@@ -1,0 +1,494 @@
+openapi: 3.1.0
+info:
+  title: Роботоподбор API
+  version: 0.1.0
+  description: >
+    Стаб контракта для фронтенда. Бизнес-логика расчёта живёт на бэкенде,
+    фронт только отображает готовые значения.
+servers:
+  - url: /api
+paths:
+  /object-types:
+    get:
+      operationId: listObjectTypes
+      responses:
+        '200':
+          description: Типы объектов для мастера расчёта
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ObjectType' }
+  /calculations/{calculationId}:
+    get:
+      operationId: getCalculation
+      parameters:
+        - name: calculationId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Результат расчёта
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CalculationResult' }
+  /catalog/solutions:
+    get:
+      operationId: listSolutions
+      parameters:
+        - name: objectType
+          in: query
+          description: Оставить только решения, применимые к типу объекта.
+          required: false
+          schema: { type: string }
+      responses:
+        '200':
+          description: Каталог решений
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Solution' }
+  /projects:
+    get:
+      operationId: listProjects
+      description: Только для авторизованного пользователя.
+      responses:
+        '200':
+          description: Расчёты пользователя
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Project' }
+        '401':
+          description: Требуется вход
+    post:
+      operationId: createProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProjectInput' }
+      responses:
+        '201':
+          description: Проект создан
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectDetail' }
+        '401':
+          description: Требуется вход
+  /auth/register:
+    post:
+      operationId: register
+      description: Создаёт пользователя и открывает сессию (httpOnly cookie).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Credentials' }
+      responses:
+        '201':
+          description: Сессия открыта
+          headers:
+            Set-Cookie:
+              description: sid=<opaque>; HttpOnly; Path=/; SameSite=Lax
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '409':
+          description: Пользователь уже существует
+  /auth/login:
+    post:
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Credentials' }
+      responses:
+        '200':
+          description: Сессия открыта
+          headers:
+            Set-Cookie:
+              description: sid=<opaque>; HttpOnly; Path=/; SameSite=Lax
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401':
+          description: Неверная пара логин/пароль
+  /auth/logout:
+    post:
+      operationId: logout
+      responses:
+        '204':
+          description: Сессия закрыта
+  /auth/session:
+    get:
+      operationId: getSession
+      description: Текущий пользователь по cookie. 401, если сессии нет.
+      responses:
+        '200':
+          description: Текущий пользователь
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401':
+          description: Сессии нет
+  /object-types/{slug}/parameters:
+    get:
+      operationId: getObjectParameters
+      description: Состав полей паспорта объекта зависит от типа объекта.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Схема полей
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ParameterField' }
+  /object-types/{slug}/parameters/import:
+    post:
+      operationId: importObjectParameters
+      description: Разбор загруженного Excel/CSV в значения паспорта объекта.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        '200':
+          description: Распознанные значения
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ImportedParameters' }
+        '422':
+          description: Файл не распознан
+  /projects/{projectId}:
+    get:
+      operationId: getProject
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Проект с входными параметрами и сценариями
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectDetail' }
+        '404':
+          description: Не найден
+    delete:
+      operationId: deleteProject
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Удалён
+  /catalog/solutions/{solutionId}:
+    put:
+      operationId: updateSolution
+      description: Доступно роли admin.
+      parameters:
+        - name: solutionId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Solution' }
+      responses:
+        '200':
+          description: Обновлено
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Solution' }
+        '403':
+          description: Недостаточно прав
+    delete:
+      operationId: deleteSolution
+      parameters:
+        - name: solutionId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Удалено
+        '403':
+          description: Недостаточно прав
+  /catalog/taxonomy:
+    get:
+      operationId: getTaxonomy
+      description: Иерархия отрасль → объект → процесс → тип решения → продукт.
+      responses:
+        '200':
+          description: Дерево каталога
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/TaxonomyNode' }
+components:
+  schemas:
+    Credentials:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 6 }
+        organization: { type: string }
+    User:
+      type: object
+      required: [id, email, name, role]
+      properties:
+        id: { type: string }
+        email: { type: string }
+        name: { type: string }
+        organization: { type: string }
+        role:
+          type: string
+          enum: [user, admin]
+    ParameterField:
+      type: object
+      required: [id, label, kind]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        hint: { type: string }
+        unit: { type: string }
+        kind:
+          type: string
+          enum: [number, text, select]
+        min: { type: number }
+        max: { type: number }
+        defaultValue: { type: string }
+        options:
+          type: array
+          items:
+            type: object
+            required: [value, label]
+            properties:
+              value: { type: string }
+              label: { type: string }
+    ImportedParameters:
+      type: object
+      required: [values, recognized]
+      properties:
+        values:
+          type: object
+          additionalProperties: { type: string }
+        recognized: { type: integer }
+        skipped:
+          type: array
+          items: { type: string }
+    ProjectInput:
+      type: object
+      required: [title, objectType, parameters]
+      properties:
+        title: { type: string }
+        objectType: { type: string }
+        parameters:
+          type: object
+          additionalProperties: { type: string }
+        processes:
+          type: array
+          items: { type: string }
+    ProjectDetail:
+      allOf:
+        - $ref: '#/components/schemas/Project'
+        - type: object
+          required: [objectType, parameters, scenarios]
+          properties:
+            objectType: { type: string }
+            parameters:
+              type: object
+              additionalProperties: { type: string }
+            processes:
+              type: array
+              items: { type: string }
+            scenarios:
+              type: array
+              description: Минимум три — «как есть», «покупка», «услуга/RaaS».
+              items: { $ref: '#/components/schemas/ScenarioBar' }
+            calculationId: { type: string }
+    TaxonomyNode:
+      type: object
+      required: [id, label, level]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        level:
+          type: string
+          enum: [industry, object, process, solutionType, product]
+        children:
+          type: array
+          items: { $ref: '#/components/schemas/TaxonomyNode' }
+    SensitivityFactor:
+      type: object
+      required: [id, label, impact, direction]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        impact:
+          type: number
+          description: Влияние на срок окупаемости, доля от базового значения.
+        direction:
+          type: string
+          enum: [up, down]
+        low: { type: string }
+        high: { type: string }
+    DataConfidence:
+      type: string
+      enum: [confirmed, needs-review]
+    Maturity:
+      type: string
+      enum: [operation, piloting, rnd]
+    ObjectType:
+      type: object
+      required: [slug, title, description, solutionsCount, paybackRange, photoCaption]
+      properties:
+        slug: { type: string }
+        title: { type: string }
+        description: { type: string }
+        solutionsCount: { type: integer }
+        solutionsCountLabel: { type: string }
+        paybackRange: { type: string }
+        photoCaption: { type: string }
+    ScenarioBar:
+      type: object
+      required: [id, title, subtitle, tco, share, delta]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        subtitle: { type: string }
+        tco: { type: number }
+        share: { type: number }
+        delta: { type: string }
+        detail: { type: string }
+        recommended: { type: boolean }
+    CostLine:
+      type: object
+      required: [title, amount, share, source]
+      properties:
+        title: { type: string }
+        amount: { type: number }
+        share: { type: integer }
+        source: { type: string }
+        confidence: { $ref: '#/components/schemas/DataConfidence' }
+    CostGroup:
+      type: object
+      required: [id, title, amount, share, confidence, lines]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        amount: { type: number }
+        share: { type: integer }
+        confidence: { $ref: '#/components/schemas/DataConfidence' }
+        lines:
+          type: array
+          items: { $ref: '#/components/schemas/CostLine' }
+    CalculationResult:
+      type: object
+      required:
+        [
+          id, objectTitle, meta, payback, capex, roi, scenarios, costGroups,
+          opexSaving, warning, assumptions, totalTco,
+        ]
+      properties:
+        id: { type: string }
+        objectTitle: { type: string }
+        meta: { type: string }
+        payback: { $ref: '#/components/schemas/Kpi' }
+        capex: { $ref: '#/components/schemas/Kpi' }
+        roi: { $ref: '#/components/schemas/Kpi' }
+        opexSaving:
+          type: object
+          required: [series, percent, meta]
+          properties:
+            series: { type: array, items: { type: number } }
+            percent: { type: string }
+            meta: { type: string }
+        warning: { type: string }
+        assumptions: { type: array, items: { type: string } }
+        scenarios:
+          type: array
+          items: { $ref: '#/components/schemas/ScenarioBar' }
+        costGroups:
+          type: array
+          items: { $ref: '#/components/schemas/CostGroup' }
+        totalTco: { type: number }
+        sensitivity:
+          type: array
+          description: Параметры, ранжированные по влиянию на результат.
+          items: { $ref: '#/components/schemas/SensitivityFactor' }
+    Kpi:
+      type: object
+      required: [label, value]
+      properties:
+        label: { type: string }
+        value: { type: string }
+        unit: { type: string }
+        note: { type: string }
+        trend: { type: string, enum: [up, down, none] }
+    Solution:
+      type: object
+      required: [id, name, vendor, useCase, price, payload, speed, maturity, confidence]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        vendor: { type: string }
+        useCase: { type: string }
+        price: { type: string }
+        payload: { type: string }
+        speed: { type: string }
+        maturity: { $ref: '#/components/schemas/Maturity' }
+        confidence: { $ref: '#/components/schemas/DataConfidence' }
+        source: { type: string, description: Название источника характеристик. }
+        sourceDate: { type: string, description: Дата актуальности источника. }
+        objectTypes:
+          type: array
+          description: Типы объектов, для которых решение применимо.
+          items: { type: string }
+        score: { type: number, description: Итоговый балл ранжирования, 0..100. }
+        scoreFactors:
+          type: array
+          description: Вклад критериев в позицию решения.
+          items:
+            type: object
+            required: [label, weight]
+            properties:
+              label: { type: string }
+              weight: { type: number }
+    Project:
+      type: object
+      required: [id, title, meta, payback, status]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        meta: { type: string }
+        payback: { type: string }
+        status: { $ref: '#/components/schemas/Maturity' }

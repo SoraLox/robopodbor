@@ -1,0 +1,100 @@
+# CI/CD SourceCraft.
+# Документация: https://sourcecraft.dev/portal/docs/ru/sourcecraft/ci-cd-ref/
+#
+# Обязателен для проверок и находится в apps/web (единственный пакет в apps/).
+
+on:
+  pull_request:
+    - workflows: [checks]
+      filter:
+        target_branches: ["main"]
+  push:
+    - workflows: [checks]
+      filter:
+        branches: ["main"]
+    # Публикация Docker-образа — только после мержа в main.
+    - workflows: [build-image]
+      filter:
+        branches: ["main"]
+
+workflows:
+  checks:
+    tasks:
+      - name: install
+        cubes:
+          - name: npm-ci
+            image: node:22-alpine
+            script:
+              - cd apps/web
+              - npm ci --no-audit --no-fund
+            artifacts:
+              paths:
+                - apps/web/node_modules
+
+      - name: lint-typecheck-test
+        needs: [install]
+        cubes:
+          - name: lint
+            image: node:22-alpine
+            script:
+              - cd apps/web
+              - npm run lint
+          - name: typecheck
+            image: node:22-alpine
+            script:
+              - cd apps/web
+              - npm run typecheck
+          - name: test
+            image: node:22-alpine
+            script:
+              - cd apps/web
+              - npm run test
+
+      - name: build
+        needs: [lint-typecheck-test]
+        cubes:
+          - name: vite-build
+            image: node:22-alpine
+            script:
+              - cd apps/web
+              - npm run build
+            artifacts:
+              paths:
+                - apps/web/dist
+
+  # ШАГ 2 (после того как будет подключён Yandex Container Registry через
+  # service connection — см. https://sourcecraft.dev/portal/docs/ru/sourcecraft/operations/service-connections):
+  # заменить <registry>/<repo> на реальный путь в YCR и раскомментировать при готовности.
+  build-image:
+    tasks:
+      - name: docker-build-push
+        cubes:
+          - name: build-and-push
+            image:
+              name: some-docker-registry.com/cloud-builders/docker
+              entrypoint: ""
+              username: ${{ secrets.REGISTRY_USERNAME }}
+              password: ${{ secrets.REGISTRY_PASSWORD }}
+            script:
+              - docker build -t <registry>/<repo>/robopodbor-web:${{ ci.commit_sha }} -t <registry>/<repo>/robopodbor-web:latest -f apps/web/Dockerfile .
+              - docker push <registry>/<repo>/robopodbor-web:${{ ci.commit_sha }}
+              - docker push <registry>/<repo>/robopodbor-web:latest
+
+  # ШАГ 3 (после того как появится сервер — см. deploy/README.md):
+  # раскомментировать, добавить секреты DEPLOY_HOST / DEPLOY_USER / DEPLOY_SSH_KEY.
+  # deploy:
+  #   tasks:
+  #     - name: ssh-deploy
+  #       needs: [docker-build-push]
+  #       cubes:
+  #         - name: rollout
+  #           image: alpine:3.20
+  #           env:
+  #             DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+  #             DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+  #             DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+  #           script:
+  #             - apk add --no-cache openssh-client
+  #             - mkdir -p ~/.ssh && echo "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+  #             - ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+  #             - ssh -i ~/.ssh/id_ed25519 "$DEPLOY_USER@$DEPLOY_HOST" 'cd /opt/robopodbor && docker compose pull && docker compose up -d'

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.local
+.DS_Store
+
+# Выхлоп tsc, если его случайно сгенерировали рядом с исходниками
+apps/web/*.tsbuildinfo
+
+# Приватный ключ деплоя — только на этой машине и в секретах Sourcecraft,
+# в репозиторий не идёт
+deploy/robopodbor_deploy_key

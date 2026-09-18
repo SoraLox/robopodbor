@@ -1,0 +1,161 @@
+/*
+  Заголовки и текст — Inter. Space Grotesk убран намеренно: в гарнитуре нет
+  кириллицы, поэтому русские заголовки подменялись системным шрифтом, а
+  латиница и цифры в той же строке приходили из Space Grotesk.
+*/
+@import '@fontsource-variable/inter';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* --- Основа: светло-серый холст, белые карточки --- */
+    --canvas: 240 14% 97%; /* фон приложения */
+    --background: 0 0% 100%; /* карточки и панели */
+    --foreground: 240 10% 11%; /* основной текст */
+    --muted-foreground: 240 5% 42%; /* второстепенный текст, 4.9:1 на белом */
+    --meta-foreground: 240 5% 38%; /* мелкие служебные подписи, 6.1:1 */
+    --border: 240 12% 91%; /* границы карточек */
+    --hairline: 240 14% 94%; /* разделители строк внутри карточек */
+    --radius: 0.625rem; /* 10px */
+
+    /* --- Акцент --- */
+    /*
+      Единый оранжевый дизайн-системы — #EA580B — используется везде:
+      кнопки, ссылки, графики, подложки. На нём белый текст даёт 3.6:1
+      (ниже AA 4.5:1 для обычного текста), поэтому текст в заливке
+      набирается жирным от 14px — это уже проходит порог AA для крупного
+      текста (3:1).
+    */
+    --primary: 21 91% 48%; /* #EA580B */
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 20 94% 32%; /* #9A3412 — затемнение для hover/active */
+    --primary-bright: 21 91% 48%; /* #EA580B — оставлено для обратной совместимости */
+    --accent-tint: 24 100% 96%; /* подложка активного пункта и выделений */
+
+    /* --- Статусы: заливка-подложка + насыщенный текст --- */
+    --status-operation: 142 72% 26%; /* «в эксплуатации», 5.6:1 */
+    --status-operation-tint: 141 78% 95%;
+    --status-piloting: 32 81% 31%; /* «пилот», «требует проверки», 5.9:1 */
+    --status-piloting-tint: 38 92% 95%;
+    --status-rnd: 240 5% 34%; /* «НИОКР», 8.1:1 */
+    --status-rnd-tint: 240 14% 95%;
+    --status-confirmed: 199 89% 27%; /* «подтверждено», 6.2:1 */
+    --status-confirmed-tint: 200 94% 95%;
+    --status-danger: 0 72% 38%; /* «отклонено», 6.4:1 */
+    --status-danger-tint: 0 86% 96%;
+
+    /* --- Серии графиков --- */
+    --chart-1: var(--primary); /* один оранжевый на весь интерфейс */
+    --chart-2: 240 6% 52%; /* вторая — контраст к белому 4.1:1 */
+    --chart-3: 240 5% 68%; /* третья — 2.9:1, различима по светлоте */
+
+    /* --- shadcn-совместимые производные --- */
+    --card: 0 0% 100%;
+    --card-foreground: var(--foreground);
+    --popover: 0 0% 100%;
+    --popover-foreground: var(--foreground);
+    --secondary: 60 6% 96%;
+    --secondary-foreground: var(--foreground);
+    --muted: 60 6% 96%;
+    --accent: var(--accent-tint);
+    --accent-foreground: 20 90% 35%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --input: var(--border);
+    --ring: var(--primary);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  /*
+    Единый фокус на весь интерфейс: раньше кольцо было спроектировано
+    у шести элементов, остальные падали на браузерное outline 1px.
+  */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+    border-radius: calc(var(--radius) - 4px);
+  }
+
+  body {
+    @apply bg-canvas text-foreground font-sans antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+
+  /* Цифры в интерфейсе всегда табличные — колонки не «пляшут» */
+  .tabular,
+  table td,
+  table th {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  /* Мелкая служебная подпись: «15 сентября 2025», «к прошлому месяцу» */
+  .meta-label {
+    @apply text-[12px] text-meta-foreground;
+  }
+
+  /* Надзаголовок раздела: «ПАНЕЛЬ УПРАВЛЕНИЯ» */
+  .section-kicker {
+    @apply text-[11px] font-semibold uppercase tracking-[0.12em] text-meta-foreground;
+  }
+
+  /* Подпись над крупным числом в KpiBlock и фильтрах: «МЕДИАННАЯ ОКУПАЕМОСТЬ» */
+  .micro-label {
+    @apply text-[10px] font-semibold uppercase tracking-[0.1em];
+  }
+
+  /* Белая карточка панели */
+  .panel {
+    @apply rounded-xl border border-border bg-background;
+  }
+
+  /* Заголовок внутри карточки */
+  .panel-title {
+    @apply text-[15px] font-semibold text-foreground;
+  }
+
+  /* Шапка таблицы */
+  .table-head {
+    @apply text-[12px] font-medium text-meta-foreground;
+  }
+}
+
+@layer utilities {
+  /* Один авторский вход на страницу: герой поднимается из уже видимого состояния */
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Индетерминированный прогресс долгого расчёта */
+  @keyframes progress {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(300%); }
+  }
+
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
