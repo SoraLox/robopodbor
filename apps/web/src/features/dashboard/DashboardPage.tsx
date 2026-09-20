@@ -93,13 +93,13 @@ export function DashboardPage() {
         <div className="grid items-stretch gap-0 md:grid-cols-[minmax(0,1fr)_minmax(0,64%)]">
           <div className="px-5 py-6 md:py-7 md:pl-7">
             <h2 className="text-[22px] font-semibold leading-[1.15] tracking-[-0.02em] md:text-[26px]">
-              Окупаемость роботизации
+              Окупаемость роботов —
               <br />
-              без презентаций вендора
+              без презентации вендора
             </h2>
             <p className="mt-3 max-w-[46ch] text-[13px] leading-relaxed text-muted-foreground">
-              Единая платформа для расчёта CAPEX и OPEX, сравнения покупки
-              с арендой и подготовки пакета документов для инвесткомитета.
+              Считаем расходы, сравниваем покупку с арендой и готовим
+              документы для инвесткомитета — на одном экране.
             </p>
             <Link
               to="/calculate/warehouse"

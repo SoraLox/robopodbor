@@ -4,19 +4,19 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2.5 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.08em] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-[14px] font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-primary-hover',
-        outline: 'border border-border bg-background hover:border-foreground',
-        ghost: 'text-muted-foreground hover:text-foreground',
+        default: 'bg-primary text-primary-foreground shadow-soft hover:bg-primary-hover hover:shadow-lift',
+        outline: 'border border-border bg-background hover:border-foreground/30 hover:bg-muted/60',
+        ghost: 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
         link: 'text-primary underline-offset-4 hover:text-primary-hover hover:underline',
       },
       size: {
-        default: 'px-5 py-[14px]',
-        sm: 'px-4 py-2.5',
-        lg: 'px-[22px] py-[15px] text-xs',
+        default: 'px-6 py-3',
+        sm: 'px-4 py-2 text-[13px]',
+        lg: 'px-7 py-4 text-[15px]',
       },
     },
     defaultVariants: { variant: 'default', size: 'default' },

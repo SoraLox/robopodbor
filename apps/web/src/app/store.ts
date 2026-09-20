@@ -23,11 +23,12 @@ interface WizardState {
   /** Идентификаторы решений, отмеченных для сравнения в каталоге. */
   comparedIds: string[];
   toggleCompared: (id: string) => void;
+  addCompared: (id: string) => void;
   resetCompared: () => void;
 }
 
 export const useWizardStore = create<WizardState>((set) => ({
-  objectType: 'warehouse',
+  objectType: null,
   setObjectType: (slug) => set({ objectType: slug }),
 
   parameters: {},
@@ -43,12 +44,16 @@ export const useWizardStore = create<WizardState>((set) => ({
       ...(processes ? { processes } : {}),
     }),
 
-  comparedIds: ['p15', 's20', 'srt8'],
+  comparedIds: [],
   toggleCompared: (id) =>
     set((state) => ({
       comparedIds: state.comparedIds.includes(id)
         ? state.comparedIds.filter((value) => value !== id)
         : [...state.comparedIds, id],
+    })),
+  addCompared: (id) =>
+    set((state) => ({
+      comparedIds: state.comparedIds.includes(id) ? state.comparedIds : [...state.comparedIds, id],
     })),
   resetCompared: () => set({ comparedIds: [] }),
 }));

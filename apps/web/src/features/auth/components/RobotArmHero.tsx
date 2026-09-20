@@ -58,8 +58,8 @@ const SILVER = '#DCDDE1';
 const GRAPHITE = '#82858C';
 /** Глубокие щели, кабель-канал, внутренности захвата. */
 const DARK = '#4E5058';
-/** Акцентный индикатор — фирменный оранжевый платформы. */
-const ACCENT = '#C2410C';
+/** Акцентный индикатор — фирменный синий платформы. */
+const ACCENT = '#2E76D6';
 
 /** Длины звеньев и габариты сцены. */
 const RIG = {
@@ -79,12 +79,12 @@ const LIMITS = {
     но не он сам), yawBack — верхняя (глубокий разворот в профиль, не
     доходящий до жёсткого упора вбок).
   */
-  yawFront: 24 * D,
+  yawFront: 9 * D,
   yawBack: 104 * D,
   shoulderMin: -68 * D,
   shoulderMax: 148 * D,
-  elbowMin: -156 * D,
-  elbowMax: -16 * D,
+  elbowMin: 16 * D,
+  elbowMax: 156 * D,
   wrist: 132 * D,
 } as const;
 
@@ -97,14 +97,17 @@ const MARGIN = {
 } as const;
 
 /**
- * Базовая поза покоя — «на три четверти»: не анфас и не профиль.
- * Рука возвращается сюда, когда курсор покидает канвас.
+ * Базовая поза покоя — «на три четверти»: не анфас и не профиль, локоть
+ * согнут, кисть довёрнута так, что захват раскрыт в сторону зрителя, а не
+ * вверх. Углы получены тем же solve2R, что и слежение за курсором — для
+ * точки перед плечом (не в небе), — поэтому поза не «висит» отдельно от
+ * логики захвата, а выглядит как естественный кадр из его работы.
  */
 const IDLE = {
-  yaw: 46 * D,
-  shoulder: 52 * D,
-  elbow: -92 * D,
-  wrist: 14 * D,
+  yaw: 40 * D,
+  shoulder: -18 * D,
+  elbow: 114 * D,
+  wrist: -100 * D,
 } as const;
 
 /** Наклон рабочей плоскости к экрану: даёт глубину без потери точности. */
@@ -114,7 +117,7 @@ const TILT = 13 * (Math.PI / 180);
 const BASE_X = 2.5;
 
 /** Насколько крупнее вписанного по высоте/ширине кадра рисуем руку. */
-const SIZE_BOOST = 1.14;
+const SIZE_BOOST = 1.08;
 
 /** Раскрытие захвата, радианы. */
 const CLAW = { closed: 0.1, open: 0.5 } as const;
@@ -199,6 +202,14 @@ const INDICATOR_MATERIAL = new THREE.MeshStandardMaterial({
   metalness: 0.1,
 });
 
+/** Тёмное стекло линзы — глянец без металличности, чтобы читалось как оптика. */
+const LENS_MATERIAL = new THREE.MeshStandardMaterial({
+  color: '#15161a',
+  roughness: 0.12,
+  metalness: 0.05,
+  envMapIntensity: 1.8,
+});
+
 function shellOf(color: string) {
   if (color === GRAPHITE) return MATERIALS.graphite;
   if (color === DARK) return MATERIALS.dark;
@@ -209,6 +220,22 @@ function Shell({ color = SILVER }: { color?: string; rough?: number }) {
   return <primitive object={shellOf(color)} attach="material" />;
 }
 
+const STRIPE_MATERIAL = new THREE.MeshStandardMaterial({
+  color: ACCENT,
+  metalness: 0.2,
+  roughness: 0.5,
+});
+
+/** Тонкое кольцо-полоса — акцент, который читается на разъёмах и барабанах. */
+function Stripe({ radius, width = 0.05, y = 0 }: { radius: number; width?: number; y?: number }) {
+  return (
+    <mesh position={[0, y, 0]}>
+      <cylinderGeometry args={[radius, radius, width, 48]} />
+      <primitive object={STRIPE_MATERIAL} attach="material" />
+    </mesh>
+  );
+}
+
 /** Индикаторный светодиод — фирменный акцент на корпусе. */
 function Indicator({ position, radius = 0.035 }: { position: [number, number, number]; radius?: number }) {
   return (
@@ -216,6 +243,26 @@ function Indicator({ position, radius = 0.035 }: { position: [number, number, nu
       <sphereGeometry args={[radius, 14, 12]} />
       <primitive object={INDICATOR_MATERIAL} attach="material" />
     </mesh>
+  );
+}
+
+/**
+ * Сенсор-«глаз»: тёмная линза в оправе, направленная вдоль +X — туда же,
+ * куда смотрит инструмент. Читается как камера, следящая за пользователем.
+ */
+function Lens({ radius = 0.1 }: { radius?: number }) {
+  return (
+    <group rotation={[0, 0, -Math.PI / 2]}>
+      <mesh>
+        <cylinderGeometry args={[radius * 1.22, radius * 1.22, radius * 0.5, 32]} />
+        <Shell color={DARK} rough={0.4} />
+      </mesh>
+      <mesh position={[0, radius * 0.32, 0]}>
+        <cylinderGeometry args={[radius, radius, radius * 0.2, 32]} />
+        <primitive object={LENS_MATERIAL} attach="material" />
+      </mesh>
+      <Indicator position={[radius * 1.05, radius * 0.3, radius * 1.05]} radius={0.022} />
+    </group>
   );
 }
 
@@ -265,6 +312,7 @@ function Plinth() {
         <cylinderGeometry args={[0.58, 0.62, 0.12, 48]} />
         <Shell color={DARK} rough={0.48} />
       </mesh>
+      <Stripe radius={0.865} width={0.04} y={0.16} />
       {/* Табличка на тумбе */}
       <mesh position={[0, 0.29, 0.86]} rotation={[0, 0, 0]}>
         <boxGeometry args={[0.34, 0.16, 0.02]} />
@@ -311,6 +359,18 @@ function Segment({
         <cylinderGeometry args={[radius * 0.11, radius * 0.11, length * 0.74, 16]} />
         <Shell color={DARK} rough={0.4} />
       </mesh>
+      {/* Второй, более толстый гидрорукав сбоку */}
+      <mesh position={[length * 0.5, 0, radius * 0.94]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[radius * 0.16, radius * 0.16, length * 0.7, 16]} />
+        <Shell color={GRAPHITE} rough={0.44} />
+      </mesh>
+      {/* Хомуты на гидрорукавах */}
+      {[0.28, 0.5, 0.72].map((t) => (
+        <mesh key={t} position={[length * t, 0, radius * 0.94]} rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[radius * 0.19, radius * 0.19, radius * 0.06, 16]} />
+          <Shell color={DARK} rough={0.5} />
+        </mesh>
+      ))}
     </group>
   );
 }
@@ -382,16 +442,16 @@ function Claw({ open }: { open: React.MutableRefObject<number> }) {
   return (
     <group>
       {/* Пневмохаб привода когтей */}
-      <mesh position={[0.15, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.27, 0.3, 0.34, 44]} />
+      <mesh position={[0.17, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.33, 0.36, 0.36, 44]} />
         <Shell rough={0.36} />
       </mesh>
-      <mesh position={[0.44, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.22, 0.25, 0.24, 40]} />
+      <mesh position={[0.48, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.27, 0.3, 0.26, 40]} />
         <Shell color={GRAPHITE} rough={0.42} />
       </mesh>
-      <BoltRing radius={0.23} count={6} size={0.026} />
-      <Indicator position={[0.58, 0.17, 0]} />
+      <BoltRing radius={0.28} count={6} size={0.03} />
+      <Indicator position={[0.64, 0.19, 0]} />
 
       {[0, 120, 240].map((deg, index) => (
         <group key={deg} rotation={[(deg * Math.PI) / 180, 0, 0]}>
@@ -446,7 +506,12 @@ function solve2R(r: number, y: number, l1: number, l2: number) {
     -1,
     1,
   );
-  const elbow = -Math.acos(cosElbow);
+  /*
+    Знак задаёт, в какую сторону выгибается локоть между плечом и целью.
+    Плюс сгибает руку «горбом» вверх — так, как просили; минус давал
+    противоположную, «подгибающуюся снизу» конфигурацию того же 2R-решения.
+  */
+  const elbow = Math.acos(cosElbow);
   const shoulder =
     Math.atan2(y * k, r * k) -
     Math.atan2(l2 * Math.sin(elbow), l1 + l2 * Math.cos(elbow));
@@ -586,13 +651,15 @@ function Manipulator() {
       {/* J1 — рыскание колонны */}
       <group ref={j1} position={[0, 0.5, 0]}>
         <mesh position={[0, 0.1, 0]}>
-          <cylinderGeometry args={[0.54, 0.56, 0.2, 48]} />
+          <cylinderGeometry args={[0.68, 0.7, 0.2, 48]} />
           <Shell color={GRAPHITE} rough={0.42} />
         </mesh>
+        <Stripe radius={0.695} width={0.05} y={0.19} />
         <mesh position={[0, RIG.columnHeight / 2 - 0.1, 0]}>
-          <cylinderGeometry args={[0.42, 0.5, RIG.columnHeight - 0.5, 48]} />
+          <cylinderGeometry args={[0.55, 0.64, RIG.columnHeight - 0.5, 48]} />
           <Shell />
         </mesh>
+        <BoltRing radius={0.5} y={RIG.columnHeight - 0.62} count={8} size={0.038} />
         {/* Кабель-короб на колонне */}
         <mesh position={[0, RIG.columnHeight / 2 - 0.2, 0.44]}>
           <boxGeometry args={[0.3, RIG.columnHeight * 0.52, 0.16]} />
@@ -601,26 +668,29 @@ function Manipulator() {
 
         {/* J2 — плечо */}
         <group ref={j2} position={[0, RIG.columnHeight - 0.5, 0]}>
-          <Yoke radius={0.4} />
-          <JointBarrel radius={0.4} />
-          <Segment length={RIG.l1} radius={0.32} />
+          <Yoke radius={0.5} />
+          <JointBarrel radius={0.5} />
+          <Segment length={RIG.l1} radius={0.41} />
 
           {/* J3 — локоть */}
           <group ref={j3} position={[RIG.l1, 0, 0]}>
-            <JointBarrel radius={0.31} />
+            <JointBarrel radius={0.39} />
 
             {/* J4 — вращение предплечья вокруг своей оси */}
             <group ref={j4}>
-              <Segment length={RIG.l2} radius={0.25} />
+              <Segment length={RIG.l2} radius={0.32} />
 
               {/* J5 — наклон кисти */}
               <group ref={j5} position={[RIG.l2, 0, 0]}>
-                <JointBarrel radius={0.23} width={1.8} />
-                <Indicator position={[0, 0.23, 0.19]} radius={0.028} />
+                <JointBarrel radius={0.29} width={1.7} />
+                <Indicator position={[0, 0.28, 0.23]} radius={0.03} />
 
                 {/* J6 — вращение инструмента */}
                 <group ref={j6}>
                   <Claw open={clawOpen} />
+                  <group position={[0.1, 0.26, 0]}>
+                    <Lens radius={0.09} />
+                  </group>
                 </group>
               </group>
             </group>
@@ -686,16 +756,15 @@ function AutoFit({ children }: { children: ReactNode }) {
 
   const scale = useMemo(() => {
     /*
-      Габарит берём по реальному рабочему конверту: полностью выпрямленной
-      рука не бывает, поэтому вылет считаем с коэффициентом 0.86. База стоит
-      справа и рука работает влево, поэтому ширина — это смещение базы плюс
-      вылет, а не два вылета.
+      Локоть гнётся вверх («горбом»), поэтому при слежении за курсором
+      плечо и предплечье могут вытянуться почти по прямой над колонной —
+      это не только поза покоя, а любой момент активного слежения. Запас
+      «на неполное выпрямление» тут неприменим: берём ПОЛНУЮ длину звеньев
+      и инструмента (не долю) плюс небольшой запас, чтобы при реальном,
+      а не воображаемом пределе позы обрезки не было никогда.
     */
-    const reach = (RIG.l1 + RIG.l2 + RIG.tool) * 0.86;
-    const spanX = BASE_X + reach - 0.5;
-    const spanY = RIG.columnHeight + (RIG.l1 + RIG.l2) * 0.86 + 0.4;
-    // SIZE_BOOST осознанно выходит за рамки кадра: рука должна быть заметно
-    // крупнее, лёгкий срез по краям при взгляде на весь манипулятор — ок.
+    const spanX = BASE_X + RIG.l1 + RIG.l2 + RIG.tool + 0.15;
+    const spanY = RIG.columnHeight + RIG.l1 + RIG.l2 + RIG.tool + 0.3;
     return Math.min(viewport.height / spanY, viewport.width / spanX) * SIZE_BOOST;
   }, [viewport.width, viewport.height]);
 

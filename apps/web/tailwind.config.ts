@@ -54,16 +54,22 @@ const config: Config = {
         },
       },
       borderRadius: {
-        xl: 'calc(var(--radius) + 2px)',
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        xl: 'var(--radius)',
+        lg: 'calc(var(--radius) - 6px)',
+        md: 'calc(var(--radius) - 10px)',
+        sm: 'calc(var(--radius) - 14px)',
+        '2xl': 'calc(var(--radius) + 8px)',
+        '3xl': 'calc(var(--radius) + 20px)',
       },
       letterSpacing: {
-        display: '-0.05em',
-        h1: '-0.03em',
-        h2: '-0.015em',
+        display: '-0.03em',
+        h1: '-0.025em',
+        h2: '-0.012em',
         label: '0.14em',
+      },
+      boxShadow: {
+        soft: '0 1px 2px hsl(240 3% 12% / 0.04), 0 12px 32px -12px hsl(240 3% 12% / 0.16)',
+        lift: '0 8px 16px -8px hsl(240 3% 12% / 0.12), 0 24px 48px -20px hsl(240 3% 12% / 0.22)',
       },
       keyframes: {
         'accordion-down': {

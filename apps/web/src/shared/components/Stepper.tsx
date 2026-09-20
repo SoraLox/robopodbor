@@ -1,7 +1,7 @@
 /**
- * Stepper — горизонтальный степпер мастера ввода. Шаг маркирует линия
- * сверху (3px), а не круг: спокойнее в плотном интерфейсе.
- * Активный шаг — var(--primary), пройденные и будущие — muted.
+ * Stepper — горизонтальный степпер мастера ввода: кружок с номером
+ * (галочка — если шаг пройден), подпись рядом, между шагами — линия.
+ * Пройденный шаг кликабелен, если передан onStepClick.
  *
  * @example
  * <Stepper
@@ -15,6 +15,7 @@
  *   onStepClick={(index) => goTo(index)}
  * />
  */
+import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface StepperStep {
@@ -33,44 +34,58 @@ export interface StepperProps {
 
 export function Stepper({ steps, current, onStepClick, className }: StepperProps) {
   return (
-    <ol
-      className={cn('grid border-b border-border', className)}
-      style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}
-    >
+    <ol className={cn('flex items-center', className)}>
       {steps.map((step, index) => {
         const isActive = index === current;
         const isDone = index < current;
         const clickable = typeof onStepClick === 'function' && isDone;
+        const isLast = index === steps.length - 1;
 
         return (
           <li
             key={step.id}
             aria-current={isActive ? 'step' : undefined}
-            className={cn(
-              'border-t-[3px] px-5 py-[11px]',
-              index < steps.length - 1 && 'border-r border-r-hairline',
-              isActive ? 'border-t-primary' : 'border-t-border',
-              clickable && 'cursor-pointer hover:bg-accent-tint',
-            )}
-            {...(clickable ? { onClick: () => onStepClick(index) } : {})}
+            className={cn('flex items-center', !isLast && 'flex-1')}
           >
             <div
-              className={cn(
-                'font-mono text-[10px]',
-                isActive ? 'text-primary' : 'text-meta-foreground',
-              )}
+              {...(clickable
+                ? {
+                    role: 'button',
+                    tabIndex: 0,
+                    onClick: () => onStepClick(index),
+                    onKeyDown: (event: React.KeyboardEvent) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        onStepClick(index);
+                      }
+                    },
+                  }
+                : {})}
+              className={cn('flex items-center gap-2.5', clickable && 'cursor-pointer')}
             >
-              {String(index + 1).padStart(2, '0')}
-              {isDone ? ' ✓' : ''}
+              <div
+                className={cn(
+                  'flex size-7 flex-none items-center justify-center rounded-full text-[12px] font-semibold',
+                  isDone && 'bg-primary text-primary-foreground',
+                  isActive && 'border-2 border-primary text-primary',
+                  !isDone && !isActive && 'border border-border text-meta-foreground',
+                )}
+              >
+                {isDone ? <Check className="size-3.5" strokeWidth={3} /> : index + 1}
+              </div>
+              <span
+                className={cn(
+                  'hidden text-[13px] sm:inline',
+                  isActive ? 'font-semibold text-foreground' : 'text-muted-foreground',
+                )}
+              >
+                {step.label}
+              </span>
             </div>
-            <div
-              className={cn(
-                'mt-[3px] text-xs',
-                isActive ? 'font-semibold text-foreground' : 'text-muted-foreground',
-              )}
-            >
-              {step.label}
-            </div>
+
+            {!isLast ? (
+              <div className={cn('mx-3 h-px flex-1', isDone ? 'bg-primary' : 'bg-border')} />
+            ) : null}
           </li>
         );
       })}

@@ -11,6 +11,7 @@ import CatalogPage from '@/features/catalog/CatalogPage';
 import ComparePage from '@/features/catalog/ComparePage';
 import ProjectsPage from '@/features/projects/ProjectsPage';
 import MethodologyPage from '@/features/methodology/MethodologyPage';
+import PrivacyPage from '@/features/legal/PrivacyPage';
 import AdminPage from '@/features/admin/AdminPage';
 import CatalogAdminPage from '@/features/admin/CatalogAdminPage';
 import ForbiddenPage from '@/features/shared/ForbiddenPage';
@@ -23,6 +24,7 @@ export function App() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/methodology" element={<MethodologyPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/catalog" element={<CatalogPage />} />
       <Route path="/catalog/compare" element={<ComparePage />} />
       <Route path="/admin" element={<AdminPage />} />

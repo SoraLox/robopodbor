@@ -1,9 +1,15 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, Check, ChevronDown } from 'lucide-react';
-import { SiteFooter } from '@/app/AppShell';
-import { RobotArmHero } from '@/features/auth/components/RobotArmHero';
-import { ScenarioBars } from '@/features/results/ScenarioBars';
-import { KpiBlock } from '@/shared/components';
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  Check,
+  ChevronDown,
+  Image as ImageIcon,
+  ShieldCheck,
+} from 'lucide-react';
+import { SiteFooter, SiteHeader } from '@/app/AppShell';
+import { useObjectTypes } from '@/api/queries';
 import {
   Accordion,
   AccordionContent,
@@ -11,362 +17,403 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { demoCalculation } from '@/mocks/fixtures';
 import { cn } from '@/lib/utils';
-import { EFFECTS, FAQ, PLANS, PROBLEMS, SOURCES, STEPS } from './content';
+import { FAQ, PLANS, SOURCES } from './content';
 
-const NAV = [
-  { to: '/calculate/warehouse', label: 'Расчёт' },
-  { to: '/catalog', label: 'Каталог' },
-  { to: '/methodology', label: 'Методика' },
-];
-
-/** Общая обёртка секции: воздух сверху и волосяная линия-разделитель. */
+/** Общая обёртка секции: воздух сверху и снизу, без разделительных линий. */
 function Section({
   children,
   className,
-  divided = true,
 }: {
   children: React.ReactNode;
   className?: string;
-  divided?: boolean;
 }) {
   return (
-    <section
+    <section className={cn('px-[18px] py-10 md:py-14', className)}>
+      <div className="mx-auto max-w-[1380px]">{children}</div>
+    </section>
+  );
+}
+
+/** Заголовок раздела: обычный регистр, без надзаголовков — вес несёт сам текст. */
+function SectionTitle({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <h2
       className={cn(
-        'px-[18px] py-20 md:py-28',
-        divided && 'border-t border-border',
+        'font-heading text-[clamp(28px,3.6vw,44px)] font-semibold leading-[1.08] tracking-h1',
         className,
       )}
     >
-      <div className="mx-auto max-w-[1180px]">{children}</div>
-    </section>
+      {children}
+    </h2>
+  );
+}
+
+/**
+ * Число «набегает» до целевого значения при появлении на экране.
+ * Стартуем не с нуля, а с наименьшего числа той же разрядности (10 для
+ * двузначных, 100 для трёхзначных), чтобы количество цифр не менялось
+ * по ходу анимации и колонка не «дёргалась» по ширине.
+ */
+function CountUp({
+  end,
+  decimals = 0,
+  duration = 1100,
+  suffix = '',
+}: {
+  end: number;
+  decimals?: number;
+  duration?: number;
+  suffix?: string;
+}) {
+  const digits = Math.floor(Math.abs(end)).toString().length;
+  const start = digits > 1 ? 10 ** (digits - 1) : 0;
+  const [value, setValue] = useState(start);
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setValue(end);
+      return;
+    }
+
+    let frame = 0;
+
+    const observer = new IntersectionObserver(
+      ([entry], obs) => {
+        if (!entry?.isIntersecting) return;
+        obs.disconnect();
+
+        const startTime = performance.now();
+        const tick = (now: number) => {
+          const progress = Math.min((now - startTime) / duration, 1);
+          const eased = 1 - (1 - progress) ** 3;
+          setValue(start + (end - start) * eased);
+          if (progress < 1) frame = requestAnimationFrame(tick);
+        };
+        frame = requestAnimationFrame(tick);
+      },
+      { threshold: 0.4 },
+    );
+
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, [end, start, duration]);
+
+  return (
+    <span ref={ref} className="tabular">
+      {value.toFixed(decimals)}
+      {suffix}
+    </span>
+  );
+}
+
+/** Временные фото по смыслу — заменить на настоящие фото объектов. */
+const PLACEHOLDER_PHOTOS: Record<string, string> = {
+  warehouse: '/pics/placeholders/warehouse.jpg',
+  airport: '/pics/placeholders/airport.jpg',
+  clinic: '/pics/placeholders/clinic.jpg',
+};
+
+/** Короткая, в три слова, суть каждого типа объекта — без выдуманных цифр. */
+const SHORT_BLURB: Record<string, string> = {
+  warehouse: 'Хранение и комплектация',
+  airport: 'Багаж и логистика',
+  clinic: 'Расходники и дезинфекция',
+};
+
+/**
+ * Каталог объектов: заголовок слева, справа — ряд карточек по типам
+ * площадок. Список типов открытый (грузится из API), но раскладка рассчитана
+ * так, чтобы все карточки помещались на экране без прокрутки.
+ */
+function CatalogSection() {
+  const { data: types, isLoading } = useObjectTypes();
+
+  return (
+    <Section>
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,0.4fr)_minmax(0,1.6fr)] lg:items-start">
+        <div>
+          <SectionTitle className="max-w-[9ch]">Каталог объектов</SectionTitle>
+          <p className="mt-4 max-w-[26ch] text-[15px] leading-[1.5] text-muted-foreground">
+            Широкий выбор объектов для вашего бизнеса
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+          {(isLoading ? Array.from<undefined>({ length: 3 }) : types)?.map((type, index) => (
+            <Link key={type?.slug ?? index} to={type ? `/calculate/${type.slug}` : '#'}>
+              <div className="flex aspect-[3/4] items-center justify-center overflow-hidden rounded-3xl bg-muted">
+                {!type ? (
+                  <div className="size-full animate-pulse bg-muted" />
+                ) : PLACEHOLDER_PHOTOS[type.slug] ? (
+                  <img
+                    src={PLACEHOLDER_PHOTOS[type.slug]}
+                    alt=""
+                    aria-hidden
+                    className="size-full object-cover grayscale"
+                  />
+                ) : (
+                  <ImageIcon className="size-8 text-muted-foreground/40" strokeWidth={1.5} aria-hidden />
+                )}
+              </div>
+              {type ? (
+                <div className="mt-3">
+                  <h3 className="font-heading text-[20px] font-semibold">{type.title}</h3>
+                  <p className="mt-1 text-[15px] text-muted-foreground">
+                    {SHORT_BLURB[type.slug] ?? type.description}
+                  </p>
+                </div>
+              ) : null}
+            </Link>
+          ))}
+        </div>
+      </div>
+    </Section>
   );
 }
 
 export function LandingPage() {
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-50 border-b border-border bg-background">
-        <div className="mx-auto flex max-w-[1180px] flex-wrap items-center gap-8 px-[18px] py-3">
-          <Link to="/" className="font-heading text-sm font-bold tracking-[0.02em]">
-            РОБОПОДБОР<span className="text-primary">.</span>
-          </Link>
-          <nav className="flex flex-wrap gap-6 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-            {NAV.map((item) => (
-              <Link key={item.to} to={item.to} className="hover:text-foreground">
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-          <Link
-            to="/login"
-            className="ml-auto text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground"
-          >
-            Войти
-          </Link>
-        </div>
-      </header>
+      <SiteHeader />
 
-      {/* 1 — ГЕРОЙ. Одна мысль: за сколько окупится роботизация вашего объекта. */}
-      <section className="px-[18px] pb-16 pt-6 md:pb-24 md:pt-10">
-        <div className="mx-auto grid max-w-[1180px] items-center gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-          <div className="motion-safe:animate-[rise_.7s_cubic-bezier(.16,1,.3,1)_both]">
-            <h1
-              className="font-heading font-bold uppercase leading-[0.92] tracking-[-0.045em]"
-              style={{ fontSize: 'clamp(42px, 6.4vw, 88px)' }}
-            >
-              Окупится ли
-              <br />
-              робот у вас
-            </h1>
-
-            <p className="mt-7 max-w-[54ch] text-[15px] leading-[1.6] text-muted-foreground">
-              Платформа считает срок окупаемости, CAPEX и OPEX по вашему складу,
-              аэропорту или клинике и сравнивает покупку с арендой — на данных
-              о реальных внедрениях, а не на обещаниях поставщика.
-            </p>
-
-            <div className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-4">
-              <Button asChild size="lg" className="text-[13px]">
-                <Link to="/calculate/warehouse">
-                  Рассчитать объект
-                  <ArrowUpRight className="size-4" strokeWidth={2.5} />
-                </Link>
-              </Button>
-              <Link
-                to="/methodology"
-                className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+      {/* 1 — ГЕРОЙ. Компактная скруглённая панель, целиком в первом экране, вплотную к шапке. */}
+      <section className="px-[18px]">
+        <div className="relative mx-auto max-w-[1380px] overflow-hidden rounded-3xl border border-border bg-background text-foreground">
+          <div className="grid motion-safe:animate-[rise_.7s_cubic-bezier(.16,1,.3,1)_both] lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:items-center">
+            <div className="px-8 py-14 sm:px-12 sm:py-16">
+              <h1
+                className="max-w-[22ch] font-heading font-semibold leading-[1.08] tracking-display"
+                style={{ fontSize: 'clamp(28px, 3.4vw, 44px)' }}
               >
-                Как мы считаем
-              </Link>
-            </div>
-          </div>
+                Сколько стоят роботы и когда они окупятся
+              </h1>
 
-          <div className="motion-safe:animate-[fade_.9s_.15s_ease-out_both]">
-            <RobotArmHero className="h-[420px] w-full" />
-            <div className="mt-3 grid grid-cols-2 gap-3">
-              <KpiBlock
-                variant="filled"
-                size="sm"
-                label="Медианная окупаемость"
-                value="3.2"
-                unit="года"
-                trend="down"
-                className="rounded-xl"
-              />
-              <KpiBlock
-                variant="outline"
-                size="sm"
-                label="Решений в базе"
-                value="252"
-                unit="поз."
-                trend="up"
-                className="rounded-xl border border-border"
+              <p className="mt-5 max-w-[42ch] text-[15px] leading-[1.6] text-muted-foreground">
+                Впишите данные склада, аэропорта или клиники — получите точный
+                расчёт по ценам настоящих поставщиков, а не по обещаниям
+                продавца.
+              </p>
+
+              <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-4">
+                <Button asChild size="lg">
+                  <Link to="/calculate/warehouse">
+                    Рассчитать объект
+                    <ArrowUpRight className="size-4" strokeWidth={2.25} />
+                  </Link>
+                </Button>
+                <Link
+                  to="/methodology"
+                  className="text-[14px] font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                >
+                  Как мы считаем
+                </Link>
+              </div>
+            </div>
+
+            <div className="relative h-[260px] overflow-hidden bg-background sm:h-[340px] lg:h-full">
+              <img
+                src="/pics/roboarm3.png"
+                alt=""
+                aria-hidden
+                className="absolute inset-0 h-full w-full -translate-y-12 scale-x-[-1.6] scale-y-[1.6] object-contain object-bottom px-4 pt-4 sm:-translate-y-16 sm:px-6 sm:pt-6"
               />
             </div>
           </div>
         </div>
       </section>
 
-      {/* 2 — ПРОБЛЕМА. Что стоит на кону, если считать по презентации вендора. */}
-      <Section>
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-          <h2 className="font-heading text-[clamp(28px,3.4vw,44px)] font-bold uppercase leading-[1.02] tracking-[-0.035em]">
-            Восемьдесят
-            <br />
-            миллионов
-            <br />
-            вслепую
-          </h2>
-
-          <div>
-            <dl className="border-t border-border">
-              {PROBLEMS.map((problem) => (
-                <div key={problem.title} className="border-b border-hairline py-6">
-                  <dt className="font-heading text-[17px] font-semibold uppercase tracking-h2">
-                    {problem.title}
-                  </dt>
-                  <dd className="mt-2 max-w-[62ch] text-sm leading-[1.6] text-muted-foreground">
-                    {problem.text}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-            <p className="mt-7 max-w-[62ch] text-[15px] leading-[1.6]">
-              Средний CAPEX проекта роботизации — 80 млн ₽ и горизонт семь лет.
-              Это решение принимают один раз.
-            </p>
+      {/* Метрики — вынесены в ряд под геро-панелью. */}
+      <section className="px-[18px] pt-3">
+        <div className="mx-auto grid max-w-[1380px] grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="rounded-2xl border border-border bg-background p-5">
+            <div className="flex items-center gap-1.5 font-heading text-[26px] font-semibold tracking-h1">
+              <CountUp end={3.2} decimals={1} />
+              <ArrowDownRight className="size-4 text-muted-foreground" strokeWidth={2} />
+            </div>
+            <div className="mt-1 text-[12.5px] text-muted-foreground">года медианная окупаемость</div>
+          </div>
+          <div className="rounded-2xl border border-border bg-background p-5">
+            <div className="flex items-center gap-1.5 font-heading text-[26px] font-semibold tracking-h1">
+              <CountUp end={252} />
+              <ArrowUpRight className="size-4 text-muted-foreground" strokeWidth={2} />
+            </div>
+            <div className="mt-1 text-[12.5px] text-muted-foreground">решений в базе</div>
+          </div>
+          <div className="rounded-2xl border border-border bg-background p-5">
+            <div className="font-heading text-[26px] font-semibold tracking-h1">
+              <CountUp end={37} />
+            </div>
+            <div className="mt-1 text-[12.5px] text-muted-foreground">внедрений 2021–2026</div>
+          </div>
+          <div className="rounded-2xl border border-border bg-background p-5">
+            <div className="font-heading text-[26px] font-semibold tracking-h1">
+              <CountUp end={80} suffix=" млн ₽" />
+            </div>
+            <div className="mt-1 text-[12.5px] text-muted-foreground">средний CAPEX проекта</div>
           </div>
         </div>
-      </Section>
+      </section>
+
+      {/* 2 — КАТАЛОГ ОБЪЕКТОВ. Типы площадок, под которые считаем расчёт. */}
+      <CatalogSection />
 
       {/* 3 — РЕШЕНИЕ. Показываем сам продукт, а не описание продукта. */}
       <Section>
-        <div className="grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-          <div>
-            <h2 className="font-heading text-[clamp(28px,3.4vw,44px)] font-bold uppercase leading-[1.02] tracking-[-0.035em]">
-              Три сценария
-              <br />
-              на одном экране
-            </h2>
-            <p className="mt-6 max-w-[46ch] text-sm leading-[1.6] text-muted-foreground">
-              Оставить как есть, купить или арендовать. Платформа считает полную
-              стоимость владения на семь лет по каждому варианту и показывает,
-              какой окупится раньше и на сколько.
-            </p>
-            <Link
-              to="/calculate/warehouse/results/demo"
-              className="mt-7 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-primary underline-offset-4 hover:text-primary-hover hover:underline"
-            >
-              Открыть демо-расчёт
-              <ArrowUpRight className="size-3.5" strokeWidth={2.5} />
-            </Link>
-          </div>
-
-          {/* Реальный компонент результата с демо-данными */}
-          <figure className="border-t border-border pt-7">
-            <div className="mb-6 flex items-baseline justify-between gap-4">
-              <figcaption className="text-[11px] font-semibold uppercase tracking-[0.12em]">
-                Склад 20 000 м², три смены
-              </figcaption>
-              <span className="meta-label">TCO, 7 ЛЕТ · МЛН ₽</span>
-            </div>
-            <ScenarioBars scenarios={demoCalculation.scenarios} />
-            <p className="mt-6 border-t border-hairline pt-4 text-xs text-muted-foreground">
-              Покупка с господдержкой окупается за 3.2 года — на 0.6 года раньше
-              аренды и на 79.4 млн ₽ дешевле, чем ничего не менять.
-            </p>
-          </figure>
-        </div>
-      </Section>
-
-      {/* 4 — ПРОВОДНИК. Право говорить: независимость и происхождение данных. */}
-      <Section>
-        <div className="grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-          <div>
-            <h2 className="font-heading text-[clamp(28px,3.4vw,44px)] font-bold uppercase leading-[1.02] tracking-[-0.035em]">
-              Мы не продаём
-              <br />
-              роботов
-            </h2>
-            <p className="mt-6 max-w-[46ch] text-sm leading-[1.6] text-muted-foreground">
-              У платформы нет процента с внедрения и нет любимого поставщика.
-              Каждое значение в расчёте ссылается на источник, а надёжность
-              источника видна прямо в таблице.
-            </p>
-          </div>
-
-          <div>
-            <ul className="border-t border-border">
-              {SOURCES.map((source) => (
-                <li
-                  key={source.title}
-                  className="flex flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-hairline py-4"
-                >
-                  <span className="text-sm font-medium">{source.title}</span>
-                  <span className="meta-label">{source.note.toUpperCase()}</span>
-                  <span
-                    className={cn(
-                      'ml-auto text-[11px] font-semibold uppercase tracking-[0.08em]',
-                      source.confirmed
-                        ? 'text-status-confirmed'
-                        : 'text-status-piloting',
-                    )}
-                  >
-                    {source.confirmed ? 'Подтверждено' : 'Требует проверки'}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </Section>
-
-      {/* 5 — ПЛАН. Ровно три шага; нумерация здесь несёт смысл последовательности. */}
-      <Section>
-        <h2 className="font-heading text-[clamp(28px,3.4vw,44px)] font-bold uppercase leading-[1.02] tracking-[-0.035em]">
-          Четыре минуты, три шага
-        </h2>
-
-        <ol className="mt-12 border-t border-border">
-          {STEPS.map((step, index) => (
-            <li
-              key={step.title}
-              className="grid items-baseline gap-x-8 gap-y-2 border-b border-hairline py-8 md:grid-cols-[64px_minmax(0,0.9fr)_minmax(0,1.2fr)_110px]"
-            >
-              <span
-                className={cn(
-                  'font-heading text-[28px] font-bold tabular leading-none',
-                  index === 0 ? 'text-primary' : 'text-border',
-                )}
-              >
-                {index + 1}
-              </span>
-              <h3 className="font-heading text-xl font-semibold uppercase tracking-h2">
-                {step.title}
-              </h3>
-              <p className="max-w-[56ch] text-sm leading-[1.6] text-muted-foreground">
-                {step.text}
+        <div className="rounded-3xl border border-border bg-background p-8 sm:p-12">
+          <div className="grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+            <div className="flex flex-col">
+              <SectionTitle>Сравните решения</SectionTitle>
+              <p className="mt-5 max-w-[44ch] text-[15px] leading-[1.6] text-muted-foreground">
+                Столько за семь лет теряет склад на 20 000 м², если не
+                покупает роботов. Справа — настоящий расчёт, а не иллюстрация:
+                каждую сумму можно раскрыть построчно.
               </p>
-              <span className="meta-label md:text-right">
-                {step.duration.toUpperCase()}
-              </span>
-            </li>
-          ))}
-        </ol>
+              <Link
+                to="/calculate/warehouse/results/demo"
+                className="mt-7 inline-flex w-fit items-center gap-2 rounded-full bg-canvas px-5 py-2.5 text-[14px] font-medium text-primary hover:bg-accent-tint"
+              >
+                Открыть расчёт целиком
+                <ArrowUpRight className="size-4" strokeWidth={2.25} />
+              </Link>
+            </div>
+
+            <figure className="flex flex-col justify-center rounded-2xl bg-canvas p-6 sm:p-8">
+              <div className="grid gap-3">
+                {(
+                  [
+                    { label: 'Ничего не менять', value: '214,0 млн', delta: null, pct: 100, tone: 'base' },
+                    { label: 'Купить роботов', value: '134,6 млн', delta: '−79,4', pct: 63, tone: 'primary' },
+                    { label: 'Взять в аренду', value: '154,2 млн', delta: '−59,8', pct: 72, tone: 'muted' },
+                  ] as const
+                ).map((row) => (
+                  <div key={row.label} className="grid grid-cols-[1fr_auto] items-center gap-4">
+                    <div className="relative h-12 overflow-hidden rounded-xl bg-border/25">
+                      <div
+                        className={cn(
+                          'absolute inset-y-0 left-0 flex items-center rounded-xl px-4',
+                          row.tone === 'primary' && 'bg-primary',
+                          row.tone === 'base' && 'bg-border',
+                          row.tone === 'muted' && 'border border-border bg-background',
+                        )}
+                        style={{ width: `${row.pct}%` }}
+                      >
+                        <span
+                          className={cn(
+                            'truncate text-[13.5px] font-medium',
+                            row.tone === 'primary' ? 'text-primary-foreground' : 'text-foreground',
+                          )}
+                        >
+                          {row.label}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-right font-heading text-[16px] font-bold tabular tracking-h1">
+                        {row.value}
+                      </span>
+                      {row.delta && (
+                        <span className="flex items-center gap-0.5 text-[12px] font-semibold text-status-operation">
+                          <ArrowDownRight className="size-3" strokeWidth={2.5} />
+                          {row.delta}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <p className="mt-6 border-t border-hairline pt-4 text-[13px] leading-[1.6] text-muted-foreground">
+                Покупка окупается за 3,2 года — на 0,6 года раньше аренды.
+              </p>
+            </figure>
+          </div>
+        </div>
       </Section>
 
-      {/* 6 — ДОВЕРИЕ. Сначала голос клиента, затем медиана по базе внедрений. */}
+      {/* 4 — ДОВЕРИЕ. Одна мысль: у каждой цифры есть проверяемый источник. */}
       <Section>
-        <figure className="mx-auto max-w-[900px] text-center">
-          <blockquote className="font-heading text-[clamp(22px,2.9vw,38px)] font-semibold uppercase leading-[1.18] tracking-[-0.025em]">
-            «Расчёт закрыл главный вопрос совета директоров: почему не нанять ещё
-            тридцать человек. Цифры по семи годам оказались убедительнее
-            презентации вендора»
-          </blockquote>
-          <figcaption className="mt-8 text-sm">
-            <span className="font-semibold">А. Крылов</span>
-            <span className="mt-1 block text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-              Директор логистики, «Волга-Логистик»
-            </span>
-          </figcaption>
-        </figure>
-
-        <div className="mt-20 grid border-t border-border sm:grid-cols-2 lg:grid-cols-4">
-          {EFFECTS.map((effect, index) => (
-            <div
-              key={effect.label}
-              className={cn(
-                'py-8 pr-6',
-                index > 0 && 'lg:border-l lg:border-l-hairline lg:pl-6',
-              )}
-            >
-              <div className="font-heading text-[clamp(30px,3.6vw,44px)] font-bold leading-none tabular tracking-[-0.04em]">
-                {effect.value}
+        <div className="rounded-3xl border border-border bg-background p-8 sm:p-12">
+          <div className="grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+            <div>
+              <div className="mb-4 inline-flex size-11 items-center justify-center rounded-full bg-accent-tint text-primary">
+                <ShieldCheck className="size-5" strokeWidth={2} aria-hidden />
               </div>
-              <div className="mt-3 max-w-[22ch] text-xs leading-[1.5] text-muted-foreground">
-                {effect.label}
+              <SectionTitle>Мы - независимый агрегатор</SectionTitle>
+              <p className="mt-5 max-w-[42ch] text-[15px] leading-[1.6] text-muted-foreground">
+                Мы зарабатываем на расчёте, а не на продаже техники. Поэтому
+                честно показываем и вариант «ничего не покупать».
+              </p>
+            </div>
+
+            <div>
+              <div className="grid grid-cols-[1fr_120px] gap-3 px-5 pb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                <span></span>
+                <span className="text-right">Обновлён</span>
+              </div>
+
+              <div className="grid gap-2">
+                {SOURCES.map((source) => (
+                  <div
+                    key={source.title}
+                    className="grid grid-cols-[1fr_120px] items-center gap-3 rounded-xl border border-border bg-canvas px-5 py-3.5"
+                  >
+                    <span className="text-[14px] font-medium">{source.title}</span>
+                    <span className="text-right meta-label">{source.note}</span>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
+          </div>
         </div>
-        <p className="mt-6 meta-label">МЕДИАНА ПО 37 ВНЕДРЕНИЯМ · 2021–2026</p>
       </Section>
 
-      {/* 7 — ЦЕНЫ И ГАРАНТИЯ. */}
+      {/* 6 — ЦЕНЫ И ГАРАНТИЯ. */}
       <Section>
         <div className="flex flex-wrap items-end justify-between gap-6">
-          <h2 className="font-heading text-[clamp(28px,3.4vw,44px)] font-bold uppercase leading-[1.02] tracking-[-0.035em]">
-            Расчёт бесплатный
-          </h2>
-          <p className="max-w-[44ch] text-sm leading-[1.6] text-muted-foreground">
-            Платим мы только за то, что делает человек: проверку допущений
-            и сопровождение защиты бюджета.
-          </p>
+          <SectionTitle>Расчёт бесплатный</SectionTitle>
+          
         </div>
 
-        <div className="mt-12 grid border-t border-border lg:grid-cols-3">
-          {PLANS.map((plan, index) => (
+        <div className="mt-10 grid gap-4 lg:grid-cols-3">
+          {PLANS.map((plan) => (
             <div
               key={plan.id}
               className={cn(
-                'flex flex-col gap-6 py-9 pr-8',
-                index > 0 && 'lg:border-l lg:border-l-hairline lg:pl-8',
-                plan.featured && 'lg:pl-8',
+                'flex flex-col gap-6 rounded-3xl border p-8',
+                plan.featured
+                  ? 'border-primary bg-primary text-primary-foreground shadow-lift'
+                  : 'border-border bg-background',
               )}
             >
               <div>
-                <h3
-                  className={cn(
-                    'font-heading text-base font-semibold uppercase tracking-h2',
-                    plan.featured && 'text-primary',
-                  )}
-                >
-                  {plan.name}
-                </h3>
-                <div className="mt-4 font-heading text-[34px] font-bold leading-none tabular tracking-[-0.04em]">
+                <h3 className="font-heading text-[16px] font-semibold">{plan.name}</h3>
+                <div className="mt-4 font-heading text-[34px] font-semibold leading-none tabular tracking-h1">
                   {plan.price}
                 </div>
-                <div className="mt-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                <div
+                  className={cn(
+                    'mt-2 text-[13px]',
+                    plan.featured ? 'text-primary-foreground/70' : 'text-muted-foreground',
+                  )}
+                >
                   {plan.note}
                 </div>
               </div>
 
               <ul className="grid gap-2.5">
                 {plan.features.map((feature) => (
-                  <li key={feature} className="flex gap-2.5 text-[13px] leading-[1.5]">
-                    <Check
-                      className={cn(
-                        'mt-0.5 size-3.5 flex-none',
-                        plan.featured ? 'text-primary' : 'text-muted-foreground',
-                      )}
-                      strokeWidth={2.5}
-                      aria-hidden
-                    />
-                    <span className={plan.featured ? '' : 'text-muted-foreground'}>
-                      {feature}
-                    </span>
+                  <li key={feature} className="flex gap-2.5 text-[14px] leading-[1.5]">
+                    <Check className="mt-0.5 size-4 flex-none" strokeWidth={2.25} aria-hidden />
+                    <span className={plan.featured ? '' : 'text-muted-foreground'}>{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -374,8 +421,10 @@ export function LandingPage() {
               <Button
                 asChild
                 variant={plan.featured ? 'default' : 'outline'}
-                size="sm"
-                className="mt-auto w-fit"
+                className={cn(
+                  'mt-auto w-fit',
+                  plan.featured && 'bg-background text-foreground hover:bg-background/90',
+                )}
               >
                 <Link to={plan.id === 'calc' ? '/calculate/warehouse' : '/login'}>
                   {plan.id === 'calc' ? 'Начать расчёт' : 'Обсудить'}
@@ -385,33 +434,30 @@ export function LandingPage() {
           ))}
         </div>
 
-        <p className="mt-10 max-w-[70ch] border-t border-border pt-6 text-sm leading-[1.6]">
-          Если наш расчёт разойдётся с коммерческим предложением поставщика больше
-          чем на 15% — разберём расхождение построчно и бесплатно.
-        </p>
+        
       </Section>
 
-      {/* 8 — ВОЗРАЖЕНИЯ. */}
+      {/* 7 — ВОЗРАЖЕНИЯ. */}
       <Section>
         <div className="grid gap-12 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)]">
-          <h2 className="font-heading text-[clamp(28px,3.4vw,44px)] font-bold uppercase leading-[1.02] tracking-[-0.035em]">
-            Вопросы
-          </h2>
+          <SectionTitle>Вопросы</SectionTitle>
 
-          <Accordion type="single" collapsible className="border-t border-border">
+          <Accordion type="single" collapsible className="grid gap-3">
             {FAQ.map((item) => (
-              <AccordionItem key={item.q} value={item.q} className="border-b border-hairline">
-                <AccordionTrigger className="group flex w-full items-center justify-between gap-6 py-6 text-left">
-                  <span className="font-heading text-[17px] font-semibold uppercase tracking-h2">
-                    {item.q}
-                  </span>
+              <AccordionItem
+                key={item.q}
+                value={item.q}
+                className="rounded-2xl border border-border bg-background px-6"
+              >
+                <AccordionTrigger className="group flex w-full items-center justify-between gap-6 py-5 text-left">
+                  <span className="font-heading text-[15px] font-semibold">{item.q}</span>
                   <ChevronDown
                     className="size-4 flex-none text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180"
                     strokeWidth={2}
                     aria-hidden
                   />
                 </AccordionTrigger>
-                <AccordionContent className="max-w-[68ch] pb-6 text-sm leading-[1.65] text-muted-foreground">
+                <AccordionContent className="max-w-[66ch] pb-5 text-[14px] leading-[1.65] text-muted-foreground">
                   {item.a}
                 </AccordionContent>
               </AccordionItem>
@@ -420,27 +466,31 @@ export function LandingPage() {
         </div>
       </Section>
 
-      {/* 9 — ФИНАЛЬНЫЙ ПРИЗЫВ. */}
-      <section className="mt-6 bg-foreground px-[18px] py-24 text-background md:py-32">
-        <div className="mx-auto max-w-[1180px]">
-          <h2 className="max-w-[16ch] font-heading text-[clamp(32px,5vw,68px)] font-bold uppercase leading-[0.98] tracking-[-0.04em]">
+      {/* 8 — ФИНАЛЬНЫЙ ПРИЗЫВ. */}
+      <Section>
+        <div className="rounded-3xl bg-primary px-8 py-16 text-primary-foreground sm:px-14 md:py-20">
+          <h2 className="max-w-[16ch] font-heading text-[clamp(28px,4.4vw,52px)] font-semibold leading-[1.05] tracking-display">
             Посчитайте свой объект
           </h2>
-          <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-5">
-            <Button asChild size="lg" className="text-[13px]">
+          <div className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-5">
+            <Button
+              asChild
+              size="lg"
+              className="bg-background text-foreground hover:bg-background/90"
+            >
               <Link to="/calculate/warehouse">
                 Рассчитать объект
-                <ArrowUpRight className="size-4" strokeWidth={2.5} />
+                <ArrowUpRight className="size-4" strokeWidth={2.25} />
               </Link>
             </Button>
-            <p className="text-xs text-background/60">
+            <p className="text-[13px] text-primary-foreground/75">
               Четыре минуты · без регистрации · черновик хранится 30 дней
             </p>
           </div>
         </div>
-      </section>
+      </Section>
 
-      <div className="mx-auto max-w-[1180px] px-[18px]">
+      <div className="mx-auto max-w-[1380px] px-[18px] pb-[18px]">
         <SiteFooter />
       </div>
     </div>

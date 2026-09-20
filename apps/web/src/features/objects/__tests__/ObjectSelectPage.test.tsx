@@ -5,7 +5,7 @@ import ObjectSelectPage from '@/features/objects/ObjectSelectPage';
 import { renderWithProviders } from '@/test/utils';
 
 describe('ObjectSelectPage', () => {
-  it('рисует три карточки типов объектов, склад выбран по умолчанию', async () => {
+  it('рисует три карточки типов объектов, по умолчанию выбор не сделан', async () => {
     renderWithProviders(
       <Routes>
         <Route path="/calculate/:objectType" element={<ObjectSelectPage />} />
@@ -18,7 +18,9 @@ describe('ObjectSelectPage', () => {
     expect(screen.getByText('Аэропорт')).toBeInTheDocument();
     expect(screen.getByText('Медучреждение')).toBeInTheDocument();
 
-    const selected = screen.getByText('Склад').closest('[role="button"]');
-    expect(selected).toHaveAttribute('aria-pressed', 'true');
+    const warehouseCard = screen.getByText('Склад').closest('[role="button"]');
+    expect(warehouseCard).toHaveAttribute('aria-pressed', 'false');
+
+    expect(screen.getByRole('button', { name: /далее/i })).toBeDisabled();
   });
 });

@@ -1,9 +1,18 @@
 /**
- * Заглушка под визуализацию расчёта.
+ * Визуализация расчёта — WarehouseSimulation, условная 3D-иллюстрация
+ * механики автоматизации (не привязана к цифрам конкретного расчёта).
  *
- * Содержимое заполняет отдельный поток. Фронт держит место в сетке и
- * прокидывает контракт: раскладку и поток событий симуляции.
+ * Показывается для любого типа объекта: в текущей версии продукта только
+ * один рабочий сценарий расчёта (демо-данные общие для всех object type),
+ * отдельных сцен под аэропорт/медучреждение пока нет — ограничивать показ
+ * по objectType рано.
+ *
+ * Интерактивные пропсы (`sceneVariant`, `highlightZone`, ...) прокидываются
+ * насквозь из ResultsPage — это отдельная от `layout`/`events` ось
+ * управления (сиюминутная реакция на наведение, а не поток данных модели).
  */
+import { WarehouseSimulation, type WarehouseSimulationProps } from './WarehouseSimulation';
+
 export interface VisualizationLayout {
   /** Тип объекта, под который строится сцена. */
   objectType: string;
@@ -24,27 +33,23 @@ export interface VisualizationEvent {
   payload?: Record<string, unknown>;
 }
 
-export interface VisualizationSlotProps {
+export interface VisualizationSlotProps extends WarehouseSimulationProps {
   layout?: VisualizationLayout;
   events?: VisualizationEvent[];
 }
 
-export function VisualizationSlot({ layout, events }: VisualizationSlotProps) {
+export function VisualizationSlot({ layout, events, ...simProps }: VisualizationSlotProps) {
   return (
     <div
       data-testid="visualization-slot"
       data-object-type={layout?.objectType ?? ''}
       data-events={events?.length ?? 0}
-      className="flex min-h-[160px] flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border bg-canvas px-5 py-8 text-center"
+      // Без flex/flex-1: сцена сама себя размеряет (h-[520px] lg:h-full) —
+      // flex-basis:0 от flex-1 схлопывал её до нуля, когда родитель (aside)
+      // не имел собственной высоты, например на мобильном без lg:h-[...].
+      className="contents"
     >
-      <span className="text-[12px] font-medium text-muted-foreground">
-        Визуализация прогона
-      </span>
-      <span className="text-[11px] text-meta-foreground">
-        {layout
-          ? `Раскладка получена · событий в потоке: ${events?.length ?? 0}`
-          : 'Слот подключается отдельным потоком'}
-      </span>
+      <WarehouseSimulation {...simProps} />
     </div>
   );
 }

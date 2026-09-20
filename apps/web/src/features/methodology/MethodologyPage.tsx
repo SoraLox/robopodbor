@@ -1,87 +1,129 @@
 import { AppShell } from '@/app/AppShell';
-import { SectionHeading, StatusBadge } from '@/shared/components';
-import { ComparisonTable, type ComparisonColumn } from '@/shared/components';
+import { SectionHeading } from '@/shared/components';
+import { cn } from '@/lib/utils';
 
 const BLOCKS = [
   {
     title: 'Что считает платформа',
-    text: 'TCO на горизонте 7 лет для трёх сценариев: «как есть», покупка и RaaS. Внутри каждого — CAPEX, OPEX по годам, остаточный ФОТ и сервисный контракт. Ставка дисконтирования и инфляция ФОТ задаются в допущениях расчёта.',
+    text: 'Полную стоимость владения на семь лет для трёх сценариев: как есть, купить, арендовать. По каждому — оборудование, обслуживание, зарплаты и все остальные расходы по годам.',
   },
   {
     title: 'Откуда берутся цифры',
-    text: 'Прайс-листы вендоров и тарифы региона отмечаются как подтверждённые. Значения из отраслевого бенчмарка и экспертные оценки помечаются отдельно — их видно в структуре затрат и в выгрузке.',
+    text: 'Цены на технику и тарифы на электричество — из проверенных источников, это видно в таблице. Если точных данных нет, берём отраслевую оценку и помечаем её отдельно.',
   },
   {
     title: 'Чего платформа не делает',
-    text: 'Не заменяет проектное обследование объекта и не согласовывает поставку. Расчёт нужен, чтобы принять решение о бюджете и защитить его на инвесткомитете.',
+    text: 'Не приезжает к вам на объект и не согласовывает поставку техники. Она нужна для одного: получить цифры, с которыми можно защитить бюджет.',
   },
 ];
 
-const COLUMNS: ComparisonColumn[] = [
-  { key: 'param', header: 'Параметр', width: 'minmax(0, 1.4fr)' },
-  { key: 'value', header: 'Значение', width: '150px', align: 'right' },
-  { key: 'source', header: 'Статус', width: '150px', align: 'right' },
-];
-
+/** Значения по умолчанию: термин, число и что оно означает простыми словами. */
 const ASSUMPTIONS = [
-  { id: 'rate', param: 'Ставка дисконтирования', value: '16%', confirmed: true },
-  { id: 'wage', param: 'Инфляция ФОТ', value: '9% в год', confirmed: true },
-  { id: 'horizon', param: 'Горизонт расчёта', value: '7 лет', confirmed: true },
-  { id: 'service', param: 'Сервисный контракт', value: '7% от CAPEX в год', confirmed: false },
-  { id: 'raas', param: 'Тариф RaaS', value: 'бенчмарк 2025', confirmed: false },
-  { id: 'shift', param: 'Стоимость смены оператора', value: 'бенчмарк 2025', confirmed: false },
+  {
+    id: 'rate',
+    term: 'Скидка на будущие деньги',
+    value: '16%',
+    text: 'Рубль через пять лет мы считаем немного дешевле сегодняшнего — так в расчёт закладываются инфляция и риск.',
+    confirmed: true,
+  },
+  {
+    id: 'wage',
+    term: 'Рост зарплат',
+    value: '9% в год',
+    text: 'На столько ежегодно дорожает труд сотрудников. Это часть стоимости варианта «нанять больше людей».',
+    confirmed: true,
+  },
+  {
+    id: 'horizon',
+    term: 'Срок расчёта',
+    value: '7 лет',
+    text: 'Столько лет вперёд мы считаем расходы и экономию — обычный срок службы техники до замены.',
+    confirmed: true,
+  },
+  {
+    id: 'service',
+    term: 'Обслуживание техники',
+    value: '7% от цены в год',
+    text: 'Средние расходы на ремонт, запчасти и визиты техника — по данным вендоров за 2026 год.',
+    confirmed: false,
+  },
+  {
+    id: 'raas',
+    term: 'Аренда робота',
+    value: 'оценка рынка, 2025',
+    text: 'Точной цены аренды по вашему региону может не быть — берём среднюю по рынку и помечаем как оценку.',
+    confirmed: false,
+  },
+  {
+    id: 'shift',
+    term: 'Смена оператора склада',
+    value: 'оценка рынка, 2025',
+    text: 'Стоимость одной рабочей смены сотрудника — тоже оценка, если точных данных по региону нет.',
+    confirmed: false,
+  },
 ];
 
 export function MethodologyPage() {
   return (
     <AppShell>
-      <div className="px-5 py-6">
-        <div className="mb-5 flex flex-wrap items-end justify-between gap-6">
-          <SectionHeading size="h1">Методика расчёта</SectionHeading>
-          <p className="max-w-[420px] text-xs leading-[1.5] text-muted-foreground">
-            Модель одинакова для всех типов объектов, различаются только справочники
-            решений и нормативная база.
+      <div className="px-5 py-8 sm:px-8">
+        <div className="mb-8 max-w-[640px]">
+          <SectionHeading size="h1">Как мы считаем</SectionHeading>
+          <p className="mt-3 text-[15px] leading-[1.6] text-muted-foreground">
+            Модель одна для любого объекта — склад, аэропорт, клиника.
+            Меняются только каталог решений и справочник цен.
           </p>
         </div>
 
-        <div className="grid gap-[18px] border-t border-border pt-5 md:grid-cols-3">
-          {BLOCKS.map((block, index) => (
-            <article key={block.title}>
-              <div className="flex items-center gap-2.5">
-                <div
-                  className={index === 0 ? 'h-3 w-[3px] bg-primary' : 'h-3 w-[3px] bg-border'}
-                  aria-hidden
-                />
-                <h3 className="font-heading text-base font-semibold uppercase tracking-h2">
-                  {block.title}
-                </h3>
-              </div>
-              <p className="ml-[14px] mt-2.5 text-xs leading-[1.55] text-muted-foreground">
+        <div className="grid gap-4 md:grid-cols-3">
+          {BLOCKS.map((block) => (
+            <div key={block.title} className="rounded-2xl border border-border bg-background p-6">
+              <h3 className="font-heading text-[16px] font-semibold">{block.title}</h3>
+              <p className="mt-2.5 text-[14px] leading-[1.6] text-muted-foreground">
                 {block.text}
               </p>
-            </article>
+            </div>
           ))}
         </div>
       </div>
 
-      <div className="border-t border-border">
-        <SectionHeading className="px-5 pb-3 pt-4" meta="ПРИМЕНЯЮТСЯ КО ВСЕМ СЦЕНАРИЯМ">
-          Допущения по умолчанию
-        </SectionHeading>
+      <div className="border-t border-border px-5 py-8 sm:px-8">
+        <div className="mb-6 max-w-[640px]">
+          <h2 className="font-heading text-[20px] font-semibold">Значения по умолчанию</h2>
+          <p className="mt-2 text-[14px] leading-[1.6] text-muted-foreground">
+            Вот что мы подставляем в расчёт, если вы ничего не меняли. Любое
+            из этих чисел можно поправить в своём проекте.
+          </p>
+        </div>
 
-        <ComparisonTable
-          columns={COLUMNS}
-          rows={ASSUMPTIONS.map((row) => ({
-            id: row.id,
-            cells: {
-              param: <span className="text-[13px]">{row.param}</span>,
-              value: <span className="text-[13px] font-semibold tabular">{row.value}</span>,
-              source: (
-                <StatusBadge variant={row.confirmed ? 'confirmed' : 'needs-review'} />
-              ),
-            },
-          }))}
-        />
+        <div className="grid gap-3">
+          {ASSUMPTIONS.map((row) => (
+            <div
+              key={row.id}
+              className="grid items-center gap-x-6 gap-y-2 rounded-2xl border border-border bg-background px-6 py-4 sm:grid-cols-[minmax(0,180px)_minmax(0,1fr)_auto]"
+            >
+              <div>
+                <div className="text-[13px] text-muted-foreground">{row.term}</div>
+                <div className="font-heading text-[20px] font-semibold tabular tracking-h1">
+                  {row.value}
+                </div>
+              </div>
+
+              <p className="text-[13.5px] leading-[1.55] text-muted-foreground">{row.text}</p>
+
+              <span
+                className={cn(
+                  'inline-flex w-fit items-center rounded-full px-3 py-1 text-[12px] font-medium',
+                  row.confirmed
+                    ? 'bg-status-confirmed-tint text-status-confirmed'
+                    : 'bg-status-piloting-tint text-status-piloting',
+                )}
+              >
+                {row.confirmed ? 'Подтверждено' : 'Требует проверки'}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </AppShell>
   );

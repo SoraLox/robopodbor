@@ -41,7 +41,7 @@ export async function exportToPdf(result: CalculationResult) {
     head: [['Сценарий', 'Описание', 'TCO, млн ₽', 'Разница']],
     body: result.scenarios.map((s) => [s.title, s.subtitle, s.tco.toFixed(1), s.delta]),
     styles: { font: 'Inter', fontSize: 9, cellPadding: 5 },
-    headStyles: { fillColor: [234, 88, 12], textColor: 255 },
+    headStyles: { fillColor: [44, 67, 114], textColor: 255 },
   });
 
   autoTable(doc, {
@@ -61,7 +61,7 @@ export async function exportToPdf(result: CalculationResult) {
       ]),
     ]),
     styles: { font: 'Inter', fontSize: 9, cellPadding: 5 },
-    headStyles: { fillColor: [234, 88, 12], textColor: 255 },
+    headStyles: { fillColor: [44, 67, 114], textColor: 255 },
   });
 
   doc.save(`${fileBase(result)}.pdf`);

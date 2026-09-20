@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useLogin, useRegister } from '@/api/auth';
 import { ArrowUpRight } from 'lucide-react';
-import { SiteFooter } from '@/app/AppShell';
+import { SiteFooter, SiteHeader } from '@/app/AppShell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -47,31 +47,20 @@ export function LoginPage() {
   });
 
   return (
-    <div className="mx-auto grid max-w-[1380px] gap-[18px] p-[18px]">
-      <div>
-        <header className="flex flex-wrap items-center gap-4 border-b border-border px-5 py-3">
-          <Link to="/" className="font-heading text-[13px] font-bold tracking-[0.02em]">
-            РОБОТОПОДБОР<span className="text-primary">.</span>
-          </Link>
-          <Link
-            to="/"
-            className="ml-auto text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground"
-          >
-            На главную
-          </Link>
-        </header>
-
-        <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+    <div className="min-h-screen">
+      <SiteHeader />
+      <div className="mx-auto grid max-w-[1380px] gap-[18px] p-[18px]">
+        <div className="grid overflow-hidden rounded-3xl border border-border bg-background lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           {/* Форма входа */}
-          <div className="border-b border-border px-5 py-8 lg:border-b-0 lg:border-r lg:px-8 lg:py-10">
+          <div className="px-6 py-10 sm:px-10 lg:py-14">
             <SectionHeading size="display">Подбор</SectionHeading>
-            <p className="ml-3.5 mt-4 max-w-[440px] text-[12.5px] leading-[1.55] text-muted-foreground">
-              Платформа считает срок окупаемости, CAPEX и OPEX по вашему объекту и
-              сравнивает покупку с арендой RaaS — на данных о реальных внедрениях,
-              а не на обещаниях вендоров.
+            <p className="mt-4 max-w-[440px] text-[14px] leading-[1.6] text-muted-foreground">
+              Впишите данные своего объекта — получите точный расчёт
+              окупаемости на цифрах настоящих поставщиков, а не на обещаниях
+              продавца.
             </p>
 
-            <form onSubmit={onSubmit} className="ml-3.5 mt-8 grid max-w-[380px] gap-4">
+            <form onSubmit={onSubmit} className="mt-8 grid max-w-[380px] gap-4">
               <div className="grid gap-1.5">
                 <Label htmlFor="email">Рабочая почта</Label>
                 <Input
@@ -82,7 +71,7 @@ export function LoginPage() {
                   {...register('email')}
                 />
                 {errors.email ? (
-                  <p className="text-[11px] text-destructive">{errors.email.message}</p>
+                  <p className="text-[13px] text-destructive">{errors.email.message}</p>
                 ) : null}
               </div>
 
@@ -95,7 +84,7 @@ export function LoginPage() {
                   {...register('password')}
                 />
                 {errors.password ? (
-                  <p className="text-[11px] text-destructive">{errors.password.message}</p>
+                  <p className="text-[13px] text-destructive">{errors.password.message}</p>
                 ) : null}
               </div>
 
@@ -111,7 +100,7 @@ export function LoginPage() {
               ) : null}
 
               {active.isError ? (
-                <p role="alert" className="text-[12px] text-status-danger">
+                <p role="alert" className="text-[13px] text-status-danger">
                   {active.error instanceof Error ? active.error.message : 'Не удалось войти'}
                 </p>
               ) : null}
@@ -122,20 +111,20 @@ export function LoginPage() {
                   : mode === 'login'
                     ? 'Войти'
                     : 'Зарегистрироваться'}
-                <ArrowUpRight className="size-3.5" strokeWidth={2.5} />
+                <ArrowUpRight className="size-4" strokeWidth={2.25} />
               </Button>
 
               <button
                 type="button"
                 onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
-                className="w-fit text-[12px] text-muted-foreground underline-offset-4 hover:text-primary hover:underline"
+                className="w-fit text-[13px] text-muted-foreground underline-offset-4 hover:text-primary hover:underline"
               >
                 {mode === 'login'
                   ? 'Нет учётной записи — зарегистрироваться'
                   : 'Уже есть учётная запись — войти'}
               </button>
 
-              <div className="mt-2 rounded-lg border border-border bg-canvas p-3 text-[11px] leading-relaxed text-muted-foreground">
+              <div className="mt-2 rounded-2xl bg-canvas p-4 text-[13px] leading-relaxed text-muted-foreground">
                 Демо-доступы: <b>krylov@volga-logistic.ru / volga123</b> — пользователь,
                 <br />
                 <b>admin@robotopodbor.ru / admin123</b> — администратор каталога.
@@ -150,34 +139,22 @@ export function LoginPage() {
           </div>
 
           {/* Hero: 3D-манипулятор, следящий за курсором */}
-          <div className="relative">
-            <RobotArmHero className="h-[560px] w-full" />
+          <div className="relative bg-canvas">
+            <RobotArmHero className="h-[420px] w-full lg:h-full" />
 
-            <div className="grid grid-cols-2 border-t border-border">
-              <div className="border-r border-hairline">
-                <KpiBlock
-                  size="sm"
-                  label="Медианная окупаемость"
-                  value="3.2"
-                  unit="года"
-                  trend="down"
-                />
+            <div className="absolute inset-x-6 bottom-6 grid grid-cols-2 gap-3">
+              <div className="overflow-hidden rounded-2xl border border-border bg-background/90 backdrop-blur-sm">
+                <KpiBlock size="sm" label="Медианная окупаемость" value="3.2" unit="года" trend="down" />
               </div>
-              <div>
-                <KpiBlock
-                  size="sm"
-                  label="Решений в базе"
-                  value="252"
-                  unit="поз."
-                  trend="up"
-                />
+              <div className="overflow-hidden rounded-2xl border border-border bg-background/90 backdrop-blur-sm">
+                <KpiBlock size="sm" label="Решений в базе" value="252" unit="поз." trend="up" />
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <SiteFooter />
+        <SiteFooter />
+      </div>
     </div>
   );
 }

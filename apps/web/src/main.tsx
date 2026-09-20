@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
+import { HashRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import './styles/globals.css';
@@ -10,18 +10,22 @@ const queryClient = new QueryClient({
 });
 
 async function bootstrap() {
-  // В dev весь /api обслуживает MSW — бэкенд для запуска не нужен.
-  if (import.meta.env.DEV) {
-    const { worker } = await import('./mocks/browser');
-    await Promise.race([
-      worker.start({ onUnhandledRequest: 'bypass' }).catch((error) => {
+  // Бэкенда в этом репозитории нет — весь /api и в dev, и в проде
+  // обслуживает MSW поверх contracts/openapi.yaml.
+  const { worker } = await import('./mocks/browser');
+  await Promise.race([
+    worker
+      .start({
+        onUnhandledRequest: 'bypass',
+        serviceWorker: { url: `${import.meta.env.BASE_URL}mockServiceWorker.js` },
+      })
+      .catch((error) => {
         console.error('[MSW] не удалось запустить воркер, продолжаем без него', error);
       }),
-      new Promise<void>((resolve) => {
-        window.setTimeout(resolve, 1500);
-      }),
-    ]);
-  }
+    new Promise<void>((resolve) => {
+      window.setTimeout(resolve, 1500);
+    }),
+  ]);
 
   const container = document.getElementById('root');
   if (!container) throw new Error('Не найден #root');
@@ -29,9 +33,9 @@ async function bootstrap() {
   createRoot(container).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
+        <HashRouter>
           <App />
-        </BrowserRouter>
+        </HashRouter>
       </QueryClientProvider>
     </StrictMode>,
   );

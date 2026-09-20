@@ -25,8 +25,8 @@ describe('ResultsPage', () => {
     );
 
     expect(screen.getByText('3.2')).toBeInTheDocument();
-    expect(screen.getByText('РЕКОМЕНДУЕМ')).toBeInTheDocument();
-    expect(screen.getByText('Сравнение сценариев')).toBeInTheDocument();
+    expect(screen.getByText('Рекомендуем')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Сравнение решений' })).toBeInTheDocument();
     expect(screen.getByText('Структура затрат')).toBeInTheDocument();
     expect(screen.getByText('Анализ чувствительности')).toBeInTheDocument();
     expect(screen.getByTestId('visualization-slot')).toBeInTheDocument();
