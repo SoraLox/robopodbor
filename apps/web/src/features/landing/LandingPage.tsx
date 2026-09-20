@@ -116,9 +116,9 @@ function CountUp({
 
 /** Временные фото по смыслу — заменить на настоящие фото объектов. */
 const PLACEHOLDER_PHOTOS: Record<string, string> = {
-  warehouse: '/pics/placeholders/warehouse.jpg',
-  airport: '/pics/placeholders/airport.jpg',
-  clinic: '/pics/placeholders/clinic.jpg',
+  warehouse: `${import.meta.env.BASE_URL}pics/placeholders/warehouse.jpg`,
+  airport: `${import.meta.env.BASE_URL}pics/placeholders/airport.jpg`,
+  clinic: `${import.meta.env.BASE_URL}pics/placeholders/clinic.jpg`,
 };
 
 /** Короткая, в три слова, суть каждого типа объекта — без выдуманных цифр. */
@@ -220,7 +220,7 @@ export function LandingPage() {
 
             <div className="relative h-[260px] overflow-hidden bg-background sm:h-[340px] lg:h-full">
               <img
-                src="/pics/roboarm3.png"
+                src={`${import.meta.env.BASE_URL}pics/roboarm3.png`}
                 alt=""
                 aria-hidden
                 className="absolute inset-0 h-full w-full -translate-y-12 scale-x-[-1.6] scale-y-[1.6] object-contain object-bottom px-4 pt-4 sm:-translate-y-16 sm:px-6 sm:pt-6"
