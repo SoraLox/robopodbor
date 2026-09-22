@@ -1,6 +1,37 @@
-# Фронт поднимается одной командой и не ждёт бэкенд:
-# в сборке включены MSW-моки поверх контракта contracts/openapi.yaml.
+# Полный стек: nginx (фронт) -> api (Express/Prisma) -> postgres.
+# "docker compose up" — единственная команда для воспроизводимого запуска
+# и демонстрационного расчёта (см. 4.2.3, 8.2.2 ТЗ).
 services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: robopodbor
+      POSTGRES_PASSWORD: robopodbor
+      POSTGRES_DB: robopodbor
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U robopodbor"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://robopodbor:robopodbor@db:5432/robopodbor
+      WEB_ORIGIN: http://localhost:8080
+      NODE_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "4000:4000"
+
   web:
     build:
       context: .
@@ -8,3 +39,8 @@ services:
     ports:
       - "8080:80"
     restart: unless-stopped
+    depends_on:
+      - api
+
+volumes:
+  db-data:

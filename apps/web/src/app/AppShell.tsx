@@ -1,74 +1,26 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import { Link, NavLink } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import { type ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 
-const SITE_NAV = [
-  { to: '/calculate/warehouse', label: 'Расчёт' },
-  { to: '/catalog', label: 'Каталог' },
-];
-
-/** Единственная шапка сайта — одна и та же на лендинге и на всех внутренних экранах. */
-export function SiteHeader() {
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 4);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  return (
-    <header
-      className={cn(
-        'sticky top-0 z-50 border-b bg-canvas/85 backdrop-blur-md transition-colors',
-        scrolled ? 'border-border' : 'border-transparent',
-      )}
-    >
-      <div className="mx-auto grid max-w-[1380px] grid-cols-2 items-center gap-x-8 gap-y-1.5 px-[18px] py-2.5 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
-        <Link to="/" className="order-1 justify-self-start font-heading text-[15px] font-semibold">
-          РОБОПОДБОР<span className="text-primary">.</span>
-        </Link>
-        <Link
-          to="/login"
-          className="order-2 justify-self-end rounded-full px-5 py-2 text-[14px] font-medium text-foreground transition-colors hover:bg-background hover:shadow-soft sm:order-3"
-        >
-          Войти
-        </Link>
-        <nav className="order-3 col-span-2 flex flex-wrap justify-center gap-1 text-[14px] font-medium sm:order-2 sm:col-span-1">
-          {SITE_NAV.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                cn(
-                  'rounded-full px-4 py-2 transition-colors',
-                  isActive
-                    ? 'bg-background text-foreground shadow-soft'
-                    : 'text-muted-foreground hover:text-foreground',
-                )
-              }
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
-      </div>
-    </header>
-  );
-}
+export {
+  SiteHeader,
+  SITE_NAV,
+  type SiteNavItem,
+  type SiteNavPath,
+} from './SiteHeader';
 
 export interface AppShellProps {
   children: ReactNode;
 }
 
-/** Каркас внутренних экранов: та же шапка SiteHeader, карточка контента, подвал. */
+/**
+ * Каркас внутренних экранов: контент + подвал.
+ * Шапка монтируется один раз в RootLayout — сюда её не дублируем.
+ */
 export function AppShell({ children }: AppShellProps) {
   return (
     <div className="min-h-screen">
-      <SiteHeader />
       <div className="mx-auto grid max-w-[1380px] gap-[18px] px-[18px] pb-[18px]">
-        <div>{children}</div>
+        <div className="min-w-0">{children}</div>
         <SiteFooter />
       </div>
     </div>
@@ -82,66 +34,129 @@ const FOOTER_COLUMNS = [
       { to: '/calculate/warehouse', label: 'Рассчитать объект' },
       { to: '/catalog', label: 'Каталог' },
       { to: '/catalog/compare', label: 'Сравнение решений' },
+      { to: '/methodology', label: 'Методика' },
+    ],
+  },
+  {
+    title: 'Ресурсы',
+    links: [
+      { to: '/methodology', label: 'Документация' },
+      { to: '/admin', label: 'Источники данных' },
+      { to: '/catalog', label: 'Каталог решений' },
+      { to: '/login', label: 'Поддержка' },
     ],
   },
   {
     title: 'Компания',
     links: [
-      { to: '/methodology', label: 'Методика расчёта' },
-      { to: '/admin', label: 'Источники данных' },
-    ],
-  },
-  {
-    title: 'Аккаунт',
-    links: [
+      { to: '/', label: 'О продукте' },
       { to: '/login', label: 'Войти' },
       { to: '/dashboard', label: 'Личный кабинет' },
       { to: '/projects', label: 'Проекты' },
     ],
   },
-  {
-    title: 'Правовое',
-    links: [{ to: '/privacy', label: 'Политика конфиденциальности' }],
-  },
 ];
 
-/** Общий подвал: одинаковый на лендинге и внутренних экранах. */
+/** Марка бренда: чёрный скруглённый квадрат с двумя диагональными штрихами. */
+function BrandMark({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="28"
+      height="28"
+      viewBox="0 0 28 28"
+      fill="none"
+      aria-hidden
+    >
+      <rect width="28" height="28" rx="7" fill="currentColor" />
+      <path
+        d="M8.5 18.5L13.5 9.5M14.5 18.5L19.5 9.5"
+        stroke="#fff"
+        strokeWidth="2.25"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/**
+ * Общий подвал: белая скруглённая карточка + водяной знак бренда снизу.
+ * Композиция по референсу Nexiron — бренд слева, три колонки справа,
+ * юридическая строка под разделителем.
+ */
 export function SiteFooter() {
   return (
-    <footer className="rounded-3xl border border-border bg-background">
-      <div className="grid gap-10 px-6 py-10 sm:px-10 sm:py-12 md:grid-cols-[minmax(0,1fr)_repeat(4,minmax(0,0.85fr))]">
-        <div>
-          <Link to="/" className="font-heading text-[15px] font-semibold">
-            РОБОПОДБОР<span className="text-primary">.</span>
-          </Link>
-          <p className="mt-3 max-w-[26ch] text-[13px] leading-[1.6] text-muted-foreground">
-            Независимый расчёт окупаемости роботов для склада, аэропорта и
-            клиники.
-          </p>
+    <footer className="relative overflow-hidden pb-[4.75rem] sm:pb-[5.25rem] md:pb-24">
+      <div className="relative z-10 rounded-[40px] border border-[#E8E8E8] bg-background px-8 py-10 shadow-[0_1px_2px_rgba(0,0,0,0.03),0_8px_24px_-8px_rgba(0,0,0,0.08)] sm:px-12 sm:py-12 md:px-14 md:py-14">
+        <div className="flex flex-col gap-12 lg:flex-row lg:items-start lg:justify-between lg:gap-20 xl:gap-28">
+          <div className="max-w-[280px] shrink-0 sm:max-w-[300px]">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2.5 text-foreground"
+            >
+              <BrandMark className="size-7 shrink-0 text-foreground" />
+              <span className="font-heading text-[15px] font-semibold tracking-[-0.02em]">
+                РОБОПОДБОР
+              </span>
+            </Link>
+            <p className="mt-5 text-[14px] leading-[1.6] text-[#6E6E6E]">
+              РОБОПОДБОР помогает командам превратить сложные данные об объекте
+              в ясный расчёт окупаемости — всё нужное в одном месте
+            </p>
+          </div>
+
+          <div className="grid min-w-0 grid-cols-2 gap-x-10 gap-y-8 sm:grid-cols-3 sm:gap-x-12 md:gap-x-14 lg:gap-x-[4.5rem]">
+            {FOOTER_COLUMNS.map((column) => (
+              <nav key={column.title} aria-label={column.title}>
+                <div className="text-[14px] font-semibold tracking-[-0.01em] text-foreground">
+                  {column.title}
+                </div>
+                <ul className="mt-[18px] grid gap-[14px]">
+                  {column.links.map((link) => (
+                    <li key={`${column.title}-${link.label}`}>
+                      <Link
+                        to={link.to}
+                        className="text-[14px] leading-none text-[#6E6E6E] transition-colors hover:text-foreground"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            ))}
+          </div>
         </div>
 
-        {FOOTER_COLUMNS.map((column) => (
-          <nav key={column.title}>
-            <div className="meta-label">{column.title}</div>
-            <ul className="mt-3 grid gap-2.5">
-              {column.links.map((link) => (
-                <li key={link.to}>
-                  <Link
-                    to={link.to}
-                    className="text-[13.5px] font-medium text-muted-foreground hover:text-foreground"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        ))}
+        <div className="mt-11 flex flex-col gap-4 border-t border-[#EBEBEB] pt-6 sm:mt-12 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:pt-7">
+          <p className="text-[13px] leading-none text-[#6E6E6E]">
+            © 2026 РОБОПОДБОР. Все права защищены
+          </p>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+            <Link
+              to="/privacy"
+              className="text-[13px] leading-none text-[#6E6E6E] underline decoration-[#6E6E6E]/decoration-1 underline-offset-[3px] transition-colors hover:text-foreground"
+            >
+              Условия использования
+            </Link>
+            <Link
+              to="/privacy"
+              className="text-[13px] leading-none text-[#6E6E6E] underline decoration-[#6E6E6E]/decoration-1 underline-offset-[3px] transition-colors hover:text-foreground"
+            >
+              Политика конфиденциальности
+            </Link>
+          </div>
+        </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-hairline px-6 py-5 sm:px-10">
-        <div className="meta-label">© 2026 РОБОПОДБОР. Все права защищены</div>
-        <div className="meta-label">Данные о 37 внедрениях · 2021–2026</div>
+      {/* Водяной знак: видна только верхняя половина букв под карточкой */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-0 flex justify-center overflow-hidden leading-none"
+      >
+        <span className="translate-y-[46%] select-none whitespace-nowrap font-heading text-[clamp(5.5rem,15.5vw,9.25rem)] font-bold leading-none tracking-[-0.05em] text-[#D0D0D0]">
+          РОБОПОДБОР
+        </span>
       </div>
     </footer>
   );

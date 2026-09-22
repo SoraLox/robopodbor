@@ -185,6 +185,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projects/{projectId}/copy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Создаёт копию проекта для сравнения сценариев внутри проекта (см. 3.1.3 ТЗ: не менее трёх сценариев). Доступно только владельцу проекта. */
+        post: operations["copyProject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/catalog/solutions/{solutionId}": {
         parameters: {
             query?: never;
@@ -242,6 +259,8 @@ export interface components {
             label: string;
             hint?: string;
             unit?: string;
+            /** @description Заголовок группы полей в форме ввода параметров объекта */
+            section?: string;
             /** @enum {string} */
             kind: "number" | "text" | "select";
             min?: number;
@@ -734,6 +753,42 @@ export interface operations {
         responses: {
             /** @description Удалён */
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    copyProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Копия создана */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDetail"];
+                };
+            };
+            /** @description Требуется вход */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Не найден */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

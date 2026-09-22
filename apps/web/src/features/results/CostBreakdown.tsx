@@ -103,28 +103,35 @@ export function CostBreakdown({
                       onMouseEnter={() => onHoverLine?.(guessZone(line.title))}
                       onMouseLeave={() => onHoverLine?.(null)}
                       className={cn(
-                        'flex flex-wrap items-center gap-x-3 gap-y-1.5 py-3 pl-11 pr-4 text-[13px]',
+                        'grid gap-1.5 py-3 pl-11 pr-4 text-[13px] sm:flex sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1.5',
                         onHoverLine ? 'transition-colors hover:bg-accent-tint/60' : '',
                       )}
                     >
-                      <span className="min-w-0 flex-1 text-foreground/85">{line.title}</span>
-                      <span className="tabular font-medium">{fmt(line.amount)} млн ₽</span>
-                      <span className="w-9 text-right tabular text-muted-foreground">
-                        {line.share}%
-                      </span>
-                      <span
-                        className={cn(
-                          'inline-flex items-center gap-1 text-[11.5px] font-medium',
-                          confirmed ? 'text-status-confirmed' : 'text-status-piloting',
-                        )}
-                      >
-                        {confirmed ? (
-                          <ShieldCheck className="size-3.5" strokeWidth={2} aria-hidden />
-                        ) : (
-                          <TriangleAlert className="size-3.5" strokeWidth={2} aria-hidden />
-                        )}
-                        {line.source}
-                      </span>
+                      <span className="min-w-0 text-foreground/85 sm:flex-1">{line.title}</span>
+                      <div className="flex items-center justify-between gap-3 sm:contents">
+                        <span
+                          className={cn(
+                            'inline-flex items-center gap-1 text-[11.5px] font-medium sm:order-3',
+                            confirmed ? 'text-status-confirmed' : 'text-status-piloting',
+                          )}
+                        >
+                          {confirmed ? (
+                            <ShieldCheck className="size-3.5" strokeWidth={2} aria-hidden />
+                          ) : (
+                            <TriangleAlert className="size-3.5" strokeWidth={2} aria-hidden />
+                          )}
+                          {line.source}
+                        </span>
+                        <span className="tabular font-medium sm:order-1">
+                          {fmt(line.amount)} млн ₽
+                          <span className="ml-1.5 text-muted-foreground sm:ml-0 sm:hidden">
+                            · {line.share}%
+                          </span>
+                        </span>
+                        <span className="hidden w-9 text-right tabular text-muted-foreground sm:order-2 sm:inline">
+                          {line.share}%
+                        </span>
+                      </div>
                     </div>
                   );
                 })}

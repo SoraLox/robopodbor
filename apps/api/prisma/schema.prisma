@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  user
+  admin
+}
+
+enum Maturity {
+  operation
+  piloting
+  rnd
+}
+
+enum DataConfidence {
+  confirmed
+  needs_review @map("needs-review")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  organization String?
+  role         Role      @default(user)
+  createdAt    DateTime  @default(now())
+  sessions     Session[]
+  projects     Project[]
+}
+
+// Опорная сессия по httpOnly cookie sid — соответствует контракту auth/* в openapi.yaml.
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+// Проект пользователя: паспорт объекта + параметры + снапшот расчёта.
+// Изолирован по userId (см. 4.4.3 ТЗ — доступ к проекту только у его владельца и админа).
+model Project {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  objectType  String
+  parameters  Json // значения полей паспорта объекта, ключ -> строка
+  processes   String[] @default([])
+  status      Maturity @default(piloting)
+  // Снапшот последнего расчёта (CalculationResult из контракта) — хранится целиком,
+  // чтобы повторное открытие проекта воспроизводило тот же результат (см. 3.1.5 ТЗ)
+  // без пересчёта по возможно изменившимся нормативам.
+  calculation Json?
+  scenarios   Scenario[]
+  dataVersion String   @default("v1") // версия исходных нормативов/каталога на момент расчёта
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Scenario {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title       String
+  subtitle    String
+  tco         Float
+  share       Float
+  delta       String
+  detail      String?
+  recommended Boolean  @default(false)
+  sortOrder   Int      @default(0)
+}
+
+// Каталог роботизированных решений (см. 3.3 ТЗ).
+model CatalogSolution {
+  id           String         @id @default(cuid())
+  name         String
+  vendor       String
+  useCase      String
+  price        String
+  payload      String
+  speed        String
+  maturity     Maturity
+  confidence   DataConfidence
+  source       String?
+  sourceDate   String?
+  objectTypes  String[]       @default([])
+  score        Float?
+  scoreFactors Json? // [{label, weight}]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+// Иерархия отрасль -> объект -> процесс -> тип решения -> продукт (см. 3.3.1 ТЗ).
+model TaxonomyNode {
+  id       String         @id @default(cuid())
+  label    String
+  level    String // industry | object | process | solutionType | product
+  parentId String?
+  parent   TaxonomyNode?  @relation("TaxonomyChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children TaxonomyNode[] @relation("TaxonomyChildren")
+
+  @@index([parentId])
+}
+
+// Типы объектов (склад/аэропорт/клиника/...) и состав их паспортных полей (см. 3.2 ТЗ).
+model ObjectTypeDef {
+  slug              String  @id
+  title             String
+  description       String
+  photoCaption      String?
+  paybackRange      String?
+  solutionsCountLabel String?
+  parameters        ParameterField[]
+}
+
+model ParameterField {
+  id           String        @id @default(cuid())
+  objectType   ObjectTypeDef @relation(fields: [objectTypeSlug], references: [slug], onDelete: Cascade)
+  objectTypeSlug String
+  label        String
+  hint         String?
+  unit         String?
+  section      String?
+  kind         String // number | text | select
+  min          Float?
+  max          Float?
+  defaultValue String?
+  options      Json? // [{value, label}]
+  sortOrder    Int           @default(0)
+
+  @@index([objectTypeSlug])
+}

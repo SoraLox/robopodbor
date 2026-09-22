@@ -1348,7 +1348,7 @@ export function WarehouseSimulation({
     <div
       ref={cardRef}
       className={cn(
-        'relative h-[520px] overflow-hidden rounded-xl border border-border bg-[#3a3d52] lg:h-full',
+        'relative h-[520px] overflow-hidden rounded-xl bg-canvas lg:h-full',
         className,
       )}
     >

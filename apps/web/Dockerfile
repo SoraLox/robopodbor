@@ -11,6 +11,9 @@ COPY contracts ./contracts
 COPY apps/web ./apps/web
 
 WORKDIR /app/apps/web
+# В docker-compose рядом поднимается настоящий apps/api, поэтому здесь
+# MSW-моки отключены и все /api-запросы идут на реальный бэкенд через nginx.
+ENV VITE_ENABLE_MOCKS=false
 RUN npm run build
 
 # Раздача статики

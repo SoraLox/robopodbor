@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useParams } from 'react-router-dom';
-import { AlertCircle, ArrowUpRight, ChevronDown, Upload } from 'lucide-react';
-import { SiteHeader } from '@/app/AppShell';
+import { AlertCircle, Upload } from 'lucide-react';
 import { useWizardStore } from '@/app/store';
 import { useImportParameters, useObjectParameters } from '@/api/queries';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
+import { Select } from '@/components/ui/select';
+import { FormField, fieldDescribedBy } from '@/components/ui/form-field';
 import type { ParameterField } from '@/api/types';
+import { cn } from '@/lib/utils';
 
 /** Проверка значения по описанию поля из контракта. */
 function validate(field: ParameterField, raw: string): string | null {
@@ -23,7 +23,28 @@ function validate(field: ParameterField, raw: string): string | null {
   return null;
 }
 
-export function ObjectFormPage() {
+const UNSECTIONED = 'Параметры';
+
+/** Группирует поля по разделу из контракта, сохраняя порядок первого появления. */
+function groupBySection(fields: ParameterField[]): [string, ParameterField[]][] {
+  const groups = new Map<string, ParameterField[]>();
+  for (const field of fields) {
+    const section = field.section ?? UNSECTIONED;
+    const group = groups.get(section);
+    if (group) group.push(field);
+    else groups.set(section, [field]);
+  }
+  return Array.from(groups.entries());
+}
+
+const fieldControlClass =
+  'h-10 rounded-[10px] border-[#E5E5EA] bg-[#FAFAFA] text-[13px] hover:border-[#C7C7CC] focus-visible:border-[#1C1C1E] focus-visible:ring-2 focus-visible:ring-[#1C1C1E]/10';
+
+/**
+ * Параметры объекта — второй шаг мастера.
+ * Кнопка Excel порталится в слот у заголовка карточки.
+ */
+export function ObjectFormPage({ showTitleImport = true }: { showTitleImport?: boolean } = {}) {
   const navigate = useNavigate();
   const { objectType = 'warehouse' } = useParams<{ objectType: string }>();
   const { parameters, setParameters } = useWizardStore();
@@ -31,12 +52,15 @@ export function ObjectFormPage() {
   const { data: fields, isLoading } = useObjectParameters(objectType);
   const importFile = useImportParameters(objectType);
   const fileInput = useRef<HTMLInputElement>(null);
+  const [titleSlot, setTitleSlot] = useState<Element | null>(null);
 
   const [values, setValues] = useState<Record<string, string>>(parameters);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Состав полей зависит от типа объекта: подставляем значения по умолчанию
-  // для тех, что пользователь ещё не заполнял.
+  useEffect(() => {
+    setTitleSlot(document.getElementById('wizard-title-action'));
+  }, []);
+
   useEffect(() => {
     if (!fields) return;
     setValues((prev) => {
@@ -67,7 +91,11 @@ export function ObjectFormPage() {
       if (message) found[field.id] = message;
     }
     setErrors(found);
-    if (Object.keys(found).length > 0) return;
+    if (Object.keys(found).length > 0) {
+      const firstId = Object.keys(found)[0];
+      document.getElementById(firstId)?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+      return;
+    }
 
     setParameters(values);
     navigate(`/calculate/${objectType}/processes`);
@@ -79,144 +107,131 @@ export function ObjectFormPage() {
     setValues((prev) => ({ ...prev, ...result.values }));
   };
 
+  const importControl =
+    showTitleImport && titleSlot
+      ? createPortal(
+          <>
+            <input
+              ref={fileInput}
+              type="file"
+              accept=".csv,.txt,.xlsx,.xls"
+              className="sr-only"
+              onChange={(event) => void onFile(event.target.files?.[0])}
+            />
+            <button
+              type="button"
+              onClick={() => fileInput.current?.click()}
+              disabled={importFile.isPending}
+              aria-label={importFile.isPending ? 'Разбираем файл…' : 'Загрузить из Excel / CSV'}
+              title={importFile.isPending ? 'Разбираем файл…' : 'Загрузить из Excel / CSV'}
+              className={cn(
+                'flex size-9 flex-none items-center justify-center rounded-full border border-[#E5E5EA] bg-[#FAFAFA] text-[#1C1C1E]',
+                'transition-colors hover:border-[#C7C7CC] hover:bg-[#F2F2F2]',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1C1C1E]/20',
+                'disabled:cursor-not-allowed disabled:opacity-50',
+              )}
+            >
+              <Upload className="size-4" strokeWidth={1.8} />
+            </button>
+          </>,
+          titleSlot,
+        )
+      : null;
+
   return (
-    <div className="min-h-screen">
-      <SiteHeader />
+    <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col">
+      {importControl}
 
-      <div className="mx-auto max-w-[1380px] px-[18px] pb-[18px]">
-        <div className="overflow-hidden rounded-3xl border border-border bg-background">
-          <form onSubmit={onSubmit}>
-            <div className="px-6 py-8 sm:px-8">
-              <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-                <h1 className="font-heading text-[26px] font-bold tracking-h1">
-                  Параметры объекта
-                </h1>
+      <header className="flex-none">
+        {importFile.isSuccess ? (
+          <p className="mb-2 text-[11px] text-[#15803D]">
+            Распознано: {importFile.data.recognized}
+            {importFile.data.skipped?.length ? ` · −${importFile.data.skipped.length}` : ''}
+          </p>
+        ) : null}
 
-                <div className="flex flex-col items-end gap-1">
-                  <input
-                    ref={fileInput}
-                    type="file"
-                    accept=".csv,.txt,.xlsx,.xls"
-                    className="sr-only"
-                    onChange={(event) => void onFile(event.target.files?.[0])}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fileInput.current?.click()}
-                    disabled={importFile.isPending}
-                  >
-                    <Upload className="size-3.5" strokeWidth={1.8} />
-                    {importFile.isPending ? 'Разбираем файл…' : 'Загрузить из Excel / CSV'}
-                  </Button>
-                  {importFile.isSuccess ? (
-                    <span className="text-[12px] text-status-operation">
-                      Распознано полей: {importFile.data.recognized}
-                      {importFile.data.skipped?.length
-                        ? ` · пропущено: ${importFile.data.skipped.length}`
-                        : ''}
-                    </span>
-                  ) : null}
-                  {importFile.isError ? (
-                    <span role="alert" className="flex items-center gap-1 text-[12px] text-status-danger">
-                      <AlertCircle className="size-3.5" strokeWidth={2} />
-                      {importFile.error instanceof Error
-                        ? importFile.error.message
-                        : 'Файл не распознан'}
-                    </span>
-                  ) : null}
-                </div>
+        {importFile.isError ? (
+          <p role="alert" className="mb-2 flex items-center gap-1 text-[12px] text-[#B91C1C]">
+            <AlertCircle className="size-3.5 flex-none" strokeWidth={2} />
+            {importFile.error instanceof Error ? importFile.error.message : 'Файл не распознан'}
+          </p>
+        ) : null}
+      </header>
+
+      <div className="-mx-1 min-h-0 flex-1 overflow-y-auto overscroll-contain px-1 py-2.5 [scrollbar-width:thin]">
+        {isLoading || !fields ? (
+          <div className="grid gap-3.5">
+            {[0, 1, 2, 3, 4].map((key) => (
+              <div key={key} className="grid gap-1.5">
+                <div className="h-2.5 w-2/5 animate-pulse rounded-full bg-[#EFEFEF]" />
+                <div className="h-10 animate-pulse rounded-[10px] bg-[#F2F2F2]" />
               </div>
-
-              {isLoading || !fields ? (
-                <div className="grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
-                  {[0, 1, 2, 3, 4, 5].map((key) => (
-                    <div key={key} className="grid gap-2">
-                      <div className="h-2.5 w-2/5 animate-pulse rounded-full bg-hairline" />
-                      <div className="h-10 animate-pulse rounded-md bg-hairline" />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
-                  {fields.map((field) => {
+            ))}
+          </div>
+        ) : (
+          <div className="grid gap-4">
+            {groupBySection(fields).map(([section, sectionFields]) => (
+              <section key={section}>
+                <h2 className="mb-2 text-[13px] font-semibold tracking-[-0.01em] text-[#1C1C1E]">
+                  {section}
+                </h2>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3 [&_.grid]:gap-1.5">
+                  {sectionFields.map((field) => {
                     const error = errors[field.id];
+                    const describedBy = fieldDescribedBy(field.id, field.hint, error);
 
                     return (
-                      <div key={field.id} className="grid gap-1.5">
-                        <Label htmlFor={field.id}>{field.label}</Label>
-
+                      <FormField
+                        key={field.id}
+                        id={field.id}
+                        label={field.label}
+                        hint={field.hint}
+                        error={error}
+                        required={false}
+                      >
                         {field.kind === 'select' && field.options ? (
-                          <div className="relative">
-                            <select
-                              id={field.id}
-                              value={values[field.id] ?? ''}
-                              onChange={(event) => setValue(field.id, event.target.value)}
-                              className="h-10 w-full appearance-none rounded-md border border-input bg-canvas pl-3 pr-8 text-[13px] transition-colors hover:border-foreground/25 focus-visible:border-primary focus-visible:bg-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                            >
-                              {field.options.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                  {option.label}
-                                </option>
-                              ))}
-                            </select>
-                            <ChevronDown
-                              className="pointer-events-none absolute right-3 top-1/2 size-3.5 -translate-y-1/2 text-meta-foreground"
-                              strokeWidth={2}
-                            />
-                          </div>
+                          <Select
+                            id={field.id}
+                            options={field.options}
+                            value={values[field.id] ?? ''}
+                            onChange={(event) => setValue(field.id, event.target.value)}
+                            aria-invalid={Boolean(error)}
+                            aria-describedby={describedBy}
+                            aria-required="true"
+                            className={fieldControlClass}
+                          />
                         ) : (
-                          <div className="relative">
-                            <Input
-                              id={field.id}
-                              inputMode={field.kind === 'number' ? 'decimal' : 'text'}
-                              value={values[field.id] ?? ''}
-                              onChange={(event) => setValue(field.id, event.target.value)}
-                              aria-invalid={Boolean(error)}
-                              className={cn(
-                                'h-10',
-                                field.unit && 'pr-14',
-                                error &&
-                                  'border-status-danger focus-visible:border-status-danger focus-visible:ring-status-danger',
-                              )}
-                            />
-                            {field.unit ? (
-                              <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[12px] text-meta-foreground">
-                                {field.unit}
-                              </span>
-                            ) : null}
-                          </div>
+                          <Input
+                            id={field.id}
+                            inputMode={field.kind === 'number' ? 'decimal' : 'text'}
+                            value={values[field.id] ?? ''}
+                            onChange={(event) => setValue(field.id, event.target.value)}
+                            aria-invalid={Boolean(error)}
+                            aria-describedby={describedBy}
+                            aria-required="true"
+                            unit={field.unit}
+                            className={cn(fieldControlClass, field.unit && 'pr-14')}
+                          />
                         )}
-
-                        {error ? (
-                          <p className="flex items-center gap-1 text-[12px] text-status-danger">
-                            <AlertCircle className="size-3 flex-none" strokeWidth={2.25} />
-                            {error}
-                          </p>
-                        ) : field.hint ? (
-                          <p className="text-[12px] leading-snug text-muted-foreground">{field.hint}</p>
-                        ) : null}
-                      </div>
+                      </FormField>
                     );
                   })}
                 </div>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between gap-4 border-t border-border px-6 py-5 sm:px-8">
-              <Button type="button" variant="ghost" onClick={() => navigate(`/calculate/${objectType}`)}>
-                Назад
-              </Button>
-              <Button type="submit" size="lg">
-                Далее
-                <ArrowUpRight className="size-3.5" strokeWidth={2.5} />
-              </Button>
-            </div>
-          </form>
-        </div>
+              </section>
+            ))}
+          </div>
+        )}
       </div>
-    </div>
+
+      <div className="flex-none border-t border-[#EBEBEB] pt-3">
+        <button
+          type="submit"
+          className="flex h-11 w-full items-center justify-center rounded-[10px] bg-[#1C1C1E] text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
+        >
+          Далее
+        </button>
+      </div>
+    </form>
   );
 }
 

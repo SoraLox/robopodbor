@@ -81,8 +81,11 @@ describe('ComparisonTable', () => {
         footer={{ name: 'Итого', price: '7.4' }}
       />,
     );
-    expect(screen.getByText('Решение')).toBeInTheDocument();
-    expect(screen.getByText('AMR-паллетовоз P15')).toBeInTheDocument();
-    expect(screen.getByText('Итого')).toBeInTheDocument();
+    // Таблица рендерится дважды — grid для md+ и карточки для мобильных
+    // (см. ComparisonTable.tsx), поэтому подписи колонок закономерно
+    // повторяются в DOM.
+    expect(screen.getAllByText('Решение').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('AMR-паллетовоз P15').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Итого').length).toBeGreaterThan(0);
   });
 });

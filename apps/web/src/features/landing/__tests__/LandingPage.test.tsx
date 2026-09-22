@@ -1,45 +1,26 @@
 import { screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import LandingPage from '@/features/landing/LandingPage';
 import { renderWithProviders } from '@/test/utils';
 
-// Canvas в jsdom не рендерится — сам манипулятор проверяется в браузере.
-vi.mock('@/features/auth/components/RobotArmHero', () => ({
-  RobotArmHero: () => <div data-testid="robot-arm-hero" />,
-}));
-
 describe('LandingPage', () => {
-  it('держит обещанную структуру из девяти секций', () => {
+  it('держит структуру секций лендинга', () => {
     const { container } = renderWithProviders(<LandingPage />, { route: '/' });
-    expect(container.querySelectorAll('section')).toHaveLength(9);
+    expect(container.querySelectorAll('section')).toHaveLength(7);
   });
 
-  it('ведёт по сценарию: проблема → решение → проводник → план → цены → возражения', () => {
+  it('на первом экране объясняет продукт и ведёт в расчёт одной кнопкой', () => {
     renderWithProviders(<LandingPage />, { route: '/' });
 
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/Окупится ли/i);
-    expect(screen.getByTestId('robot-arm-hero')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      /Сколько стоят роботы и когда они окупятся/i,
+    );
+    expect(
+      screen.getByText(/по ценам настоящих поставщиков/i),
+    ).toBeInTheDocument();
 
-    // textContent не вставляет пробел на месте <br>, поэтому сверяем по смыслу
-    const sectionTitles = screen
-      .getAllByRole('heading', { level: 2 })
-      .map((node) => node.textContent?.replace(/\s+/g, ' ').trim());
-
-    expect(sectionTitles).toEqual([
-      'Восемьдесятмиллионоввслепую',
-      'Три сценарияна одном экране',
-      'Мы не продаёмроботов',
-      'Четыре минуты, три шага',
-      'Расчёт бесплатный',
-      'Вопросы',
-      'Посчитайте свой объект',
-    ]);
-  });
-
-  it('план состоит ровно из трёх шагов', () => {
-    const { container } = renderWithProviders(<LandingPage />, { route: '/' });
-    const plan = container.querySelector('ol');
-    expect(plan?.querySelectorAll('li')).toHaveLength(3);
+    const cta = screen.getByRole('link', { name: /^Рассчитать$/i });
+    expect(cta).toHaveAttribute('href', '/calculate/warehouse');
   });
 
   it('не содержит служебных плашек макета', () => {

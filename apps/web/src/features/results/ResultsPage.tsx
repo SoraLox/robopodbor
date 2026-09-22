@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  ArrowLeft,
   ArrowUpRight,
   FileSpreadsheet,
   FileText,
@@ -10,17 +9,46 @@ import {
   TriangleAlert,
   Wallet,
 } from 'lucide-react';
-import { AppShell, SiteHeader } from '@/app/AppShell';
+import { AppShell } from '@/app/AppShell';
 import { useCalculation } from '@/api/queries';
 import { Button } from '@/components/ui/button';
 import { MiniTrend } from '@/shared/charts';
 import { CostBreakdown, type CostZone } from './CostBreakdown';
+import { ObjectParametersList } from './ObjectParametersList';
+import { OBJECT_PARAMETERS } from './objectParameters';
 import { MetricTile } from './parts';
 import { ScenarioBars } from './ScenarioBars';
 import { SensitivityPanel } from './SensitivityPanel';
 import { VisualizationSlot } from './visualization/VisualizationSlot';
 import type { SimSceneVariant } from './visualization/WarehouseSimulation';
 import { exportToPdf, exportToXlsx } from './export/exportCalculation';
+
+/**
+ * Вводные данные объекта отличаются по типу площадки (склад / аэропорт /
+ * медучреждение) — расчёт экономики при этом общий демо-сценарий, но
+ * карточка «Вводные» должна показывать реальные для типа объекта параметры.
+ */
+interface ObjectIntro {
+  title: string;
+  meta: string;
+}
+
+const DEFAULT_INTRO: ObjectIntro = {
+  title: 'Склад «Южные Врата» · 20 000 м²',
+  meta: 'Расчёт №2026-0417 · 2 смены · 100 отборщиков · горизонт 5 лет · обновлено 17.09.2026',
+};
+
+const OBJECT_INTRO: Record<string, ObjectIntro> = {
+  warehouse: DEFAULT_INTRO,
+  airport: {
+    title: 'Аэропорт «Соколиная Гора» · 85 000 м²',
+    meta: 'Расчёт №2026-0418 · 2 терминала · 320 сотрудников рампы · горизонт 7 лет · обновлено 17.09.2026',
+  },
+  clinic: {
+    title: 'Многопрофильная больница №14 · 45 000 м²',
+    meta: 'Расчёт №2026-0419 · 650 коек · 65 санитаров · горизонт 7 лет · обновлено 17.09.2026',
+  },
+};
 
 export function ResultsPage() {
   const navigate = useNavigate();
@@ -29,6 +57,8 @@ export function ResultsPage() {
     calculationId: string;
   }>();
   const { data, isLoading, isError } = useCalculation(calculationId);
+  const intro = OBJECT_INTRO[objectType] ?? DEFAULT_INTRO;
+  const parameterGroups = OBJECT_PARAMETERS[objectType] ?? OBJECT_PARAMETERS.warehouse ?? [];
   const [exporting, setExporting] = useState<'pdf' | 'xlsx' | null>(null);
 
   // «Живой спутник» справа реагирует на то, что читает пользователь слева.
@@ -55,7 +85,6 @@ export function ResultsPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen">
-        <SiteHeader />
         <div className="mx-auto max-w-[1380px] px-[18px] pb-[18px]">
           <div className="panel grid min-h-[420px] place-items-center p-5">
             <div className="w-full max-w-[400px] text-center">
@@ -97,18 +126,6 @@ export function ResultsPage() {
 
   return (
     <AppShell>
-      {/* Назад к процессам */}
-      <div className="mb-4">
-        <button
-          type="button"
-          onClick={() => navigate(`/calculate/${objectType}/processes`)}
-          className="flex min-h-[36px] items-center gap-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" strokeWidth={2} aria-hidden />
-          Назад к процессам
-        </button>
-      </div>
-
       {/*
         Живой спутник отчёта — сразу половина экрана справа, фиксированная
         (sticky) от самого верха: реагирует на то, что читает пользователь
@@ -133,7 +150,7 @@ export function ResultsPage() {
             <SectionHeading>Вводные</SectionHeading>
 
             <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
-              <p className="text-[15px] font-medium">{data.objectTitle}</p>
+              <p className="text-[15px] font-medium">{intro.title}</p>
 
               <div className="flex flex-wrap items-center gap-2">
                 <Button
@@ -164,12 +181,14 @@ export function ResultsPage() {
             </div>
 
             <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t border-hairline pt-4">
-              {data.meta.split('·').map((part) => (
+              {intro.meta.split('·').map((part) => (
                 <div key={part} className="text-[13px] text-muted-foreground">
                   {part.trim()}
                 </div>
               ))}
             </div>
+
+            {parameterGroups.length ? <ObjectParametersList groups={parameterGroups} /> : null}
           </section>
 
           {/* Раздел 2 — Базовые экономические показатели */}

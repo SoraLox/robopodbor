@@ -1,0 +1,640 @@
+[
+  {
+    "id": "p15",
+    "name": "AMR-паллетовоз P15",
+    "vendor": "Ронави Роботикс",
+    "useCase": "Транспортировка паллет между зонами",
+    "price": "7.4",
+    "payload": "1 500 кг",
+    "speed": "1.8 м/с",
+    "maturity": "operation",
+    "confidence": "confirmed",
+    "source": "Прайс вендора",
+    "sourceDate": "12.09.2026",
+    "objectTypes": [
+      "warehouse",
+      "clinic"
+    ],
+    "score": 92,
+    "scoreFactors": [
+      {
+        "label": "Зрелость решения",
+        "weight": 32
+      },
+      {
+        "label": "Соответствие процессам",
+        "weight": 28
+      },
+      {
+        "label": "Цена за единицу производительности",
+        "weight": 20
+      },
+      {
+        "label": "Российский вендор",
+        "weight": 12
+      }
+    ]
+  },
+  {
+    "id": "s20",
+    "name": "Штабелёр AS/RS S20",
+    "vendor": "Крафтвэй Робо",
+    "useCase": "Высотное хранение, подача паллет на пост",
+    "price": "12.1",
+    "payload": "2 000 кг",
+    "speed": "1.2 м/с",
+    "maturity": "operation",
+    "confidence": "needs-review",
+    "source": "Прайс вендора",
+    "sourceDate": "08.09.2026",
+    "objectTypes": [
+      "warehouse"
+    ],
+    "score": 85,
+    "scoreFactors": [
+      {
+        "label": "Соответствие процессам",
+        "weight": 30
+      },
+      {
+        "label": "Зрелость решения",
+        "weight": 28
+      },
+      {
+        "label": "Грузоподъёмность",
+        "weight": 17
+      },
+      {
+        "label": "Российский вендор",
+        "weight": 10
+      }
+    ]
+  },
+  {
+    "id": "srt8",
+    "name": "Сортировщик SRT-8",
+    "vendor": "Технорэд",
+    "useCase": "Сортировка заказов, 8 000 посылок/ч",
+    "price": "5.9",
+    "payload": "50 кг",
+    "speed": "2.4 м/с",
+    "maturity": "operation",
+    "confidence": "confirmed",
+    "source": "Прайс вендора",
+    "sourceDate": "12.09.2026",
+    "objectTypes": [
+      "warehouse",
+      "airport"
+    ],
+    "score": 79,
+    "scoreFactors": [
+      {
+        "label": "Производительность",
+        "weight": 31
+      },
+      {
+        "label": "Зрелость решения",
+        "weight": 26
+      },
+      {
+        "label": "Цена",
+        "weight": 14
+      },
+      {
+        "label": "Российский вендор",
+        "weight": 8
+      }
+    ]
+  },
+  {
+    "id": "ams",
+    "name": "Манипулятор пикинга AMS-2",
+    "vendor": "Аркодим",
+    "useCase": "Штучный отбор, зрение и вакуумный захват",
+    "price": "9.6",
+    "payload": "25 кг",
+    "speed": "0.9 м/с",
+    "maturity": "piloting",
+    "confidence": "needs-review",
+    "source": "Бенчмарк отрасли",
+    "sourceDate": "2025 год",
+    "objectTypes": [
+      "warehouse",
+      "clinic"
+    ],
+    "score": 64,
+    "scoreFactors": [
+      {
+        "label": "Соответствие процессам",
+        "weight": 26
+      },
+      {
+        "label": "Цена",
+        "weight": 18
+      },
+      {
+        "label": "Зрелость решения",
+        "weight": 12
+      },
+      {
+        "label": "Российский вендор",
+        "weight": 8
+      }
+    ]
+  },
+  {
+    "id": "drone",
+    "name": "БАС-инвентаризатор DX-4",
+    "vendor": "Геоскан",
+    "useCase": "Пересчёт запасов по RFID в высотных стеллажах",
+    "price": "3.2",
+    "payload": "2 кг",
+    "speed": "4.0 м/с",
+    "maturity": "rnd",
+    "confidence": "needs-review",
+    "source": "НИОКР вендора",
+    "sourceDate": "2026 год",
+    "objectTypes": [
+      "warehouse",
+      "airport"
+    ],
+    "score": 48,
+    "scoreFactors": [
+      {
+        "label": "Потенциал экономии",
+        "weight": 22
+      },
+      {
+        "label": "Цена",
+        "weight": 14
+      },
+      {
+        "label": "Зрелость решения",
+        "weight": 6
+      },
+      {
+        "label": "Российский вендор",
+        "weight": 6
+      }
+    ]
+  },
+  {
+    "id": "p22",
+    "name": "AMR-паллетовоз P22 Max",
+    "vendor": "Ронави Роботикс",
+    "useCase": "Транспортировка паллет на длинных плечах между складами",
+    "price": "9.1",
+    "payload": "2 200 кг",
+    "speed": "2.0 м/с",
+    "maturity": "operation",
+    "confidence": "confirmed",
+    "source": "Прайс вендора",
+    "sourceDate": "14.09.2026",
+    "objectTypes": [
+      "warehouse"
+    ],
+    "score": 88,
+    "scoreFactors": [
+      {
+        "label": "Грузоподъёмность",
+        "weight": 30
+      },
+      {
+        "label": "Зрелость решения",
+        "weight": 27
+      },
+      {
+        "label": "Соответствие процессам",
+        "weight": 21
+      },
+      {
+        "label": "Российский вендор",
+        "weight": 10
+      }
+    ]
+  },
+  {
+    "id": "wf3",
+    "name": "Вилочный AGV WF-3",
+    "vendor": "Технорэд",
+    "useCase": "Штабелирование паллет на стеллаж без оператора",
+    "price": "11.4",
+    "payload": "1 800 кг",
+    "speed": "1.4 м/с",
+    "maturity": "operation",
+    "confidence": "confirmed",
+    "source": "Прайс вендора",
+    "sourceDate": "10.09.2026",
+    "objectTypes": [
+      "warehouse"
+    ],
+    "score": 81,
+    "scoreFactors": [
+      {
+        "label": "Соответствие процессам",
+        "weight": 29
+      },
+      {
+        "label": "Зрелость решения",
+        "weight": 25
+      },
+      {
+        "label": "Цена",
+        "weight": 17
+      },
+      {
+        "label": "Российский вендор",
+        "weight": 10
+      }
+    ]
+  },
+  {
+    "id": "srt3",
+    "name": "Сортировщик SRT-3 Compact",
+    "vendor": "Крафтвэй Робо",
+    "useCase": "Сортировка мелких посылок, 3 000 посылок/ч",
+    "price": "3.6",
+    "payload": "20 кг",
+    "speed": "2.0 м/с",
+    "maturity": "operation",
+    "confidence": "confirmed",
+    "source": "Прайс вендора",
+    "sourceDate": "05.09.2026",
+    "objectTypes": [
+      "warehouse",
+      "airport"
+    ],
+    "score": 74,
+    "scoreFactors": [
+      {
+        "label": "Цена",
+        "weight": 26
+      },
+      {
+        "label": "Зрелость решения",
+        "weight": 24
+      },
+      {
+        "label": "Производительность",
+        "weight": 16
+      },
+      {
+        "label": "Российский вендор",
+        "weight": 8
+      }
+    ]
+  },
+  {
+    "id": "bg12",
+    "name": "Крестовой сортер BG-12",
+    "vendor": "Геоскан",
+    "useCase": "Сортировка багажа и грузов по направлениям",
+    "price": "14.8",
+    "payload": "60 кг",
+    "speed": "3.1 м/с",
+    "maturity": "operation",
+    "confidence": "needs-review",
+    "source": "Бенчмарк отрасли",
+    "sourceDate": "2025 год",
+    "objectTypes": [
+      "airport"
+    ],
+    "score": 71,
+    "scoreFactors": [
+      {
+        "label": "Производительность",
+        "weight": 28
+      },
+      {
+        "label": "Соответствие процессам",
+        "weight": 22
+      },
+      {
+        "label": "Цена",
+        "weight": 11
+      },
+      {
+        "label": "Российский вендор",
+        "weight": 10
+      }
+    ]
+  },
+  {
+    "id": "ams1",
+    "name": "Манипулятор пикинга AMS-1 Lite",
+    "vendor": "Аркодим",
+    "useCase": "Штучный отбор лёгких грузов на конвейере",
+    "price": "6.2",
+    "payload": "12 кг",
+    "speed": "0.7 м/с",
+    "maturity": "operation",
+    "confidence": "confirmed",
+    "source": "Прайс вендора",
+    "sourceDate": "11.09.2026",
+    "objectTypes": [
+      "warehouse",
+      "clinic"
+    ],
+    "score": 76,
+    "scoreFactors": [
+      {
+        "label": "Соответствие процессам",
+        "weight": 27
+      },
+      {
+        "label": "Цена",
+        "weight": 22
+      },
+      {
+        "label": "Зрелость решения",
+        "weight": 17
+      },
+      {
+        "label": "Российский вендор",
+        "weight": 10
+      }
+    ]
+  },
+  {
+    "id": "ams3",
+    "name": "Манипулятор пикинга AMS-3 Vision",
+    "vendor": "Аркодим",
+    "useCase": "Штучный отбор со смешанной номенклатурой, машинное зрение",
+    "price": "13.5",
+    "payload": "30 кг",
+    "speed": "1.0 м/с",
+    "maturity": "piloting",
+    "confidence": "needs-review",
+    "source": "Пилотный отчёт",
+    "sourceDate": "2026 год",
+    "objectTypes": [
+      "warehouse"
+    ],
+    "score": 58,
+    "scoreFactors": [
+      {
+        "label": "Соответствие процессам",
+        "weight": 24
+      },
+      {
+        "label": "Потенциал экономии",
+        "weight": 16
+      },
+      {
+        "label": "Зрелость решения",
+        "weight": 10
+      },
+      {
+        "label": "Цена",
+        "weight": 8
+      }
+    ]
+  },
+  {
+    "id": "sanit1",
+    "name": "Дезинфекционный робот UV-Clean C1",
+    "vendor": "МедРобТех",
+    "useCase": "Автономная УФ-дезинфекция палат и коридоров",
+    "price": "4.1",
+    "payload": "—",
+    "speed": "0.6 м/с",
+    "maturity": "operation",
+    "confidence": "confirmed",
+    "source": "Прайс вендора",
+    "sourceDate": "09.09.2026",
+    "objectTypes": [
+      "clinic"
+    ],
+    "score": 90,
+    "scoreFactors": [
+      {
+        "label": "Соответствие процессам",
+        "weight": 33
+      },
+      {
+        "label": "Зрелость решения",
+        "weight": 29
+      },
+      {
+        "label": "Цена",
+        "weight": 18
+      },
+      {
+        "label": "Российский вендор",
+        "weight": 10
+      }
+    ]
+  },
+  {
+    "id": "courier1",
+    "name": "Курьерский робот MedGo-2",
+    "vendor": "МедРобТех",
+    "useCase": "Доставка медикаментов и анализов между отделениями",
+    "price": "5.4",
+    "payload": "35 кг",
+    "speed": "1.1 м/с",
+    "maturity": "operation",
+    "confidence": "confirmed",
+    "source": "Прайс вендора",
+    "sourceDate": "09.09.2026",
+    "objectTypes": [
+      "clinic"
+    ],
+    "score": 83,
+    "scoreFactors": [
+      {
+        "label": "Соответствие процессам",
+        "weight": 30
+      },
+      {
+        "label": "Зрелость решения",
+        "weight": 24
+      },
+      {
+        "label": "Цена",
+        "weight": 19
+      },
+      {
+        "label": "Российский вендор",
+        "weight": 10
+      }
+    ]
+  },
+  {
+    "id": "ivchassis",
+    "name": "Транспортёр медикаментов TM-Cart",
+    "vendor": "Крафтвэй Робо",
+    "useCase": "Перевозка тележек с бельём и расходниками по этажам",
+    "price": "2.8",
+    "payload": "150 кг",
+    "speed": "0.9 м/с",
+    "maturity": "piloting",
+    "confidence": "needs-review",
+    "source": "Пилотный отчёт",
+    "sourceDate": "2026 год",
+    "objectTypes": [
+      "clinic"
+    ],
+    "score": 61,
+    "scoreFactors": [
+      {
+        "label": "Цена",
+        "weight": 24
+      },
+      {
+        "label": "Соответствие процессам",
+        "weight": 18
+      },
+      {
+        "label": "Зрелость решения",
+        "weight": 11
+      },
+      {
+        "label": "Российский вендор",
+        "weight": 8
+      }
+    ]
+  },
+  {
+    "id": "towtug",
+    "name": "Буксировщик багажных тележек TowTug A5",
+    "vendor": "Ронави Роботикс",
+    "useCase": "Буксировка составов багажных тележек по перрону",
+    "price": "10.7",
+    "payload": "4 000 кг",
+    "speed": "3.5 м/с",
+    "maturity": "operation",
+    "confidence": "confirmed",
+    "source": "Прайс вендора",
+    "sourceDate": "13.09.2026",
+    "objectTypes": [
+      "airport"
+    ],
+    "score": 86,
+    "scoreFactors": [
+      {
+        "label": "Соответствие процессам",
+        "weight": 31
+      },
+      {
+        "label": "Грузоподъёмность",
+        "weight": 26
+      },
+      {
+        "label": "Зрелость решения",
+        "weight": 19
+      },
+      {
+        "label": "Российский вендор",
+        "weight": 10
+      }
+    ]
+  },
+  {
+    "id": "gseasrs",
+    "name": "Штабелёр AS/RS S9 Compact",
+    "vendor": "Крафтвэй Робо",
+    "useCase": "Хранение и подача контейнеров ULD на пост комплектации",
+    "price": "16.3",
+    "payload": "3 500 кг",
+    "speed": "0.8 м/с",
+    "maturity": "piloting",
+    "confidence": "needs-review",
+    "source": "Пилотный отчёт",
+    "sourceDate": "2026 год",
+    "objectTypes": [
+      "airport"
+    ],
+    "score": 54,
+    "scoreFactors": [
+      {
+        "label": "Грузоподъёмность",
+        "weight": 20
+      },
+      {
+        "label": "Соответствие процессам",
+        "weight": 17
+      },
+      {
+        "label": "Цена",
+        "weight": 9
+      },
+      {
+        "label": "Зрелость решения",
+        "weight": 8
+      }
+    ]
+  },
+  {
+    "id": "droneair",
+    "name": "БАС-патруль AeroDX-2",
+    "vendor": "Геоскан",
+    "useCase": "Осмотр периметра и перрона, БАС-мониторинг",
+    "price": "6.8",
+    "payload": "3 кг",
+    "speed": "5.5 м/с",
+    "maturity": "rnd",
+    "confidence": "needs-review",
+    "source": "НИОКР вендора",
+    "sourceDate": "2026 год",
+    "objectTypes": [
+      "airport"
+    ],
+    "score": 39,
+    "scoreFactors": [
+      {
+        "label": "Потенциал экономии",
+        "weight": 16
+      },
+      {
+        "label": "Цена",
+        "weight": 12
+      },
+      {
+        "label": "Зрелость решения",
+        "weight": 5
+      },
+      {
+        "label": "Российский вендор",
+        "weight": 6
+      }
+    ]
+  },
+  {
+    "id": "floorclean",
+    "name": "Клининговый робот FloorBot X",
+    "vendor": "Технорэд",
+    "useCase": "Автономная мойка и уборка полов в проходах",
+    "price": "2.1",
+    "payload": "—",
+    "speed": "0.8 м/с",
+    "maturity": "operation",
+    "confidence": "confirmed",
+    "source": "Прайс вендора",
+    "sourceDate": "07.09.2026",
+    "objectTypes": [
+      "warehouse",
+      "airport",
+      "clinic"
+    ],
+    "score": 69,
+    "scoreFactors": [
+      {
+        "label": "Цена",
+        "weight": 27
+      },
+      {
+        "label": "Зрелость решения",
+        "weight": 23
+      },
+      {
+        "label": "Соответствие процессам",
+        "weight": 12
+      },
+      {
+        "label": "Российский вендор",
+        "weight": 7
+      }
+    ]
+  }
+]

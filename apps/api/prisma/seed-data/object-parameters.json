@@ -1,0 +1,1597 @@
+{
+  "warehouse": [
+    {
+      "id": "obschaya_ploschad_sklada",
+      "label": "Общая площадь склада",
+      "unit": "м²",
+      "hint": "Типичный FFC/RDC в логистическом парке. Источник: отраслевые бенчмарки РФ 2023–2024",
+      "section": "Общие параметры объекта",
+      "kind": "number",
+      "min": 10000,
+      "max": 100000,
+      "defaultValue": "20000"
+    },
+    {
+      "id": "ploschad_aktivnoy_zony",
+      "label": "Площадь активной (роботизируемой) зоны",
+      "unit": "м²",
+      "hint": "50% от общей площади",
+      "section": "Общие параметры объекта",
+      "kind": "number",
+      "min": 5000,
+      "max": 50000,
+      "defaultValue": "10000"
+    },
+    {
+      "id": "vysota_potolkov_zone_hraneniya",
+      "label": "Высота потолков в зоне хранения",
+      "unit": "м",
+      "hint": "Влияет на выбор типа решений (особенно в случае шаттловой системы)",
+      "section": "Общие параметры объекта",
+      "kind": "number",
+      "min": 5,
+      "max": 16,
+      "defaultValue": "10"
+    },
+    {
+      "id": "kolichestvo_etazhey",
+      "label": "Количество этажей (мезонинов)",
+      "unit": "шт.",
+      "hint": "Для многоэтажных решений необходимы лифты - учитывается в CAPEX",
+      "section": "Общие параметры объекта",
+      "kind": "number",
+      "min": 1,
+      "max": 3,
+      "defaultValue": "1"
+    },
+    {
+      "id": "shirina_glavnyh_proezdov",
+      "label": "Ширина главных проездов",
+      "unit": "м",
+      "hint": "Определяет допустимые габариты робота",
+      "section": "Общие параметры объекта",
+      "kind": "number",
+      "min": 2.5,
+      "max": 6,
+      "defaultValue": "3.5"
+    },
+    {
+      "id": "shirina_rabochih_prohodov_mezhdu_stellazhami",
+      "label": "Ширина рабочих проходов между стеллажами",
+      "unit": "м",
+      "hint": "Узкий проход (1.5-2.0 м) - только специализированные решения",
+      "section": "Общие параметры объекта",
+      "kind": "number",
+      "min": 1.5,
+      "max": 4.5,
+      "defaultValue": "2.8"
+    },
+    {
+      "id": "floor_type",
+      "label": "Тип напольного покрытия",
+      "hint": "Влияет на выбор колёс/гусениц роботов-транспортировщиков. Альтернативы: эпоксид, асфальт",
+      "section": "Общие параметры объекта",
+      "kind": "select",
+      "defaultValue": "concrete",
+      "options": [
+        {
+          "value": "concrete",
+          "label": "Промышленный бетон"
+        },
+        {
+          "value": "epoxy",
+          "label": "Эпоксидное покрытие"
+        },
+        {
+          "value": "asphalt",
+          "label": "Асфальт"
+        }
+      ]
+    },
+    {
+      "id": "rovnost_pola",
+      "label": "Ровность пола (отклонение)",
+      "unit": "мм/2м",
+      "hint": "DIN 15185 или FM2. Критично для AutoStore и высотных решений",
+      "section": "Общие параметры объекта",
+      "kind": "number",
+      "min": 1,
+      "max": 8,
+      "defaultValue": "3"
+    },
+    {
+      "id": "kolichestvo_rabochih_smen_sutki",
+      "label": "Количество рабочих смен в сутки",
+      "unit": "смен",
+      "hint": "Стандартно: 2 смены по 12 ч/сутки",
+      "section": "Режим работы",
+      "kind": "number",
+      "min": 1,
+      "max": 3,
+      "defaultValue": "2"
+    },
+    {
+      "id": "rabochih_dney_godu",
+      "label": "Рабочих дней в году",
+      "unit": "дн.",
+      "section": "Режим работы",
+      "kind": "number",
+      "min": 365,
+      "max": 365,
+      "defaultValue": "365"
+    },
+    {
+      "id": "prodolzhitelnost_smeny",
+      "label": "Продолжительность смены",
+      "unit": "ч",
+      "hint": "С учётом перерывов на обед и техн. пауз",
+      "section": "Режим работы",
+      "kind": "number",
+      "min": 10,
+      "max": 11,
+      "defaultValue": "11"
+    },
+    {
+      "id": "pikovyy_koeffitsient_nagruzki",
+      "label": "Пиковый коэффициент нагрузки",
+      "hint": "Отношение макс. часовой нагрузки к среднечасовой. e-com: до 2.5",
+      "section": "Режим работы",
+      "kind": "number",
+      "min": 1.2,
+      "max": 2.5,
+      "defaultValue": "1.5"
+    },
+    {
+      "id": "obem_priemki",
+      "label": "Объём приёмки (поддоны/сутки)",
+      "unit": "поддон/сут",
+      "hint": "Входящий поток. 1 еврооддон ≈ 33 короба",
+      "section": "Операции: объём и производительность",
+      "kind": "number",
+      "min": 500,
+      "max": 5000,
+      "defaultValue": "1000"
+    },
+    {
+      "id": "obem_otgruzki",
+      "label": "Объём отгрузки (поддоны/сутки)",
+      "unit": "поддон/сут",
+      "hint": "Исходящий поток. Включая консолидацию",
+      "section": "Операции: объём и производительность",
+      "kind": "number",
+      "min": 500,
+      "max": 5000,
+      "defaultValue": "1000"
+    },
+    {
+      "id": "obem_otbora",
+      "label": "Объём отбора (строк/сутки, всего)",
+      "unit": "строк/сут",
+      "hint": "Строка = 1 позиция в заказе. Ключевой KPI для комплектации",
+      "section": "Операции: объём и производительность",
+      "kind": "number",
+      "min": 50000,
+      "max": 500000,
+      "defaultValue": "100000"
+    },
+    {
+      "id": "obem_otbora_2",
+      "label": "Объём отбора (штук/сутки, всего)",
+      "unit": "шт./сут",
+      "hint": "Среднее кол-во штук на строку ~1,5",
+      "section": "Операции: объём и производительность",
+      "kind": "number",
+      "min": 75000,
+      "max": 750000,
+      "defaultValue": "150000"
+    },
+    {
+      "id": "dolya_melkoshtuchnogo_otbora",
+      "label": "Доля мелкоштучного отбора (piece-pick)",
+      "unit": "%",
+      "hint": "Остаток - коробочный или паллетный отбор",
+      "section": "Операции: объём и производительность",
+      "kind": "number",
+      "min": 10,
+      "max": 80,
+      "defaultValue": "30"
+    },
+    {
+      "id": "kolichestvo_sku",
+      "label": "Количество SKU (активных)",
+      "unit": "SKU",
+      "hint": "Влияет на сложность маршрутизации и алгоритм слотирования",
+      "section": "Операции: объём и производительность",
+      "kind": "number",
+      "min": 1000,
+      "max": 10000,
+      "defaultValue": "2000"
+    },
+    {
+      "id": "dolya_sku_bystrym_oborotom",
+      "label": "Доля SKU с быстрым оборотом (A-класс)",
+      "unit": "%",
+      "section": "Операции: объём и производительность",
+      "kind": "number",
+      "min": 10,
+      "max": 40,
+      "defaultValue": "20"
+    },
+    {
+      "id": "obschaya_chislennost_personala_sklada",
+      "label": "Общая численность персонала склада",
+      "unit": "чел.",
+      "hint": "Включая ИТР, кладовщиков, водителей погрузчиков, уборку",
+      "section": "Персонал",
+      "kind": "number",
+      "min": 30,
+      "max": 700,
+      "defaultValue": "180"
+    },
+    {
+      "id": "nih_otborschiki",
+      "label": "Из них: отборщики (комплектовщики)",
+      "unit": "чел.",
+      "hint": "Целевая группа для экономии при роботизации",
+      "section": "Персонал",
+      "kind": "number",
+      "min": 15,
+      "max": 500,
+      "defaultValue": "100"
+    },
+    {
+      "id": "nih_operatory_pogruzchikov",
+      "label": "Из них: операторы погрузчиков",
+      "unit": "чел.",
+      "hint": "Целевая функция для автономных погрузчиков / VNA",
+      "section": "Персонал",
+      "kind": "number",
+      "min": 5,
+      "max": 80,
+      "defaultValue": "25"
+    },
+    {
+      "id": "nih_operatory_upakovochnyh_liniy",
+      "label": "Из них: операторы упаковочных линий",
+      "unit": "чел.",
+      "hint": "Частично автоматизируется коботами",
+      "section": "Персонал",
+      "kind": "number",
+      "min": 5,
+      "max": 60,
+      "defaultValue": "20"
+    },
+    {
+      "id": "z_p_otborschika",
+      "label": "Средняя з/п отборщика (gross)",
+      "unit": "руб./мес.",
+      "hint": "gross",
+      "section": "Персонал",
+      "kind": "number",
+      "min": 70000,
+      "max": 150000,
+      "defaultValue": "100000"
+    },
+    {
+      "id": "z_p_operatora_pogruzchika",
+      "label": "Средняя з/п оператора погрузчика (gross)",
+      "unit": "руб./мес.",
+      "hint": "Квалификация выше; дефицит на рынке",
+      "section": "Персонал",
+      "kind": "number",
+      "min": 80000,
+      "max": 170000,
+      "defaultValue": "120000"
+    },
+    {
+      "id": "koeffitsient_nachisleniy_fot",
+      "label": "Коэффициент начислений на ФОТ (страховые взносы)",
+      "hint": "ОПФ 22% + ОМС 5.1% + ОСС 2.9% + НСиПЗ 0.2% = 30.2%",
+      "section": "Персонал",
+      "kind": "number",
+      "min": 1.302,
+      "max": 1.302,
+      "defaultValue": "1.302"
+    },
+    {
+      "id": "vyrabotka_otborschika",
+      "label": "Средняя выработка отборщика (строк/ч)",
+      "unit": "строк/ч·чел",
+      "hint": "До роботизации; учитывает ходьбу, поиск, упаковку. Зависит от размера склада",
+      "section": "Персонал",
+      "kind": "number",
+      "min": 80,
+      "max": 200,
+      "defaultValue": "150"
+    },
+    {
+      "id": "koeffitsient_poter_rabochego_vremeni",
+      "label": "Коэффициент потерь рабочего времени (отпуск, болезнь, текучесть)",
+      "unit": "%",
+      "hint": "Для расчёта потребной численности: +25% к нормативной",
+      "section": "Персонал",
+      "kind": "number",
+      "min": 15,
+      "max": 35,
+      "defaultValue": "25"
+    },
+    {
+      "id": "dlina_marshruta_otborschika_1_stroku",
+      "label": "Средняя длина маршрута отборщика на 1 строку",
+      "unit": "м",
+      "hint": "Зависит от размера склада и системы слотирования",
+      "section": "Маршруты и планировка",
+      "kind": "number",
+      "min": 15,
+      "max": 60,
+      "defaultValue": "25"
+    },
+    {
+      "id": "protyazhennost_konveyernoy_transportnoy_sistemy",
+      "label": "Протяжённость конвейерной/транспортной системы",
+      "unit": "м",
+      "hint": "0 если её нет; учитывается при выборе решения",
+      "section": "Маршруты и планировка",
+      "kind": "number",
+      "min": 0,
+      "max": 2000,
+      "defaultValue": "350"
+    },
+    {
+      "id": "rack_type",
+      "label": "Тип стеллажной системы",
+      "hint": "Альтернативы: Shuttle, AutoStore, Miniload, Drive-in, Push-back",
+      "section": "Хранение и характеристики грузов",
+      "kind": "select",
+      "defaultValue": "selective",
+      "options": [
+        {
+          "value": "selective",
+          "label": "Фронтальные паллетные"
+        },
+        {
+          "value": "shuttle",
+          "label": "Shuttle"
+        },
+        {
+          "value": "autostore",
+          "label": "AutoStore"
+        },
+        {
+          "value": "miniload",
+          "label": "Miniload"
+        },
+        {
+          "value": "drive_in",
+          "label": "Drive-in"
+        },
+        {
+          "value": "push_back",
+          "label": "Push-back"
+        }
+      ]
+    },
+    {
+      "id": "kolichestvo_palletomest",
+      "label": "Количество паллетомест",
+      "unit": "м/п",
+      "hint": "Ёмкость склада",
+      "section": "Хранение и характеристики грузов",
+      "kind": "number",
+      "min": 10000,
+      "max": 100000,
+      "defaultValue": "20000"
+    },
+    {
+      "id": "massa_gruzovoy_edinitsy",
+      "label": "Средняя масса грузовой единицы (паллет)",
+      "unit": "кг",
+      "hint": "Влияет на грузоподъёмность роботов",
+      "section": "Хранение и характеристики грузов",
+      "kind": "number",
+      "min": 200,
+      "max": 1500,
+      "defaultValue": "800"
+    },
+    {
+      "id": "massa_shtuchnoy_edinitsy",
+      "label": "Средняя масса штучной единицы (SKU)",
+      "unit": "кг",
+      "hint": "Критично для G2P-систем",
+      "section": "Хранение и характеристики грузов",
+      "kind": "number",
+      "min": 0.1,
+      "max": 20,
+      "defaultValue": "1.8"
+    },
+    {
+      "id": "pallet_dimensions",
+      "label": "Средние габариты паллеты (Д×Ш×В)",
+      "unit": "мм",
+      "hint": "Евростандарт",
+      "section": "Хранение и характеристики грузов",
+      "kind": "text",
+      "defaultValue": "1200×800×1600"
+    },
+    {
+      "id": "unit_dimensions",
+      "label": "Средние габариты штучной единицы (Д×Ш×В)",
+      "unit": "мм",
+      "hint": "Среднестатистический короб",
+      "section": "Хранение и характеристики грузов",
+      "kind": "text",
+      "defaultValue": "300×200×150"
+    },
+    {
+      "id": "dolya_negabaritnyh_nestandartnyh_gruzov",
+      "label": "Доля негабаритных/нестандартных грузов",
+      "unit": "%",
+      "hint": "Нестандарт - барьер для автоматизации; остаётся ручным",
+      "section": "Хранение и характеристики грузов",
+      "kind": "number",
+      "min": 0,
+      "max": 30,
+      "defaultValue": "5"
+    },
+    {
+      "id": "moschnost_elektrosnabzheniya",
+      "label": "Мощность электроснабжения (доступная)",
+      "unit": "кВт",
+      "hint": "Для зарядных станций роботов",
+      "section": "Инфраструктура и ограничения",
+      "kind": "number",
+      "min": 100,
+      "max": 3000,
+      "defaultValue": "500"
+    },
+    {
+      "id": "wms_present",
+      "label": "Наличие WMS",
+      "hint": "Наличие WMS обязательно для роботизации",
+      "section": "Инфраструктура и ограничения",
+      "kind": "select",
+      "defaultValue": "yes",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Да"
+        },
+        {
+          "value": "no",
+          "label": "Нет"
+        }
+      ]
+    },
+    {
+      "id": "erp_system",
+      "label": "Наличие ERP/1С",
+      "hint": "Интеграция через REST API или COM-коннектор",
+      "section": "Инфраструктура и ограничения",
+      "kind": "text",
+      "defaultValue": "1С:ERP"
+    },
+    {
+      "id": "planiruemyy_byudzhet_robotizatsiyu",
+      "label": "Планируемый бюджет на роботизацию (CAPEX)",
+      "unit": "млн руб.",
+      "hint": "Ориентир для фильтрации решений. Лизинг/RaaS — альтернатива",
+      "section": "Инфраструктура и ограничения",
+      "kind": "number",
+      "min": 10,
+      "max": 500,
+      "defaultValue": "80"
+    },
+    {
+      "id": "gorizont_rascheta_okupaemosti",
+      "label": "Горизонт расчёта окупаемости",
+      "unit": "лет",
+      "hint": "Типовой горизонт ТЭО для складской автоматизации",
+      "section": "Инфраструктура и ограничения",
+      "kind": "number",
+      "min": 3,
+      "max": 10,
+      "defaultValue": "5"
+    }
+  ],
+  "airport": [
+    {
+      "id": "summarnaya_ploschad_terminala",
+      "label": "Суммарная площадь терминала (ов)",
+      "unit": "м²",
+      "hint": "Площадь пассажирского терминала - база для расчёта маршрутов роботов-транспортировщиков",
+      "section": "Общие параметры объекта",
+      "kind": "number",
+      "min": 8000,
+      "max": 500000,
+      "defaultValue": "85000"
+    },
+    {
+      "id": "ploschad_perrona_tehnicheskih_zon",
+      "label": "Площадь перрона и технических зон",
+      "unit": "м²",
+      "hint": "Открытая зона - ограничения на перемещение роботов (погода, допуски)",
+      "section": "Общие параметры объекта",
+      "kind": "number",
+      "min": 10000,
+      "max": 800000,
+      "defaultValue": "100000"
+    },
+    {
+      "id": "kolichestvo_terminalov",
+      "label": "Количество терминалов",
+      "unit": "шт.",
+      "hint": "Несколько терминалов - сложная логистика между ними",
+      "section": "Общие параметры объекта",
+      "kind": "number",
+      "min": 1,
+      "max": 6,
+      "defaultValue": "2"
+    },
+    {
+      "id": "kolichestvo_vyhodov_posadku",
+      "label": "Количество выходов на посадку (гейтов)",
+      "unit": "шт.",
+      "hint": "Влияет на маршруты доставки и кол-во роботов",
+      "section": "Общие параметры объекта",
+      "kind": "number",
+      "min": 8,
+      "max": 50,
+      "defaultValue": "20"
+    },
+    {
+      "id": "kolichestvo_vzletno_posadochnyh_polos",
+      "label": "Количество взлётно-посадочных полос",
+      "unit": "шт.",
+      "hint": "Контекст масштаба аэропорта",
+      "section": "Общие параметры объекта",
+      "kind": "number",
+      "min": 1,
+      "max": 4,
+      "defaultValue": "2"
+    },
+    {
+      "id": "passazhiropotok",
+      "label": "Пассажиропоток (млн пассажиров/год)",
+      "unit": "млн пасс./год",
+      "section": "Пассажирский поток",
+      "kind": "number",
+      "min": 0.5,
+      "max": 50,
+      "defaultValue": "8.5"
+    },
+    {
+      "id": "srednesutochnoe_kolichestvo_passazhirov",
+      "label": "Среднесуточное количество пассажиров",
+      "unit": "пасс./сут",
+      "hint": "(= Годовой поток / 365)",
+      "section": "Пассажирский поток",
+      "kind": "number",
+      "min": 1400,
+      "max": 137000,
+      "defaultValue": "23300"
+    },
+    {
+      "id": "pikovoe_kolichestvo_passazhirov_chas",
+      "label": "Пиковое количество пассажиров в час (PHF)",
+      "unit": "пасс./ч",
+      "section": "Пассажирский поток",
+      "kind": "number",
+      "min": 200,
+      "max": 18000,
+      "defaultValue": "3200"
+    },
+    {
+      "id": "dolya_transfernyh_passazhirov",
+      "label": "Доля трансферных пассажиров",
+      "unit": "%",
+      "hint": "Транзит - ключевой сегмент для роботов-носильщиков/кейсов",
+      "section": "Пассажирский поток",
+      "kind": "number",
+      "min": 5,
+      "max": 45,
+      "defaultValue": "15"
+    },
+    {
+      "id": "kolichestvo_stoek_registratsii",
+      "label": "Количество стоек регистрации",
+      "unit": "шт.",
+      "hint": "Целевая зона для роботов сопровождения и аэропортовых тележек",
+      "section": "Пассажирский поток",
+      "kind": "number",
+      "min": 15,
+      "max": 350,
+      "defaultValue": "50"
+    },
+    {
+      "id": "srednesutochnoe_kolichestvo_reysov",
+      "label": "Среднесуточное количество рейсов (взлёт+посадка)",
+      "unit": "рейсов/сут",
+      "section": "Авиационное наземное обслуживание (RAMP)",
+      "kind": "number",
+      "min": 30,
+      "max": 1200,
+      "defaultValue": "280"
+    },
+    {
+      "id": "pikovoe_kolichestvo_reysov_chas",
+      "label": "Пиковое количество рейсов в час",
+      "unit": "рейсов/ч",
+      "hint": "Для расчёта пиковой потребности в спецтехнике",
+      "section": "Авиационное наземное обслуживание (RAMP)",
+      "kind": "number",
+      "min": 4,
+      "max": 120,
+      "defaultValue": "32"
+    },
+    {
+      "id": "vremya_oborota_vozdushnogo_sudna",
+      "label": "Среднее время оборота воздушного судна (TAT)",
+      "unit": "мин",
+      "hint": "Turnaround Time: посадка → взлёт. Ключевой KPI перрона",
+      "section": "Авиационное наземное обслуживание (RAMP)",
+      "kind": "number",
+      "min": 25,
+      "max": 90,
+      "defaultValue": "45"
+    },
+    {
+      "id": "kolichestvo_operatsiy_nazemnogo_obsluzhivaniya_1",
+      "label": "Среднее количество операций наземного обслуживания на 1 рейс",
+      "unit": "операций",
+      "hint": "Буксировка, питание, заправка, уборка, разгрузка/погрузка",
+      "section": "Авиационное наземное обслуживание (RAMP)",
+      "kind": "number",
+      "min": 10,
+      "max": 25,
+      "defaultValue": "18"
+    },
+    {
+      "id": "obem_peremescheniya_bagazha",
+      "label": "Объём перемещения багажа (единиц/сутки)",
+      "unit": "ед./сут",
+      "hint": "Целевой KPI для багажных AMR и сортировочных систем",
+      "section": "Авиационное наземное обслуживание (RAMP)",
+      "kind": "number",
+      "min": 3000,
+      "max": 300000,
+      "defaultValue": "35000"
+    },
+    {
+      "id": "massa_edinitsy_bagazha",
+      "label": "Средняя масса единицы багажа",
+      "unit": "кг",
+      "hint": "Для расчёта грузоподъёмности багажных роботов",
+      "section": "Авиационное наземное обслуживание (RAMP)",
+      "kind": "number",
+      "min": 10,
+      "max": 35,
+      "defaultValue": "18"
+    },
+    {
+      "id": "kolichestvo_stoek_vydachi_bagazha",
+      "label": "Количество стоек выдачи багажа (каруселей)",
+      "unit": "шт.",
+      "hint": "Целевая зона автоматической сортировки",
+      "section": "Авиационное наземное обслуживание (RAMP)",
+      "kind": "number",
+      "min": 3,
+      "max": 30,
+      "defaultValue": "8"
+    },
+    {
+      "id": "obem_bortovogo_pitaniya",
+      "label": "Объём бортового питания (порций/сутки)",
+      "unit": "порций/сут",
+      "hint": "Цель: автономные тележки доставки питания на борт",
+      "section": "Авиационное наземное обслуживание (RAMP)",
+      "kind": "number",
+      "min": 1000,
+      "max": 200000,
+      "defaultValue": "22000"
+    },
+    {
+      "id": "obem_zapravki_vozdushnyh_sudov",
+      "label": "Объём заправки воздушных судов (рейсов/сут)",
+      "unit": "рейсов/сут",
+      "hint": "Потенциал: автономные топливозаправщики",
+      "section": "Авиационное наземное обслуживание (RAMP)",
+      "kind": "number",
+      "min": 30,
+      "max": 1200,
+      "defaultValue": "280"
+    },
+    {
+      "id": "sutochnoe_kolichestvo_reysov_vnutrennih_gruzovyh",
+      "label": "Суточное количество рейсов внутренних грузовых тележек (внутри терминала)",
+      "unit": "рейсов/сут",
+      "hint": "Перемещение грузов, расходников, отходов внутри терминала",
+      "section": "Внутрипортовая логистика и уборка",
+      "kind": "number",
+      "min": 50,
+      "max": 3000,
+      "defaultValue": "420"
+    },
+    {
+      "id": "kolichestvo_uborochnyh_mashin",
+      "label": "Количество уборочных машин (терминал)",
+      "unit": "шт.",
+      "hint": "Замена: автономные поломоечные машины (Karcher, Nilfisk и др.)",
+      "section": "Внутрипортовая логистика и уборка",
+      "kind": "number",
+      "min": 2,
+      "max": 40,
+      "defaultValue": "8"
+    },
+    {
+      "id": "ploschad_ubiraemaya_robotizirovannoy_uborkoy",
+      "label": "Площадь, убираемая роботизированной уборкой",
+      "unit": "м²",
+      "hint": "~60-70% от площади терминала (без закрытых и режимных зон)",
+      "section": "Внутрипортовая логистика и уборка",
+      "kind": "number",
+      "min": 4800,
+      "max": 300000,
+      "defaultValue": "51000"
+    },
+    {
+      "id": "sutochnyy_obem_vyvoza_musora",
+      "label": "Суточный объём вывоза мусора (контейнеров)",
+      "unit": "конт./сут",
+      "hint": "AMR-платформы для вывоза мусорных тележек",
+      "section": "Внутрипортовая логистика и уборка",
+      "kind": "number",
+      "min": 10,
+      "max": 500,
+      "defaultValue": "85"
+    },
+    {
+      "id": "chislennost_personala_nazemnogo_obsluzhivaniya",
+      "label": "Численность персонала наземного обслуживания (рамп)",
+      "unit": "чел.",
+      "hint": "Цель роботизации - частичное высвобождение на рутинных операциях",
+      "section": "Персонал",
+      "kind": "number",
+      "min": 50,
+      "max": 2000,
+      "defaultValue": "320"
+    },
+    {
+      "id": "chislennost_personala_vnutri_terminala",
+      "label": "Численность персонала внутри терминала (логистика, уборка)",
+      "unit": "чел.",
+      "hint": "Уборщики, курьеры, грузчики терминала",
+      "section": "Персонал",
+      "kind": "number",
+      "min": 30,
+      "max": 800,
+      "defaultValue": "180"
+    },
+    {
+      "id": "z_p_sotrudnika_nazemnogo_obsluzhivaniya",
+      "label": "Средняя з/п сотрудника наземного обслуживания (gross)",
+      "unit": "руб./мес.",
+      "section": "Персонал",
+      "kind": "number",
+      "min": 70000,
+      "max": 150000,
+      "defaultValue": "100000"
+    },
+    {
+      "id": "z_p_uborschika_terminala",
+      "label": "Средняя з/п уборщика терминала (gross)",
+      "unit": "руб./мес.",
+      "hint": "Ниже рынка, высокая текучесть",
+      "section": "Персонал",
+      "kind": "number",
+      "min": 38000,
+      "max": 85000,
+      "defaultValue": "65000"
+    },
+    {
+      "id": "koeffitsient_nachisleniy_fot",
+      "label": "Коэффициент начислений на ФОТ",
+      "hint": "Аналогично складу",
+      "section": "Персонал",
+      "kind": "number",
+      "min": 1.302,
+      "max": 1.302,
+      "defaultValue": "1.302"
+    },
+    {
+      "id": "godovaya_tekuchest",
+      "label": "Годовая текучесть (персонал терминала)",
+      "unit": "%",
+      "section": "Персонал",
+      "kind": "number",
+      "min": 15,
+      "max": 60,
+      "defaultValue": "35"
+    },
+    {
+      "id": "zonirovanie",
+      "label": "Зонирование (количество режимных зон)",
+      "unit": "шт.",
+      "hint": "Airside, Landside, стерильная зона, перрон — у каждой свои допуски",
+      "section": "Безопасность и ограничения",
+      "kind": "number",
+      "min": 2,
+      "max": 8,
+      "defaultValue": "4"
+    },
+    {
+      "id": "access_control",
+      "label": "Наличие системы контроля доступа (СКУД)",
+      "hint": "AMR должны интегрироваться со СКУД для прохода через двери",
+      "section": "Безопасность и ограничения",
+      "kind": "select",
+      "defaultValue": "yes",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Да (OSDP)"
+        },
+        {
+          "value": "no",
+          "label": "Нет"
+        }
+      ]
+    },
+    {
+      "id": "airside_certification",
+      "label": "Требования по сертификации оборудования для airside",
+      "hint": "Серьёзный барьер: не все роботы допущены на перрон",
+      "section": "Безопасность и ограничения",
+      "kind": "text",
+      "defaultValue": "EASA/ИКАО"
+    },
+    {
+      "id": "ogranicheniya_urovnyu_shuma",
+      "label": "Ограничения по уровню шума (зона)",
+      "unit": "дБА",
+      "hint": "Критично для работы AMR в ночное время",
+      "section": "Безопасность и ограничения",
+      "kind": "number",
+      "min": 55,
+      "max": 80,
+      "defaultValue": "70"
+    },
+    {
+      "id": "temperatura_neotaplivaemyh_zonah",
+      "label": "Температура в неотапливаемых зонах (перрон, зима)",
+      "unit": "°C",
+      "hint": "Многие роботы не сертифицированы ниже -20°C",
+      "section": "Безопасность и ограничения",
+      "kind": "number",
+      "min": -40,
+      "max": 0,
+      "defaultValue": "-25"
+    },
+    {
+      "id": "fids_aodb_present",
+      "label": "Наличие FIDS/AODB системы",
+      "hint": "Аэропортовая операционная БД - источник данных для расписания роботов FIDS - система отображения информации о рейсах в аэропорту, AODB - операционная база данных аэропорта",
+      "section": "Инфраструктура",
+      "kind": "select",
+      "defaultValue": "yes",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Да"
+        },
+        {
+          "value": "no",
+          "label": "Нет"
+        }
+      ]
+    },
+    {
+      "id": "bms_present",
+      "label": "Наличие BMS (системы управления зданием)",
+      "hint": "Интеграция AMR с лифтами, дверями, освещением",
+      "section": "Инфраструктура",
+      "kind": "select",
+      "defaultValue": "yes",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Да"
+        },
+        {
+          "value": "no",
+          "label": "Нет"
+        }
+      ]
+    },
+    {
+      "id": "dostupnaya_moschnost_zaryadnoy_infrastruktury",
+      "label": "Доступная мощность для зарядной инфраструктуры",
+      "unit": "кВт",
+      "hint": "Дополнительные требования к электроснабжению",
+      "section": "Инфраструктура",
+      "kind": "number",
+      "min": 50,
+      "max": 2000,
+      "defaultValue": "300"
+    },
+    {
+      "id": "planiruemyy_byudzhet_robotizatsiyu",
+      "label": "Планируемый бюджет на роботизацию (CAPEX)",
+      "unit": "млн руб.",
+      "section": "Инфраструктура",
+      "kind": "number",
+      "min": 20,
+      "max": 800,
+      "defaultValue": "120"
+    },
+    {
+      "id": "gorizont_rascheta_okupaemosti",
+      "label": "Горизонт расчёта окупаемости",
+      "unit": "лет",
+      "hint": "Аэропортовые проекты имеют длиннее горизонт из-за сложности интеграции",
+      "section": "Инфраструктура",
+      "kind": "number",
+      "min": 5,
+      "max": 15,
+      "defaultValue": "7"
+    }
+  ],
+  "clinic": [
+    {
+      "id": "facility_type",
+      "label": "Тип медицинского учреждения",
+      "hint": "Варианты: Поликлиника / Многопрофильная больница / Онкоцентр / Диагностический центр",
+      "section": "Общие параметры объекта",
+      "kind": "select",
+      "defaultValue": "hospital",
+      "options": [
+        {
+          "value": "clinic",
+          "label": "Поликлиника"
+        },
+        {
+          "value": "hospital",
+          "label": "Многопрофильная больница"
+        },
+        {
+          "value": "oncology",
+          "label": "Онкоцентр"
+        },
+        {
+          "value": "diagnostic",
+          "label": "Диагностический центр"
+        }
+      ]
+    },
+    {
+      "id": "obschaya_ploschad_zdaniya",
+      "label": "Общая площадь здания(й)",
+      "unit": "м²",
+      "hint": "Площадь влияет на длину маршрутов и кол-во роботов",
+      "section": "Общие параметры объекта",
+      "kind": "number",
+      "min": 3000,
+      "max": 200000,
+      "defaultValue": "45000"
+    },
+    {
+      "id": "kolichestvo_etazhey",
+      "label": "Количество этажей (основной корпус)",
+      "unit": "шт.",
+      "hint": "Лифты — ключевой элемент интеграции. Н≥5 этажей = обязательные лифты",
+      "section": "Общие параметры объекта",
+      "kind": "number",
+      "min": 3,
+      "max": 20,
+      "defaultValue": "9"
+    },
+    {
+      "id": "kolichestvo_liftov",
+      "label": "Количество лифтов (грузовых/медицинских)",
+      "unit": "шт.",
+      "hint": "Пропускная способность лифта - частое узкое место",
+      "section": "Общие параметры объекта",
+      "kind": "number",
+      "min": 1,
+      "max": 12,
+      "defaultValue": "4"
+    },
+    {
+      "id": "kolichestvo_koek",
+      "label": "Количество коек (стационар)",
+      "unit": "коек",
+      "hint": "Основная нагрузка: питание, бельё, медикаменты на койку/сутки",
+      "section": "Общие параметры объекта",
+      "kind": "number",
+      "min": 50,
+      "max": 2500,
+      "defaultValue": "650"
+    },
+    {
+      "id": "koechnyy_fond_ekspluatatsii",
+      "label": "Коечный фонд в эксплуатации (средняя занятость)",
+      "unit": "%",
+      "hint": "Источник: Минздрав РФ, среднее по ЦФО 2023",
+      "section": "Общие параметры объекта",
+      "kind": "number",
+      "min": 60,
+      "max": 95,
+      "defaultValue": "82"
+    },
+    {
+      "id": "kolichestvo_operatsionnyh",
+      "label": "Количество операционных",
+      "unit": "шт.",
+      "hint": "Доставка стерильных наборов — высокоприоритетный сценарий",
+      "section": "Общие параметры объекта",
+      "kind": "number",
+      "min": 2,
+      "max": 40,
+      "defaultValue": "12"
+    },
+    {
+      "id": "kolichestvo_ambulatornyh_posescheniy_sutki",
+      "label": "Количество амбулаторных посещений в сутки",
+      "unit": "посещений/сут",
+      "hint": "Поликлиника. Влияет на доставку анализов",
+      "section": "Общие параметры объекта",
+      "kind": "number",
+      "min": 100,
+      "max": 5000,
+      "defaultValue": "850"
+    },
+    {
+      "id": "inpatient_schedule",
+      "label": "Режим работы стационара",
+      "hint": "Стационар = круглосуточно. Определяет требование к надёжности робота",
+      "section": "Режим работы",
+      "kind": "text",
+      "defaultValue": "24/7/365"
+    },
+    {
+      "id": "outpatient_schedule",
+      "label": "Режим работы амбулатории",
+      "hint": "Поликлиника работает в рабочие дни",
+      "section": "Режим работы",
+      "kind": "text",
+      "defaultValue": "5/2, 08:00-20:00"
+    },
+    {
+      "id": "kolichestvo_smen_medpersonala",
+      "label": "Количество смен медперсонала (уход за пациентами)",
+      "unit": "смен/сут",
+      "hint": "3 смены по 8 ч или 2 по 12 ч (зависит от учреждения)",
+      "section": "Режим работы",
+      "kind": "number",
+      "min": 2,
+      "max": 3,
+      "defaultValue": "3"
+    },
+    {
+      "id": "peak_logistics_hours",
+      "label": "Пиковое время логистической нагрузки",
+      "hint": "Завтрак + обед; смена белья; приём/выдача анализов",
+      "section": "Режим работы",
+      "kind": "text",
+      "defaultValue": "07:00-10:00 и 15:00-17:00"
+    },
+    {
+      "id": "kolichestvo_kormleniy_sutki",
+      "label": "Количество кормлений в сутки",
+      "unit": "раз/сут",
+      "hint": "Завтрак, обед, ужин (+ полдник и второй ужин в ряде отделений)",
+      "section": "Внутрибольничная логистика: питание",
+      "kind": "number",
+      "min": 3,
+      "max": 5,
+      "defaultValue": "3"
+    },
+    {
+      "id": "obschee_kolichestvo_portsiy_pitaniya_sutki",
+      "label": "Общее количество порций питания в сутки",
+      "unit": "порций/сут",
+      "hint": "(= Коек x Занятость x Кратность кормления)",
+      "section": "Внутрибольничная логистика: питание",
+      "kind": "number",
+      "min": 150,
+      "max": 7500,
+      "defaultValue": "1950"
+    },
+    {
+      "id": "rasstoyanie_pischebloka_do_otdeleniya",
+      "label": "Среднее расстояние от пищеблока до отделения",
+      "unit": "м",
+      "hint": "Влияет на время маршрута и требуемое кол-во роботов",
+      "section": "Внутрибольничная логистика: питание",
+      "kind": "number",
+      "min": 30,
+      "max": 500,
+      "defaultValue": "180"
+    },
+    {
+      "id": "kolichestvo_tochek_razdachi_pitaniya",
+      "label": "Количество точек раздачи питания (отделений)",
+      "unit": "шт.",
+      "hint": "Один рейс робота = 1 отделение или несколько в цепочке",
+      "section": "Внутрибольничная логистика: питание",
+      "kind": "number",
+      "min": 4,
+      "max": 60,
+      "defaultValue": "18"
+    },
+    {
+      "id": "massa_telezhki_pitaniem",
+      "label": "Средняя масса тележки с питанием (брутто)",
+      "unit": "кг",
+      "hint": "Определяет грузоподъёмность. Типовой агрегатный лоток - 60-80 кг",
+      "section": "Внутрибольничная логистика: питание",
+      "kind": "number",
+      "min": 40,
+      "max": 250,
+      "defaultValue": "120"
+    },
+    {
+      "id": "normativ_dostavki_pitaniya",
+      "label": "Норматив доставки питания (мин от пищеблока до отделения)",
+      "unit": "мин",
+      "hint": "Требование СанПиН и технологической карты",
+      "section": "Внутрибольничная логистика: питание",
+      "kind": "number",
+      "min": 10,
+      "max": 35,
+      "defaultValue": "20"
+    },
+    {
+      "id": "obem_gryaznogo_belya",
+      "label": "Объём грязного белья (кг/сутки)",
+      "unit": "кг/сут",
+      "hint": "Норматив: ~2.5–3.5 кг на койку в сутки (постельное + операционное)",
+      "section": "Внутрибольничная логистика: бельё",
+      "kind": "number",
+      "min": 200,
+      "max": 8000,
+      "defaultValue": "1800"
+    },
+    {
+      "id": "obem_chistogo_belya_razdachu",
+      "label": "Объём чистого белья на раздачу (кг/сутки)",
+      "unit": "кг/сут",
+      "hint": "≈ грязному (с учётом сортировки и потерь)",
+      "section": "Внутрибольничная логистика: бельё",
+      "kind": "number",
+      "min": 200,
+      "max": 8000,
+      "defaultValue": "1800"
+    },
+    {
+      "id": "kolichestvo_tochek_sbora_vydachi_belya",
+      "label": "Количество точек сбора/выдачи белья",
+      "unit": "шт.",
+      "hint": "По числу отделений; есть также операционный блок",
+      "section": "Внутрибольничная логистика: бельё",
+      "kind": "number",
+      "min": 4,
+      "max": 60,
+      "defaultValue": "18"
+    },
+    {
+      "id": "periodichnost_smeny_belya",
+      "label": "Периодичность смены белья (раз в сутки, в среднем)",
+      "unit": "раз/сут",
+      "hint": "Плановая смена 1 р/сут; экстренная — по потребности",
+      "section": "Внутрибольничная логистика: бельё",
+      "kind": "number",
+      "min": 1,
+      "max": 3,
+      "defaultValue": "1.3"
+    },
+    {
+      "id": "massa_konteynera_belem",
+      "label": "Средняя масса контейнера с бельём",
+      "unit": "кг",
+      "hint": "Брезентовая тележка или замкнутый контейнер (требование по инфекции)",
+      "section": "Внутрибольничная логистика: бельё",
+      "kind": "number",
+      "min": 20,
+      "max": 120,
+      "defaultValue": "55"
+    },
+    {
+      "id": "kolichestvo_naimenovaniy_medikamentov_obraschenii",
+      "label": "Количество наименований медикаментов в обращении",
+      "unit": "наименований",
+      "hint": "Аналог SKU. Влияет на алгоритм комплектации",
+      "section": "Внутрибольничная логистика: медикаменты и расходники",
+      "kind": "number",
+      "min": 300,
+      "max": 8000,
+      "defaultValue": "2800"
+    },
+    {
+      "id": "obem_vydachi_medikamentov",
+      "label": "Объём выдачи медикаментов (заявок/сутки)",
+      "unit": "заявок/сут",
+      "hint": "1 заявка = 1 отделение, 1 смена. Комплектуется в аптеке",
+      "section": "Внутрибольничная логистика: медикаменты и расходники",
+      "kind": "number",
+      "min": 40,
+      "max": 1500,
+      "defaultValue": "340"
+    },
+    {
+      "id": "kolichestvo_aptechnyh_tochek_vydachi",
+      "label": "Количество аптечных точек выдачи (аптека, аптечные склады)",
+      "unit": "шт.",
+      "hint": "Точки отправки роботов с медикаментами",
+      "section": "Внутрибольничная логистика: медикаменты и расходники",
+      "kind": "number",
+      "min": 1,
+      "max": 6,
+      "defaultValue": "2"
+    },
+    {
+      "id": "kolichestvo_tochek_dostavki",
+      "label": "Количество точек доставки (отделений + ОР + реанимация)",
+      "unit": "шт.",
+      "hint": "Точки назначения",
+      "section": "Внутрибольничная логистика: медикаменты и расходники",
+      "kind": "number",
+      "min": 5,
+      "max": 70,
+      "defaultValue": "22"
+    },
+    {
+      "id": "vremya_komplektatsii_1_zayavki_apteke",
+      "label": "Среднее время комплектации 1 заявки в аптеке",
+      "unit": "мин",
+      "hint": "Влияет на ритмичность работы роботов",
+      "section": "Внутрибольничная логистика: медикаменты и расходники",
+      "kind": "number",
+      "min": 5,
+      "max": 30,
+      "defaultValue": "12"
+    },
+    {
+      "id": "dolya_srochnyh_dostavok_medikamentov",
+      "label": "Доля срочных (STAT) доставок медикаментов",
+      "unit": "%",
+      "hint": "STAT = приоритет; робот должен прерывать плановый маршрут",
+      "section": "Внутрибольничная логистика: медикаменты и расходники",
+      "kind": "number",
+      "min": 2,
+      "max": 20,
+      "defaultValue": "8"
+    },
+    {
+      "id": "obem_dostavki_rashodnyh_materialov",
+      "label": "Объём доставки расходных материалов (рейсов/сутки)",
+      "unit": "рейсов/сут",
+      "hint": "Шприцы, бинты, перчатки и пр.",
+      "section": "Внутрибольничная логистика: медикаменты и расходники",
+      "kind": "number",
+      "min": 10,
+      "max": 200,
+      "defaultValue": "45"
+    },
+    {
+      "id": "kolichestvo_biomaterialov_sutki",
+      "label": "Количество биоматериалов (проб) в сутки",
+      "unit": "проб/сут",
+      "hint": "Забор у пациентов → доставка в КДЛ",
+      "section": "Внутрибольничная логистика: анализы и биоматериалы",
+      "kind": "number",
+      "min": 100,
+      "max": 6000,
+      "defaultValue": "1200"
+    },
+    {
+      "id": "kolichestvo_kliniko_diagnosticheskih_laboratoriy",
+      "label": "Количество клинико-диагностических лабораторий (КДЛ)",
+      "unit": "шт.",
+      "hint": "Точки приёма биоматериала",
+      "section": "Внутрибольничная логистика: анализы и биоматериалы",
+      "kind": "number",
+      "min": 1,
+      "max": 5,
+      "defaultValue": "2"
+    },
+    {
+      "id": "vremya_dostavki_proby",
+      "label": "Среднее время доставки пробы (норматив)",
+      "unit": "мин",
+      "hint": "ГОСТ Р 53079.4-2008. Критично для коагулологии и цитологии",
+      "section": "Внутрибольничная логистика: анализы и биоматериалы",
+      "kind": "number",
+      "min": 10,
+      "max": 60,
+      "defaultValue": "30"
+    },
+    {
+      "id": "obem_vydachi_rezultatov_analizov",
+      "label": "Объём выдачи результатов анализов (рейсов/сутки)",
+      "unit": "рейсов/сут",
+      "hint": "Бумажные бланки или интегрированная ЛИС - влияет на сценарий",
+      "section": "Внутрибольничная логистика: анализы и биоматериалы",
+      "kind": "number",
+      "min": 5,
+      "max": 120,
+      "defaultValue": "28"
+    },
+    {
+      "id": "obem_meditsinskih_othodov_klassa_a",
+      "label": "Объём медицинских отходов класса А (ненасыщенные)",
+      "unit": "кг/сут",
+      "hint": "Класс А - ненасыщенные",
+      "section": "Внутрибольничная логистика: отходы",
+      "kind": "number",
+      "min": 80,
+      "max": 4000,
+      "defaultValue": "850"
+    },
+    {
+      "id": "obem_meditsinskih_othodov_klassa_b",
+      "label": "Объём медицинских отходов класса Б (инфицированные)",
+      "unit": "кг/сут",
+      "hint": "Класс Б - специальные требования к контейнерам и маршруту",
+      "section": "Внутрибольничная логистика: отходы",
+      "kind": "number",
+      "min": 20,
+      "max": 1200,
+      "defaultValue": "220"
+    },
+    {
+      "id": "kolichestvo_tochek_sbora_othodov",
+      "label": "Количество точек сбора отходов",
+      "unit": "шт.",
+      "hint": "По числу отделений + операционный блок",
+      "section": "Внутрибольничная логистика: отходы",
+      "kind": "number",
+      "min": 4,
+      "max": 70,
+      "defaultValue": "20"
+    },
+    {
+      "id": "periodichnost_vyvoza_othodov_otdeleniy",
+      "label": "Периодичность вывоза отходов из отделений",
+      "unit": "раз/сут",
+      "hint": "Строгий регламент СанПиН 2.1.3684-21",
+      "section": "Внутрибольничная логистика: отходы",
+      "kind": "number",
+      "min": 1,
+      "max": 4,
+      "defaultValue": "2"
+    },
+    {
+      "id": "chislennost_sanitarov_transportirovschikov",
+      "label": "Численность санитаров и транспортировщиков",
+      "unit": "чел.",
+      "hint": "Основная целевая группа для замещения",
+      "section": "Персонал (немедицинский, задействованный в логистике)",
+      "kind": "number",
+      "min": 10,
+      "max": 300,
+      "defaultValue": "65"
+    },
+    {
+      "id": "chislennost_sotrudnikov_pischebloka",
+      "label": "Численность сотрудников пищеблока (раздача)",
+      "unit": "чел.",
+      "hint": "Частичное замещение - только транспортная функция",
+      "section": "Персонал (немедицинский, задействованный в логистике)",
+      "kind": "number",
+      "min": 5,
+      "max": 100,
+      "defaultValue": "28"
+    },
+    {
+      "id": "chislennost_sotrudnikov_prachechnoy",
+      "label": "Численность сотрудников прачечной (транспорт белья)",
+      "unit": "чел.",
+      "section": "Персонал (немедицинский, задействованный в логистике)",
+      "kind": "number",
+      "min": 3,
+      "max": 60,
+      "defaultValue": "18"
+    },
+    {
+      "id": "z_p_sanitara_transportirovschika",
+      "label": "Средняя з/п санитара/транспортировщика (gross)",
+      "unit": "руб./мес.",
+      "hint": "Москва/МО 2024-2025",
+      "section": "Персонал (немедицинский, задействованный в логистике)",
+      "kind": "number",
+      "min": 38000,
+      "max": 85000,
+      "defaultValue": "55000"
+    },
+    {
+      "id": "z_p_sotrudnika_pischebloka",
+      "label": "Средняя з/п сотрудника пищеблока (gross)",
+      "unit": "руб./мес.",
+      "section": "Персонал (немедицинский, задействованный в логистике)",
+      "kind": "number",
+      "min": 35000,
+      "max": 75000,
+      "defaultValue": "52000"
+    },
+    {
+      "id": "koeffitsient_nachisleniy_fot",
+      "label": "Коэффициент начислений на ФОТ",
+      "hint": "Аналогично склад/аэропорт",
+      "section": "Персонал (немедицинский, задействованный в логистике)",
+      "kind": "number",
+      "min": 1.302,
+      "max": 1.302,
+      "defaultValue": "1.302"
+    },
+    {
+      "id": "godovaya_tekuchest",
+      "label": "Годовая текучесть (немедицинский персонал)",
+      "unit": "%",
+      "section": "Персонал (немедицинский, задействованный в логистике)",
+      "kind": "number",
+      "min": 20,
+      "max": 70,
+      "defaultValue": "45"
+    },
+    {
+      "id": "decontamination_policy",
+      "label": "Обеззараживание робота между рейсами",
+      "hint": "УФ-модуль или обработка дез. средством. Учитывается в OPEX",
+      "section": "Требования безопасности и санитарные нормы",
+      "kind": "text",
+      "defaultValue": "Обязательно для Б-маршрутов"
+    },
+    {
+      "id": "trebovaniya_urovnyu_shuma_palatah",
+      "label": "Требования к уровню шума в палатах (ночное время)",
+      "unit": "дБА",
+      "hint": "СанПиН 2.1.3.2630-10",
+      "section": "Требования безопасности и санитарные нормы",
+      "kind": "number",
+      "min": 25,
+      "max": 40,
+      "defaultValue": "30"
+    },
+    {
+      "id": "access_control_zones",
+      "label": "Наличие СКУД (контроль доступа по зонам)",
+      "hint": "Интеграция роботов через API лифтового оборудования и дверей",
+      "section": "Требования безопасности и санитарные нормы",
+      "kind": "select",
+      "defaultValue": "yes",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Да"
+        },
+        {
+          "value": "no",
+          "label": "Нет"
+        }
+      ]
+    },
+    {
+      "id": "robot_surface_material",
+      "label": "Требования к материалу поверхностей робота",
+      "hint": "Для протирки дез. Средствами",
+      "section": "Требования безопасности и санитарные нормы",
+      "kind": "text",
+      "defaultValue": "Нержавеющая сталь или ABS с антибактер. покрытием"
+    },
+    {
+      "id": "mis_present",
+      "label": "Наличие МИС (медицинская информационная система)",
+      "hint": "Интеграция с МИС - источник данных для планирования маршрутов",
+      "section": "Инфраструктура",
+      "kind": "select",
+      "defaultValue": "yes",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Да (ЕМИАС)"
+        },
+        {
+          "value": "no",
+          "label": "Нет"
+        }
+      ]
+    },
+    {
+      "id": "lis_present",
+      "label": "Наличие ЛИС (лабораторная информационная система)",
+      "hint": "Для автоматического формирования заявок на доставку проб",
+      "section": "Инфраструктура",
+      "kind": "select",
+      "defaultValue": "yes",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Да"
+        },
+        {
+          "value": "no",
+          "label": "Нет"
+        }
+      ]
+    },
+    {
+      "id": "elevator_bms_present",
+      "label": "Наличие системы управления лифтами (BMS)",
+      "hint": "Критично: без API лифтов AMR не может самостоятельно переходить между этажами",
+      "section": "Инфраструктура",
+      "kind": "select",
+      "defaultValue": "yes",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Да (частично)"
+        },
+        {
+          "value": "no",
+          "label": "Нет"
+        }
+      ]
+    },
+    {
+      "id": "shirina_koridorov",
+      "label": "Ширина коридоров (основных)",
+      "unit": "м",
+      "hint": "Мин. 1.8 м для AMR + разминовка с каталками. Узкие места - критичны",
+      "section": "Инфраструктура",
+      "kind": "number",
+      "min": 1.8,
+      "max": 3.5,
+      "defaultValue": "2.4"
+    },
+    {
+      "id": "ramps_present",
+      "label": "Наличие пандусов/подъёмников (для межэтажного AMR без лифта)",
+      "hint": "Если нет лифтовой интеграции - требуются подъёмники",
+      "section": "Инфраструктура",
+      "kind": "select",
+      "defaultValue": "no",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Да"
+        },
+        {
+          "value": "no",
+          "label": "Нет"
+        }
+      ]
+    },
+    {
+      "id": "dostupnaya_moschnost_zaryadnoy_infrastruktury",
+      "label": "Доступная мощность для зарядной инфраструктуры",
+      "unit": "кВт",
+      "hint": "Обычно ставятся у сестринских постов или в технических нишах",
+      "section": "Инфраструктура",
+      "kind": "number",
+      "min": 15,
+      "max": 400,
+      "defaultValue": "80"
+    },
+    {
+      "id": "planiruemyy_byudzhet_robotizatsiyu",
+      "label": "Планируемый бюджет на роботизацию (CAPEX)",
+      "unit": "млн руб.",
+      "hint": "Медицина - консервативна; часто начинают с пилота на 1-3 робота",
+      "section": "Инфраструктура",
+      "kind": "number",
+      "min": 5,
+      "max": 200,
+      "defaultValue": "35"
+    },
+    {
+      "id": "gorizont_rascheta_okupaemosti",
+      "label": "Горизонт расчёта окупаемости",
+      "unit": "лет",
+      "section": "Инфраструктура",
+      "kind": "number",
+      "min": 5,
+      "max": 15,
+      "defaultValue": "7"
+    }
+  ]
+}

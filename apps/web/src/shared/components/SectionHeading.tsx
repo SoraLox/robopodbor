@@ -29,8 +29,8 @@ export interface SectionHeadingProps {
 }
 
 const TEXT: Record<SectionHeadingSize, string> = {
-  display: 'text-[40px] font-bold tracking-display leading-[0.95]',
-  h1: 'text-[28px] font-bold tracking-h1 leading-none',
+  display: 'text-[30px] sm:text-[40px] font-bold tracking-display leading-[1.05] sm:leading-[0.95]',
+  h1: 'text-[22px] sm:text-[28px] font-bold tracking-h1 leading-tight sm:leading-none',
   h2: 'text-[20px] font-semibold tracking-[-0.025em]',
   micro: 'text-[13px] font-semibold tracking-[-0.01em]',
 };
@@ -49,10 +49,12 @@ export function SectionHeading({
   className,
 }: SectionHeadingProps) {
   return (
-    <div className={cn('flex items-center gap-2.5', className)}>
-      <div className={cn('flex-none bg-primary', BAR[size])} aria-hidden />
-      <div className={cn('font-heading uppercase', TEXT[size])}>{children}</div>
-      {meta ? <div className="ml-auto meta-label">{meta}</div> : null}
+    <div className={cn('flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2.5', className)}>
+      <div className="flex min-w-0 items-center gap-2.5">
+        <div className={cn('flex-none bg-primary', BAR[size])} aria-hidden />
+        <div className={cn('min-w-0 font-heading uppercase [overflow-wrap:anywhere]', TEXT[size])}>{children}</div>
+      </div>
+      {meta ? <div className="meta-label pl-[14px] sm:ml-auto sm:pl-0">{meta}</div> : null}
     </div>
   );
 }

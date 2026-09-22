@@ -14,24 +14,35 @@
 @layer base {
   :root {
     /*
-      Палитра Apple Store (apple.com/store): белый + светло-серый холст +
-      почти чёрный текст/акцент, синий оставлен только под точечные ссылки.
+      Мир по референсу Sorcerer: светло-серый холст, белые скруглённые блоки,
+      чистый ч/б, один геометрический гротеск (Inter), grainy blue radial как
+      единственный цвет. Тёмная гео-панель (--hero-*) остаётся для Login и CTA.
     */
-    --canvas: 240 11% 96%; /* #F5F5F7 — фон приложения */
-    --background: 0 0% 100%; /* #FFFFFF — карточки и панели */
-    --foreground: 240 3% 12%; /* #1D1D1F — основной текст и акцент кнопок, почти чёрный */
-    --muted-foreground: 240 2% 44%; /* #6E6E73 — второстепенный текст абзацев */
-    --meta-foreground: 240 2% 54%; /* #86868B — мелкие служебные подписи */
-    --border: 240 3% 83%; /* #D2D2D7 — границы карточек */
-    --hairline: 240 9% 94%; /* #EDEDF0 — лёгкие разделители внутри карточек */
-    --radius: 20px; /* мягкая, но не игрушечная скруглённость — язык референсов */
+    --canvas: 0 0% 95%; /* #F3F3F3 — холст страницы и заливка полей */
+    --background: 0 0% 100%; /* #FFFFFF — блоки и панели */
+    --foreground: 0 0% 11%; /* #1C1C1C — основной текст и чёрные кнопки */
+    --muted-foreground: 0 0% 43%; /* #6E6E6E — второстепенный текст */
+    --meta-foreground: 0 0% 53%; /* #878787 — мелкие служебные подписи */
+    --border: 0 0% 83%; /* #D4D4D4 — границы */
+    --hairline: 0 0% 94%; /* #F0F0F0 — лёгкие разделители */
+    --radius: 28px; /* крупное скругление оболочки, как у референса */
 
-    /* --- Акцент: почти чёрный, синий — только под ссылки/точечные акценты --- */
-    --primary: 240 3% 12%; /* #1D1D1F — чёрные кнопки, как в Apple Store */
+    /* --- Акцент: нейтрально-чёрный --- */
+    --primary: 0 0% 11%; /* #1C1C1C — чёрные кнопки */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 240 2% 26%; /* #424245 — hover/active */
-    --primary-bright: 209 100% 58%; /* #2997FF — синий для ссылок и акцентов на тёмном фоне */
-    --accent-tint: 240 12% 92%; /* #E8E8ED — подложка активного пункта и выделений */
+    --primary-hover: 0 0% 20%; /* #333333 — hover/active */
+    --primary-bright: 214 80% 54%; /* #2C7FE8 — синий акцент / glow */
+    --accent-tint: 0 0% 92%; /* #EBEBEB — подложка активного пункта */
+
+    /*
+      Синее свечение: на тёмных панелях — полный radial; на светлом hero —
+      тихий wash в углу (см. .hero-shell).
+    */
+    --hero-glow-bright: #2f86f0;
+    --hero-glow-deep: #1a5fc4;
+    --hero-edge-1: #0e2f6b;
+    --hero-edge-2: #070a14;
+    --hero-corner-wash: rgba(255, 255, 255, 0.1);
 
     /* --- Статусы: заливка-подложка + насыщенный текст --- */
     --status-operation: 142 72% 29%; /* #15803D — «в эксплуатации» */
@@ -46,18 +57,18 @@
     --status-danger-tint: 0 86% 96%;
 
     /* --- Серии графиков --- */
-    --chart-1: var(--primary); /* один оранжевый на весь интерфейс */
-    --chart-2: 60 1% 54%; /* вторая — та же тёплая мета-серая, что и подписи */
-    --chart-3: 60 7% 75%; /* третья — светлее, различима по светлоте */
+    --chart-1: var(--primary); /* нейтрально-чёрный на весь интерфейс */
+    --chart-2: 0 0% 54%; /* вторая — та же нейтральная мета-серая, что и подписи */
+    --chart-3: 0 0% 75%; /* третья — светлее, различима по светлоте */
 
     /* --- shadcn-совместимые производные --- */
     --card: 0 0% 100%;
     --card-foreground: var(--foreground);
     --popover: 0 0% 100%;
     --popover-foreground: var(--foreground);
-    --secondary: 60 6% 96%;
+    --secondary: 0 0% 95%;
     --secondary-foreground: var(--foreground);
-    --muted: 60 6% 96%;
+    --muted: 0 0% 95%;
     --accent: var(--accent-tint);
     --accent-foreground: var(--primary-hover);
     --destructive: 0 72% 51%;
@@ -82,6 +93,7 @@
     border-radius: calc(var(--radius) - 4px);
   }
 
+  /* Холст страницы — светло-серый; белые плоскости живут внутри блоков. */
   body {
     @apply bg-canvas text-foreground font-sans antialiased;
     font-feature-settings: 'cv11', 'ss01';
@@ -112,17 +124,17 @@
 @layer components {
   /* Мелкая служебная подпись: «15 сентября 2025», «к прошлому месяцу» */
   .meta-label {
-    @apply text-[12px] text-meta-foreground;
+    @apply text-meta text-meta-foreground;
   }
 
   /* Надзаголовок раздела — используется только там, где реально нужна классификация (таблицы, фильтры), не как декоративный кикер над заголовком */
   .section-kicker {
-    @apply text-[11px] font-semibold uppercase tracking-[0.12em] text-meta-foreground;
+    @apply text-micro uppercase text-meta-foreground;
   }
 
   /* Подпись над крупным числом в KpiBlock и фильтрах: «МЕДИАННАЯ ОКУПАЕМОСТЬ» */
   .micro-label {
-    @apply text-[10px] font-semibold uppercase tracking-[0.1em];
+    @apply text-micro uppercase;
   }
 
   /* Мягкая карточка панели: скруглённые углы и лёгкая тень вместо плоской рамки */
@@ -132,7 +144,107 @@
 
   /* Заголовок внутри карточки */
   .panel-title {
-    @apply text-[15px] font-semibold text-foreground;
+    @apply text-h3 text-foreground;
+  }
+
+  .hero-shell {
+    background-color: #fff;
+  }
+
+  .hero-shell > .hero-grain {
+    z-index: 0;
+    opacity: 0.018;
+    mix-blend-mode: soft-light;
+  }
+
+  /*
+    Тёмная гео-панель с синим свечением — LoginPage и финальный CTA.
+    Glow снизу: на inset-карточках и экранах, где низ обрезает viewport.
+  */
+  .hero-panel {
+    background-color: var(--hero-edge-2);
+    background-image:
+      radial-gradient(
+        105% 82% at 26% 90%,
+        var(--hero-glow-bright) 0%,
+        var(--hero-glow-deep) 24%,
+        var(--hero-edge-1) 46%,
+        var(--hero-edge-2) 78%
+      ),
+      radial-gradient(60% 40% at 90% 0%, var(--hero-corner-wash) 0%, rgba(255, 255, 255, 0) 60%);
+    background-blend-mode: screen, normal;
+    color: #fff;
+  }
+
+  /*
+    Full-bleed глава посреди светлой страницы.
+    Свечение — не «шар в углу», а размазанный light-leak: несколько
+    вытянутых эллипсов + blur, чтобы свет растекался по плоскости.
+  */
+  .hero-panel-chapter {
+    background-color: var(--hero-edge-2);
+    color: #fff;
+  }
+
+  .hero-panel-chapter::before {
+    content: '';
+    position: absolute;
+    inset: -12% -8%;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        ellipse 90% 45% at 78% 72%,
+        color-mix(in srgb, var(--hero-glow-bright) 42%, transparent) 0%,
+        transparent 72%
+      ),
+      radial-gradient(
+        ellipse 55% 70% at 92% 38%,
+        color-mix(in srgb, var(--hero-glow-deep) 38%, transparent) 0%,
+        transparent 68%
+      ),
+      radial-gradient(
+        ellipse 70% 40% at 48% 100%,
+        color-mix(in srgb, var(--hero-edge-1) 55%, transparent) 0%,
+        transparent 75%
+      );
+    filter: blur(56px);
+    opacity: 0.95;
+    transform: rotate(-6deg) scale(1.05);
+  }
+
+  /*
+    Зерно поверх glow: без него градиент бандится. Внутри .hero-shell /
+    .hero-panel, клики пропускает.
+  */
+  .hero-grain {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.045;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .hero-panel > .hero-grain,
+  .hero-panel-chapter > .hero-grain {
+    opacity: 0.06;
+    mix-blend-mode: overlay;
+  }
+
+  /*
+    Scrim под текстом на тёмной панели: белый текст на ярком синем иначе
+    падает ниже 4,5:1.
+  */
+  .hero-scrim {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: linear-gradient(
+      100deg,
+      rgba(4, 8, 20, 0.72) 0%,
+      rgba(4, 8, 20, 0.35) 38%,
+      rgba(4, 8, 20, 0) 66%
+    );
   }
 
   /* Шапка таблицы */

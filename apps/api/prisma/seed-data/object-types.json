@@ -1,0 +1,29 @@
+[
+  {
+    "slug": "warehouse",
+    "title": "Склад",
+    "description": "Паллетное и мелкоштучное хранение, комплектация, внутренняя транспортировка.",
+    "solutionsCount": 148,
+    "solutionsCountLabel": "решений",
+    "paybackRange": "2.8–4.6",
+    "photoCaption": "ФОТО · AMR НА СКЛАДЕ"
+  },
+  {
+    "slug": "airport",
+    "title": "Аэропорт",
+    "description": "Обработка багажа, перронная логистика, уборка и инспекция инфраструктуры БАС.",
+    "solutionsCount": 63,
+    "solutionsCountLabel": "решения",
+    "paybackRange": "4.1–6.2",
+    "photoCaption": "ФОТО · ПЕРРОННАЯ ТЕХНИКА"
+  },
+  {
+    "slug": "clinic",
+    "title": "Медучреждение",
+    "description": "Транспортировка расходников и белья, дезинфекция помещений, аптечная логистика.",
+    "solutionsCount": 41,
+    "solutionsCountLabel": "решение",
+    "paybackRange": "5.0–7.4",
+    "photoCaption": "ФОТО · РОБОТ В КЛИНИКЕ"
+  }
+]

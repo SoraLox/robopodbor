@@ -206,6 +206,27 @@ paths:
       responses:
         '204':
           description: Удалён
+  /projects/{projectId}/copy:
+    post:
+      operationId: copyProject
+      description: >
+        Создаёт копию проекта для сравнения сценариев внутри проекта (см. 3.1.3 ТЗ:
+        не менее трёх сценариев). Доступно только владельцу проекта.
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '201':
+          description: Копия создана
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectDetail' }
+        '401':
+          description: Требуется вход
+        '404':
+          description: Не найден
   /catalog/solutions/{solutionId}:
     put:
       operationId: updateSolution
@@ -280,6 +301,7 @@ components:
         label: { type: string }
         hint: { type: string }
         unit: { type: string }
+        section: { type: string, description: 'Заголовок группы полей в форме ввода параметров объекта' }
         kind:
           type: string
           enum: [number, text, select]

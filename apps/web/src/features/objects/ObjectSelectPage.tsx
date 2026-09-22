@@ -1,10 +1,13 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowUpRight, Check } from 'lucide-react';
-import { SiteHeader } from '@/app/AppShell';
 import { useWizardStore } from '@/app/store';
 import { useObjectTypes } from '@/api/queries';
+import { TYPE_BLURB, TYPE_ICONS } from '@/features/objects/objectTypeMeta';
 import { cn } from '@/lib/utils';
+import { Warehouse } from 'lucide-react';
 
+/**
+ * Выбор типа объекта — контент без заголовка (его держит ObjectWizardLayout).
+ */
 export function ObjectSelectPage() {
   const navigate = useNavigate();
   const { objectType: routeType } = useParams<{ objectType: string }>();
@@ -15,84 +18,52 @@ export function ObjectSelectPage() {
   const selectedSlug = objectType ?? routeType ?? 'warehouse';
 
   return (
-    <div className="min-h-screen">
-      <SiteHeader />
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="mt-3.5 grid min-h-0 gap-2 overflow-y-auto overscroll-contain [scrollbar-width:thin]" role="radiogroup" aria-label="Тип объекта">
+        {isLoading
+          ? [0, 1, 2].map((key) => (
+              <div key={key} className="h-[52px] animate-pulse rounded-[12px] bg-[#F2F2F2]" />
+            ))
+          : types?.map((type) => {
+              const isSelected = type.slug === objectType;
+              const Icon = TYPE_ICONS[type.slug] ?? Warehouse;
+              const blurb = TYPE_BLURB[type.slug] ?? type.description;
 
-      <div className="mx-auto flex min-h-[calc(100vh-64px)] max-w-[1380px] items-center justify-center px-[18px] py-16">
-        <div className="w-full max-w-[980px]">
-          <div className="mb-8 text-center">
-            <h1 className="font-heading text-[26px] font-semibold tracking-h1">Какой объект считаем?</h1>
-            <p className="mt-2 text-[14px] text-muted-foreground">
-              Выберите тип площадки — дальше подстроим вопросы под неё
-            </p>
-          </div>
+              return (
+                <button
+                  key={type.slug}
+                  type="button"
+                  role="radio"
+                  aria-checked={isSelected}
+                  onClick={() => setObjectType(type.slug)}
+                  className={cn(
+                    'flex w-full min-w-0 items-center gap-3 rounded-[12px] border bg-white px-3 py-2.5 text-left transition-colors duration-100',
+                    isSelected ? 'border-[#1C1C1E]' : 'border-[#E5E5EA] hover:border-[#C7C7CC]',
+                  )}
+                >
+                  <span className="flex size-9 flex-none items-center justify-center text-[#1C1C1E]">
+                    <Icon className="size-[22px]" strokeWidth={1.5} />
+                  </span>
 
-          {isLoading ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              {[0, 1, 2].map((key) => (
-                <div key={key} className="h-[220px] animate-pulse rounded-2xl bg-muted" />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              {types?.map((type) => {
-                const isSelected = type.slug === objectType;
-
-                return (
-                  <button
-                    key={type.slug}
-                    type="button"
-                    role="button"
-                    aria-pressed={isSelected}
-                    onClick={() => setObjectType(type.slug)}
-                    className={cn(
-                      'flex h-[220px] w-full flex-col rounded-2xl border p-6 text-left transition-all duration-200',
-                      isSelected
-                        ? 'border-primary bg-accent-tint shadow-soft'
-                        : 'border-border bg-background hover:border-foreground/20 hover:shadow-soft',
-                    )}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-heading text-[19px] font-semibold leading-tight tracking-h2">
-                        {type.title}
-                      </h3>
-                      <div
-                        className={cn(
-                          'flex size-7 flex-none items-center justify-center rounded-full border',
-                          isSelected
-                            ? 'border-primary bg-primary text-primary-foreground'
-                            : 'border-border bg-background text-transparent',
-                        )}
-                      >
-                        <Check className="size-3.5" strokeWidth={3} />
-                      </div>
-                    </div>
-
-                    <p
-                      className={cn(
-                        'mt-2.5 text-[13.5px] leading-[1.5]',
-                        isSelected ? 'text-accent-foreground' : 'text-muted-foreground',
-                      )}
-                    >
-                      {type.description}
-                    </p>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          <button
-            type="button"
-            disabled={!hasSelection}
-            onClick={() => navigate(`/calculate/${selectedSlug}/form`)}
-            className="mt-6 flex w-full items-center justify-center gap-3 rounded-full border border-transparent bg-primary px-8 py-4 text-[15px] font-medium text-primary-foreground shadow-soft transition-all hover:bg-primary-hover hover:shadow-lift disabled:cursor-not-allowed disabled:border-border disabled:bg-transparent disabled:text-muted-foreground disabled:shadow-none disabled:hover:bg-transparent sm:w-auto sm:mx-auto"
-          >
-            Далее
-            <ArrowUpRight className="size-4" strokeWidth={2.25} />
-          </button>
-        </div>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[14px] font-semibold leading-tight text-[#1C1C1E]">
+                      {type.title}
+                    </span>
+                    <span className="mt-0.5 block text-[12px] leading-snug text-[#8E8E93]">{blurb}</span>
+                  </span>
+                </button>
+              );
+            })}
       </div>
+
+      <button
+        type="button"
+        disabled={!hasSelection}
+        onClick={() => navigate(`/calculate/${selectedSlug}/form`)}
+        className="mt-auto flex h-11 w-full flex-none items-center justify-center rounded-[10px] bg-[#1C1C1E] text-[14px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[#E5E5EA] disabled:text-[#8E8E93] disabled:opacity-100"
+      >
+        Продолжить
+      </button>
     </div>
   );
 }

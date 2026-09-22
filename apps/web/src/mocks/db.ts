@@ -157,4 +157,18 @@ export const projectStore = {
     projects.set(id, detail);
     return detail;
   },
+  copy(sourceId: string) {
+    const source = projects.get(sourceId);
+    if (!source) return null;
+    const id = String(78460 + projects.size);
+    const detail: ProjectDetail = {
+      ...source,
+      id,
+      title: `${source.title} (копия)`,
+      meta: `РАСЧЁТ №${id} · ${new Date().toLocaleDateString('ru-RU')}`,
+      calculationId: id,
+    };
+    projects.set(id, detail);
+    return detail;
+  },
 };

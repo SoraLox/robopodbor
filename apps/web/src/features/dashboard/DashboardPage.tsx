@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useSession } from '@/api/auth';
 import {
   ArrowRight,
   Building2,
@@ -68,6 +69,9 @@ const TREND_SERIES = [
 ];
 
 export function DashboardPage() {
+  const { data: user } = useSession();
+  const isAdmin = user?.role === 'admin';
+
   return (
     <DashboardLayout aside={<SideRail />}>
       {/* Заголовок раздела и период */}
@@ -267,7 +271,11 @@ export function DashboardPage() {
           <TrendLines data={categoryTrend} series={TREND_SERIES} height={208} />
         </Panel>
 
-        <Panel title="Статистика по регионам" action="Справочники" actionTo="/admin" bodyClassName="px-0 pb-2">
+        <Panel
+          title="Статистика по регионам"
+          {...(isAdmin ? { action: 'Справочники', actionTo: '/admin' } : {})}
+          bodyClassName="px-0 pb-2"
+        >
           <RankTable
             label="Статистика по регионам"
             head={['Регион', 'Расчётов', 'CAPEX, млрд ₽']}
@@ -331,9 +339,12 @@ function RankTable({
 }
 
 function SideRail() {
+  const { data: user } = useSession();
+  const isAdmin = user?.role === 'admin';
+
   return (
     <>
-      <Panel title="Последние события" action="Журнал" actionTo="/admin">
+      <Panel title="Последние события" {...(isAdmin ? { action: 'Журнал', actionTo: '/admin' } : {})}>
         <ol className="space-y-3.5">
           {events.map((event) => (
             <li key={event.time} className="flex gap-3 text-[12px]">
@@ -380,7 +391,7 @@ function SideRail() {
           {[
             { to: '/catalog', label: 'Подобрать решение', icon: Building2 },
             { to: '/methodology', label: 'Посмотреть методику', icon: FileSpreadsheet },
-            { to: '/admin', label: 'Открыть справочники', icon: FolderOpen },
+            ...(isAdmin ? [{ to: '/admin', label: 'Открыть справочники', icon: FolderOpen }] : []),
           ].map((action) => (
             <Link
               key={action.to}

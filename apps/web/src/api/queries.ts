@@ -117,6 +117,20 @@ export function useDeleteProject() {
   });
 }
 
+export function useCopyProject() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (projectId: string): Promise<ProjectDetail> => {
+      const { data, error } = await api.POST('/projects/{projectId}/copy', {
+        params: { path: { projectId } },
+      });
+      if (error || !data) throw new Error('Не удалось скопировать проект');
+      return data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.projects }),
+  });
+}
+
 export function useTaxonomy() {
   return useQuery({
     queryKey: ['catalog', 'taxonomy'] as const,

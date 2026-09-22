@@ -199,4 +199,13 @@ export const handlers = [
     projectStore.remove(String(params.projectId));
     return new HttpResponse(null, { status: 204 });
   }),
+
+  http.post('*/api/projects/:projectId/copy', ({ params, cookies }) => {
+    if (!userBySid(sidOf(cookies))) {
+      return HttpResponse.json({ message: 'Требуется вход' }, { status: 401 });
+    }
+    const copy = projectStore.copy(String(params.projectId));
+    if (!copy) return HttpResponse.json({ message: 'Не найден' }, { status: 404 });
+    return HttpResponse.json(copy, { status: 201 });
+  }),
 ];

@@ -1,0 +1,120 @@
+[
+  {
+    "id": "logistics",
+    "label": "Логистика и склад",
+    "level": "industry",
+    "children": [
+      {
+        "id": "warehouse",
+        "label": "Склад",
+        "level": "object",
+        "children": [
+          {
+            "id": "transport",
+            "label": "Внутренняя транспортировка",
+            "level": "process",
+            "children": [
+              {
+                "id": "amr",
+                "label": "AMR / транспортировка",
+                "level": "solutionType",
+                "children": [
+                  {
+                    "id": "p15",
+                    "label": "AMR-паллетовоз P15",
+                    "level": "product"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "storage",
+            "label": "Хранение и подача",
+            "level": "process",
+            "children": [
+              {
+                "id": "asrs",
+                "label": "AS/RS · хранение",
+                "level": "solutionType",
+                "children": [
+                  {
+                    "id": "s20",
+                    "label": "Штабелёр AS/RS S20",
+                    "level": "product"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "aviation",
+    "label": "Авиационная инфраструктура",
+    "level": "industry",
+    "children": [
+      {
+        "id": "airport",
+        "label": "Аэропорт",
+        "level": "object",
+        "children": [
+          {
+            "id": "baggage",
+            "label": "Обработка багажа",
+            "level": "process",
+            "children": [
+              {
+                "id": "sorter",
+                "label": "Сортировка",
+                "level": "solutionType",
+                "children": [
+                  {
+                    "id": "srt8",
+                    "label": "Сортировщик SRT-8",
+                    "level": "product"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "healthcare",
+    "label": "Здравоохранение",
+    "level": "industry",
+    "children": [
+      {
+        "id": "clinic",
+        "label": "Медучреждение",
+        "level": "object",
+        "children": [
+          {
+            "id": "delivery",
+            "label": "Внутрибольничная доставка",
+            "level": "process",
+            "children": [
+              {
+                "id": "amr-med",
+                "label": "AMR / транспортировка",
+                "level": "solutionType",
+                "children": [
+                  {
+                    "id": "p15",
+                    "label": "AMR-паллетовоз P15",
+                    "level": "product"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

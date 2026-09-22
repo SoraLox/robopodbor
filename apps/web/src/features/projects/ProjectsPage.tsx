@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Trash2 } from 'lucide-react';
+import { Copy, Trash2 } from 'lucide-react';
 import { ArrowUpRight } from 'lucide-react';
 import { AppShell } from '@/app/AppShell';
-import { useCreateProject, useDeleteProject, useProjects } from '@/api/queries';
+import { useCopyProject, useCreateProject, useDeleteProject, useProjects } from '@/api/queries';
 import { api } from '@/api/client';
 import { useWizardStore } from '@/app/store';
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,7 @@ export function ProjectsPage() {
   const { data: projects, isLoading } = useProjects();
   const createProject = useCreateProject();
   const deleteProject = useDeleteProject();
+  const copyProject = useCopyProject();
   const { objectType, parameters, processes, loadProject } = useWizardStore();
   const [opening, setOpening] = useState<string | null>(null);
 
@@ -77,7 +78,7 @@ export function ProjectsPage() {
         </span>
       ),
       status: (
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <StatusBadge variant={project.status}>{STATUS_LABEL[project.status]}</StatusBadge>
           <button
             type="button"
@@ -86,6 +87,15 @@ export function ProjectsPage() {
             className="rounded-md border border-border px-2 py-1 text-[11px] hover:border-primary hover:text-primary disabled:opacity-50"
           >
             {opening === project.id ? 'Открываем…' : 'Открыть'}
+          </button>
+          <button
+            type="button"
+            aria-label={`Скопировать расчёт ${project.id}`}
+            onClick={() => copyProject.mutate(project.id)}
+            disabled={copyProject.isPending}
+            className="rounded-md border border-border p-1 text-muted-foreground hover:border-primary hover:text-primary disabled:opacity-50"
+          >
+            <Copy className="size-3.5" strokeWidth={1.8} />
           </button>
           <button
             type="button"
@@ -102,7 +112,7 @@ export function ProjectsPage() {
 
   return (
     <AppShell>
-      <div className="flex flex-wrap items-stretch border-b border-border">
+      <div className="flex flex-col items-stretch border-b border-border sm:flex-row sm:flex-wrap">
         <div className="flex flex-col justify-center px-5 py-3.5">
           <h1 className="font-heading text-[22px] font-bold uppercase leading-none tracking-h1">
             Мои расчёты
@@ -111,7 +121,7 @@ export function ProjectsPage() {
             ВСЕГО {projects?.length ?? 0} · ЧЕРНОВИКИ ХРАНЯТСЯ 30 ДНЕЙ
           </div>
         </div>
-        <div className="ml-auto flex items-stretch">
+        <div className="flex flex-col items-stretch sm:ml-auto sm:flex-row">
           <Button
             variant="outline"
             className="px-5 py-3.5"
