@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -36,8 +36,8 @@ const registerSchema = z
   .object({
     ...baseFields,
     confirmPassword: z.string().min(1, 'Повторите пароль'),
-    acceptTerms: z.literal(true, {
-      errorMap: () => ({ message: 'Нужно принять условия обработки данных' }),
+    acceptTerms: z.boolean().refine((value) => value === true, {
+      message: 'Нужно принять условия обработки данных',
     }),
   })
   .refine((values) => values.password === values.confirmPassword, {
@@ -45,9 +45,13 @@ const registerSchema = z
     path: ['confirmPassword'],
   });
 
-type LoginValues = z.infer<typeof loginSchema>;
-type RegisterValues = z.infer<typeof registerSchema>;
-type FormValues = LoginValues & Partial<RegisterValues>;
+type FormValues = {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  acceptTerms: boolean;
+  rememberMe: boolean;
+};
 
 const demoAccounts = [
   { label: 'Пользователь', email: 'krylov@volga-logistic.ru', password: 'volga123' },
@@ -88,7 +92,7 @@ export function LoginPage() {
     setFocus,
     formState: { errors, touchedFields },
   } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as Resolver<FormValues>,
     mode: 'onSubmit',
     reValidateMode: 'onSubmit',
     defaultValues: {
@@ -172,7 +176,7 @@ export function LoginPage() {
     } catch {
       // localStorage недоступен (приватный режим) — не критично для входа
     }
-    await active.mutateAsync(values);
+    await active.mutateAsync({ email: values.email, password: values.password });
     navigate(from, { replace: true });
   });
   const fieldClass =
@@ -308,9 +312,12 @@ export function LoginPage() {
                     className={cn(fieldClass, 'pr-11')}
                     aria-invalid={Boolean(errors.password)}
                     aria-describedby={errors.password ? 'password-error' : undefined}
-                    onKeyUp={(event) => setCapsLockOn(event.getModifierState?.('CapsLock') ?? false)}
-                    onBlur={() => setCapsLockOn(false)}
                     {...register('password')}
+                    onKeyUp={(event) => setCapsLockOn(event.getModifierState?.('CapsLock') ?? false)}
+                    onBlur={(event) => {
+                      setCapsLockOn(false);
+                      void register('password').onBlur(event);
+                    }}
                   />
                   <button
                     type="button"

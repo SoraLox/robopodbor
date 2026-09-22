@@ -150,79 +150,81 @@ function HeroScreen() {
 }
 
 /**
- * Вход в расчёт по типу объекта. Тёмная full-bleed глава после светлого hero:
- * крупные строки-ссылки без декоративной нумерации. Список открытый (из API).
+ * Вход в расчёт по типу объекта. Тёмная inset-панель как на Login —
+ * rounded hero-panel на светлом холсте, не full-bleed.
  */
 function CatalogSection() {
   const { options } = useLandingTypes();
   const rows = options ?? Array.from<LandingObjectType | undefined>({ length: 3 });
 
   return (
-    <section className="hero-panel-chapter relative overflow-hidden">
-      <div className="hero-grain" aria-hidden />
+    <Section>
+      <div className="hero-panel relative overflow-hidden rounded-[28px] px-8 py-12 sm:px-10 sm:py-14 md:px-14 md:py-16">
+        <div className="hero-grain" aria-hidden />
 
-      <div className="relative z-10 mx-auto max-w-[1380px] px-6 py-12 sm:px-10 md:py-16 lg:px-16 xl:px-24">
-        <header className="max-w-[36rem]">
-          <h2 className="text-balance font-heading text-[1.625rem] font-bold leading-[1.1] tracking-h1 text-white sm:text-[1.875rem] lg:text-[2.125rem]">
-            Расчёт строится от объекта
-          </h2>
-          <p className="mt-3 max-w-[44ch] text-body text-white/70 sm:text-body-lg">
-            У склада, аэропорта и клиники разные процессы и статьи затрат.
-            Выберите тип площадки — откроем сценарии на семь лет под ваши данные.
-          </p>
-        </header>
+        <div className="relative z-10">
+          <header className="max-w-[36rem]">
+            <h2 className="text-balance font-heading text-[1.625rem] font-bold leading-[1.1] tracking-h1 text-white sm:text-[1.875rem] lg:text-[2.125rem]">
+              Расчёт строится от объекта
+            </h2>
+            <p className="mt-3 max-w-[44ch] text-body text-white/70 sm:text-body-lg">
+              У склада, аэропорта и клиники разные процессы и статьи затрат.
+              Выберите тип площадки — откроем сценарии на семь лет под ваши данные.
+            </p>
+          </header>
 
-        <nav aria-label="Типы объектов" className="mt-8 md:mt-10">
-          <ul className="border-t border-white/15">
-            {rows.map((type, index) => {
-              if (!type) {
+          <nav aria-label="Типы объектов" className="mt-8 md:mt-10">
+            <ul className="border-t border-white/15">
+              {rows.map((type, index) => {
+                if (!type) {
+                  return (
+                    <li
+                      key={index}
+                      className="flex items-center justify-between gap-6 border-b border-white/15 py-5"
+                    >
+                      <span className="h-6 w-32 animate-pulse rounded bg-white/10" />
+                      <span className="hidden h-3.5 w-40 animate-pulse rounded bg-white/10 sm:block" />
+                    </li>
+                  );
+                }
+
                 return (
-                  <li
-                    key={index}
-                    className="flex items-center justify-between gap-6 border-b border-white/15 py-5"
-                  >
-                    <span className="h-6 w-32 animate-pulse rounded bg-white/10" />
-                    <span className="hidden h-3.5 w-40 animate-pulse rounded bg-white/10 sm:block" />
+                  <li key={type.slug} className="border-b border-white/15">
+                    <Link
+                      to={`/calculate/${type.slug}`}
+                      className={cn(
+                        'group flex items-center gap-4 py-5 outline-none transition-colors duration-200 ease-out sm:gap-8',
+                        '-mx-3 rounded-xl px-3',
+                        'hover:bg-white/[0.045]',
+                        'focus-visible:bg-white/[0.06] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+                      )}
+                    >
+                      <div className="min-w-0 flex-1 sm:flex sm:items-baseline sm:gap-8">
+                        <span className="block font-heading text-[1.25rem] font-semibold leading-tight tracking-h2 text-white sm:text-[1.375rem]">
+                          {type.title}
+                        </span>
+                        <span className="mt-1 block text-body text-white/55 transition-colors duration-200 group-hover:text-white/75 sm:mt-0">
+                          {SHORT_BLURB[type.slug] ?? type.description}
+                        </span>
+                      </div>
+
+                      <span className="flex shrink-0 items-center gap-1.5 text-control text-white/55 transition-colors duration-200 group-hover:text-white">
+                        <span className="hidden sm:inline">Рассчитать</span>
+                        <ArrowUpRight
+                          className="size-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                          strokeWidth={2.25}
+                          aria-hidden
+                        />
+                      </span>
+                    </Link>
                   </li>
                 );
-              }
-
-              return (
-                <li key={type.slug} className="border-b border-white/15">
-                  <Link
-                    to={`/calculate/${type.slug}`}
-                    className={cn(
-                      'group flex items-center gap-4 py-5 outline-none transition-colors duration-200 ease-out sm:gap-8',
-                      '-mx-3 rounded-xl px-3',
-                      'hover:bg-white/[0.045]',
-                      'focus-visible:bg-white/[0.06] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
-                    )}
-                  >
-                    <div className="min-w-0 flex-1 sm:flex sm:items-baseline sm:gap-8">
-                      <span className="block font-heading text-[1.25rem] font-semibold leading-tight tracking-h2 text-white sm:text-[1.375rem]">
-                        {type.title}
-                      </span>
-                      <span className="mt-1 block text-body text-white/55 transition-colors duration-200 group-hover:text-white/75 sm:mt-0">
-                        {SHORT_BLURB[type.slug] ?? type.description}
-                      </span>
-                    </div>
-
-                    <span className="flex shrink-0 items-center gap-1.5 text-control text-white/55 transition-colors duration-200 group-hover:text-white">
-                      <span className="hidden sm:inline">Рассчитать</span>
-                      <ArrowUpRight
-                        className="size-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                        strokeWidth={2.25}
-                        aria-hidden
-                      />
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
+              })}
+            </ul>
+          </nav>
+        </div>
       </div>
-    </section>
+    </Section>
   );
 }
 
@@ -270,26 +272,28 @@ export function LandingPage() {
                 <div key={row.label} className="grid gap-3">
                   <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4">
                     <span className="text-body text-foreground">{row.label}</span>
-                    <span className="flex items-baseline gap-1.5 whitespace-nowrap sm:gap-2.5">
-                      <span className="font-heading text-[1.375rem] font-bold leading-none tracking-h1 tabular sm:text-[1.75rem]">
+                    <span className="text-right">
+                      <span className="block font-heading text-[1.375rem] font-bold leading-none tracking-h1 tabular sm:text-[1.75rem]">
                         {row.value}
                       </span>
-                      {row.delta && (
-                        <span className="flex items-center gap-0.5 text-meta text-status-operation">
-                          <ArrowDownRight className="size-3" strokeWidth={2.5} aria-hidden />
-                          {row.delta}
-                        </span>
-                      )}
+                      <span className="mt-1.5 flex h-5 items-center justify-end gap-0.5 text-control tabular text-status-operation">
+                        {row.delta ? (
+                          <>
+                            <ArrowDownRight className="size-3.5 shrink-0" strokeWidth={2.5} aria-hidden />
+                            {row.delta}
+                          </>
+                        ) : null}
+                      </span>
                     </span>
                   </div>
 
-                  <div className="relative h-1 overflow-hidden rounded-full bg-canvas">
+                  <div className="relative h-1.5 overflow-hidden rounded-full bg-accent-tint">
                     <div
                       className={cn(
                         'absolute inset-y-0 left-0 rounded-full',
                         row.tone === 'primary' && 'bg-primary',
-                        row.tone === 'base' && 'bg-foreground/30',
-                        row.tone === 'muted' && 'bg-foreground/18',
+                        row.tone === 'base' && 'bg-foreground/60',
+                        row.tone === 'muted' && 'bg-foreground/40',
                       )}
                       style={{ width: `${row.pct}%` }}
                     />
@@ -299,9 +303,9 @@ export function LandingPage() {
             </div>
 
             <figcaption className="mt-8 border-t border-border/70 pt-5 text-meta text-muted-foreground">
-              Покупка окупается за <span className="tabular">3,2</span> года — на
-              0,6 года раньше аренды. Средний CAPEX проекта в базе —{' '}
-              <span className="tabular">80</span> млн ₽.
+              Покупка окупается за <span className="tabular">3,2</span> года — на{' '}
+              <span className="tabular">0,6</span> года раньше аренды. Средний CAPEX проекта в базе —{' '}
+              <span className="whitespace-nowrap tabular">80 млн ₽</span>.
             </figcaption>
           </figure>
         </div>

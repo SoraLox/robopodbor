@@ -22,7 +22,8 @@ const PREVIEW_BY_CATEGORY: Record<string, string> = {
 };
 
 function previewImage(solution: Solution): string {
-  return PREVIEW_BY_CATEGORY[categorize(solution).id] ?? PREVIEW_BY_CATEGORY.other;
+  const id = categorize(solution).id;
+  return PREVIEW_BY_CATEGORY[id] ?? '/pics/roboarm4.webp';
 }
 
 /**

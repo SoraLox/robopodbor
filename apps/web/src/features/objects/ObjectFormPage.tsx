@@ -91,8 +91,8 @@ export function ObjectFormPage({ showTitleImport = true }: { showTitleImport?: b
       if (message) found[field.id] = message;
     }
     setErrors(found);
-    if (Object.keys(found).length > 0) {
-      const firstId = Object.keys(found)[0];
+    const firstId = Object.keys(found)[0];
+    if (firstId) {
       document.getElementById(firstId)?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
       return;
     }

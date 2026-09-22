@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Route, Routes } from 'react-router-dom';
 import ObjectWizardLayout from '@/features/objects/ObjectWizardLayout';
