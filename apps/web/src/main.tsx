@@ -9,6 +9,21 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
 });
 
+// После деплоя GitHub Pages чанков прошлой сборки уже нет: вкладка, открытая
+// до деплоя, не догружает маршрут и остаётся белой. Перезагружаемся на новую
+// сборку, но не чаще раза в 10 с — чтобы не зациклиться, если чанк сломан.
+const RELOAD_KEY = 'chunk-reload-at';
+window.addEventListener('vite:preloadError', (event) => {
+  try {
+    if (Date.now() - Number(sessionStorage.getItem(RELOAD_KEY) ?? 0) < 10_000) return;
+    sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+  } catch {
+    return;
+  }
+  event.preventDefault();
+  window.location.reload();
+});
+
 async function bootstrap() {
   // По умолчанию /api обслуживает MSW поверх contracts/openapi.yaml — это нужно
   // для статического хостинга (GitHub Pages), где настоящего бэкенда быть не может.
