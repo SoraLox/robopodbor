@@ -18,7 +18,6 @@ export interface SiteNavItem {
 export const SITE_NAV = [
   { to: '/calculate/warehouse', label: 'Расчёт' },
   { to: '/catalog', label: 'Каталог' },
-  { to: '/simulation', label: 'Симуляция' },
 ] as const satisfies readonly SiteNavItem[];
 
 export type SiteNavPath = (typeof SITE_NAV)[number]['to'];

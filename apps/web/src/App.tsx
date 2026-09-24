@@ -15,7 +15,6 @@ const LoginPage = lazy(() => import('@/features/auth/LoginPage'));
 const ObjectWizardLayout = lazy(() => import('@/features/objects/ObjectWizardLayout'));
 const ResultsPage = lazy(() => import('@/features/results/ResultsPage'));
 const CatalogPage = lazy(() => import('@/features/catalog/CatalogPage'));
-const SimulationDemoPage = lazy(() => import('@/features/simulation/SimulationDemoPage'));
 const ComparePage = lazy(() => import('@/features/catalog/ComparePage'));
 const ProjectsPage = lazy(() => import('@/features/projects/ProjectsPage'));
 const SettingsPage = lazy(() => import('@/features/settings/SettingsPage'));
@@ -38,7 +37,6 @@ export function App() {
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/catalog" element={<CatalogPage />} />
         <Route path="/catalog/compare" element={<ComparePage />} />
-        <Route path="/simulation" element={<SimulationDemoPage />} />
 
         <Route path="/calculate/:objectType" element={<ObjectWizardLayout />}>
           <Route index element={null} />

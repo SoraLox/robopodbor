@@ -9,6 +9,10 @@ interface WizardState {
   processes: string[];
   setProcesses: (ids: string[]) => void;
 
+  /** Решение каталога, выбранное для расчёта. */
+  solutionId: string | null;
+  setSolutionId: (id: string) => void;
+
   /** Загружает сохранённый проект обратно в мастер. */
   loadProject: (input: {
     objectType: string;
@@ -36,6 +40,9 @@ export const useWizardStore = create<WizardState>((set) => ({
 
   processes: ['transport', 'storage', 'picking'],
   setProcesses: (ids) => set({ processes: ids }),
+
+  solutionId: null,
+  setSolutionId: (id) => set({ solutionId: id }),
 
   loadProject: ({ objectType, parameters, processes }) =>
     set({
