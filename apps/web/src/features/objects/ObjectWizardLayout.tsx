@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMatch, useNavigate, useParams } from 'react-router-dom';
 import { useWizardStore } from '@/app/store';
 import { useObjectTypes } from '@/api/queries';
+import { CalculatingStep } from '@/features/objects/CalculatingStep';
 import ObjectFormPage from '@/features/objects/ObjectFormPage';
 import ObjectSelectPage from '@/features/objects/ObjectSelectPage';
 import ProcessesPage from '@/features/objects/ProcessesPage';
@@ -13,9 +14,10 @@ import { cn } from '@/lib/utils';
 const FADE_MS = 320;
 const FADE_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
-type Step = 'select' | 'form' | 'processes';
+type Step = 'select' | 'form' | 'processes' | 'calculating';
 
-function stepFromRoute(isForm: boolean, isProcesses: boolean): Step {
+function stepFromRoute(isForm: boolean, isProcesses: boolean, isCalculating: boolean): Step {
+  if (isCalculating) return 'calculating';
   if (isProcesses) return 'processes';
   if (isForm) return 'form';
   return 'select';
@@ -26,12 +28,14 @@ function formObjectLabel(objectType: string, fallbackTitle: string): string {
 }
 
 function titleFor(step: Step, objectType: string, objectTitle: string): string {
+  if (step === 'calculating') return 'Считаем экономику';
   if (step === 'processes') return 'Роботы для вашего объекта';
   if (step === 'form') return `Параметры ${formObjectLabel(objectType, objectTitle)}`;
   return 'Какой объект считаем?';
 }
 
 function subtitleFor(step: Step): ReactNode {
+  if (step === 'calculating') return null;
   if (step === 'processes') {
     return (
       <p className="text-[13px] leading-[1.4] text-[#8E8E93]">
@@ -48,7 +52,7 @@ function subtitleFor(step: Step): ReactNode {
 }
 
 /**
- * Layout мастера: select → form → processes.
+ * Layout мастера: select → form → processes → calculating.
  * Переход: fade-out → разъезд/сжатие ширины → fade-in.
  * Список роботов — узкая карточка, как выбор объекта; широкая только форма.
  */
@@ -59,15 +63,17 @@ export function ObjectWizardLayout() {
   const { data: types } = useObjectTypes();
   const isForm = Boolean(useMatch('/calculate/:objectType/form'));
   const isProcesses = Boolean(useMatch('/calculate/:objectType/processes'));
+  const isCalculating = Boolean(useMatch('/calculate/:objectType/calculating'));
 
   const objectType = storeType ?? routeType;
   const objectTitle = types?.find((t) => t.slug === objectType)?.title ?? objectType;
-  const step = stepFromRoute(isForm, isProcesses);
-  const activeStep = step === 'processes' ? 2 : step === 'form' ? 1 : 0;
+  const step = stepFromRoute(isForm, isProcesses, isCalculating);
+  const activeStep = step === 'calculating' ? 3 : step === 'processes' ? 2 : step === 'form' ? 1 : 0;
 
   const [selectOn, setSelectOn] = useState(step === 'select');
   const [formOn, setFormOn] = useState(step === 'form');
   const [processesOn, setProcessesOn] = useState(step === 'processes');
+  const [calculatingOn, setCalculatingOn] = useState(step === 'calculating');
   const [wide, setWide] = useState(step === 'form');
   const [heading, setHeading] = useState(() => titleFor(step, objectType, objectTitle));
   const [subtitle, setSubtitle] = useState<ReactNode>(() => subtitleFor(step));
@@ -93,6 +99,7 @@ export function ObjectWizardLayout() {
       setSelectOn(step === 'select');
       setFormOn(step === 'form');
       setProcessesOn(step === 'processes');
+      setCalculatingOn(step === 'calculating');
       setWide(step === 'form');
       setHeading(titleFor(step, objectTypeRef.current, objectTitleRef.current));
       setSubtitle(subtitleFor(step));
@@ -106,11 +113,18 @@ export function ObjectWizardLayout() {
     setSelectOn(false);
     setFormOn(false);
     setProcessesOn(false);
+    setCalculatingOn(false);
+
+    const nextHeading = titleFor(step, objectTypeRef.current, objectTitleRef.current);
+    const nextSubtitle = subtitleFor(step);
+    // Сразу убираем описание при уходе на форму — высота сжимается во время fade, без рывка.
+    if (!nextSubtitle) setSubtitle(null);
 
     const reveal = () => {
       if (step === 'select') setSelectOn(true);
       else if (step === 'form') setFormOn(true);
-      else setProcessesOn(true);
+      else if (step === 'processes') setProcessesOn(true);
+      else setCalculatingOn(true);
     };
 
     if (widthChanges) {
@@ -118,18 +132,18 @@ export function ObjectWizardLayout() {
       timers.push(
         window.setTimeout(() => {
           setWide(nextWide);
-          setHeading(titleFor(step, objectTypeRef.current, objectTitleRef.current));
-          setSubtitle(subtitleFor(step));
+          setHeading(nextHeading);
+          setSubtitle(nextSubtitle);
         }, FADE_MS),
       );
       // Контент только после полной ширины — fade in на месте.
       timers.push(window.setTimeout(reveal, FADE_MS + WIZARD_EXPAND_MS));
     } else {
-      // select ↔ processes: обе узкие — только заголовок и fade
+      // узкие шаги — только заголовок и fade
       timers.push(
         window.setTimeout(() => {
-          setHeading(titleFor(step, objectTypeRef.current, objectTitleRef.current));
-          setSubtitle(subtitleFor(step));
+          setHeading(nextHeading);
+          setSubtitle(nextSubtitle);
           reveal();
         }, FADE_MS),
       );
@@ -146,7 +160,8 @@ export function ObjectWizardLayout() {
   }, [objectTitle, objectType, step, formOn]);
 
   const onBack = () => {
-    if (step === 'processes') navigate(`/calculate/${objectType}/form`);
+    if (step === 'calculating') navigate(`/calculate/${objectType}/processes`);
+    else if (step === 'processes') navigate(`/calculate/${objectType}/form`);
     else if (step === 'form') navigate(`/calculate/${objectType}`);
     else navigate(-1);
   };
@@ -178,7 +193,7 @@ export function ObjectWizardLayout() {
         style={fadeStyle}
         aria-hidden={!formOn}
       >
-        <ObjectFormPage showTitleImport={formOn} />
+        <ObjectFormPage showTitleImport={wide} />
       </div>
 
       <div
@@ -190,6 +205,17 @@ export function ObjectWizardLayout() {
         aria-hidden={!processesOn}
       >
         <ProcessesPage active={processesOn} />
+      </div>
+
+      <div
+        className={cn(
+          'absolute inset-0 flex flex-col',
+          calculatingOn ? 'opacity-100' : 'pointer-events-none opacity-0',
+        )}
+        style={fadeStyle}
+        aria-hidden={!calculatingOn}
+      >
+        <CalculatingStep active={step === 'calculating'} revealed={calculatingOn} />
       </div>
     </WizardCard>
   );

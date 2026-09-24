@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import type { Maturity, Solution } from '@/api/types';
 import { categorize } from '@/features/catalog/solutionCategory';
 import { getFitTone } from '@/features/catalog/fitTone';
-import { wizardCardHeightPx, WIZARD_WIDTH_PREVIEW } from '@/features/objects/WizardCard';
+import { wizardCardHeightPx, WIZARD_EXPAND_MS, WIZARD_WIDTH_PREVIEW } from '@/features/objects/WizardCard';
 import { cn } from '@/lib/utils';
 
 const MATURITY_LABEL: Record<Maturity, string> = {
@@ -11,6 +11,10 @@ const MATURITY_LABEL: Record<Maturity, string> = {
   piloting: 'Пилот',
   rnd: 'НИОКР',
 };
+
+/** Тот же easing, что у разъезда WizardCard — чуть дольше, чтобы выезд читался мягче. */
+const PREVIEW_MS = WIZARD_EXPAND_MS + 80;
+const PREVIEW_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
 const PREVIEW_BY_CATEGORY: Record<string, string> = {
   amr: '/pics/placeholders/warehouse.webp',
@@ -64,11 +68,12 @@ export function SolutionPreviewCard({
 
   return (
     <div
-      className={cn(
-        'overflow-hidden transition-[max-width,opacity,margin] duration-[420ms] ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none',
-        open ? 'ml-3 opacity-100' : 'ml-0 max-w-0 opacity-0',
-      )}
-      style={open ? { maxWidth: WIZARD_WIDTH_PREVIEW } : undefined}
+      className="overflow-hidden motion-reduce:!transition-none"
+      style={{
+        maxWidth: open ? WIZARD_WIDTH_PREVIEW : 0,
+        marginLeft: open ? 12 : 0,
+        transition: `max-width ${PREVIEW_MS}ms ${PREVIEW_EASE}, margin-left ${PREVIEW_MS}ms ${PREVIEW_EASE}`,
+      }}
       aria-hidden={!open}
       inert={open ? undefined : true}
     >
@@ -76,26 +81,29 @@ export function SolutionPreviewCard({
         role="dialog"
         aria-modal="false"
         aria-labelledby={titleId}
-        className="flex max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[20px] bg-white"
+        className="relative flex max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[20px] bg-white motion-reduce:!transition-none"
         style={{
           boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
           width: WIZARD_WIDTH_PREVIEW,
           height,
+          opacity: open ? 1 : 0,
+          transform: open ? 'translateX(0)' : 'translateX(28px)',
+          transition: `transform ${PREVIEW_MS}ms ${PREVIEW_EASE}, opacity ${Math.round(PREVIEW_MS * 0.75)}ms ${PREVIEW_EASE}`,
         }}
       >
         {solution ? (
           <>
-            <div className="relative flex-none px-5 pt-5">
-              <button
-                ref={closeRef}
-                type="button"
-                onClick={onClose}
-                className="absolute right-3 top-3 z-10 flex size-8 items-center justify-center rounded-full bg-[#F2F2F2] text-[#1C1C1E] transition-colors hover:bg-[#E5E5EA]"
-                aria-label="Закрыть"
-              >
-                <X className="size-3.5" strokeWidth={2} />
-              </button>
+            <button
+              ref={closeRef}
+              type="button"
+              onClick={onClose}
+              className="absolute right-3 top-3 z-10 flex size-8 items-center justify-center rounded-full bg-[#F2F2F2] text-foreground transition-colors hover:bg-[#E5E5EA]"
+              aria-label="Закрыть"
+            >
+              <X className="size-3.5" strokeWidth={2} />
+            </button>
 
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-4 pt-5 [scrollbar-width:thin]">
               <div className="relative overflow-hidden rounded-[14px] border border-[#E5E5EA] bg-[#F2F2F2]">
                 <img
                   src={previewImage(solution)}
@@ -103,15 +111,13 @@ export function SolutionPreviewCard({
                   className="aspect-[16/9] w-full object-cover object-center"
                 />
                 {category ? (
-                  <span className="absolute bottom-2.5 left-2.5 rounded-md bg-white/90 px-2 py-0.5 text-[11px] font-medium text-[#1C1C1E] backdrop-blur-sm">
+                  <span className="absolute bottom-2.5 left-2.5 rounded-md bg-white/90 px-2 py-0.5 text-[11px] font-medium text-foreground backdrop-blur-sm">
                     {category.label}
                   </span>
                 ) : null}
               </div>
-            </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4 [scrollbar-width:thin]">
-              <div className="flex items-center justify-between gap-3">
+              <div className="mt-4 flex items-center justify-between gap-3">
                 <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-[#8E8E93]">
                   {solution.vendor}
                 </span>
@@ -122,7 +128,7 @@ export function SolutionPreviewCard({
 
               <h2
                 id={titleId}
-                className="mt-1 text-[18px] font-semibold leading-[1.25] tracking-[-0.02em] text-[#1C1C1E]"
+                className="mt-1 text-[18px] font-semibold leading-[1.25] tracking-[-0.02em] text-foreground"
               >
                 {solution.name}
               </h2>
@@ -155,7 +161,7 @@ export function SolutionPreviewCard({
                           className="flex items-baseline justify-between gap-3 text-[12px]"
                         >
                           <span className="min-w-0 truncate text-[#6E6E73]">{factor.label}</span>
-                          <span className="flex-none tabular-nums font-medium text-[#1C1C1E]">
+                          <span className="flex-none tabular-nums font-medium text-foreground">
                             {factor.weight}
                           </span>
                         </li>
@@ -193,7 +199,7 @@ function Spec({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-[10px] border border-[#E5E5EA] px-2.5 py-2">
       <dt className="text-[10px] text-[#8E8E93]">{label}</dt>
-      <dd className="mt-0.5 text-[13px] font-semibold tabular-nums tracking-[-0.01em] text-[#1C1C1E]">
+      <dd className="mt-0.5 text-[13px] font-semibold tabular-nums tracking-[-0.01em] text-foreground">
         {value}
       </dd>
     </div>

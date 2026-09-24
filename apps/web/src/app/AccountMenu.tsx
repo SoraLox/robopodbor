@@ -39,12 +39,14 @@ function MenuRow({
   trailing?: React.ReactNode;
 }) {
   const className = cn(
-    'flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left text-[14.5px] font-medium text-neutral-900 transition-colors',
-    active ? 'bg-neutral-100' : 'hover:bg-neutral-50',
+    'flex w-full items-center gap-2.5 rounded-[12px] border px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-100',
+    active
+      ? 'border-foreground bg-white text-foreground'
+      : 'border-transparent text-foreground hover:border-[#E5E5EA] hover:bg-[#FAFAFA]',
   );
   const content = (
     <>
-      <Icon className="size-[18px] flex-none text-neutral-900" strokeWidth={2} aria-hidden />
+      <Icon className="size-4 flex-none text-foreground" strokeWidth={1.75} aria-hidden />
       <span className="min-w-0 flex-1 truncate">{label}</span>
       {trailing}
     </>
@@ -66,7 +68,7 @@ function MenuRow({
 
 /**
  * Меню профиля: аватар-триггер + выпадающая карточка.
- * Используется только из SiteHeader — единая точка входа на всех страницах.
+ * Визуально в одном языке с WizardCard / выбором объекта.
  */
 export function AccountMenu({ avatarClassName }: { avatarClassName?: string }) {
   const { data: user } = useSession();
@@ -94,7 +96,7 @@ export function AccountMenu({ avatarClassName }: { avatarClassName?: string }) {
 
   if (!user) return null;
 
-  const roleLabel = user.role === 'admin' ? 'ADMIN' : 'USER';
+  const roleLabel = user.role === 'admin' ? 'Admin' : 'User';
 
   return (
     <div ref={ref} className="relative flex-none">
@@ -105,7 +107,7 @@ export function AccountMenu({ avatarClassName }: { avatarClassName?: string }) {
         aria-haspopup="menu"
         aria-label="Меню профиля"
         className={cn(
-          'flex size-10 items-center justify-center rounded-full bg-[linear-gradient(135deg,#60a5fa_0%,#a78bfa_50%,#f472b6_100%)] text-[13px] font-bold text-white shadow-[0_2px_8px_rgba(0,0,0,0.12)] ring-2 ring-white transition-transform hover:scale-[1.04]',
+          'flex size-7 items-center justify-center rounded-full bg-foreground text-[10px] font-semibold tracking-tight text-white transition-opacity hover:opacity-90',
           avatarClassName,
         )}
       >
@@ -115,24 +117,25 @@ export function AccountMenu({ avatarClassName }: { avatarClassName?: string }) {
       {open ? (
         <div
           role="menu"
-          className="absolute right-0 top-full z-50 mt-2 w-[320px] rounded-[28px] border border-black/5 bg-white p-2 shadow-[0_16px_40px_rgba(0,0,0,0.14)]"
+          className="absolute right-0 top-full z-50 mt-5 w-[248px] overflow-hidden rounded-[20px] border border-[#E5E5EA] bg-white p-1.5 shadow-[0_4px_24px_rgba(0,0,0,0.06)]"
         >
-          {/* Профиль: имя, почта, крупный аватар */}
-          <div className="flex items-start justify-between gap-3 px-3.5 pb-4 pt-3">
-            <div className="min-w-0">
-              <div className="truncate text-[16px] font-bold leading-tight text-neutral-900">
-                {user.name}
-              </div>
-              <div className="mt-0.5 truncate text-[13.5px] text-neutral-400">{user.email}</div>
-            </div>
-            <span className="flex size-12 flex-none items-center justify-center rounded-full bg-[linear-gradient(135deg,#60a5fa_0%,#a78bfa_50%,#f472b6_100%)] text-[14px] font-bold text-white shadow-[0_2px_10px_rgba(0,0,0,0.14)] ring-4 ring-white">
+          <div className="flex items-center gap-2.5 px-2 pb-2.5 pt-1.5">
+            <span className="flex size-8 flex-none items-center justify-center rounded-full bg-foreground text-[11px] font-semibold text-white">
               {initialsOf(user.name)}
             </span>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-[13.5px] font-semibold leading-tight text-foreground">
+                {user.name}
+              </div>
+              <div className="mt-0.5 truncate text-[11.5px] leading-snug text-[#8E8E93]">
+                {user.email}
+              </div>
+            </div>
           </div>
 
-          <div className="mx-2 h-px bg-neutral-100" />
+          <div className="mx-1 h-px bg-accent-tint" />
 
-          <div className="flex flex-col gap-0.5 py-2">
+          <div className="flex flex-col gap-0.5 py-1.5">
             <MenuRow
               icon={BadgeCheck}
               label="Профиль"
@@ -153,21 +156,21 @@ export function AccountMenu({ avatarClassName }: { avatarClassName?: string }) {
                     event.stopPropagation();
                     setOpen(false);
                   }}
-                  className="ml-auto flex size-6 flex-none items-center justify-center rounded-full bg-neutral-100 text-neutral-900 transition-colors hover:bg-neutral-200"
+                  className="ml-auto flex size-5 flex-none items-center justify-center rounded-[6px] bg-[#F2F2F2] text-foreground transition-colors hover:bg-[#E5E5EA]"
                 >
-                  <Plus className="size-3.5" strokeWidth={2.4} aria-hidden />
+                  <Plus className="size-3" strokeWidth={2.25} aria-hidden />
                 </Link>
               }
             />
-            <div className="flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-[14.5px] font-medium text-neutral-900">
-              <IdCard className="size-[18px] flex-none text-neutral-900" strokeWidth={2} aria-hidden />
+            <div className="flex w-full items-center gap-2.5 rounded-[12px] border border-transparent px-2.5 py-1.5 text-[13px] font-medium text-foreground">
+              <IdCard className="size-4 flex-none text-foreground" strokeWidth={1.75} aria-hidden />
               <span className="min-w-0 flex-1 truncate">Роль</span>
               <span
                 className={cn(
-                  'ml-auto inline-flex flex-none items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold',
+                  'ml-auto inline-flex flex-none items-center rounded-[6px] px-1.5 py-0.5 text-[10.5px] font-semibold',
                   user.role === 'admin'
-                    ? 'bg-emerald-400 text-emerald-950'
-                    : 'bg-neutral-100 text-neutral-500',
+                    ? 'bg-foreground text-white'
+                    : 'bg-[#F2F2F2] text-[#8E8E93]',
                 )}
               >
                 {roleLabel}
@@ -181,9 +184,9 @@ export function AccountMenu({ avatarClassName }: { avatarClassName?: string }) {
             />
           </div>
 
-          <div className="mx-2 h-px bg-neutral-100" />
+          <div className="mx-1 h-px bg-accent-tint" />
 
-          <div className="flex flex-col gap-0.5 py-2">
+          <div className="flex flex-col gap-0.5 py-1.5">
             <MenuRow
               icon={Info}
               label="Методика расчёта"

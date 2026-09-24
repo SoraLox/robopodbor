@@ -12,6 +12,9 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "strict": true,
+    /* Перенесённый код симуляции — на JavaScript; типы для него не пишем, см. src/upstream/UPSTREAM.md */
+    "allowJs": true,
+    "checkJs": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,

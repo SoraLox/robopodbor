@@ -31,11 +31,11 @@ function SolutionRow({
       onClick={onSelect}
       className={cn(
         'flex w-full min-w-0 items-center gap-3 rounded-[12px] border bg-white px-3 py-2.5 text-left transition-colors duration-100',
-        selected ? 'border-[#1C1C1E]' : 'border-[#E5E5EA] hover:border-[#C7C7CC]',
+        selected ? 'border-foreground' : 'border-[#E5E5EA] hover:border-[#C7C7CC]',
       )}
     >
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[14px] font-semibold leading-tight text-[#1C1C1E]">
+        <span className="block truncate text-[14px] font-semibold leading-tight text-foreground">
           {solution.name}
         </span>
         <span className="mt-0.5 block truncate text-[12px] leading-snug text-[#8E8E93]">
@@ -96,7 +96,7 @@ export function ProcessesPage({ active = true }: { active?: boolean } = {}) {
   const goCalculate = () => {
     if (!selectedId) return;
     setPreviewOpen(false);
-    navigate(`/calculate/${objectType}/results/demo`);
+    navigate(`/calculate/${objectType}/calculating`);
   };
 
   const preview =
@@ -114,7 +114,7 @@ export function ProcessesPage({ active = true }: { active?: boolean } = {}) {
     <>
       <div className="flex min-h-0 flex-1 flex-col">
         <div
-          className="-mx-1 mt-3.5 min-h-0 flex-1 overflow-y-auto overscroll-contain px-1 [scrollbar-width:thin]"
+          className="-mx-1 min-h-0 flex-1 overflow-y-auto overscroll-contain px-1 [scrollbar-width:thin]"
           role="radiogroup"
           aria-label="Робот для расчёта"
         >
@@ -146,7 +146,7 @@ export function ProcessesPage({ active = true }: { active?: boolean } = {}) {
           type="button"
           disabled={!selectedId}
           onClick={goCalculate}
-          className="mt-auto flex h-11 w-full flex-none items-center justify-center rounded-[10px] bg-[#1C1C1E] text-[14px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[#E5E5EA] disabled:text-[#8E8E93] disabled:opacity-100"
+          className="mt-auto flex h-11 w-full flex-none items-center justify-center rounded-[10px] bg-foreground text-[14px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[#E5E5EA] disabled:text-[#8E8E93] disabled:opacity-100"
         >
           Рассчитать
         </button>

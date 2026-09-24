@@ -1,6 +1,6 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowUpRight, Search, SlidersHorizontal, X } from 'lucide-react';
+import { ArrowUpRight, ChevronLeft, ChevronRight, Search, SlidersHorizontal, X } from 'lucide-react';
 import { AppShell } from '@/app/AppShell';
 import { useSolutions } from '@/api/queries';
 import { useWizardStore } from '@/app/store';
@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import type { Maturity, Solution } from '@/api/types';
+import { CatalogPreview } from './CatalogPreview';
 import { categorize, listCategories } from './solutionCategory';
 
 const MATURITY_LABEL: Record<Maturity, string> = {
@@ -33,9 +34,24 @@ const MATURITY_TEXT: Record<Maturity, string> = {
 const ALL_MATURITY: Maturity[] = ['operation', 'piloting', 'rnd'];
 
 const OBJECT_TYPES = [
-  { slug: 'warehouse', label: 'Склад' },
-  { slug: 'airport', label: 'Аэропорт' },
-  { slug: 'clinic', label: 'Клиника' },
+  {
+    slug: 'warehouse',
+    label: 'Склад',
+    hint: 'Хранение и комплектация',
+    image: `${import.meta.env.BASE_URL}pics/placeholders/warehouse.webp`,
+  },
+  {
+    slug: 'airport',
+    label: 'Аэропорт',
+    hint: 'Багаж и логистика',
+    image: `${import.meta.env.BASE_URL}pics/placeholders/airport.webp`,
+  },
+  {
+    slug: 'clinic',
+    label: 'Клиника',
+    hint: 'Расходники и дезинфекция',
+    image: `${import.meta.env.BASE_URL}pics/placeholders/clinic.webp`,
+  },
 ];
 
 const MATURITY_OPTIONS: { id: Maturity; label: string }[] = [
@@ -61,6 +77,92 @@ function matchesQuery(solution: Solution, query: string): boolean {
 function parsePrice(value: string): number {
   const num = Number(value.replace(',', '.'));
   return Number.isFinite(num) ? num : 0;
+}
+
+/** Горизонтальная карусель типов объекта — основной фильтр каталога. */
+function ObjectTypeCarousel({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (slug: string) => void;
+}) {
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  const scrollBy = (direction: -1 | 1) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const step = Math.min(280, track.clientWidth * 0.7);
+    track.scrollBy({ left: direction * step, behavior: 'smooth' });
+  };
+
+  return (
+    <div className="relative">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <span className="font-mono text-[10.5px] font-medium uppercase tracking-[0.06em] text-meta-foreground">
+          Тип объекта
+        </span>
+        <div className="hidden items-center gap-1 sm:flex">
+          <button
+            type="button"
+            onClick={() => scrollBy(-1)}
+            className="flex size-8 items-center justify-center rounded-full border border-border bg-background text-foreground transition-colors hover:border-foreground/30"
+            aria-label="Прокрутить влево"
+          >
+            <ChevronLeft className="size-4" strokeWidth={2} />
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollBy(1)}
+            className="flex size-8 items-center justify-center rounded-full border border-border bg-background text-foreground transition-colors hover:border-foreground/30"
+            aria-label="Прокрутить вправо"
+          >
+            <ChevronRight className="size-4" strokeWidth={2} />
+          </button>
+        </div>
+      </div>
+
+      <div
+        ref={trackRef}
+        role="listbox"
+        aria-label="Тип объекта"
+        className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {OBJECT_TYPES.map((item) => {
+          const active = item.slug === value;
+          return (
+            <button
+              key={item.slug}
+              type="button"
+              role="option"
+              aria-selected={active}
+              onClick={() => onChange(item.slug)}
+              className={cn(
+                'group relative w-[min(72vw,220px)] flex-none snap-start overflow-hidden rounded-2xl border text-left transition-colors sm:w-[200px]',
+                active
+                  ? 'border-foreground ring-1 ring-foreground'
+                  : 'border-border hover:border-foreground/30',
+              )}
+            >
+              <div className="aspect-[16/10] overflow-hidden bg-canvas">
+                <img
+                  src={item.image}
+                  alt=""
+                  className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                />
+              </div>
+              <div className="bg-background px-3 py-2.5">
+                <div className="font-heading text-[15px] font-semibold tracking-h2 text-foreground">
+                  {item.label}
+                </div>
+                <div className="mt-0.5 text-[12px] text-muted-foreground">{item.hint}</div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 function FilterSection({ title, children }: { title: string; children: ReactNode }) {
@@ -94,25 +196,40 @@ function FilterCheck({
 function SolutionRow({
   solution,
   selected,
+  previewed,
+  onOpenPreview,
   onToggleCompare,
 }: {
   solution: Solution;
   selected: boolean;
+  previewed: boolean;
+  onOpenPreview: () => void;
   onToggleCompare: () => void;
 }) {
   const category = categorize(solution);
 
   return (
     <article
+      role="button"
+      tabIndex={0}
+      onClick={onOpenPreview}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onOpenPreview();
+        }
+      }}
       className={cn(
-        'border-b border-hairline px-4 py-3.5 transition-colors last:border-b-0 sm:px-5',
-        selected ? 'bg-accent-tint/70' : 'hover:bg-canvas/60',
+        'cursor-pointer border-b border-hairline px-4 py-3.5 transition-colors last:border-b-0 sm:px-5',
+        previewed ? 'bg-canvas' : selected ? 'bg-accent-tint/70' : 'hover:bg-canvas/60',
       )}
+      aria-pressed={previewed}
     >
       <div className="flex gap-3">
         <Checkbox
           checked={selected}
           onCheckedChange={onToggleCompare}
+          onClick={(event) => event.stopPropagation()}
           className="mt-1 size-[18px] shrink-0"
           aria-label={
             selected ? `Убрать ${solution.name} из сравнения` : `Добавить ${solution.name} в сравнение`
@@ -210,6 +327,7 @@ export function CatalogPage() {
   const [priceMin, setPriceMin] = useState('');
   const [priceMax, setPriceMax] = useState('');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [previewId, setPreviewId] = useState<string | null>(null);
 
   const categories = listCategories();
 
@@ -272,29 +390,14 @@ export function CatalogPage() {
     }
   }, [filteredRows, sort]);
 
+  const previewSolution = sortedRows.find((row) => row.id === previewId) ?? null;
+
+  const openPreview = (id: string) => {
+    setPreviewId((current) => (current === id ? null : id));
+  };
+
   const filters = (
     <>
-      <FilterSection title="Тип объекта">
-        <div className="grid gap-0.5">
-          {OBJECT_TYPES.map((item) => (
-            <button
-              key={item.slug}
-              type="button"
-              aria-pressed={item.slug === objectType}
-              onClick={() => setSearchParams({ objectType: item.slug })}
-              className={cn(
-                'rounded-[10px] px-2.5 py-2 text-left text-[13.5px] transition-colors',
-                item.slug === objectType
-                  ? 'bg-foreground font-medium text-background'
-                  : 'text-foreground/80 hover:bg-canvas',
-              )}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-      </FilterSection>
-
       <FilterSection title="Класс решения">
         <div className="grid gap-0.5">
           {categories.map((category) => (
@@ -358,6 +461,16 @@ export function CatalogPage() {
   return (
     <AppShell>
       <div className={cn('mt-5', comparedIds.length > 0 && 'pb-20')}>
+        <div className="mb-4">
+          <ObjectTypeCarousel
+            value={objectType}
+            onChange={(slug) => {
+              setPreviewId(null);
+              setSearchParams({ objectType: slug });
+            }}
+          />
+        </div>
+
         <div className="grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-5 xl:grid-cols-[260px_minmax(0,1fr)]">
           {/* Desktop filters */}
           <aside className="hidden lg:block">
@@ -438,7 +551,7 @@ export function CatalogPage() {
                 <div className="px-5 py-16 text-center">
                   <h2 className="font-heading text-[17px] font-semibold">Пока нет решений</h2>
                   <p className="mx-auto mt-2 max-w-[38ch] text-[13.5px] text-muted-foreground">
-                    Для этого типа объекта в каталоге ещё нет позиций. Выберите другой тип слева.
+                    Для этого типа объекта в каталоге ещё нет позиций. Выберите другой тип выше.
                   </p>
                 </div>
               ) : sortedRows.length === 0 ? (
@@ -466,6 +579,8 @@ export function CatalogPage() {
                     key={solution.id}
                     solution={solution}
                     selected={comparedIds.includes(solution.id)}
+                    previewed={previewId === solution.id}
+                    onOpenPreview={() => openPreview(solution.id)}
                     onToggleCompare={() => toggleCompared(solution.id)}
                   />
                 ))
@@ -474,6 +589,16 @@ export function CatalogPage() {
           </div>
         </div>
       </div>
+
+      <CatalogPreview
+        solution={previewSolution}
+        open={Boolean(previewSolution)}
+        compared={previewSolution ? comparedIds.includes(previewSolution.id) : false}
+        onClose={() => setPreviewId(null)}
+        onToggleCompare={() => {
+          if (previewSolution) toggleCompared(previewSolution.id);
+        }}
+      />
 
       {/* Mobile filter sheet */}
       {mobileFiltersOpen ? (

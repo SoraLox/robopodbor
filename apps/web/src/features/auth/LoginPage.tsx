@@ -13,7 +13,6 @@ import {
   MoreHorizontal,
   X,
 } from 'lucide-react';
-import { SiteHeader } from '@/app/AppShell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -180,14 +179,12 @@ export function LoginPage() {
     navigate(from, { replace: true });
   });
   const fieldClass =
-    'h-10 rounded-[10px] border-0 bg-[#F3F3F3] px-4 text-[14px] text-foreground shadow-none placeholder:text-[#B0B0B0] hover:border-0 focus-visible:border-0 focus-visible:ring-0 focus-visible:ring-offset-0';
+    'h-10 rounded-[10px] border-0 bg-canvas px-4 text-[14px] text-foreground shadow-none placeholder:text-[#B0B0B0] hover:border-0 focus-visible:border-0 focus-visible:ring-0 focus-visible:ring-offset-0';
 
   const hintClass = 'flex h-5 items-center gap-1 text-[11px] leading-none';
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden overscroll-none bg-canvas">
-      <SiteHeader />
-
       <div className="flex min-h-0 flex-1 overflow-hidden bg-white">
         <div className="relative hidden min-h-0 w-1/2 p-3 lg:block xl:p-4">
           <div className="hero-panel relative flex h-full min-h-0 flex-col justify-between overflow-hidden rounded-[28px] p-10 xl:p-12">
@@ -233,7 +230,7 @@ export function LoginPage() {
                       key={account.email}
                       type="button"
                       onClick={() => fillDemo(account)}
-                      className="flex h-9 w-full items-center rounded-[10px] bg-[#F3F3F3] px-3 text-left text-[13px] font-medium text-foreground transition-colors hover:bg-[#EBEBEB]"
+                      className="flex h-9 w-full items-center rounded-[10px] bg-canvas px-3 text-left text-[13px] font-medium text-foreground transition-colors hover:bg-accent-tint"
                     >
                       {account.label}
                     </button>
@@ -273,7 +270,7 @@ export function LoginPage() {
                   autoCorrect="off"
                   spellCheck={false}
                   autoComplete="username"
-                  placeholder="a.krylov@volga-logistic.ru"
+                  placeholder="example@company.ru"
                   aria-invalid={Boolean(errors.email)}
                   aria-describedby={errors.email ? 'email-error' : undefined}
                   className={fieldClass}
@@ -309,6 +306,7 @@ export function LoginPage() {
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                    placeholder="••••••••"
                     className={cn(fieldClass, 'pr-11')}
                     aria-invalid={Boolean(errors.password)}
                     aria-describedby={errors.password ? 'password-error' : undefined}
@@ -357,6 +355,7 @@ export function LoginPage() {
                       id="confirmPassword"
                       type={showConfirmPassword ? 'text' : 'password'}
                       autoComplete="new-password"
+                      placeholder="••••••••"
                       className={cn(fieldClass, 'pr-11')}
                       aria-invalid={Boolean(errors.confirmPassword)}
                       aria-describedby={

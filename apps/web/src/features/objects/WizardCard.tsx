@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { WIZARD_STEPS } from '@/features/objects/wizardSteps';
 import { cn } from '@/lib/utils';
@@ -9,10 +9,10 @@ export const WIZARD_EXPAND_MS = 520;
 const EXPAND_MS = WIZARD_EXPAND_MS;
 const EXPAND_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 export const WIZARD_WIDTH_SELECT = 380;
-/** Ширина формы параметров (единственный широкий шаг). */
-export const WIZARD_WIDTH_FORM = 680;
+/** Ширина формы параметров (единственный широкий шаг) — 3 колонки полей. */
+export const WIZARD_WIDTH_FORM = 900;
 /** Ширина карточки превью робота рядом со списком. */
-export const WIZARD_WIDTH_PREVIEW = 720;
+export const WIZARD_WIDTH_PREVIEW = 440;
 
 const WIDTH_SELECT = WIZARD_WIDTH_SELECT;
 const WIDTH_FORM = WIZARD_WIDTH_FORM;
@@ -28,6 +28,41 @@ export function wizardCardHeightPx(): number {
 }
 
 export const WIZARD_COMPANION_ID = 'wizard-companion';
+
+/** Подзаголовок с плавным сжатием высоты — разделитель не прыгает. */
+function WizardSubtitle({ subtitle }: { subtitle?: ReactNode }) {
+  const open = Boolean(subtitle);
+  const [held, setHeld] = useState(subtitle);
+
+  useLayoutEffect(() => {
+    if (subtitle) setHeld(subtitle);
+  }, [subtitle]);
+
+  return (
+    <div
+      className="grid"
+      style={{
+        gridTemplateRows: open ? '1fr' : '0fr',
+        transition: `grid-template-rows ${EXPAND_MS}ms ${EXPAND_EASE}`,
+      }}
+    >
+      <div className="min-h-0 overflow-hidden">
+        {held ? (
+          <div
+            className="mt-1"
+            style={{
+              opacity: open ? 1 : 0,
+              transition: `opacity ${EXPAND_MS}ms ${EXPAND_EASE}`,
+            }}
+            aria-hidden={!open}
+          >
+            {held}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
 
 /**
  * Оболочка мастера: фиксированная высота во вьюпорте, ширина через CSS-transition.
@@ -95,7 +130,7 @@ export function WizardCard({
             <button
               type="button"
               onClick={onBack ?? (() => navigate(-1))}
-              className="text-[13px] font-medium text-[#8E8E93] transition-colors hover:text-[#1C1C1E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1C1C1E]/40"
+              className="text-[13px] font-medium text-[#8E8E93] transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
             >
               Назад
             </button>
@@ -113,28 +148,35 @@ export function WizardCard({
                   key={step.id}
                   className={cn(
                     'h-[2.5px] w-6 rounded-full transition-colors duration-300',
-                    index === activeStep ? 'bg-[#1C1C1E]' : 'bg-[#E5E5EA]',
+                    index === activeStep ? 'bg-foreground' : 'bg-[#E5E5EA]',
                   )}
                 />
               ))}
             </div>
           </div>
 
-          <div className={cn('flex min-h-0 flex-1 flex-col overflow-hidden px-7 pb-7 pt-4', bodyClassName)}>
+          <div className={cn('flex min-h-0 flex-1 flex-col overflow-hidden px-7 pb-3 pt-3', bodyClassName)}>
             {title ? (
               <header className="flex flex-none items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <h1 className="text-[22px] font-semibold leading-[1.25] tracking-[-0.02em] text-[#1C1C1E]">
+                  <h1 className="text-[22px] font-semibold leading-[1.25] tracking-[-0.02em] text-foreground">
                     {title}
                   </h1>
-                  {subtitle ? <div className="mt-1">{subtitle}</div> : null}
+                  <WizardSubtitle subtitle={subtitle} />
                 </div>
-                <div id="wizard-title-action" className="flex flex-none items-center pt-0.5" />
+                <div
+                  id="wizard-title-action"
+                  className="flex h-7 flex-none items-center justify-center overflow-hidden"
+                  style={{
+                    width: expanded ? 28 : 0,
+                    transition: `width ${EXPAND_MS}ms ${EXPAND_EASE}`,
+                  }}
+                />
               </header>
             ) : null}
 
             {/* Одна линия на все шаги — иначе у select/form/processes свои и они «съезжают». */}
-            {title ? <div className="mt-3.5 flex-none border-t border-[#EBEBEB]" /> : null}
+            {title ? <div className="mt-3.5 flex-none border-t border-accent-tint" /> : null}
 
             <div className="relative mt-3.5 min-h-0 flex-1">{children}</div>
           </div>

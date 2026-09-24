@@ -30,9 +30,10 @@ export function useObjectTypes() {
   });
 }
 
-export function useCalculation(calculationId: string) {
+export function useCalculation(calculationId: string, enabled = true) {
   return useQuery({
     queryKey: queryKeys.calculation(calculationId),
+    enabled: enabled && calculationId.length > 0,
     queryFn: async (): Promise<CalculationResult> => {
       const { data, error } = await api.GET('/calculations/{calculationId}', {
         params: { path: { calculationId } },

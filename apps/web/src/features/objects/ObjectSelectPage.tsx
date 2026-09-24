@@ -19,7 +19,7 @@ export function ObjectSelectPage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="mt-3.5 grid min-h-0 gap-2 overflow-y-auto overscroll-contain [scrollbar-width:thin]" role="radiogroup" aria-label="Тип объекта">
+      <div className="grid min-h-0 gap-2 overflow-y-auto overscroll-contain [scrollbar-width:thin]" role="radiogroup" aria-label="Тип объекта">
         {isLoading
           ? [0, 1, 2].map((key) => (
               <div key={key} className="h-[52px] animate-pulse rounded-[12px] bg-[#F2F2F2]" />
@@ -38,15 +38,15 @@ export function ObjectSelectPage() {
                   onClick={() => setObjectType(type.slug)}
                   className={cn(
                     'flex w-full min-w-0 items-center gap-3 rounded-[12px] border bg-white px-3 py-2.5 text-left transition-colors duration-100',
-                    isSelected ? 'border-[#1C1C1E]' : 'border-[#E5E5EA] hover:border-[#C7C7CC]',
+                    isSelected ? 'border-foreground' : 'border-[#E5E5EA] hover:border-[#C7C7CC]',
                   )}
                 >
-                  <span className="flex size-9 flex-none items-center justify-center text-[#1C1C1E]">
+                  <span className="flex size-9 flex-none items-center justify-center text-foreground">
                     <Icon className="size-[22px]" strokeWidth={1.5} />
                   </span>
 
                   <span className="min-w-0 flex-1">
-                    <span className="block text-[14px] font-semibold leading-tight text-[#1C1C1E]">
+                    <span className="block text-[14px] font-semibold leading-tight text-foreground">
                       {type.title}
                     </span>
                     <span className="mt-0.5 block text-[12px] leading-snug text-[#8E8E93]">{blurb}</span>
@@ -60,7 +60,7 @@ export function ObjectSelectPage() {
         type="button"
         disabled={!hasSelection}
         onClick={() => navigate(`/calculate/${selectedSlug}/form`)}
-        className="mt-auto flex h-11 w-full flex-none items-center justify-center rounded-[10px] bg-[#1C1C1E] text-[14px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[#E5E5EA] disabled:text-[#8E8E93] disabled:opacity-100"
+        className="mt-auto flex h-11 w-full flex-none items-center justify-center rounded-[10px] bg-foreground text-[14px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[#E5E5EA] disabled:text-[#8E8E93] disabled:opacity-100"
       >
         Продолжить
       </button>

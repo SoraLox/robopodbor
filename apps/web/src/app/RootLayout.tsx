@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import { SiteHeader } from './SiteHeader';
 
@@ -9,7 +10,14 @@ export function RootLayout() {
   return (
     <>
       <SiteHeader />
-      <Outlet />
+      {/*
+        Пустая заглушка, а не спиннер: чанк маршрута обычно приезжает за
+        десятки миллисекунд, и крутилка успела бы только мигнуть. Высота
+        держит скролл, aria-busy сообщает о загрузке скринридеру.
+      */}
+      <Suspense fallback={<div className="min-h-[60vh]" aria-busy="true" />}>
+        <Outlet />
+      </Suspense>
     </>
   );
 }

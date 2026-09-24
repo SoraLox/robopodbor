@@ -19,7 +19,7 @@ export interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   return (
     <div className="min-h-screen">
-      <div className="mx-auto grid max-w-[1380px] gap-[18px] px-[18px] pb-[18px]">
+      <div className="mx-auto grid max-w-site gap-[18px] px-[18px] pb-[18px]">
         <div className="min-w-0">{children}</div>
         <SiteFooter />
       </div>
@@ -99,7 +99,7 @@ export function SiteFooter() {
                 РОБОПОДБОР
               </span>
             </Link>
-            <p className="mt-5 text-[14px] leading-[1.6] text-[#6E6E6E]">
+            <p className="mt-5 text-[14px] leading-[1.6] text-muted-foreground">
               РОБОПОДБОР помогает командам превратить сложные данные об объекте
               в ясный расчёт окупаемости — всё нужное в одном месте
             </p>
@@ -116,7 +116,7 @@ export function SiteFooter() {
                     <li key={`${column.title}-${link.label}`}>
                       <Link
                         to={link.to}
-                        className="text-[14px] leading-none text-[#6E6E6E] transition-colors hover:text-foreground"
+                        className="text-[14px] leading-none text-muted-foreground transition-colors hover:text-foreground"
                       >
                         {link.label}
                       </Link>
@@ -128,20 +128,20 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-11 flex flex-col gap-4 border-t border-[#EBEBEB] pt-6 sm:mt-12 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:pt-7">
-          <p className="text-[13px] leading-none text-[#6E6E6E]">
+        <div className="mt-11 flex flex-col gap-4 border-t border-accent-tint pt-6 sm:mt-12 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:pt-7">
+          <p className="text-[13px] leading-none text-muted-foreground">
             © 2026 РОБОПОДБОР. Все права защищены
           </p>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
             <Link
               to="/privacy"
-              className="text-[13px] leading-none text-[#6E6E6E] underline decoration-[#6E6E6E]/decoration-1 underline-offset-[3px] transition-colors hover:text-foreground"
+              className="text-[13px] leading-none text-muted-foreground underline decoration-muted-foreground decoration-1 underline-offset-[3px] transition-colors hover:text-foreground"
             >
               Условия использования
             </Link>
             <Link
               to="/privacy"
-              className="text-[13px] leading-none text-[#6E6E6E] underline decoration-[#6E6E6E]/decoration-1 underline-offset-[3px] transition-colors hover:text-foreground"
+              className="text-[13px] leading-none text-muted-foreground underline decoration-muted-foreground decoration-1 underline-offset-[3px] transition-colors hover:text-foreground"
             >
               Политика конфиденциальности
             </Link>

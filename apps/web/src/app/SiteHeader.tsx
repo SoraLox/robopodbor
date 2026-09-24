@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useSession } from '@/api/auth';
+import { Button } from '@/components/ui/button';
 import { AccountMenu } from './AccountMenu';
 import { cn } from '@/lib/utils';
 
@@ -52,7 +53,7 @@ export function SiteHeader() {
         Абсолютный центр не зависит от ширины левого и правого блоков — иначе
         нав «уплывает» в сторону более лёгкого края и кажется кривым.
       */}
-      <div className="relative mx-auto flex h-14 max-w-[1380px] items-center px-5 sm:px-8">
+      <div className="relative mx-auto flex h-14 max-w-site items-center px-5 sm:px-8">
         <Link
           to="/"
           className="relative z-10 font-heading text-[15px] font-semibold tracking-[-0.015em] text-foreground"
@@ -97,13 +98,16 @@ export function SiteHeader() {
               >
                 Регистрация
               </Link>
-              <Link
-                to="/login"
-                state={{ mode: 'login' }}
-                className="inline-flex h-8 items-center rounded-lg border border-border px-3.5 text-[14px] font-medium leading-none tracking-[-0.01em] text-foreground transition-colors hover:border-foreground hover:bg-foreground hover:text-background"
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="h-8 rounded-[6px] px-3.5 text-[14px] leading-none"
               >
-                Войти
-              </Link>
+                <Link to="/login" state={{ mode: 'login' }}>
+                  Войти
+                </Link>
+              </Button>
             </>
           )}
         </div>

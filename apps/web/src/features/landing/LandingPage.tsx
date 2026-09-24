@@ -4,7 +4,7 @@
   OWN-WORLD: светлый full-bleed hero на весь viewport, ч/б + grainy blue
   wash в углу; Inter; чёрная кнопка с мягкой тенью (референс Sorcerer).
   STORY: посетитель сразу понимает цену и срок окупаемости роботов —
-  и жмёт «Рассчитать».
+  и жмёт «Рассчитать окупаемость».
   FIRST VIEWPORT: edge-to-edge плоскость во весь экран; заголовок; описание;
   одна CTA; робот справа.
   FORM: full-bleed сплит текст/изображение — не inset-карточка.
@@ -12,12 +12,7 @@
   finish review, the verdict, and DESIGN.md
 */
 import { Link } from 'react-router-dom';
-import {
-  ArrowDownRight,
-  ArrowUpRight,
-  Check,
-  ChevronDown,
-} from 'lucide-react';
+import { ArrowUpRight, Check, ChevronDown } from 'lucide-react';
 import { SiteFooter } from '@/app/AppShell';
 import { useObjectTypes } from '@/api/queries';
 import {
@@ -75,8 +70,8 @@ function Section({
   className?: string;
 }) {
   return (
-    <section className={cn('px-[18px] py-16 md:py-24', className)}>
-      <div className="mx-auto max-w-[1380px]">{children}</div>
+    <section className={cn('px-5 py-16 sm:px-8 md:py-24', className)}>
+      <div className="mx-auto max-w-site">{children}</div>
     </section>
   );
 }
@@ -86,58 +81,51 @@ function SectionTitle({ children, className }: { children: React.ReactNode; clas
 }
 
 /**
- * Full-bleed hero. Текст — главный; робот — равновесный якорь справа.
+ * Full-bleed hero. Текст в сетке сайта; робот — к правому низу viewport,
+ * иначе на широком экране он «уезжает» вместе с max-w-site к центру.
  */
 function HeroScreen() {
   return (
     <section
       className={cn(
-        'hero-shell relative -mt-14 min-h-svh overflow-hidden pt-14',
+        'hero-shell relative z-0 -mt-14 min-h-svh overflow-x-clip pt-14',
         'motion-safe:animate-[rise_.7s_cubic-bezier(.16,1,.3,1)_both]',
       )}
     >
       <div className="hero-grain" aria-hidden />
 
-      <div className="relative z-[1] grid min-h-[calc(100svh-3.5rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        {/*
-          Робот ~72% правой колонки, чуть вниз — основание обрезано.
-        */}
-        <div className="relative order-1 min-h-[42svh] overflow-hidden sm:min-h-[46svh] lg:order-2 lg:min-h-0">
-          <img
-            src={`${import.meta.env.BASE_URL}pics/roboarm3.webp`}
-            alt=""
-            aria-hidden
-            width={1121}
-            height={1403}
-            loading="eager"
-            fetchPriority="high"
-            decoding="async"
-            className="pointer-events-none absolute bottom-0 right-[8%] w-[66%] max-w-none origin-bottom translate-y-[6%] scale-x-[-1] sm:w-[70%] sm:translate-y-[7%] lg:right-[10%] lg:w-[72%] lg:translate-y-[8%]"
-          />
-        </div>
+      <img
+        src={`${import.meta.env.BASE_URL}pics/roboarm3.webp`}
+        alt=""
+        aria-hidden
+        width={1121}
+        height={1403}
+        loading="eager"
+        fetchPriority="high"
+        decoding="async"
+        className="hero-robot pointer-events-none absolute bottom-0 z-[1] h-[min(92svh,940px)] w-auto max-w-[min(62vw,780px)] origin-bottom translate-y-[8%] scale-x-[-1] object-contain object-bottom sm:max-w-[min(56vw,740px)] lg:max-w-[740px]"
+      />
 
-        <div className="relative order-2 flex flex-col justify-center px-6 py-10 sm:px-10 lg:order-1 lg:px-16 lg:py-16 xl:px-24">
-          <div className="mx-auto flex w-full max-w-[1380px] flex-col lg:mx-0 lg:max-w-[36rem]">
+      <div className="relative z-[2] mx-auto grid min-h-[calc(100svh-3.5rem)] max-w-site px-5 sm:px-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+        <div className="relative order-1 min-h-[36svh] sm:min-h-[40svh] lg:order-2 lg:min-h-0" aria-hidden />
+
+        <div className="relative order-2 flex flex-col justify-center py-10 lg:order-1 lg:py-16">
+          <div className="flex w-full max-w-[34rem] flex-col">
             <h1 className="max-w-[15ch] text-balance font-heading text-[2.5rem] font-bold leading-[1.05] tracking-display text-foreground sm:text-[3.25rem] lg:text-[3.75rem]">
               Сколько стоят роботы и когда они окупятся
             </h1>
 
             <p className="mt-5 max-w-[38ch] text-body-lg text-muted-foreground sm:text-[1.0625rem] sm:leading-relaxed">
-              Впишите данные склада, аэропорта или клиники — получите точный
-              расчёт по ценам настоящих поставщиков, а не по обещаниям продавца.
+              Введите параметры склада, аэропорта или клиники — получите расчёт окупаемости по каталогу реальных решений с указанием источника каждой цифры
             </p>
 
             <div className="mt-10 flex flex-wrap items-center gap-x-7 gap-y-3">
-              <Button
-                asChild
-                size="lg"
-                className="hover:bg-primary hover:shadow-[0_6px_20px_-4px_rgba(0,0,0,0.28)]"
-              >
-                <Link to="/calculate/warehouse">Рассчитать</Link>
+              <Button asChild size="lg">
+                <Link to="/calculate/warehouse">Рассчитать окупаемость</Link>
               </Button>
               <Link
                 to="/catalog"
-                className="text-control text-foreground/70 transition-colors hover:text-foreground"
+                className="text-control text-foreground/70 underline underline-offset-4 transition-colors hover:text-foreground"
               >
                 Каталог
               </Link>
@@ -150,81 +138,96 @@ function HeroScreen() {
 }
 
 /**
- * Вход в расчёт по типу объекта. Тёмная inset-панель как на Login —
- * rounded hero-panel на светлом холсте, не full-bleed.
+ * Вход в расчёт по типу объекта. Слева — фото объекта, справа — текст и список.
  */
 function CatalogSection() {
   const { options } = useLandingTypes();
   const rows = options ?? Array.from<LandingObjectType | undefined>({ length: 3 });
 
   return (
-    <Section>
-      <div className="hero-panel relative overflow-hidden rounded-[28px] px-8 py-12 sm:px-10 sm:py-14 md:px-14 md:py-16">
-        <div className="hero-grain" aria-hidden />
+    <section className="relative z-10 -mt-2 bg-background px-5 pb-16 pt-0 sm:-mt-3 sm:px-8 md:-mt-4 md:pb-24">
+      <div className="relative mx-auto max-w-site">
+        <div className="hero-panel-catalog relative overflow-hidden rounded-[28px] p-5 sm:p-6 md:p-7">
+          <div className="hero-grain" aria-hidden />
 
-        <div className="relative z-10">
-          <header className="max-w-[36rem]">
-            <h2 className="text-balance font-heading text-[1.625rem] font-bold leading-[1.1] tracking-h1 text-white sm:text-[1.875rem] lg:text-[2.125rem]">
-              Расчёт строится от объекта
-            </h2>
-            <p className="mt-3 max-w-[44ch] text-body text-white/70 sm:text-body-lg">
-              У склада, аэропорта и клиники разные процессы и статьи затрат.
-              Выберите тип площадки — откроем сценарии на семь лет под ваши данные.
-            </p>
-          </header>
+          <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
+            <div className="mx-auto size-[300px] shrink-0 overflow-hidden rounded-[22px] bg-black/30 sm:size-[340px] lg:mx-0 lg:size-[360px]">
+              <img
+                src={`${import.meta.env.BASE_URL}pics/warehouse2.png`}
+                alt=""
+                width={480}
+                height={480}
+                loading="lazy"
+                decoding="async"
+                className="size-full object-cover"
+              />
+            </div>
 
-          <nav aria-label="Типы объектов" className="mt-8 md:mt-10">
-            <ul className="border-t border-white/15">
-              {rows.map((type, index) => {
-                if (!type) {
-                  return (
-                    <li
-                      key={index}
-                      className="flex items-center justify-between gap-6 border-b border-white/15 py-5"
-                    >
-                      <span className="h-6 w-32 animate-pulse rounded bg-white/10" />
-                      <span className="hidden h-3.5 w-40 animate-pulse rounded bg-white/10 sm:block" />
-                    </li>
-                  );
-                }
+            <div className="flex min-w-0 flex-1 flex-col px-1 sm:px-2 md:px-3">
+              <header className="max-w-[36rem]">
+                <h2 className="text-balance font-heading text-[1.625rem] font-bold leading-[1.1] tracking-h1 text-white sm:text-[1.875rem] lg:text-[2.125rem]">
+                  Расчёт строится от объекта
+                </h2>
+                <p className="mt-3 max-w-[44ch] text-body text-white/70 sm:text-body-lg">
+                  У склада, аэропорта и клиники разные процессы и статьи затрат.
+                  Выберите тип площадки — откроем сценарии на семь лет под ваши данные.
+                </p>
+              </header>
 
-                return (
-                  <li key={type.slug} className="border-b border-white/15">
-                    <Link
-                      to={`/calculate/${type.slug}`}
-                      className={cn(
-                        'group flex items-center gap-4 py-5 outline-none transition-colors duration-200 ease-out sm:gap-8',
-                        '-mx-3 rounded-xl px-3',
-                        'hover:bg-white/[0.045]',
-                        'focus-visible:bg-white/[0.06] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
-                      )}
-                    >
-                      <div className="min-w-0 flex-1 sm:flex sm:items-baseline sm:gap-8">
-                        <span className="block font-heading text-[1.25rem] font-semibold leading-tight tracking-h2 text-white sm:text-[1.375rem]">
-                          {type.title}
-                        </span>
-                        <span className="mt-1 block text-body text-white/55 transition-colors duration-200 group-hover:text-white/75 sm:mt-0">
-                          {SHORT_BLURB[type.slug] ?? type.description}
-                        </span>
-                      </div>
+              <nav aria-label="Типы объектов" className="mt-8 md:mt-10">
+                <ul className="border-t border-white/15">
+                  {rows.map((type, index) => {
+                    if (!type) {
+                      return (
+                        <li
+                          key={index}
+                          className="flex items-center justify-between gap-6 border-b border-white/15 py-5"
+                        >
+                          <span className="h-6 w-32 animate-pulse rounded bg-white/10" />
+                          <span className="hidden h-3.5 w-40 animate-pulse rounded bg-white/10 sm:block" />
+                        </li>
+                      );
+                    }
 
-                      <span className="flex shrink-0 items-center gap-1.5 text-control text-white/55 transition-colors duration-200 group-hover:text-white">
-                        <span className="hidden sm:inline">Рассчитать</span>
-                        <ArrowUpRight
-                          className="size-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                          strokeWidth={2.25}
-                          aria-hidden
-                        />
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
+                    return (
+                      <li key={type.slug} className="border-b border-white/15">
+                        <Link
+                          to={`/calculate/${type.slug}`}
+                          className={cn(
+                            'group flex items-center gap-4 py-5 outline-none transition-colors duration-200 ease-out sm:gap-6',
+                            '-mx-3 rounded-xl px-3',
+                            'hover:bg-white/[0.045]',
+                            'focus-visible:bg-white/[0.06] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+                          )}
+                        >
+                          <div className="min-w-0 flex-1 sm:flex sm:items-baseline sm:gap-6">
+                            <span className="block font-heading text-[1.25rem] font-semibold leading-tight tracking-h2 text-white sm:text-[1.375rem]">
+                              {type.title}
+                            </span>
+                            <span className="mt-1 block text-body text-white/55 transition-colors duration-200 group-hover:text-white/75 sm:mt-0">
+                              {SHORT_BLURB[type.slug] ?? type.description}
+                            </span>
+                          </div>
+
+                          <span className="flex shrink-0 items-center gap-1.5 text-control text-white/55 transition-colors duration-200 group-hover:text-white">
+                            <span className="hidden sm:inline">Рассчитать</span>
+                            <ArrowUpRight
+                              className="size-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                              strokeWidth={2.25}
+                              aria-hidden
+                            />
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </nav>
+            </div>
+          </div>
         </div>
       </div>
-    </Section>
+    </section>
   );
 }
 
@@ -234,30 +237,30 @@ export function LandingPage() {
       {/* 1 — ПЕРВЫЙ ЭКРАН */}
       <HeroScreen />
 
-      {/* 2 — КАТАЛОГ ОБЪЕКТОВ */}
+      {/* 2 — КАТАЛОГ: наезжает на низ hero и касается робота */}
       <CatalogSection />
 
-      {/* 3 — РЕШЕНИЕ. Белый лист на сером холсте: суммы крупно, полосы тонкие. */}
-      <Section>
-        <div className="grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-start">
-          <div className="flex flex-col lg:pt-3">
+      {/* 3 — РЕШЕНИЕ. Белая плоскость на всю ширину, без карточки. */}
+      <section className="bg-background px-5 py-10 sm:px-8 md:py-12">
+        <div className="mx-auto grid max-w-site items-start gap-8 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-16">
+          <div>
             <SectionTitle>Сравните решения</SectionTitle>
-            <p className="mt-5 max-w-[44ch] text-body-lg text-muted-foreground">
+            <p className="mt-3 max-w-[36ch] text-body text-muted-foreground">
               Столько за семь лет теряет склад на 20 000 м², если не покупает
               роботов. Справа — настоящий расчёт, а не иллюстрация: каждую сумму
               можно раскрыть построчно.
             </p>
             <Link
               to="/calculate/warehouse/results/demo"
-              className="mt-7 inline-flex w-fit items-center gap-2 text-control text-foreground underline-offset-4 hover:underline"
+              className="mt-4 inline-flex w-fit items-center gap-2 text-control text-foreground underline-offset-4 hover:underline"
             >
               Открыть расчёт целиком
               <ArrowUpRight className="size-4" strokeWidth={2.25} />
             </Link>
           </div>
 
-          <figure className="flex flex-col rounded-3xl bg-background p-6 shadow-soft sm:p-10">
-            <div className="grid gap-8">
+          <figure>
+            <div className="grid gap-4">
               {(
                 [
                   { label: 'Ничего не менять', value: '214,0 млн', delta: null, pct: 100, tone: 'base' },
@@ -265,35 +268,23 @@ export function LandingPage() {
                   { label: 'Взять в аренду', value: '154,2 млн', delta: '−59,8', pct: 72, tone: 'muted' },
                 ] as const
               ).map((row) => (
-                /*
-                  Подпись и сумма — в одной строке, полоса под ними. На узком
-                  экране подпись переносится, сумма не сжимается.
-                */
-                <div key={row.label} className="grid gap-3">
-                  <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4">
-                    <span className="text-body text-foreground">{row.label}</span>
-                    <span className="text-right">
-                      <span className="block font-heading text-[1.375rem] font-bold leading-none tracking-h1 tabular sm:text-[1.75rem]">
-                        {row.value}
-                      </span>
-                      <span className="mt-1.5 flex h-5 items-center justify-end gap-0.5 text-control tabular text-status-operation">
-                        {row.delta ? (
-                          <>
-                            <ArrowDownRight className="size-3.5 shrink-0" strokeWidth={2.5} aria-hidden />
-                            {row.delta}
-                          </>
-                        ) : null}
-                      </span>
+                <div key={row.label} className="grid gap-1.5">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="min-w-0 text-body text-foreground">{row.label}</span>
+                    <span className="flex shrink-0 items-baseline gap-2">
+                      <span className="font-heading text-h3 tabular leading-none sm:text-h2">{row.value}</span>
+                      {row.delta ? (
+                        <span className="text-meta tabular text-status-operation">{row.delta}</span>
+                      ) : null}
                     </span>
                   </div>
-
-                  <div className="relative h-1.5 overflow-hidden rounded-full bg-accent-tint">
+                  <div className="relative h-1 overflow-hidden rounded-full bg-accent-tint">
                     <div
                       className={cn(
                         'absolute inset-y-0 left-0 rounded-full',
                         row.tone === 'primary' && 'bg-primary',
-                        row.tone === 'base' && 'bg-foreground/60',
-                        row.tone === 'muted' && 'bg-foreground/40',
+                        row.tone === 'base' && 'bg-foreground/55',
+                        row.tone === 'muted' && 'bg-foreground/35',
                       )}
                       style={{ width: `${row.pct}%` }}
                     />
@@ -301,15 +292,14 @@ export function LandingPage() {
                 </div>
               ))}
             </div>
-
-            <figcaption className="mt-8 border-t border-border/70 pt-5 text-meta text-muted-foreground">
+            <figcaption className="mt-4 max-w-[62ch] text-meta text-muted-foreground">
               Покупка окупается за <span className="tabular">3,2</span> года — на{' '}
               <span className="tabular">0,6</span> года раньше аренды. Средний CAPEX проекта в базе —{' '}
               <span className="whitespace-nowrap tabular">80 млн ₽</span>.
             </figcaption>
           </figure>
         </div>
-      </Section>
+      </section>
 
       {/* 4 — ДОВЕРИЕ. Одна мысль: у каждой цифры есть проверяемый источник. */}
       <Section>
@@ -463,7 +453,7 @@ export function LandingPage() {
         </div>
       </Section>
 
-      <div className="mx-auto max-w-[1380px] px-[18px] pb-[18px]">
+      <div className="mx-auto max-w-site px-5 pb-[18px] sm:px-8">
         <SiteFooter />
       </div>
     </div>

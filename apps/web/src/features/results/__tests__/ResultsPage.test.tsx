@@ -17,7 +17,7 @@ describe('ResultsPage', () => {
     );
 
     // Мок держит паузу, имитируя долгий прогон модели на бэкенде.
-    expect(screen.getByText('Идёт расчёт сценариев')).toBeInTheDocument();
+    expect(screen.getByText('Считаем экономику')).toBeInTheDocument();
 
     await waitFor(
       () => expect(screen.getByText('Срок окупаемости')).toBeInTheDocument(),

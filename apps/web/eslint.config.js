@@ -5,7 +5,9 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules', 'src/api/schema.d.ts', 'public/mockServiceWorker.js'] },
+  // src/upstream — дословная копия кода разработчика симуляции; держим её
+  // неотличимой от оригинала, чтобы дёшево забирать обновления (см. UPSTREAM.md)
+  { ignores: ['dist', 'node_modules', 'src/api/schema.d.ts', 'public/mockServiceWorker.js', 'src/upstream'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],

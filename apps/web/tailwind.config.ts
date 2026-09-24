@@ -5,7 +5,7 @@ const config: Config = {
   darkMode: ['class'],
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
-    container: { center: true, padding: '18px', screens: { '2xl': '1380px' } },
+    container: { center: true, padding: '18px', screens: { '2xl': '1120px' } },
     extend: {
       // aria-invalid не входит в стандартный набор именованных aria-вариантов
       // Tailwind (checked/disabled/expanded/hidden/pressed/readonly/required/selected) —
@@ -67,6 +67,7 @@ const config: Config = {
         '2xl': 'calc(var(--radius) + 8px)',
         '3xl': 'calc(var(--radius) + 20px)',
       },
+      /* max-w-site живёт в globals.css через --site-max — не дублировать здесь */
       letterSpacing: {
         display: '-0.03em',
         h1: '-0.025em',

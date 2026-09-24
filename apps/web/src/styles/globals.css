@@ -11,6 +11,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  Единственный источник ширины сетки. Не определять max-w-site в tailwind.config —
+  JIT кеширует старые пиксели и тогда двигается только .hero-robot.
+*/
+.max-w-site {
+  max-width: var(--site-max);
+}
+
 @layer base {
   :root {
     /*
@@ -26,6 +34,8 @@
     --border: 0 0% 83%; /* #D4D4D4 — границы */
     --hairline: 0 0% 94%; /* #F0F0F0 — лёгкие разделители */
     --radius: 28px; /* крупное скругление оболочки, как у референса */
+    /* Единая ширина контента — шапка, секции, робот считают отсюда */
+    --site-max: 1120px;
 
     /* --- Акцент: нейтрально-чёрный --- */
     --primary: 0 0% 11%; /* #1C1C1C — чёрные кнопки */
@@ -151,6 +161,20 @@
     background-color: #fff;
   }
 
+  /*
+    Робот у правого низа: от lg — к правому краю той же --site-max,
+    что и max-w-site (не дублировать пиксели).
+  */
+  .hero-robot {
+    right: 0;
+  }
+
+  @media (min-width: 1024px) {
+    .hero-robot {
+      right: max(0px, calc((100vw - var(--site-max)) / 2 - 20px));
+    }
+  }
+
   .hero-shell > .hero-grain {
     z-index: 0;
     opacity: 0.018;
@@ -173,6 +197,14 @@
       ),
       radial-gradient(60% 40% at 90% 0%, var(--hero-corner-wash) 0%, rgba(255, 255, 255, 0) 60%);
     background-blend-mode: screen, normal;
+    color: #fff;
+  }
+
+  /*
+    Каталог на лендинге: ровная тёмная панель без синего glow.
+  */
+  .hero-panel-catalog {
+    background-color: var(--hero-edge-2);
     color: #fff;
   }
 
@@ -226,6 +258,7 @@
   }
 
   .hero-panel > .hero-grain,
+  .hero-panel-catalog > .hero-grain,
   .hero-panel-chapter > .hero-grain {
     opacity: 0.06;
     mix-blend-mode: overlay;

@@ -38,7 +38,7 @@ function groupBySection(fields: ParameterField[]): [string, ParameterField[]][] 
 }
 
 const fieldControlClass =
-  'h-10 rounded-[10px] border-[#E5E5EA] bg-[#FAFAFA] text-[13px] hover:border-[#C7C7CC] focus-visible:border-[#1C1C1E] focus-visible:ring-2 focus-visible:ring-[#1C1C1E]/10';
+  'h-10 rounded-[10px] border-[#E5E5EA] bg-[#FAFAFA] text-[13px] hover:border-[#C7C7CC] focus-visible:border-foreground focus-visible:ring-2 focus-visible:ring-foreground/10';
 
 /**
  * Параметры объекта — второй шаг мастера.
@@ -76,7 +76,8 @@ export function ObjectFormPage({ showTitleImport = true }: { showTitleImport?: b
     setValues((prev) => ({ ...prev, [id]: next }));
     setErrors((prev) => {
       if (!prev[id]) return prev;
-      const { [id]: _removed, ...rest } = prev;
+      const rest = { ...prev };
+      delete rest[id];
       return rest;
     });
   };
@@ -125,13 +126,13 @@ export function ObjectFormPage({ showTitleImport = true }: { showTitleImport?: b
               aria-label={importFile.isPending ? 'Разбираем файл…' : 'Загрузить из Excel / CSV'}
               title={importFile.isPending ? 'Разбираем файл…' : 'Загрузить из Excel / CSV'}
               className={cn(
-                'flex size-9 flex-none items-center justify-center rounded-full border border-[#E5E5EA] bg-[#FAFAFA] text-[#1C1C1E]',
+                'flex size-7 flex-none items-center justify-center rounded-full border border-[#E5E5EA] bg-[#FAFAFA] text-foreground',
                 'transition-colors hover:border-[#C7C7CC] hover:bg-[#F2F2F2]',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1C1C1E]/20',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20',
                 'disabled:cursor-not-allowed disabled:opacity-50',
               )}
             >
-              <Upload className="size-4" strokeWidth={1.8} />
+              <Upload className="size-3.5" strokeWidth={1.8} />
             </button>
           </>,
           titleSlot,
@@ -144,7 +145,7 @@ export function ObjectFormPage({ showTitleImport = true }: { showTitleImport?: b
 
       <header className="flex-none">
         {importFile.isSuccess ? (
-          <p className="mb-2 text-[11px] text-[#15803D]">
+          <p className="mb-2 text-[11px] text-status-operation">
             Распознано: {importFile.data.recognized}
             {importFile.data.skipped?.length ? ` · −${importFile.data.skipped.length}` : ''}
           </p>
@@ -158,7 +159,7 @@ export function ObjectFormPage({ showTitleImport = true }: { showTitleImport?: b
         ) : null}
       </header>
 
-      <div className="-mx-1 min-h-0 flex-1 overflow-y-auto overscroll-contain px-1 py-2.5 [scrollbar-width:thin]">
+      <div className="-mx-1 min-h-0 flex-1 overflow-y-auto overscroll-contain px-1 py-1.5 [scrollbar-width:thin]">
         {isLoading || !fields ? (
           <div className="grid gap-3.5">
             {[0, 1, 2, 3, 4].map((key) => (
@@ -172,10 +173,10 @@ export function ObjectFormPage({ showTitleImport = true }: { showTitleImport?: b
           <div className="grid gap-4">
             {groupBySection(fields).map(([section, sectionFields]) => (
               <section key={section}>
-                <h2 className="mb-2 text-[13px] font-semibold tracking-[-0.01em] text-[#1C1C1E]">
+                <h2 className="mb-2 text-[13px] font-semibold tracking-[-0.01em] text-foreground">
                   {section}
                 </h2>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-3 [&_.grid]:gap-1.5">
+                <div className="grid grid-cols-3 gap-x-3 gap-y-3 [&_.grid]:gap-1.5">
                   {sectionFields.map((field) => {
                     const error = errors[field.id];
                     const describedBy = fieldDescribedBy(field.id, field.hint, error);
@@ -223,10 +224,10 @@ export function ObjectFormPage({ showTitleImport = true }: { showTitleImport?: b
         )}
       </div>
 
-      <div className="flex-none border-t border-[#EBEBEB] pt-3">
+      <div className="flex-none border-t border-accent-tint pt-2.5">
         <button
           type="submit"
-          className="flex h-11 w-full items-center justify-center rounded-[10px] bg-[#1C1C1E] text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
+          className="flex h-11 w-full items-center justify-center rounded-[10px] bg-foreground text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
         >
           Далее
         </button>

@@ -84,21 +84,9 @@ export function ResultsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen">
-        <div className="mx-auto max-w-[1380px] px-[18px] pb-[18px]">
-          <div className="panel grid min-h-[420px] place-items-center p-5">
-            <div className="w-full max-w-[400px] text-center">
-              <div className="mx-auto size-9 animate-spin rounded-full border-2 border-border border-t-primary" />
-              <h2 className="mt-5 text-[17px] font-semibold">Идёт расчёт сценариев</h2>
-              <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">
-                Обычно это занимает до минуты. Мы считаем расходы на 7 лет
-                вперёд по трём вариантам: как есть, покупка и аренда.
-              </p>
-              <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-hairline">
-                <div className="h-full w-1/3 animate-[progress_1.4s_ease-in-out_infinite] rounded-full bg-primary" />
-              </div>
-            </div>
-          </div>
+      <div className="min-h-[calc(100dvh-3.5rem)] px-[18px] pt-8">
+        <div className="panel mx-auto grid min-h-[240px] max-w-site place-items-center p-8">
+          <h2 className="text-[17px] font-semibold">Считаем экономику</h2>
         </div>
       </div>
     );
@@ -107,7 +95,7 @@ export function ResultsPage() {
   if (isError || !data) {
     return (
       <AppShell>
-        <div className="panel flex flex-col items-center gap-3 p-8 text-center">
+        <div className="panel mt-8 flex flex-col items-center gap-3 p-8 text-center">
           <TriangleAlert className="size-6 text-status-piloting" strokeWidth={1.8} />
           <p className="text-[14px] text-muted-foreground">
             Не удалось загрузить расчёт. Попробуйте посчитать ещё раз.
@@ -132,9 +120,10 @@ export function ResultsPage() {
         слева, без единой подписи — сама сцена уже понятна. На мобильном —
         та же сцена, без прилипания.
       */}
-      <div className="grid gap-4 lg:grid-cols-2 lg:items-start lg:gap-6">
-        <aside className="lg:sticky lg:top-[84px] lg:order-2 lg:h-[calc(100vh-100px)]">
+      <div className="grid gap-4 pt-8 lg:grid-cols-2 lg:items-start lg:gap-6">
+        <aside className="panel h-[520px] overflow-hidden lg:sticky lg:top-[calc(3.5rem+1px+2rem)] lg:order-2 lg:h-[calc(100dvh-3.5rem-1px-2rem-1.5rem)]">
           <VisualizationSlot
+            className="h-full rounded-none"
             layout={{ objectType }}
             events={[]}
             sceneVariant={sceneVariant}
