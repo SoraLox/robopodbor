@@ -13,14 +13,13 @@ import { AppShell } from '@/app/AppShell';
 import { useCalculation } from '@/api/queries';
 import { Button } from '@/components/ui/button';
 import { MiniTrend } from '@/shared/charts';
-import { CostBreakdown, type CostZone } from './CostBreakdown';
+import { CostBreakdown } from './CostBreakdown';
 import { ObjectParametersList } from './ObjectParametersList';
 import { OBJECT_PARAMETERS } from './objectParameters';
 import { MetricTile } from './parts';
 import { ScenarioBars } from './ScenarioBars';
 import { SensitivityPanel } from './SensitivityPanel';
-import { VisualizationSlot } from './visualization/VisualizationSlot';
-import type { SimSceneVariant } from './visualization/WarehouseSimulation';
+import { ResultSimulation } from './simulation/ResultSimulation';
 import { exportToPdf, exportToXlsx } from './export/exportCalculation';
 
 /**
@@ -61,18 +60,8 @@ export function ResultsPage() {
   const parameterGroups = OBJECT_PARAMETERS[objectType] ?? OBJECT_PARAMETERS.warehouse ?? [];
   const [exporting, setExporting] = useState<'pdf' | 'xlsx' | null>(null);
 
-  // «Живой спутник» справа реагирует на то, что читает пользователь слева.
-  const [hoveredScenarioId, setHoveredScenarioId] = useState<string | null>(null);
-  const [hoveredZone, setHoveredZone] = useState<CostZone | null>(null);
-  const [hoveredImpact, setHoveredImpact] = useState<number | null>(null);
-  const [flashSignal, setFlashSignal] = useState(0);
-
-  const sceneVariant: SimSceneVariant =
-    hoveredScenarioId === 'as-is' ? 'as-is' : hoveredScenarioId === 'raas' ? 'raas' : null;
-
   const runExport = async (kind: 'pdf' | 'xlsx') => {
     if (!data) return;
-    setFlashSignal((n) => n + 1);
     setExporting(kind);
     try {
       if (kind === 'pdf') await exportToPdf(data);
@@ -114,26 +103,8 @@ export function ResultsPage() {
 
   return (
     <AppShell>
-      {/*
-        Живой спутник отчёта — сразу половина экрана справа, фиксированная
-        (sticky) от самого верха: реагирует на то, что читает пользователь
-        слева, без единой подписи — сама сцена уже понятна. На мобильном —
-        та же сцена, без прилипания.
-      */}
-      <div className="grid gap-4 pt-8 lg:grid-cols-2 lg:items-start lg:gap-6">
-        <aside className="panel h-[520px] overflow-hidden lg:sticky lg:top-[calc(3.5rem+1px+2rem)] lg:order-2 lg:h-[calc(100dvh-3.5rem-1px-2rem-1.5rem)]">
-          <VisualizationSlot
-            className="h-full rounded-none"
-            layout={{ objectType }}
-            events={[]}
-            sceneVariant={sceneVariant}
-            highlightZone={hoveredZone}
-            sensitivityPulse={hoveredImpact ?? 0}
-            flashSignal={flashSignal}
-          />
-        </aside>
-
-        <div className="grid gap-4 lg:order-1">
+      <div className="pt-8">
+        <div className="grid gap-4">
           {/* Раздел 1 — Вводные */}
           <section className="panel p-5 lg:p-6">
             <SectionHeading>Вводные</SectionHeading>
@@ -178,6 +149,16 @@ export function ResultsPage() {
             </div>
 
             {parameterGroups.length ? <ObjectParametersList groups={parameterGroups} /> : null}
+          </section>
+
+          {/* Сцена upstream рассчитана на полную ширину — в половине экрана камера обрезает склад. */}
+          <section data-testid="visualization-slot" className="panel p-5 lg:p-6">
+            <SectionHeading description="3D-модель склада с введёнными параметрами и выбранным роботом: сколько их нужно и справляются ли они с потоком.">
+              Симуляция
+            </SectionHeading>
+            <div className="mt-4">
+              <ResultSimulation objectType={objectType} />
+            </div>
           </section>
 
           {/* Раздел 2 — Базовые экономические показатели */}
@@ -237,7 +218,7 @@ export function ResultsPage() {
             </SectionHeading>
 
             <div className="mt-4">
-              <CostBreakdown groups={data.costGroups} total={data.totalTco} onHoverLine={setHoveredZone} />
+              <CostBreakdown groups={data.costGroups} total={data.totalTco} />
             </div>
           </section>
 
@@ -248,7 +229,7 @@ export function ResultsPage() {
             </SectionHeading>
 
             <div className="mt-4">
-              <ScenarioBars scenarios={data.scenarios} onHoverScenario={setHoveredScenarioId} />
+              <ScenarioBars scenarios={data.scenarios} />
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-hairline pt-4">
@@ -274,7 +255,7 @@ export function ResultsPage() {
               </SectionHeading>
 
               <div className="mt-4">
-                <SensitivityPanel factors={data.sensitivity} onHoverFactor={setHoveredImpact} />
+                <SensitivityPanel factors={data.sensitivity} />
               </div>
             </section>
           ) : null}

@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSolutions } from '@/api/queries';
+import { useWizardStore } from '@/app/store';
 import type { Solution } from '@/api/types';
 import { getFitTone } from '@/features/catalog/fitTone';
 import { SolutionPreviewCard } from '@/features/objects/SolutionPreviewCard';
@@ -65,6 +66,7 @@ export function ProcessesPage({ active = true }: { active?: boolean } = {}) {
   const navigate = useNavigate();
   const { objectType = 'warehouse' } = useParams<{ objectType: string }>();
   const { data: solutions, isLoading } = useSolutions(objectType);
+  const setSolutionId = useWizardStore((s) => s.setSolutionId);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [companion, setCompanion] = useState<HTMLElement | null>(null);
@@ -95,6 +97,7 @@ export function ProcessesPage({ active = true }: { active?: boolean } = {}) {
 
   const goCalculate = () => {
     if (!selectedId) return;
+    setSolutionId(selectedId);
     setPreviewOpen(false);
     navigate(`/calculate/${objectType}/calculating`);
   };
