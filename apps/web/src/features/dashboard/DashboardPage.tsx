@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react';
 import { Link } from 'react-router-dom';
 import { useSession } from '@/api/auth';
 import {
@@ -18,7 +19,9 @@ import {
 } from 'lucide-react';
 import { DashboardLayout } from '@/app/DashboardLayout';
 import { DonutBreakdown, StackedBars, TrendLines } from '@/shared/charts';
-import { RobotArmHero } from '@/features/auth/components/RobotArmHero';
+// Декоративная 3D-рука тянет three.js + drei (~350 КБ gzip): грузим её отдельным
+// чанком, чтобы KPI и графики дашборда не ждали WebGL.
+const RobotArmHero = lazy(() => import('@/features/auth/components/RobotArmHero'));
 import { cn } from '@/lib/utils';
 import {
   categories,
@@ -123,7 +126,9 @@ export function DashboardPage() {
             цифры, а three.js грузился ради декора на мобильном трафике.
           */}
           <div className="relative hidden h-[300px] md:block md:h-[520px] xl:h-[560px]">
-            <RobotArmHero className="absolute inset-0 h-full w-full" />
+            <Suspense fallback={null}>
+              <RobotArmHero className="absolute inset-0 h-full w-full" />
+            </Suspense>
           </div>
         </div>
       </section>

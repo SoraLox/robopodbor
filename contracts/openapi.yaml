@@ -5,12 +5,83 @@ info:
   description: >
     Стаб контракта для фронтенда. Бизнес-логика расчёта живёт на бэкенде,
     фронт только отображает готовые значения.
+  license:
+    name: Proprietary
 servers:
   - url: /api
+security:
+  - sessionCookie: []
 paths:
+  /health:
+    get:
+      operationId: health
+      summary: Проверка доступности API и базы данных
+      security: []
+      description: Проверка живости API и доступности базы данных.
+      responses:
+        '200':
+          description: API и база доступны
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: { type: string, enum: [ok] }
+        '503':
+          description: База данных недоступна
+  /selection:
+    post:
+      operationId: selectSolutions
+      summary: Подбор решений под паспорт объекта
+      security: []
+      description: >
+        Подбор решений под паспорт объекта (ТЗ 3.4): для каждого решения —
+        статус (рекомендовано / требует проверки / исключено), причины
+        соответствия, ограничения, недостающие данные и разложение балла по критериям.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SelectionRequest' }
+      responses:
+        '200':
+          description: Результат подбора
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SelectionResult' }
+        '400':
+          description: Некорректный запрос
+  /object-types/{slug}/parameters/template:
+    get:
+      operationId: getParametersTemplate
+      summary: Шаблон паспорта объекта (xlsx/csv)
+      security: []
+      description: Шаблон паспорта объекта для заполнения и загрузки (ТЗ 3.2.3).
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+        - name: format
+          in: query
+          required: false
+          schema: { type: string, enum: [xlsx, csv], default: xlsx }
+      responses:
+        '200':
+          description: Файл шаблона
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema: { type: string, format: binary }
+            text/csv:
+              schema: { type: string }
+        '404':
+          description: Тип объекта не найден
   /object-types:
     get:
       operationId: listObjectTypes
+      summary: Типы объектов
+      security: []
       responses:
         '200':
           description: Типы объектов для мастера расчёта
@@ -22,6 +93,8 @@ paths:
   /calculations/{calculationId}:
     get:
       operationId: getCalculation
+      summary: Результат расчёта
+      security: []
       parameters:
         - name: calculationId
           in: path
@@ -36,6 +109,8 @@ paths:
   /catalog/solutions:
     get:
       operationId: listSolutions
+      summary: Каталог решений
+      security: []
       parameters:
         - name: objectType
           in: query
@@ -50,10 +125,39 @@ paths:
               schema:
                 type: array
                 items: { $ref: '#/components/schemas/Solution' }
+    post:
+      operationId: createSolution
+      summary: Добавить решение в каталог
+      description: Добавление решения в каталог. Доступно роли admin.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Solution' }
+      responses:
+        '201':
+          description: Создано
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Solution' }
+        '400':
+          description: Некорректные данные
+        '403':
+          description: Недостаточно прав
   /projects:
     get:
       operationId: listProjects
-      description: Только для авторизованного пользователя.
+      summary: Проекты пользователя
+      description: Только для авторизованного пользователя. Без limit возвращается весь список.
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 100 }
+        - name: offset
+          in: query
+          required: false
+          schema: { type: integer, minimum: 0 }
       responses:
         '200':
           description: Расчёты пользователя
@@ -66,6 +170,7 @@ paths:
           description: Требуется вход
     post:
       operationId: createProject
+      summary: Создать проект
       requestBody:
         required: true
         content:
@@ -82,6 +187,8 @@ paths:
   /auth/register:
     post:
       operationId: register
+      summary: Регистрация
+      security: []
       description: Создаёт пользователя и открывает сессию (httpOnly cookie).
       requestBody:
         required: true
@@ -103,6 +210,8 @@ paths:
   /auth/login:
     post:
       operationId: login
+      summary: Вход
+      security: []
       requestBody:
         required: true
         content:
@@ -123,12 +232,15 @@ paths:
   /auth/logout:
     post:
       operationId: logout
+      summary: Выход
+      security: []
       responses:
         '204':
           description: Сессия закрыта
   /auth/session:
     get:
       operationId: getSession
+      summary: Текущая сессия
       description: Текущий пользователь по cookie. 401, если сессии нет.
       responses:
         '200':
@@ -141,6 +253,8 @@ paths:
   /object-types/{slug}/parameters:
     get:
       operationId: getObjectParameters
+      summary: Состав паспорта объекта
+      security: []
       description: Состав полей паспорта объекта зависит от типа объекта.
       parameters:
         - name: slug
@@ -158,6 +272,8 @@ paths:
   /object-types/{slug}/parameters/import:
     post:
       operationId: importObjectParameters
+      summary: Загрузить паспорт объекта из файла
+      security: []
       description: Разбор загруженного Excel/CSV в значения паспорта объекта.
       parameters:
         - name: slug
@@ -183,6 +299,7 @@ paths:
   /projects/{projectId}:
     get:
       operationId: getProject
+      summary: Проект
       parameters:
         - name: projectId
           in: path
@@ -196,8 +313,33 @@ paths:
               schema: { $ref: '#/components/schemas/ProjectDetail' }
         '404':
           description: Не найден
+    patch:
+      operationId: updateProject
+      summary: Изменить проект
+      description: Переименование, смена статуса, правка паспорта объекта (ТЗ 3.1.3).
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProjectPatch' }
+      responses:
+        '200':
+          description: Проект обновлён
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectDetail' }
+        '400':
+          description: Некорректные данные
+        '404':
+          description: Не найден
     delete:
       operationId: deleteProject
+      summary: Удалить проект
       parameters:
         - name: projectId
           in: path
@@ -206,9 +348,59 @@ paths:
       responses:
         '204':
           description: Удалён
+        '401': { description: Требуется вход }
+        '404': { description: Не найден }
+  /projects/{projectId}/calculations:
+    get:
+      operationId: listProjectCalculations
+      summary: История расчётов проекта
+      description: История сохранённых расчётов проекта, новые сверху (ТЗ 3.1.5).
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Снимки расчётов с версиями данных и модели
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/CalculationSnapshot' }
+        '404':
+          description: Не найден
+    post:
+      operationId: saveProjectCalculation
+      summary: Сохранить снимок расчёта
+      description: >
+        Сохраняет снимок расчёта: результат целиком, паспорт объекта на момент расчёта,
+        версию данных (каталог и нормативы) и версию расчётной модели. Повторное открытие
+        снимка воспроизводит тот же результат без пересчёта.
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CalculationSnapshotInput' }
+      responses:
+        '201':
+          description: Снимок сохранён
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CalculationSnapshot' }
+        '400':
+          description: Некорректные данные
+        '404':
+          description: Не найден
   /projects/{projectId}/copy:
     post:
       operationId: copyProject
+      summary: Копировать проект
       description: >
         Создаёт копию проекта для сравнения сценариев внутри проекта (см. 3.1.3 ТЗ:
         не менее трёх сценариев). Доступно только владельцу проекта.
@@ -230,6 +422,7 @@ paths:
   /catalog/solutions/{solutionId}:
     put:
       operationId: updateSolution
+      summary: Изменить решение
       description: Доступно роли admin.
       parameters:
         - name: solutionId
@@ -251,6 +444,7 @@ paths:
           description: Недостаточно прав
     delete:
       operationId: deleteSolution
+      summary: Удалить решение
       parameters:
         - name: solutionId
           in: path
@@ -261,9 +455,204 @@ paths:
           description: Удалено
         '403':
           description: Недостаточно прав
+  /catalog/solutions/export:
+    get:
+      operationId: exportCatalog
+      summary: Выгрузить каталог
+      description: Выгрузка каталога в таблицу организатора (ТЗ 3.3.2). Только администратор.
+      parameters:
+        - name: format
+          in: query
+          required: false
+          schema: { type: string, enum: [xlsx, csv], default: xlsx }
+      responses:
+        '200':
+          description: Файл каталога
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema: { type: string, format: binary }
+            text/csv:
+              schema: { type: string }
+        '401': { description: Требуется вход }
+        '403': { description: Недостаточно прав }
+  /catalog/solutions/import:
+    post:
+      operationId: importCatalog
+      summary: Загрузить каталог из файла
+      description: >
+        Загрузка каталога из xlsx/csv (ТЗ 3.8.2). Строка обновляет позицию по id или по
+        паре «наименование + производитель», иначе создаёт новую. Ошибки — по строкам.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        '200':
+          description: Итог загрузки
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CatalogImportResult' }
+        '401': { description: Требуется вход }
+        '403': { description: Недостаточно прав }
+        '422': { description: Файл не передан или не читается }
+  /admin/robot-catalog:
+    post:
+      operationId: importRobotCatalog
+      summary: Загрузить новую версию каталога роботов
+      description: >
+        Файлы папки каталога роботов (структура v2: index.json, categories.json, vendors.json,
+        codes.json, sources.json, data/*.json) — каждый файл в поле files, имя файла с путём
+        внутри папки. Каталог собирается по тем же правилам, что и при первом запуске,
+        с дополнениями организатора. Характеристики обновляются из каталога, кроме полей,
+        которые правил администратор. Решения, которых нет в новой версии, не удаляются.
+        С dryRun=1 возвращает отчёт без записи (ТЗ 3.3.2, 3.3.6).
+      parameters:
+        - { name: dryRun, in: query, required: false, schema: { type: string, enum: ['1'] } }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [files]
+              properties:
+                files: { type: array, items: { type: string, format: binary } }
+      responses:
+        '200':
+          description: Отчёт о версии каталога
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RobotCatalogImportReport' }
+        '401': { description: Требуется вход }
+        '403': { description: Недостаточно прав }
+        '422': { description: Нет файлов, файл не читается или структура каталога не та }
+  /sources:
+    get:
+      operationId: listSources
+      summary: Источники данных
+      security: []
+      description: Источники данных каталога и нормативов (ТЗ 3.1.4, 3.7.5).
+      responses:
+        '200':
+          description: Список источников
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/DataSource' }
+  /admin/sources:
+    post:
+      operationId: createSource
+      summary: Добавить источник
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DataSourceInput' }
+      responses:
+        '201':
+          description: Источник добавлен
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DataSource' }
+        '400': { description: Некорректные данные }
+        '401': { description: Требуется вход }
+        '403': { description: Недостаточно прав }
+  /admin/sources/{sourceId}:
+    put:
+      operationId: updateSource
+      summary: Изменить источник
+      parameters:
+        - name: sourceId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DataSourceInput' }
+      responses:
+        '200':
+          description: Источник обновлён
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DataSource' }
+        '400': { description: Некорректные данные }
+        '403': { description: Недостаточно прав }
+        '404': { description: Не найден }
+    delete:
+      operationId: deleteSource
+      summary: Удалить источник
+      parameters:
+        - name: sourceId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '204': { description: Удалён }
+        '403': { description: Недостаточно прав }
+        '404': { description: Не найден }
+  /admin/parameters/{fieldId}:
+    patch:
+      operationId: updateParameterField
+      summary: Изменить норматив паспорта
+      description: >
+        Правка норматива паспорта объекта: значение по умолчанию, границы, источник,
+        обязательность (ТЗ 3.2.5, 3.8.1). Значение по умолчанию проверяется по границам поля.
+      parameters:
+        - name: fieldId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ParameterFieldPatch' }
+      responses:
+        '200':
+          description: Поле обновлено
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ParameterField' }
+        '400': { description: Некорректные данные }
+        '403': { description: Недостаточно прав }
+        '404': { description: Поле не найдено }
+  /admin/changes:
+    get:
+      operationId: listChanges
+      summary: Журнал изменений
+      description: Журнал изменений каталога, нормативов и источников (ТЗ 3.3.6).
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+        - name: entity
+          in: query
+          required: false
+          schema: { type: string, enum: [solution, source, parameter, catalog-import] }
+      responses:
+        '200':
+          description: Записи журнала, новые сверху
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ChangeLogEntry' }
+        '401': { description: Требуется вход }
+        '403': { description: Недостаточно прав }
   /catalog/taxonomy:
     get:
       operationId: getTaxonomy
+      summary: Иерархия каталога
+      security: []
       description: Иерархия отрасль → объект → процесс → тип решения → продукт.
       responses:
         '200':
@@ -274,6 +663,12 @@ paths:
                 type: array
                 items: { $ref: '#/components/schemas/TaxonomyNode' }
 components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: sid
+      description: httpOnly-cookie сессии, выдаётся при входе и регистрации.
   schemas:
     Credentials:
       type: object
@@ -308,6 +703,8 @@ components:
         min: { type: number }
         max: { type: number }
         defaultValue: { type: string }
+        required: { type: boolean, description: 'Обязательный параметр (true) или дополнительный.' }
+        source: { type: string, description: Источник значения по умолчанию (норматива). }
         options:
           type: array
           items:
@@ -316,17 +713,35 @@ components:
             properties:
               value: { type: string }
               label: { type: string }
+    ImportIssue:
+      type: object
+      required: [message]
+      properties:
+        row: { type: integer, description: Номер строки в файле (с 1). }
+        fieldId: { type: string }
+        label: { type: string }
+        message: { type: string, description: Что не так и как исправить. }
     ImportedParameters:
       type: object
       required: [values, recognized]
       properties:
         values:
           type: object
+          description: Только прошедшие проверку значения.
           additionalProperties: { type: string }
         recognized: { type: integer }
         skipped:
           type: array
+          description: Строки, ключ которых не найден в паспорте.
           items: { type: string }
+        errors:
+          type: array
+          description: Значения, не прошедшие проверку типа, единиц или диапазона.
+          items: { $ref: '#/components/schemas/ImportIssue' }
+        warnings:
+          type: array
+          description: Незаполненные обязательные поля — подставлено значение по умолчанию.
+          items: { $ref: '#/components/schemas/ImportIssue' }
     ProjectInput:
       type: object
       required: [title, objectType, parameters]
@@ -339,6 +754,102 @@ components:
         processes:
           type: array
           items: { type: string }
+        solutionId:
+          type: string
+          description: Решение каталога, выбранное на шаге подбора.
+        calculation:
+          $ref: '#/components/schemas/CalculationResult'
+        modelVersion:
+          type: string
+          description: Версия расчётной модели, выдавшей результат.
+    CatalogImportResult:
+      type: object
+      required: [created, updated, errors]
+      properties:
+        created: { type: integer }
+        updated: { type: integer }
+        errors:
+          type: array
+          items: { $ref: '#/components/schemas/ImportIssue' }
+    DataSourceInput:
+      type: object
+      required: [title, scope, kind, actualAt, confirmed]
+      properties:
+        title: { type: string }
+        scope: { type: string }
+        kind: { type: string, enum: [price, tariff, registry, benchmark, cases, dataset, open] }
+        url: { type: string }
+        actualAt: { type: string, description: Дата актуализации в формате источника }
+        confirmed: { type: boolean }
+    DataSource:
+      allOf:
+        - $ref: '#/components/schemas/DataSourceInput'
+        - type: object
+          required: [id, updatedAt]
+          properties:
+            id: { type: string }
+            updatedAt: { type: string, format: date-time }
+    ParameterFieldPatch:
+      type: object
+      properties:
+        defaultValue: { type: string }
+        min: { type: [number, 'null'] }
+        max: { type: [number, 'null'] }
+        source: { type: string }
+        required: { type: boolean }
+        hint: { type: string }
+    ChangeLogEntry:
+      type: object
+      required: [id, createdAt, entity, entityId, action, summary]
+      properties:
+        id: { type: string }
+        createdAt: { type: string, format: date-time }
+        userEmail: { type: string }
+        entity: { type: string, enum: [solution, source, parameter, catalog-import] }
+        entityId: { type: string }
+        action: { type: string, enum: [create, update, delete, import] }
+        summary: { type: string }
+        diff:
+          type: object
+          description: Изменённые поля — «было → стало».
+          additionalProperties:
+            type: object
+            properties:
+              from: {}
+              to: {}
+    ProjectPatch:
+      type: object
+      properties:
+        title: { type: string, minLength: 1 }
+        status: { $ref: '#/components/schemas/Maturity' }
+        parameters:
+          type: object
+          additionalProperties: { type: string }
+        processes:
+          type: array
+          items: { type: string }
+        solutionId: { type: string }
+    CalculationSnapshotInput:
+      type: object
+      required: [calculation]
+      properties:
+        calculation: { $ref: '#/components/schemas/CalculationResult' }
+        solutionId: { type: string }
+        modelVersion: { type: string }
+    CalculationSnapshot:
+      type: object
+      required: [id, createdAt, dataVersion, modelVersion]
+      properties:
+        id:
+          type: string
+          description: Идентификатор снимка; его же принимает GET /calculations/{calculationId}.
+        createdAt: { type: string, format: date-time }
+        dataVersion:
+          type: string
+          description: Версия каталога и нормативов на момент расчёта (data-YYYYMMDDHHMMSS).
+        modelVersion: { type: string }
+        solutionId: { type: string }
+        payback: { type: string }
     ProjectDetail:
       allOf:
         - $ref: '#/components/schemas/Project'
@@ -357,6 +868,10 @@ components:
               description: Минимум три — «как есть», «покупка», «услуга/RaaS».
               items: { $ref: '#/components/schemas/ScenarioBar' }
             calculationId: { type: string }
+            solutionId: { type: string }
+            dataVersion: { type: string }
+            modelVersion: { type: string }
+            calculatedAt: { type: string, format: date-time }
     TaxonomyNode:
       type: object
       required: [id, label, level]
@@ -463,6 +978,13 @@ components:
           type: array
           items: { $ref: '#/components/schemas/CostGroup' }
         totalTco: { type: number }
+        dataVersion:
+          type: string
+          description: Версия каталога и нормативов, на которых сделан расчёт (ТЗ 3.1.5).
+        modelVersion:
+          type: string
+          description: Версия расчётной модели.
+        calculatedAt: { type: string, format: date-time }
         sensitivity:
           type: array
           description: Параметры, ранжированные по влиянию на результат.
@@ -478,33 +1000,227 @@ components:
         trend: { type: string, enum: [up, down, none] }
     Solution:
       type: object
+      description: >
+        Карточка решения каталога. Группы полей повторяют таблицу 3.3 ТЗ:
+        идентификация, технические характеристики, инфраструктура, экономика,
+        применимость, качество данных. Денежные значения — млн ₽ с НДС.
       required: [id, name, vendor, useCase, price, payload, speed, maturity, confidence]
       properties:
         id: { type: string }
         name: { type: string }
-        vendor: { type: string }
-        useCase: { type: string }
-        price: { type: string }
-        payload: { type: string }
+        vendor: { type: string, description: Производитель. }
+        useCase: { type: string, description: Назначение. }
+        price: { type: string, description: 'Ориентировочная цена единицы, млн ₽.' }
+        payload: { type: string, description: Грузоподъёмность для отображения. }
         speed: { type: string }
         maturity: { $ref: '#/components/schemas/Maturity' }
         confidence: { $ref: '#/components/schemas/DataConfidence' }
         source: { type: string, description: Название источника характеристик. }
-        sourceDate: { type: string, description: Дата актуальности источника. }
+        sourceDate: { type: string, description: Дата получения или обновления данных. }
+        sourceUrl: { type: string, description: Ссылка на источник. }
         objectTypes:
           type: array
           description: Типы объектов, для которых решение применимо.
           items: { type: string }
-        score: { type: number, description: Итоговый балл ранжирования, 0..100. }
+        score: { type: number, description: 'Итоговый балл ранжирования, 0..100.' }
         scoreFactors:
           type: array
           description: Вклад критериев в позицию решения.
+          items: { $ref: '#/components/schemas/ScoreFactor' }
+        solutionType:
+          type: string
+          description: 'Тип решения: ключ справочника SOLUTION_TYPES (amr, fmr, asrs, cleaner, courier, inventory, security, …).'
+        country: { type: string, description: Страна происхождения. }
+        availability: { type: string, enum: [available, on-order, pilot], description: Статус доступности. }
+        payloadKg: { type: number, description: 'Грузоподъёмность, кг (0 — решение не перевозит грузы).' }
+        weightKg: { type: number, description: 'Собственная масса, кг.' }
+        dimensions: { type: string, description: 'Габариты, Д×Ш×В.' }
+        throughput: { type: number, description: Производительность в единицах throughputUnit. }
+        throughputUnit: { type: string }
+        autonomyHours: { type: number, description: 'Автономность, ч. Для стационарных систем 24 — работа от сети.' }
+        positioningAccuracyMm: { type: number, description: 'Точность позиционирования, мм.' }
+        navigation: { type: string, description: Тип навигации. }
+        operatingConditions: { type: string, description: Допустимые условия эксплуатации. }
+        environment: { type: string, enum: [indoor, outdoor, both] }
+        minTempC: { type: number }
+        maxTempC: { type: number }
+        noiseDb: { type: number, description: 'Уровень шума, дБА.' }
+        minAisleWidthM: { type: number, description: 'Минимальная ширина прохода, м.' }
+        maxFloorDeviationMm: { type: number, description: 'Допуск ровности пола, мм на 2 м.' }
+        minCeilingHeightM: { type: number, description: 'Минимальная высота помещения, м.' }
+        elevatorIntegration: { type: boolean, description: Умеет ли вызывать лифт. }
+        airsideCertified: { type: boolean, description: Допуск к работе на перроне. }
+        infrastructure:
+          type: object
+          description: Требования к инфраструктуре.
+          properties:
+            floor: { type: string, description: Покрытие и проходы. }
+            charging: { type: string }
+            connectivity: { type: string }
+            integration: { type: string }
+            service: { type: string }
+        costs:
+          type: object
+          description: 'Ориентировочная стоимость, млн ₽ с НДС.'
+          properties:
+            equipment: { type: number }
+            software: { type: number }
+            implementation: { type: number }
+            maintenancePerYear: { type: number }
+        acquisitionModels:
+          type: array
+          items: { type: string, enum: [purchase, leasing, raas] }
+        lifespanYears: { type: number, description: 'Срок службы, лет.' }
+        processes:
+          type: array
+          description: Поддерживаемые процессы (идентификаторы уровня «процесс» иерархии).
+          items: { type: string }
+        limitations: { type: array, items: { type: string } }
+        cases: { type: array, description: Реализованные кейсы., items: { type: string } }
+        unconfirmedFields:
+          type: array
+          description: Характеристики, значения которых приняты как допущение.
+          items: { type: string }
+        completeness:
+          type: integer
+          description: 'Полнота карточки по обязательным характеристикам, %. Считается сервером.'
+        catalogCategory: { type: string, description: 'Код категории каталога роботов (AM, FL, FC, …).' }
+        trl: { type: integer, description: 'Уровень готовности технологии (УГТ), 1–9.' }
+        photos:
+          type: array
+          description: Имена файлов фото в /robots_photo.
+          items: { type: string }
+        objectFit:
+          type: object
+          description: >
+            Откуда известно, что решение подходит типу объекта: declared — объект указан
+            в каталоге, example — пример решения для объекта в материалах организатора,
+            inferred — выведено по сценариям применения.
+          additionalProperties: { type: string, enum: [declared, example, inferred] }
+        fieldSources:
+          type: object
+          description: >
+            Происхождение характеристик (ТЗ 3.3.4): ключ — поле карточки (payloadKg,
+            dimensions, infrastructure.charging, …). Считается из источников каталога,
+            правка администратора заменяет запись на «правка администратора».
+          additionalProperties: { $ref: '#/components/schemas/FieldProvenance' }
+    RobotCatalogImportReport:
+      type: object
+      required: [applied, version, total, fit, filled, conflicts, added, updated, unchanged, missing, keptAdmin]
+      properties:
+        applied: { type: boolean, description: 'false — только отчёт (dryRun), в базу ничего не записано.' }
+        version:
+          type: object
+          required: [schema, updated]
+          properties:
+            schema: { type: string }
+            updated: { type: string, description: 'Дата версии каталога, ДД.ММ.ГГГГ.' }
+        total: { type: integer, description: Решений в версии вместе с дополнениями организатора. }
+        fit:
+          type: object
+          description: 'Тип объекта → число решений по основаниям применимости.'
+          additionalProperties:
+            type: object
+            required: [declared, example, inferred]
+            properties:
+              declared: { type: integer }
+              example: { type: integer }
+              inferred: { type: integer }
+        filled: { type: array, items: { type: string }, description: Поля каталога, дополненные из материалов организатора. }
+        conflicts: { type: array, items: { type: string }, description: 'Расхождения каталога и организатора — для ответственного за каталог.' }
+        added: { type: array, items: { $ref: '#/components/schemas/NamedSolution' } }
+        updated:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/NamedSolution'
+              - type: object
+                required: [fields]
+                properties: { fields: { type: array, items: { type: string } } }
+        unchanged: { type: integer }
+        missing:
+          type: array
+          description: Были в базе из каталога, но в этой версии их нет. Не удалены.
+          items: { $ref: '#/components/schemas/NamedSolution' }
+        keptAdmin:
+          type: array
+          description: Решения, в которых сохранены правки администратора.
+          items:
+            allOf:
+              - $ref: '#/components/schemas/NamedSolution'
+              - type: object
+                required: [fields]
+                properties: { fields: { type: array, items: { type: string } } }
+    NamedSolution:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string }
+        name: { type: string }
+    FieldProvenance:
+      type: object
+      required: [confirmed, sources]
+      properties:
+        confirmed: { type: boolean, description: 'true — значение в источнике точное; false — «около», значение серии, пересчёт или вывод.' }
+        note: { type: string }
+        sources:
+          type: array
           items:
             type: object
-            required: [label, weight]
+            required: [kind, title]
             properties:
-              label: { type: string }
-              weight: { type: number }
+              kind: { type: string, enum: [organizer, vendor, reseller, media, registry, team, admin] }
+              title: { type: string }
+              url: { type: string }
+              date: { type: string, description: 'ДД.ММ.ГГГГ' }
+    ScoreFactor:
+      type: object
+      required: [label, weight]
+      properties:
+        label: { type: string }
+        weight: { type: number, description: Набранные баллы. }
+        max: { type: number, description: Максимум баллов по критерию. }
+    SelectionRequest:
+      type: object
+      required: [objectType]
+      properties:
+        objectType: { type: string }
+        parameters:
+          type: object
+          description: Значения паспорта объекта; пропущенные берутся по умолчанию.
+          additionalProperties: { type: string }
+    SelectionItem:
+      type: object
+      required: [solutionId, status, score, factors, reasons, limitations, missing, blockers]
+      properties:
+        solutionId: { type: string }
+        status:
+          type: string
+          enum: [recommended, needs-review, excluded]
+        score: { type: number }
+        factors:
+          type: array
+          items: { $ref: '#/components/schemas/ScoreFactor' }
+        reasons: { type: array, description: Причины соответствия., items: { type: string } }
+        limitations: { type: array, items: { type: string } }
+        missing: { type: array, description: Недостающие данные., items: { type: string } }
+        blockers: { type: array, description: Причины исключения., items: { type: string } }
+    SelectionResult:
+      type: object
+      required: [objectType, rulesVersion, summary, items]
+      properties:
+        objectType: { type: string }
+        rulesVersion: { type: string }
+        summary:
+          type: object
+          required: [recommended, needsReview, excluded]
+          properties:
+            recommended: { type: integer }
+            needsReview: { type: integer }
+            excluded: { type: integer }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/SelectionItem' }
     Project:
       type: object
       required: [id, title, meta, payback, status]

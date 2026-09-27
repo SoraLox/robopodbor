@@ -36,7 +36,7 @@ describe('ObjectFormPage', () => {
     await user.type(area, '5');
     await user.click(screen.getByRole('button', { name: 'Далее' }));
 
-    await waitFor(() => expect(screen.getByText('Минимум 10000')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/меньше допустимого минимума 10000/)).toBeInTheDocument());
     expect(screen.queryByText('ЭКРАН ПРОЦЕССОВ')).not.toBeInTheDocument();
   });
 

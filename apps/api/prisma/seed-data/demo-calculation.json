@@ -1,0 +1,174 @@
+{
+  "id": "demo",
+  "objectTitle": "Склад «Южные Врата» · 20 000 м²",
+  "meta": "Расчёт №2026-0417 · 3 смены · 64 оператора · горизонт 7 лет · обновлено 17.09.2026",
+  "payback": {
+    "label": "Срок окупаемости",
+    "value": "3.2",
+    "unit": "года",
+    "trend": "down",
+    "note": "Рекомендуемый сценарий — покупка с господдержкой: на 0.6 года быстрее аренды (RaaS)."
+  },
+  "capex": {
+    "label": "CAPEX",
+    "value": "80",
+    "note": "млн ₽, разово",
+    "trend": "none"
+  },
+  "roi": {
+    "label": "ROI, 5 лет",
+    "value": "148%",
+    "note": "Чистая выгода 71.4 млн ₽",
+    "trend": "up"
+  },
+  "opexSaving": {
+    "series": [
+      2.1,
+      4.4,
+      8,
+      12.6,
+      18.1,
+      24,
+      31.2
+    ],
+    "percent": "+24.8%",
+    "meta": "31.2 млн ₽ в год к 7-му году"
+  },
+  "warning": "Стоимость смены и тариф RaaS взяты из отраслевого бенчмарка 2025 года. Уточните у поставщика перед защитой бюджета.",
+  "assumptions": [
+    "Ставка дисконтирования 16%, рост зарплат 9% в год",
+    "Аренда (RaaS) окупается за 3.8 года"
+  ],
+  "scenarios": [
+    {
+      "id": "as-is",
+      "title": "Как есть",
+      "subtitle": "Без автоматизации",
+      "tco": 214,
+      "share": 1,
+      "delta": "база",
+      "detail": "214.0 млн ₽: зарплаты 168.0, обслуживание 46.0"
+    },
+    {
+      "id": "purchase",
+      "title": "Покупка",
+      "subtitle": "CAPEX + сервис",
+      "tco": 134.6,
+      "share": 0.63,
+      "delta": "−79.4",
+      "recommended": true
+    },
+    {
+      "id": "raas",
+      "title": "RaaS",
+      "subtitle": "Аренда, 0 CAPEX",
+      "tco": 154.2,
+      "share": 0.72,
+      "delta": "−59.8"
+    }
+  ],
+  "costGroups": [
+    {
+      "id": "capex",
+      "title": "CAPEX — разовая покупка",
+      "amount": 80,
+      "share": 59,
+      "confidence": "confirmed",
+      "lines": [
+        {
+          "title": "12 × AMR-паллетовоз P15",
+          "amount": 44.4,
+          "share": 33,
+          "source": "Прайс 2026",
+          "confidence": "confirmed"
+        },
+        {
+          "title": "Система управления парком (WCS)",
+          "amount": 14.8,
+          "share": 11,
+          "source": "Прайс 2026",
+          "confidence": "confirmed"
+        },
+        {
+          "title": "Зарядные станции, разметка, Wi-Fi",
+          "amount": 12.6,
+          "share": 9,
+          "source": "Оценка",
+          "confidence": "needs-review"
+        },
+        {
+          "title": "Внедрение, интеграция с WMS, обучение",
+          "amount": 8.2,
+          "share": 6,
+          "source": "Оценка",
+          "confidence": "needs-review"
+        }
+      ]
+    },
+    {
+      "id": "opex",
+      "title": "OPEX — расходы за 7 лет",
+      "amount": 54.6,
+      "share": 41,
+      "confidence": "needs-review",
+      "lines": [
+        {
+          "title": "Сервисный контракт, 7% от CAPEX в год",
+          "amount": 28,
+          "share": 21,
+          "source": "Отраслевой бенчмарк",
+          "confidence": "needs-review"
+        },
+        {
+          "title": "Электроэнергия и ЗИП",
+          "amount": 11.9,
+          "share": 9,
+          "source": "Тариф региона",
+          "confidence": "confirmed"
+        },
+        {
+          "title": "Остаточный ФОТ: 21 оператор, 2 инженера",
+          "amount": 14.7,
+          "share": 11,
+          "source": "Оценка",
+          "confidence": "needs-review"
+        }
+      ]
+    }
+  ],
+  "totalTco": 134.6,
+  "sensitivity": [
+    {
+      "id": "shift-cost",
+      "label": "Стоимость смены оператора",
+      "impact": 0.41,
+      "direction": "down",
+      "low": "2.6 года",
+      "high": "4.1 года"
+    },
+    {
+      "id": "raas-rate",
+      "label": "Тариф RaaS",
+      "impact": 0.27,
+      "direction": "up",
+      "low": "3.0 года",
+      "high": "3.6 года"
+    },
+    {
+      "id": "discount",
+      "label": "Ставка дисконтирования",
+      "impact": 0.19,
+      "direction": "up",
+      "low": "3.1 года",
+      "high": "3.5 года"
+    },
+    {
+      "id": "service",
+      "label": "Сервисный контракт, % от CAPEX",
+      "impact": 0.13,
+      "direction": "up",
+      "low": "3.1 года",
+      "high": "3.4 года"
+    }
+  ]
+}

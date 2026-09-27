@@ -10,12 +10,8 @@ const ICON: Record<string, ComponentType<{ className?: string; strokeWidth?: num
 };
 
 /**
- * Три варианта один под другим: одинаковая шкала (100% — самый дорогой),
- * поэтому «кто дороже» видно по длине полосы без чтения чисел.
- * Рекомендуемый вариант выделен рамкой, заливкой и словом «Рекомендуем».
- *
- * `onHoverScenario` — для «живого спутника» отчёта: наведение на строку
- * сообщает наружу id сценария, симуляция рядом отражает разницу физически.
+ * Сравнение: одна шкала на всех — длиннее полоса = дороже.
+ * Рекомендуемый вариант — рамка + бейдж, без лишних карточек.
  */
 export function ScenarioBars({
   scenarios,
@@ -27,75 +23,80 @@ export function ScenarioBars({
   const max = Math.max(...scenarios.map((scenario) => scenario.tco), 1);
 
   return (
-    <div className="grid gap-3">
+    <ul className="grid gap-1">
       {scenarios.map((scenario) => {
         const isRecommended = Boolean(scenario.recommended);
         const isBase = scenario.delta === 'база';
         const Icon = ICON[scenario.id] ?? PackageSearch;
 
         return (
-          <div
+          <li
             key={scenario.id}
             onMouseEnter={() => onHoverScenario?.(scenario.id)}
             onMouseLeave={() => onHoverScenario?.(null)}
             className={cn(
-              'grid gap-3 rounded-xl border p-4 transition-shadow sm:grid-cols-[minmax(0,232px)_minmax(0,1fr)_128px] sm:items-center sm:gap-5',
-              isRecommended ? 'border-primary/70 bg-accent-tint/50' : 'border-border',
-              onHoverScenario ? 'hover:shadow-soft' : '',
+              'rounded-[12px] border px-2.5 py-2.5 transition-colors duration-100',
+              isRecommended
+                ? 'border-foreground bg-white'
+                : 'border-transparent hover:border-[#E5E5EA] hover:bg-[#FAFAFA]',
             )}
           >
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-2.5">
               <span
                 className={cn(
-                  'grid size-9 flex-none place-items-center rounded-lg',
-                  isRecommended ? 'bg-primary text-primary-foreground' : 'bg-canvas text-muted-foreground',
+                  'mt-0.5 grid size-7 flex-none place-items-center rounded-[8px]',
+                  isRecommended ? 'bg-foreground text-white' : 'bg-[#F2F2F2] text-foreground',
                 )}
                 aria-hidden
               >
-                <Icon className="size-4" strokeWidth={1.8} />
+                <Icon className="size-3.5" strokeWidth={1.75} />
               </span>
-              <div className="min-w-0">
+
+              <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-[14px] font-semibold">{scenario.title}</span>
+                  <span className="text-[13.5px] font-semibold text-foreground">{scenario.title}</span>
                   {isRecommended ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-primary-foreground">
-                      <CircleCheck className="size-3" strokeWidth={2.5} aria-hidden />
+                    <span className="inline-flex items-center gap-1 rounded-[6px] bg-[#F2F2F2] px-1.5 py-0.5 text-[10.5px] font-semibold text-[#8E8E93]">
+                      <CircleCheck className="size-3" strokeWidth={2.25} aria-hidden />
                       Рекомендуем
                     </span>
                   ) : null}
                 </div>
-                <div className="mt-0.5 text-[12.5px] text-muted-foreground">{scenario.subtitle}</div>
-                {scenario.detail ? (
-                  <div className="mt-1 text-[11.5px] leading-snug text-meta-foreground">
-                    {scenario.detail}
+                <div className="mt-0.5 text-[11.5px] leading-snug text-[#8E8E93]">
+                  {scenario.subtitle}
+                  {scenario.detail ? ` · ${scenario.detail}` : ''}
+                </div>
+
+                <div className="mt-2 flex items-center gap-3">
+                  <div className="relative h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-[#F2F2F2]">
+                    <div
+                      className={cn(
+                        'h-full rounded-full',
+                        isRecommended ? 'bg-foreground' : 'bg-[#C7C7CC]',
+                      )}
+                      style={{ width: `${(scenario.tco / max) * 100}%` }}
+                    />
                   </div>
-                ) : null}
+                  <div className="shrink-0 text-right">
+                    <div
+                      className={cn(
+                        'text-[15px] font-semibold tabular-nums leading-none',
+                        isRecommended ? 'text-foreground' : 'text-foreground',
+                      )}
+                    >
+                      {fmt(scenario.tco)}
+                      <span className="ml-1 text-[11.5px] font-medium text-[#8E8E93]">млн ₽</span>
+                    </div>
+                    <div className="mt-0.5 text-[11px] text-[#8E8E93]">
+                      {isBase ? 'точка отсчёта' : `экономия ${scenario.delta.replace('−', '')}`}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-
-            <div className="relative h-2.5 overflow-hidden rounded-full bg-hairline">
-              <div
-                className={cn('h-full rounded-full', isRecommended ? 'bg-primary' : 'bg-border')}
-                style={{ width: `${(scenario.tco / max) * 100}%` }}
-              />
-            </div>
-
-            <div className="flex items-baseline justify-between gap-2 sm:flex-col sm:items-end sm:justify-start sm:gap-0.5">
-              <span
-                className={cn(
-                  'font-heading text-[19px] font-bold tabular',
-                  isRecommended ? 'text-primary' : 'text-foreground',
-                )}
-              >
-                {fmt(scenario.tco)}
-              </span>
-              <span className="text-[12px] text-muted-foreground">
-                {isBase ? 'млн ₽ · точка отсчёта' : `экономия ${scenario.delta.replace('−', '')} млн ₽`}
-              </span>
-            </div>
-          </div>
+          </li>
         );
       })}
-    </div>
+    </ul>
   );
 }

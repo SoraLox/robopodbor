@@ -14,10 +14,10 @@ const config: Config = {
         invalid: 'invalid="true"',
       },
       fontFamily: {
-        // Space Grotesk убран: в гарнитуре нет кириллицы
+        // Один шрифт: Inter. mono = тот же Inter + tabular через утилиту .tabular
         heading: ['"Inter Variable"', 'Inter', 'system-ui', 'sans-serif'],
         sans: ['"Inter Variable"', 'Inter', 'Helvetica', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+        mono: ['"Inter Variable"', 'Inter', 'Helvetica', 'sans-serif'],
       },
       colors: {
         background: 'hsl(var(--background))',
@@ -34,6 +34,7 @@ const config: Config = {
           bright: 'hsl(var(--primary-bright))',
         },
         'accent-tint': 'hsl(var(--accent-tint))',
+        positive: 'hsl(var(--positive))',
         'meta-foreground': 'hsl(var(--meta-foreground))',
         muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
         accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
@@ -82,7 +83,17 @@ const config: Config = {
         отдельно указывать font-bold/font-medium рядом с ним не нужно.
       */
       fontSize: {
+        /* Маркетинговые роли тянутся по ширине экрана; интерфейсные ниже — фиксированные. */
+        'display-xl': [
+          'clamp(2.5rem, 1.5rem + 3.2vw, 3.75rem)',
+          { lineHeight: '1.04', letterSpacing: '-0.032em', fontWeight: '700' },
+        ],
         display: ['2.75rem', { lineHeight: '1.05', letterSpacing: '-0.03em', fontWeight: '700' }],
+        title: [
+          'clamp(2.25rem, 1.6rem + 2.2vw, 3rem)',
+          { lineHeight: '1.08', letterSpacing: '-0.025em', fontWeight: '700' },
+        ],
+        lead: ['1.0625rem', { lineHeight: '1.6', fontWeight: '400' }],
         h1: ['1.75rem', { lineHeight: '1.15', letterSpacing: '-0.02em', fontWeight: '700' }],
         h2: ['1.375rem', { lineHeight: '1.2', letterSpacing: '-0.012em', fontWeight: '600' }],
         h3: ['1.125rem', { lineHeight: '1.3', letterSpacing: '-0.006em', fontWeight: '600' }],

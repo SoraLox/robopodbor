@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, type RefObject } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCalculation } from '@/api/queries';
 
@@ -28,9 +28,7 @@ function rush(elapsed: number): number {
  * Пока ответа нет — разгон к 90% и редкие шаги чуть выше, каждый меньше предыдущего.
  * 100% только когда расчёт реально пришёл.
  */
-function ProgressTrack({ value, glide }: { value: number; glide: boolean }) {
-  const pct = Math.round(value * 1000) / 10;
-
+function ProgressTrack({ barRef }: { barRef: RefObject<HTMLDivElement | null> }) {
   return (
     <div
       className="h-[2px] w-full overflow-hidden rounded-full bg-[#E5E5EA]"
@@ -40,15 +38,19 @@ function ProgressTrack({ value, glide }: { value: number; glide: boolean }) {
       aria-valuetext="Считаем экономику"
       aria-label="Считаем экономику"
     >
-      <div
-        className="h-full rounded-full bg-foreground"
-        style={{
-          width: `${pct}%`,
-          transition: glide ? `width ${FINISH_MS}ms cubic-bezier(0.22, 1, 0.36, 1)` : 'none',
-        }}
-      />
+      <div ref={barRef} className="h-full origin-left rounded-full bg-foreground" style={{ transform: 'scaleX(0)' }} />
     </div>
   );
+}
+
+/**
+ * Полоса двигается через scaleX прямо в DOM: разгон идёт каждый кадр, и через
+ * state это был бы ре-рендер React плюс пересчёт вёрстки (width) на каждом кадре.
+ */
+function paintProgress(bar: HTMLDivElement | null, value: number, glide: boolean) {
+  if (!bar) return;
+  bar.style.transition = glide ? `transform ${FINISH_MS}ms cubic-bezier(0.22, 1, 0.36, 1)` : 'none';
+  bar.style.transform = `scaleX(${value})`;
 }
 
 /**
@@ -59,21 +61,20 @@ export function CalculatingStep({ active, revealed }: { active: boolean; reveale
   const navigate = useNavigate();
   const { objectType = 'warehouse' } = useParams<{ objectType: string }>();
   const query = useCalculation('demo', active);
-  const [value, setValue] = useState(0);
-  const [glide, setGlide] = useState(false);
+  const barRef = useRef<HTMLDivElement>(null);
   const succeeded = useRef(false);
   succeeded.current = query.isSuccess;
 
   useEffect(() => {
+    const bar = barRef.current;
     if (!active) {
-      setValue(0);
-      setGlide(false);
+      paintProgress(bar, 0, false);
       return;
     }
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduced) {
-      setValue(query.isSuccess ? 1 : CAP);
+      paintProgress(bar, query.isSuccess ? 1 : CAP, false);
       return;
     }
     if (query.isSuccess) return;
@@ -88,15 +89,13 @@ export function CalculatingStep({ active, revealed }: { active: boolean; reveale
       if (succeeded.current) return;
       const next = rush(now - t0);
       if (next < STALL_AT) {
-        setGlide(false);
-        setValue(next);
+        paintProgress(bar, next, false);
         raf = requestAnimationFrame(frame);
         return;
       }
       if (stalled) return;
       stalled = true;
-      setGlide(true);
-      setValue(CAP);
+      paintProgress(bar, CAP, true);
       let wait = 0;
       for (const tick of TICKS) {
         wait += tick.gap;
@@ -105,8 +104,7 @@ export function CalculatingStep({ active, revealed }: { active: boolean; reveale
           window.setTimeout(() => {
             if (succeeded.current) return;
             crept = Math.min(0.98, crept + tick.jump);
-            setGlide(true);
-            setValue(crept);
+            paintProgress(bar, crept, true);
           }, delay),
         );
       }
@@ -130,8 +128,7 @@ export function CalculatingStep({ active, revealed }: { active: boolean; reveale
       return;
     }
 
-    setGlide(true);
-    setValue(1);
+    paintProgress(barRef.current, 1, true);
     const hold = window.setTimeout(go, FINISH_MS + HOLD_MS);
     return () => window.clearTimeout(hold);
   }, [active, revealed, query.isSuccess, navigate, objectType]);
@@ -146,7 +143,7 @@ export function CalculatingStep({ active, revealed }: { active: boolean; reveale
 
   return (
     <div className="pt-3">
-      <ProgressTrack value={value} glide={glide} />
+      <ProgressTrack barRef={barRef} />
     </div>
   );
 }

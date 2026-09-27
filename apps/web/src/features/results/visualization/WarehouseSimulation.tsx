@@ -28,6 +28,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import {
   Maximize,
   Minimize,
@@ -434,7 +435,7 @@ function prepareVacuumTemplate(gltfScene: THREE.Group): THREE.Group {
 
 function loadVacuumModel(): Promise<void> {
   if (!vacuumLoadingPromise) {
-    vacuumLoadingPromise = new GLTFLoader().loadAsync(VACUUM_MODEL_URL).then((gltf) => {
+    vacuumLoadingPromise = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(VACUUM_MODEL_URL).then((gltf) => {
       vacuumTemplate = prepareVacuumTemplate(gltf.scene);
     });
   }

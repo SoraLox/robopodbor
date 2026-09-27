@@ -33,7 +33,56 @@
         "label": "Российский вендор",
         "weight": 12
       }
-    ]
+    ],
+    "solutionType": "amr",
+    "country": "Россия",
+    "availability": "available",
+    "payloadKg": 1500,
+    "weightKg": 620,
+    "dimensions": "1650×1100×350 мм",
+    "throughput": 22,
+    "throughputUnit": "паллет/ч",
+    "autonomyHours": 10,
+    "positioningAccuracyMm": 10,
+    "navigation": "LiDAR SLAM, без разметки",
+    "operatingConditions": "+5…+40 °C, влажность до 85%, IP54",
+    "environment": "indoor",
+    "minTempC": 5,
+    "maxTempC": 40,
+    "noiseDb": 58,
+    "minAisleWidthM": 2.2,
+    "elevatorIntegration": false,
+    "infrastructure": {
+      "floor": "Бетон или эпоксид, уклон до 3%, проход от 2,2 м",
+      "charging": "Автоматическая станция 3 кВт на 6 роботов",
+      "connectivity": "Wi-Fi 5 ГГц по всему маршруту",
+      "integration": "REST API к WMS, диспетчер парка",
+      "service": "Сервисный контракт, выезд инженера за 24 ч"
+    },
+    "costs": {
+      "equipment": 7.4,
+      "software": 0.6,
+      "implementation": 0.9,
+      "maintenancePerYear": 0.52
+    },
+    "acquisitionModels": [
+      "purchase",
+      "leasing",
+      "raas"
+    ],
+    "lifespanYears": 8,
+    "processes": [
+      "transport",
+      "receiving",
+      "linen"
+    ],
+    "limitations": [
+      "Не работает на улице и в неотапливаемых зонах"
+    ],
+    "cases": [
+      "РЦ ритейла, Московская обл., 2025 — 14 роботов"
+    ],
+    "unconfirmedFields": []
   },
   {
     "id": "s20",
@@ -68,6 +117,54 @@
         "label": "Российский вендор",
         "weight": 10
       }
+    ],
+    "solutionType": "asrs",
+    "country": "Россия",
+    "availability": "on-order",
+    "payloadKg": 2000,
+    "weightKg": 3200,
+    "dimensions": "Мачта до 18 м, база 2800×1400 мм",
+    "throughput": 30,
+    "throughputUnit": "паллет/ч",
+    "autonomyHours": 24,
+    "positioningAccuracyMm": 3,
+    "navigation": "Рельсовая направляющая, лазерный дальномер",
+    "operatingConditions": "+2…+40 °C, питание от шинопровода",
+    "environment": "indoor",
+    "minTempC": 2,
+    "maxTempC": 40,
+    "noiseDb": 70,
+    "maxFloorDeviationMm": 2,
+    "minCeilingHeightM": 8,
+    "infrastructure": {
+      "floor": "Фундаментная плита, ровность до 2 мм на 2 м",
+      "charging": "Не требуется: питание от шинопровода 380 В",
+      "connectivity": "Промышленный Ethernet",
+      "integration": "Контроллер склада (WCS) с интеграцией в WMS",
+      "service": "Регламентное ТО раз в квартал"
+    },
+    "costs": {
+      "equipment": 12.1,
+      "software": 1.8,
+      "implementation": 3.4,
+      "maintenancePerYear": 0.9
+    },
+    "acquisitionModels": [
+      "purchase",
+      "leasing"
+    ],
+    "lifespanYears": 15,
+    "processes": [
+      "storage"
+    ],
+    "limitations": [
+      "Требует монтажа стеллажной конструкции под систему"
+    ],
+    "cases": [
+      "Склад FMCG, Казань, 2024"
+    ],
+    "unconfirmedFields": [
+      "Допуск ровности пола"
     ]
   },
   {
@@ -104,7 +201,52 @@
         "label": "Российский вендор",
         "weight": 8
       }
-    ]
+    ],
+    "solutionType": "sorter",
+    "country": "Россия",
+    "availability": "available",
+    "payloadKg": 50,
+    "weightKg": 5400,
+    "dimensions": "Модуль 12×3 м",
+    "throughput": 8000,
+    "throughputUnit": "посылок/ч",
+    "autonomyHours": 24,
+    "positioningAccuracyMm": 5,
+    "navigation": "Конвейерная линия, сканеры штрихкода",
+    "operatingConditions": "+5…+35 °C",
+    "environment": "indoor",
+    "minTempC": 5,
+    "maxTempC": 35,
+    "noiseDb": 72,
+    "infrastructure": {
+      "floor": "Ровный пол под модульную раму",
+      "charging": "Не требуется: питание 380 В, 18 кВт",
+      "connectivity": "Промышленный Ethernet",
+      "integration": "Обмен с WMS по REST или файлом",
+      "service": "Сервисный контракт, ЗИП на объекте"
+    },
+    "costs": {
+      "equipment": 5.9,
+      "software": 0.9,
+      "implementation": 1.6,
+      "maintenancePerYear": 0.45
+    },
+    "acquisitionModels": [
+      "purchase",
+      "leasing"
+    ],
+    "lifespanYears": 12,
+    "processes": [
+      "sorting",
+      "baggage"
+    ],
+    "limitations": [
+      "Посылки до 50 кг и до 800×600×600 мм"
+    ],
+    "cases": [
+      "Сортировочный центр маркетплейса, 2025"
+    ],
+    "unconfirmedFields": []
   },
   {
     "id": "ams",
@@ -140,6 +282,52 @@
         "label": "Российский вендор",
         "weight": 8
       }
+    ],
+    "solutionType": "manipulator",
+    "country": "Россия",
+    "availability": "on-order",
+    "payloadKg": 25,
+    "weightKg": 450,
+    "dimensions": "Рабочая зона Ø 2,4 м",
+    "throughput": 600,
+    "throughputUnit": "шт/ч",
+    "autonomyHours": 24,
+    "positioningAccuracyMm": 0.5,
+    "navigation": "Стационарный, 3D-зрение",
+    "operatingConditions": "+10…+35 °C",
+    "environment": "indoor",
+    "minTempC": 10,
+    "maxTempC": 35,
+    "noiseDb": 65,
+    "infrastructure": {
+      "floor": "Анкерное крепление к полу",
+      "charging": "Не требуется: питание 220 В, 2 кВт",
+      "connectivity": "Ethernet, Wi-Fi для телеметрии",
+      "integration": "API к WMS, подача тары конвейером",
+      "service": "Удалённый мониторинг, выезд за 48 ч"
+    },
+    "costs": {
+      "equipment": 9.6,
+      "software": 1.4,
+      "implementation": 2.2,
+      "maintenancePerYear": 0.7
+    },
+    "acquisitionModels": [
+      "purchase",
+      "raas"
+    ],
+    "lifespanYears": 10,
+    "processes": [
+      "picking",
+      "pharmacy"
+    ],
+    "limitations": [
+      "Не берёт мягкую и прозрачную упаковку без дообучения"
+    ],
+    "cases": [],
+    "unconfirmedFields": [
+      "Производительность",
+      "Точность позиционирования"
     ]
   },
   {
@@ -176,6 +364,53 @@
         "label": "Российский вендор",
         "weight": 6
       }
+    ],
+    "solutionType": "uav",
+    "country": "Россия",
+    "availability": "pilot",
+    "payloadKg": 2,
+    "weightKg": 1.8,
+    "dimensions": "450×450×200 мм",
+    "throughput": 1200,
+    "throughputUnit": "ячеек/ч",
+    "autonomyHours": 0.5,
+    "positioningAccuracyMm": 50,
+    "navigation": "Визуальная одометрия + UWB-маяки",
+    "operatingConditions": "+5…+35 °C, только в помещении",
+    "environment": "indoor",
+    "minTempC": 5,
+    "maxTempC": 35,
+    "noiseDb": 75,
+    "minCeilingHeightM": 6,
+    "infrastructure": {
+      "floor": "Не требуется",
+      "charging": "Док-станция на 4 дрона, 1 кВт",
+      "connectivity": "Wi-Fi, UWB-маяки по периметру",
+      "integration": "Выгрузка остатков в WMS",
+      "service": "Замена винтов и АКБ по регламенту"
+    },
+    "costs": {
+      "equipment": 3.2,
+      "software": 0.8,
+      "implementation": 0.7,
+      "maintenancePerYear": 0.35
+    },
+    "acquisitionModels": [
+      "purchase"
+    ],
+    "lifespanYears": 4,
+    "processes": [
+      "inventory",
+      "inspection"
+    ],
+    "limitations": [
+      "Полёты только без людей в проходе",
+      "Нужны RFID-метки на паллетах"
+    ],
+    "cases": [],
+    "unconfirmedFields": [
+      "Производительность",
+      "Автономность"
     ]
   },
   {
@@ -211,7 +446,55 @@
         "label": "Российский вендор",
         "weight": 10
       }
-    ]
+    ],
+    "solutionType": "amr",
+    "country": "Россия",
+    "availability": "available",
+    "payloadKg": 2200,
+    "weightKg": 780,
+    "dimensions": "1800×1200×380 мм",
+    "throughput": 18,
+    "throughputUnit": "паллет/ч",
+    "autonomyHours": 9,
+    "positioningAccuracyMm": 10,
+    "navigation": "LiDAR SLAM, без разметки",
+    "operatingConditions": "+5…+40 °C, IP54",
+    "environment": "indoor",
+    "minTempC": 5,
+    "maxTempC": 40,
+    "noiseDb": 60,
+    "minAisleWidthM": 2.6,
+    "elevatorIntegration": false,
+    "infrastructure": {
+      "floor": "Бетон или эпоксид, пандусы до 5%, проход от 2,6 м",
+      "charging": "Автоматическая станция 5 кВт на 4 робота",
+      "connectivity": "Wi-Fi 5 ГГц по всему маршруту",
+      "integration": "REST API к WMS, диспетчер парка",
+      "service": "Сервисный контракт, выезд инженера за 24 ч"
+    },
+    "costs": {
+      "equipment": 9.1,
+      "software": 0.6,
+      "implementation": 1,
+      "maintenancePerYear": 0.62
+    },
+    "acquisitionModels": [
+      "purchase",
+      "leasing",
+      "raas"
+    ],
+    "lifespanYears": 8,
+    "processes": [
+      "transport",
+      "receiving"
+    ],
+    "limitations": [
+      "Уклон пандусов не более 5%"
+    ],
+    "cases": [
+      "Межскладской шаттл, Екатеринбург, 2025"
+    ],
+    "unconfirmedFields": []
   },
   {
     "id": "wf3",
@@ -246,7 +529,56 @@
         "label": "Российский вендор",
         "weight": 10
       }
-    ]
+    ],
+    "solutionType": "fmr",
+    "country": "Россия",
+    "availability": "available",
+    "payloadKg": 1800,
+    "weightKg": 2100,
+    "dimensions": "2400×1200×2100 мм, подъём до 6 м",
+    "throughput": 16,
+    "throughputUnit": "паллет/ч",
+    "autonomyHours": 8,
+    "positioningAccuracyMm": 10,
+    "navigation": "Лазерная навигация по отражателям",
+    "operatingConditions": "+5…+40 °C",
+    "environment": "indoor",
+    "minTempC": 5,
+    "maxTempC": 40,
+    "noiseDb": 62,
+    "minAisleWidthM": 3,
+    "elevatorIntegration": false,
+    "infrastructure": {
+      "floor": "Бетон, проход от 3,0 м для разворота с паллетой",
+      "charging": "Зарядная станция 7 кВт на каждый погрузчик",
+      "connectivity": "Wi-Fi, отражатели на колоннах",
+      "integration": "Диспетчер парка с интеграцией в WMS",
+      "service": "ТО каждые 500 моточасов"
+    },
+    "costs": {
+      "equipment": 11.4,
+      "software": 0.9,
+      "implementation": 1.5,
+      "maintenancePerYear": 0.8
+    },
+    "acquisitionModels": [
+      "purchase",
+      "leasing",
+      "raas"
+    ],
+    "lifespanYears": 10,
+    "processes": [
+      "storage",
+      "receiving",
+      "transport"
+    ],
+    "limitations": [
+      "Высота подъёма до 6 м"
+    ],
+    "cases": [
+      "Склад автокомпонентов, Тольятти, 2024"
+    ],
+    "unconfirmedFields": []
   },
   {
     "id": "srt3",
@@ -282,7 +614,52 @@
         "label": "Российский вендор",
         "weight": 8
       }
-    ]
+    ],
+    "solutionType": "sorter",
+    "country": "Россия",
+    "availability": "available",
+    "payloadKg": 20,
+    "weightKg": 900,
+    "dimensions": "Модуль 6×2 м",
+    "throughput": 3000,
+    "throughputUnit": "посылок/ч",
+    "autonomyHours": 24,
+    "positioningAccuracyMm": 5,
+    "navigation": "Конвейерная линия, сканер штрихкода",
+    "operatingConditions": "+5…+35 °C",
+    "environment": "indoor",
+    "minTempC": 5,
+    "maxTempC": 35,
+    "noiseDb": 68,
+    "infrastructure": {
+      "floor": "Ровный пол под модульную раму",
+      "charging": "Не требуется: питание 380 В, 7 кВт",
+      "connectivity": "Ethernet",
+      "integration": "Обмен с WMS по REST",
+      "service": "Сервисный контракт"
+    },
+    "costs": {
+      "equipment": 3.6,
+      "software": 0.5,
+      "implementation": 0.9,
+      "maintenancePerYear": 0.3
+    },
+    "acquisitionModels": [
+      "purchase",
+      "leasing"
+    ],
+    "lifespanYears": 10,
+    "processes": [
+      "sorting",
+      "baggage"
+    ],
+    "limitations": [
+      "Посылки до 20 кг"
+    ],
+    "cases": [
+      "Даркстор, Москва, 2025"
+    ],
+    "unconfirmedFields": []
   },
   {
     "id": "bg12",
@@ -317,6 +694,51 @@
         "label": "Российский вендор",
         "weight": 10
       }
+    ],
+    "solutionType": "sorter",
+    "country": "Россия",
+    "availability": "on-order",
+    "payloadKg": 60,
+    "weightKg": 18000,
+    "dimensions": "Замкнутая петля 60 м",
+    "throughput": 12000,
+    "throughputUnit": "ед./ч",
+    "autonomyHours": 24,
+    "positioningAccuracyMm": 5,
+    "navigation": "Кросс-белт, RFID и штрихкод",
+    "operatingConditions": "+5…+35 °C",
+    "environment": "indoor",
+    "minTempC": 5,
+    "maxTempC": 35,
+    "noiseDb": 74,
+    "infrastructure": {
+      "floor": "Антресоль или усиленный пол под петлю",
+      "charging": "Не требуется: питание 380 В, 45 кВт",
+      "connectivity": "Промышленный Ethernet",
+      "integration": "Интеграция с DCS/BRS аэропорта",
+      "service": "Круглосуточная смена сервиса на объекте"
+    },
+    "costs": {
+      "equipment": 14.8,
+      "software": 2.1,
+      "implementation": 4.5,
+      "maintenancePerYear": 1.1
+    },
+    "acquisitionModels": [
+      "purchase"
+    ],
+    "lifespanYears": 15,
+    "processes": [
+      "baggage",
+      "cargo"
+    ],
+    "limitations": [
+      "Требуется интеграция с системой обработки багажа аэропорта"
+    ],
+    "cases": [],
+    "unconfirmedFields": [
+      "Производительность",
+      "Шум"
     ]
   },
   {
@@ -353,7 +775,52 @@
         "label": "Российский вендор",
         "weight": 10
       }
-    ]
+    ],
+    "solutionType": "manipulator",
+    "country": "Россия",
+    "availability": "available",
+    "payloadKg": 12,
+    "weightKg": 260,
+    "dimensions": "Рабочая зона Ø 1,6 м",
+    "throughput": 900,
+    "throughputUnit": "шт/ч",
+    "autonomyHours": 24,
+    "positioningAccuracyMm": 0.3,
+    "navigation": "Стационарный, 2D-зрение",
+    "operatingConditions": "+10…+35 °C",
+    "environment": "indoor",
+    "minTempC": 10,
+    "maxTempC": 35,
+    "noiseDb": 60,
+    "infrastructure": {
+      "floor": "Анкерное крепление к полу",
+      "charging": "Не требуется: питание 220 В, 1,5 кВт",
+      "connectivity": "Ethernet",
+      "integration": "API к WMS, подача тары конвейером",
+      "service": "Удалённый мониторинг, выезд за 48 ч"
+    },
+    "costs": {
+      "equipment": 6.2,
+      "software": 0.8,
+      "implementation": 1.2,
+      "maintenancePerYear": 0.45
+    },
+    "acquisitionModels": [
+      "purchase",
+      "raas"
+    ],
+    "lifespanYears": 10,
+    "processes": [
+      "picking",
+      "pharmacy"
+    ],
+    "limitations": [
+      "Грузы до 12 кг в жёсткой упаковке"
+    ],
+    "cases": [
+      "Аптечный склад, Новосибирск, 2025"
+    ],
+    "unconfirmedFields": []
   },
   {
     "id": "ams3",
@@ -388,6 +855,48 @@
         "label": "Цена",
         "weight": 8
       }
+    ],
+    "solutionType": "manipulator",
+    "country": "Китай",
+    "availability": "pilot",
+    "payloadKg": 30,
+    "weightKg": 520,
+    "dimensions": "Рабочая зона Ø 2,8 м",
+    "throughput": 700,
+    "throughputUnit": "шт/ч",
+    "autonomyHours": 24,
+    "navigation": "Стационарный, 3D-зрение с нейросетью",
+    "operatingConditions": "+10…+35 °C",
+    "environment": "indoor",
+    "minTempC": 10,
+    "maxTempC": 35,
+    "noiseDb": 66,
+    "infrastructure": {
+      "floor": "Анкерное крепление к полу",
+      "charging": "Не требуется: питание 380 В, 4 кВт",
+      "connectivity": "Ethernet",
+      "integration": "API к WMS",
+      "service": "Сервис через локального интегратора"
+    },
+    "costs": {
+      "equipment": 13.5,
+      "software": 2.4,
+      "implementation": 2.8,
+      "maintenancePerYear": 1
+    },
+    "acquisitionModels": [
+      "purchase"
+    ],
+    "lifespanYears": 8,
+    "processes": [
+      "picking"
+    ],
+    "limitations": [
+      "Срок поставки комплектующих 16–20 недель"
+    ],
+    "cases": [],
+    "unconfirmedFields": [
+      "Производительность"
     ]
   },
   {
@@ -423,7 +932,54 @@
         "label": "Российский вендор",
         "weight": 10
       }
-    ]
+    ],
+    "solutionType": "disinfection",
+    "country": "Россия",
+    "availability": "available",
+    "payloadKg": 0,
+    "weightKg": 95,
+    "dimensions": "600×600×1500 мм",
+    "throughput": 1200,
+    "throughputUnit": "м²/ч",
+    "autonomyHours": 4,
+    "positioningAccuracyMm": 30,
+    "navigation": "LiDAR SLAM",
+    "operatingConditions": "+10…+35 °C",
+    "environment": "indoor",
+    "minTempC": 10,
+    "maxTempC": 35,
+    "noiseDb": 45,
+    "minAisleWidthM": 1,
+    "elevatorIntegration": true,
+    "infrastructure": {
+      "floor": "Любое твёрдое покрытие, пороги до 15 мм",
+      "charging": "Док-станция 0,5 кВт",
+      "connectivity": "Wi-Fi",
+      "integration": "API лифтов и дверей, журнал обработки в МИС",
+      "service": "Замена УФ-ламп раз в 9000 ч"
+    },
+    "costs": {
+      "equipment": 4.1,
+      "software": 0.4,
+      "implementation": 0.5,
+      "maintenancePerYear": 0.3
+    },
+    "acquisitionModels": [
+      "purchase",
+      "leasing",
+      "raas"
+    ],
+    "lifespanYears": 7,
+    "processes": [
+      "disinfection"
+    ],
+    "limitations": [
+      "Работает только в помещениях без людей (УФ-излучение)"
+    ],
+    "cases": [
+      "Городская больница, Москва, 2024"
+    ],
+    "unconfirmedFields": []
   },
   {
     "id": "courier1",
@@ -458,7 +1014,54 @@
         "label": "Российский вендор",
         "weight": 10
       }
-    ]
+    ],
+    "solutionType": "courier",
+    "country": "Россия",
+    "availability": "available",
+    "payloadKg": 35,
+    "weightKg": 70,
+    "dimensions": "550×500×1200 мм",
+    "throughput": 6,
+    "throughputUnit": "рейсов/ч",
+    "autonomyHours": 10,
+    "positioningAccuracyMm": 20,
+    "navigation": "LiDAR SLAM + камеры глубины",
+    "operatingConditions": "+10…+35 °C",
+    "environment": "indoor",
+    "minTempC": 10,
+    "maxTempC": 35,
+    "noiseDb": 38,
+    "minAisleWidthM": 1.2,
+    "elevatorIntegration": true,
+    "infrastructure": {
+      "floor": "Любое твёрдое покрытие, коридор от 1,2 м",
+      "charging": "Док-станция 0,5 кВт на этаж",
+      "connectivity": "Wi-Fi по всем этажам маршрута",
+      "integration": "API лифтов и СКУД, заявки из МИС/ЛИС",
+      "service": "Сервисный контракт, подменный робот"
+    },
+    "costs": {
+      "equipment": 5.4,
+      "software": 0.6,
+      "implementation": 0.8,
+      "maintenancePerYear": 0.4
+    },
+    "acquisitionModels": [
+      "purchase",
+      "raas"
+    ],
+    "lifespanYears": 7,
+    "processes": [
+      "delivery",
+      "pharmacy"
+    ],
+    "limitations": [
+      "Запираемые отсеки — до 35 кг"
+    ],
+    "cases": [
+      "Областная больница, Тюмень, 2025"
+    ],
+    "unconfirmedFields": []
   },
   {
     "id": "ivchassis",
@@ -493,6 +1096,54 @@
         "label": "Российский вендор",
         "weight": 8
       }
+    ],
+    "solutionType": "amr",
+    "country": "Россия",
+    "availability": "pilot",
+    "payloadKg": 150,
+    "weightKg": 110,
+    "dimensions": "1100×650×300 мм",
+    "throughput": 4,
+    "throughputUnit": "рейса/ч",
+    "autonomyHours": 8,
+    "positioningAccuracyMm": 15,
+    "navigation": "LiDAR SLAM",
+    "operatingConditions": "+10…+35 °C",
+    "environment": "indoor",
+    "minTempC": 10,
+    "maxTempC": 35,
+    "noiseDb": 50,
+    "minAisleWidthM": 1.6,
+    "elevatorIntegration": true,
+    "infrastructure": {
+      "floor": "Твёрдое покрытие, коридор от 1,6 м",
+      "charging": "Док-станция 1 кВт",
+      "connectivity": "Wi-Fi по всем этажам маршрута",
+      "integration": "API лифтов",
+      "service": "Гарантийное обслуживание на период пилота"
+    },
+    "costs": {
+      "equipment": 2.8,
+      "software": 0.4,
+      "implementation": 0.6,
+      "maintenancePerYear": 0.25
+    },
+    "acquisitionModels": [
+      "purchase",
+      "raas"
+    ],
+    "lifespanYears": 6,
+    "processes": [
+      "linen",
+      "delivery"
+    ],
+    "limitations": [
+      "Только тележки стандарта 1000×600 мм"
+    ],
+    "cases": [],
+    "unconfirmedFields": [
+      "Автономность",
+      "Шум"
     ]
   },
   {
@@ -528,7 +1179,54 @@
         "label": "Российский вендор",
         "weight": 10
       }
-    ]
+    ],
+    "solutionType": "tug",
+    "country": "Россия",
+    "availability": "available",
+    "payloadKg": 4000,
+    "weightKg": 1800,
+    "dimensions": "2600×1300×1500 мм",
+    "throughput": 10,
+    "throughputUnit": "составов/ч",
+    "autonomyHours": 12,
+    "positioningAccuracyMm": 50,
+    "navigation": "RTK-GNSS + LiDAR",
+    "operatingConditions": "−35…+45 °C, IP65, снег и дождь",
+    "environment": "outdoor",
+    "minTempC": -35,
+    "maxTempC": 45,
+    "noiseDb": 68,
+    "airsideCertified": true,
+    "infrastructure": {
+      "floor": "Асфальт или бетон перрона",
+      "charging": "Быстрая зарядка 22 кВт у багажного терминала",
+      "connectivity": "LTE/5G частная сеть аэропорта",
+      "integration": "Задания из AODB, трекинг в диспетчерской",
+      "service": "Сервисная база на территории аэропорта"
+    },
+    "costs": {
+      "equipment": 10.7,
+      "software": 1.2,
+      "implementation": 1.8,
+      "maintenancePerYear": 0.85
+    },
+    "acquisitionModels": [
+      "purchase",
+      "leasing",
+      "raas"
+    ],
+    "lifespanYears": 10,
+    "processes": [
+      "ramp",
+      "baggage"
+    ],
+    "limitations": [
+      "Скорость на перроне ограничена регламентом аэропорта"
+    ],
+    "cases": [
+      "Региональный аэропорт, пилот 2025"
+    ],
+    "unconfirmedFields": []
   },
   {
     "id": "gseasrs",
@@ -563,6 +1261,52 @@
         "label": "Зрелость решения",
         "weight": 8
       }
+    ],
+    "solutionType": "asrs",
+    "country": "Россия",
+    "availability": "pilot",
+    "payloadKg": 3500,
+    "weightKg": 6000,
+    "dimensions": "Ячейка ULD 3,2×2,4 м",
+    "throughput": 20,
+    "throughputUnit": "ULD/ч",
+    "autonomyHours": 24,
+    "positioningAccuracyMm": 5,
+    "navigation": "Рельсовая направляющая",
+    "operatingConditions": "0…+40 °C",
+    "environment": "indoor",
+    "minTempC": 0,
+    "maxTempC": 40,
+    "noiseDb": 70,
+    "maxFloorDeviationMm": 2,
+    "minCeilingHeightM": 9,
+    "infrastructure": {
+      "floor": "Фундаментная плита, ровность до 2 мм на 2 м",
+      "charging": "Не требуется: питание 380 В",
+      "connectivity": "Промышленный Ethernet",
+      "integration": "Интеграция с системой грузового терминала",
+      "service": "Регламентное ТО раз в квартал"
+    },
+    "costs": {
+      "equipment": 16.3,
+      "software": 2.2,
+      "implementation": 4.8,
+      "maintenancePerYear": 1.2
+    },
+    "acquisitionModels": [
+      "purchase",
+      "leasing"
+    ],
+    "lifespanYears": 15,
+    "processes": [
+      "cargo"
+    ],
+    "limitations": [
+      "Требует капитального строительства под систему"
+    ],
+    "cases": [],
+    "unconfirmedFields": [
+      "Производительность"
     ]
   },
   {
@@ -598,6 +1342,51 @@
         "label": "Российский вендор",
         "weight": 6
       }
+    ],
+    "solutionType": "uav",
+    "country": "Россия",
+    "availability": "pilot",
+    "payloadKg": 3,
+    "weightKg": 6.5,
+    "dimensions": "900×900×350 мм",
+    "throughput": 4,
+    "throughputUnit": "облёта/ч",
+    "autonomyHours": 0.7,
+    "positioningAccuracyMm": 100,
+    "navigation": "RTK-GNSS + визуальная навигация",
+    "operatingConditions": "−20…+40 °C, IP43, ветер до 12 м/с",
+    "environment": "outdoor",
+    "minTempC": -20,
+    "maxTempC": 40,
+    "noiseDb": 78,
+    "airsideCertified": false,
+    "infrastructure": {
+      "floor": "Не требуется",
+      "charging": "Док-станция с подогревом, 2 кВт",
+      "connectivity": "LTE, резервный радиоканал",
+      "integration": "Видеопоток в ситуационный центр",
+      "service": "Предполётный осмотр, замена АКБ"
+    },
+    "costs": {
+      "equipment": 6.8,
+      "software": 1.1,
+      "implementation": 1.3,
+      "maintenancePerYear": 0.6
+    },
+    "acquisitionModels": [
+      "purchase"
+    ],
+    "lifespanYears": 4,
+    "processes": [
+      "inspection"
+    ],
+    "limitations": [
+      "Полёты согласуются с диспетчерской службой"
+    ],
+    "cases": [],
+    "unconfirmedFields": [
+      "Автономность",
+      "Точность позиционирования"
     ]
   },
   {
@@ -635,6 +1424,54 @@
         "label": "Российский вендор",
         "weight": 7
       }
-    ]
+    ],
+    "solutionType": "cleaner",
+    "country": "Россия",
+    "availability": "available",
+    "payloadKg": 0,
+    "weightKg": 280,
+    "dimensions": "1100×700×1150 мм",
+    "throughput": 1500,
+    "throughputUnit": "м²/ч",
+    "autonomyHours": 4,
+    "positioningAccuracyMm": 20,
+    "navigation": "LiDAR SLAM",
+    "operatingConditions": "+5…+40 °C",
+    "environment": "indoor",
+    "minTempC": 5,
+    "maxTempC": 40,
+    "noiseDb": 58,
+    "minAisleWidthM": 1.2,
+    "elevatorIntegration": false,
+    "infrastructure": {
+      "floor": "Твёрдое покрытие, пороги до 20 мм",
+      "charging": "Док-станция с заправкой воды, 1,5 кВт",
+      "connectivity": "Wi-Fi или LTE",
+      "integration": "Облачный кабинет, отчёты об уборке",
+      "service": "Замена щёток и фильтров по регламенту"
+    },
+    "costs": {
+      "equipment": 2.1,
+      "software": 0.2,
+      "implementation": 0.3,
+      "maintenancePerYear": 0.2
+    },
+    "acquisitionModels": [
+      "purchase",
+      "leasing",
+      "raas"
+    ],
+    "lifespanYears": 6,
+    "processes": [
+      "cleaning"
+    ],
+    "limitations": [
+      "Не моет лестницы и эскалаторы"
+    ],
+    "cases": [
+      "Терминал аэропорта, 2025",
+      "Логистический парк, 2024"
+    ],
+    "unconfirmedFields": []
   }
 ]

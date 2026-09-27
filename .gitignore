@@ -5,6 +5,10 @@ dist/
 
 # Выхлоп tsc, если его случайно сгенерировали рядом с исходниками
 apps/web/*.tsbuildinfo
+apps/api/*.tsbuildinfo
+
+# Секреты docker-compose (шаблон — .env.example)
+.env
 
 # Приватный ключ деплоя — только на этой машине и в секретах Sourcecraft,
 # в репозиторий не идёт

@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "vendors.schema.json",
+  "title": "Vendors",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_ver",
+    "updated",
+    "items"
+  ],
+  "properties": {
+    "schema_ver": {
+      "type": "string"
+    },
+    "updated": {
+      "type": "string",
+      "format": "date"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "vid",
+          "legal",
+          "form",
+          "name",
+          "aliases",
+          "region",
+          "country",
+          "site",
+          "inn",
+          "search"
+        ],
+        "properties": {
+          "vid": {
+            "type": "string",
+            "pattern": "^VN\\d{4}$"
+          },
+          "legal": {
+            "type": "string",
+            "description": "legal name as in the catalog, normalized quotes and letters"
+          },
+          "form": {
+            "enum": [
+              "OO",
+              "AO",
+              "PA",
+              "ZA",
+              "AN",
+              "FA",
+              "SC",
+              "UN"
+            ],
+            "description": "legal form; codes: lform"
+          },
+          "name": {
+            "type": "string",
+            "description": "short name without legal form"
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "region": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^RU-[A-Z]{2,3}$",
+            "description": "see regions.json"
+          },
+          "country": {
+            "enum": [
+              "RU",
+              "CN",
+              "BY",
+              "KR",
+              "JP",
+              "TW",
+              "DE",
+              "IT",
+              "US",
+              "TR"
+            ]
+          },
+          "site": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri"
+          },
+          "inn": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^\\d{10}(\\d{2})?$"
+          },
+          "search": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

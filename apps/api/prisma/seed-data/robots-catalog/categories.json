@@ -1,0 +1,239 @@
+{
+  "schema_ver": "2.0.0",
+  "updated": "2026-09-25",
+  "total": 187,
+  "items": [
+    {
+      "code": "FC",
+      "en": "Indoor floor cleaning robot",
+      "ru": "Робот-уборщик помещений",
+      "domain": "ground",
+      "file": "data/fc_floor_cleaner.json",
+      "count": 6
+    },
+    {
+      "code": "SS",
+      "en": "Outdoor street & territory cleaning robot",
+      "ru": "Уличный робот-уборщик",
+      "domain": "ground",
+      "file": "data/ss_street_cleaner.json",
+      "count": 7
+    },
+    {
+      "code": "AM",
+      "en": "Autonomous mobile robot (AMR), load carrier / tugger",
+      "ru": "Автономный мобильный робот (AMR), тележка, тягач",
+      "domain": "ground",
+      "file": "data/am_mobile_robot.json",
+      "count": 19
+    },
+    {
+      "code": "FL",
+      "en": "Forklift & stacker robot (FMR)",
+      "ru": "Беспилотный погрузчик, штабелёр (FMR)",
+      "domain": "ground",
+      "file": "data/fl_forklift.json",
+      "count": 5
+    },
+    {
+      "code": "IN",
+      "en": "Inventory robot",
+      "ru": "Робот-инвентаризатор",
+      "domain": "ground",
+      "file": "data/in_inventory.json",
+      "count": 2
+    },
+    {
+      "code": "DL",
+      "en": "Ground delivery robot",
+      "ru": "Робот-курьер",
+      "domain": "ground",
+      "file": "data/dl_delivery.json",
+      "count": 2
+    },
+    {
+      "code": "SC",
+      "en": "Security, patrol & environmental monitoring robot",
+      "ru": "Охранный, патрульный робот",
+      "domain": "ground",
+      "file": "data/sc_security.json",
+      "count": 4
+    },
+    {
+      "code": "ER",
+      "en": "Firefighting & rescue robot",
+      "ru": "Пожарный, спасательный робот",
+      "domain": "ground",
+      "file": "data/er_emergency.json",
+      "count": 2
+    },
+    {
+      "code": "IR",
+      "en": "Inspection robot (pipes, structures, underground)",
+      "ru": "Инспекционный робот (трубы, конструкции, грунт)",
+      "domain": "ground",
+      "file": "data/ir_inspection.json",
+      "count": 7
+    },
+    {
+      "code": "UG",
+      "en": "Off-road robotic platform (UGV)",
+      "ru": "Платформа высокой проходимости",
+      "domain": "ground",
+      "file": "data/ug_platform.json",
+      "count": 3
+    },
+    {
+      "code": "RW",
+      "en": "Railway service robot",
+      "ru": "Робот для обслуживания вагонов",
+      "domain": "ground",
+      "file": "data/rw_railway.json",
+      "count": 3
+    },
+    {
+      "code": "AG",
+      "en": "Autonomous tractor & field robot",
+      "ru": "Беспилотный трактор, полевой робот",
+      "domain": "vehicle",
+      "file": "data/ag_field.json",
+      "count": 5
+    },
+    {
+      "code": "HV",
+      "en": "Fruit & berry harvesting robot",
+      "ru": "Робот для сбора плодов и ягод",
+      "domain": "ground",
+      "file": "data/hv_harvest.json",
+      "count": 4
+    },
+    {
+      "code": "LV",
+      "en": "Livestock & poultry robot",
+      "ru": "Робот для животноводства и птицеводства",
+      "domain": "mixed",
+      "file": "data/lv_livestock.json",
+      "count": 3
+    },
+    {
+      "code": "AV",
+      "en": "Autonomous road / rail vehicle",
+      "ru": "Беспилотный транспорт: грузовик, тягач, такси, трамвай, метро",
+      "domain": "vehicle",
+      "file": "data/av_vehicle.json",
+      "count": 8
+    },
+    {
+      "code": "CE",
+      "en": "Autonomous construction & demolition machine",
+      "ru": "Беспилотная строительная и демонтажная техника",
+      "domain": "vehicle",
+      "file": "data/ce_construction.json",
+      "count": 5
+    },
+    {
+      "code": "IM",
+      "en": "Industrial robot arm",
+      "ru": "Промышленный манипулятор",
+      "domain": "stationary",
+      "file": "data/im_manipulator.json",
+      "count": 7
+    },
+    {
+      "code": "CB",
+      "en": "Collaborative robot (cobot)",
+      "ru": "Коллаборативный робот",
+      "domain": "stationary",
+      "file": "data/cb_cobot.json",
+      "count": 2
+    },
+    {
+      "code": "MM",
+      "en": "Mobile manipulator",
+      "ru": "Мобильный манипулятор",
+      "domain": "ground",
+      "file": "data/mm_mobile_manip.json",
+      "count": 2
+    },
+    {
+      "code": "RC",
+      "en": "Robotic cell / complex",
+      "ru": "Роботизированная ячейка, комплекс",
+      "domain": "stationary",
+      "file": "data/rc_robotic_cell.json",
+      "count": 10
+    },
+    {
+      "code": "AS",
+      "en": "Automated storage & retrieval system",
+      "ru": "Автоматизированная система хранения",
+      "domain": "stationary",
+      "file": "data/as_storage.json",
+      "count": 4
+    },
+    {
+      "code": "CA",
+      "en": "Crane automation system",
+      "ru": "Система автоматизации кранов",
+      "domain": "stationary",
+      "file": "data/ca_crane_auto.json",
+      "count": 2
+    },
+    {
+      "code": "FB",
+      "en": "Food & beverage robot",
+      "ru": "Робо-кафе, робот-бариста",
+      "domain": "stationary",
+      "file": "data/fb_food.json",
+      "count": 2
+    },
+    {
+      "code": "HU",
+      "en": "Humanoid & service robot",
+      "ru": "Антропоморфный, сервисный робот",
+      "domain": "ground",
+      "file": "data/hu_humanoid.json",
+      "count": 5
+    },
+    {
+      "code": "UA",
+      "en": "Unmanned aircraft (UAV)",
+      "ru": "Беспилотное воздушное судно (БАС)",
+      "domain": "aerial",
+      "file": "data/ua_uav.json",
+      "count": 43
+    },
+    {
+      "code": "MS",
+      "en": "Uncrewed surface vessel",
+      "ru": "Безэкипажное надводное судно",
+      "domain": "marine",
+      "file": "data/ms_surface.json",
+      "count": 16
+    },
+    {
+      "code": "MU",
+      "en": "Underwater vehicle (ROV)",
+      "ru": "Телеуправляемый подводный аппарат (ТНПА)",
+      "domain": "marine",
+      "file": "data/mu_underwater.json",
+      "count": 4
+    },
+    {
+      "code": "SW",
+      "en": "Robotics software",
+      "ru": "ПО для роботов и автоматизации",
+      "domain": "software",
+      "file": "data/sw_software.json",
+      "count": 3
+    },
+    {
+      "code": "OT",
+      "en": "Other robots (single items)",
+      "ru": "Прочие роботы (единичные)",
+      "domain": "mixed",
+      "file": "data/ot_other.json",
+      "count": 2
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+{
+  "schema_ver": "2.0.0",
+  "updated": "2026-09-25",
+  "standard": "ISO 3166-2:RU; RU-SEV — not in ISO",
+  "items": [
+    {
+      "code": "RU-MOW",
+      "ru": "Москва",
+      "en": "Moscow",
+      "fd": "CE"
+    },
+    {
+      "code": "RU-MOS",
+      "ru": "Московская область",
+      "en": "Moscow Oblast",
+      "fd": "CE"
+    },
+    {
+      "code": "RU-SPE",
+      "ru": "Санкт-Петербург",
+      "en": "Saint Petersburg",
+      "fd": "NW"
+    },
+    {
+      "code": "RU-LEN",
+      "ru": "Ленинградская область",
+      "en": "Leningrad Oblast",
+      "fd": "NW"
+    },
+    {
+      "code": "RU-YAR",
+      "ru": "Ярославская область",
+      "en": "Yaroslavl Oblast",
+      "fd": "CE"
+    },
+    {
+      "code": "RU-KLU",
+      "ru": "Калужская область",
+      "en": "Kaluga Oblast",
+      "fd": "CE"
+    },
+    {
+      "code": "RU-BRY",
+      "ru": "Брянская область",
+      "en": "Bryansk Oblast",
+      "fd": "CE"
+    },
+    {
+      "code": "RU-RYA",
+      "ru": "Рязанская область",
+      "en": "Ryazan Oblast",
+      "fd": "CE"
+    },
+    {
+      "code": "RU-KDA",
+      "ru": "Краснодарский край",
+      "en": "Krasnodar Krai",
+      "fd": "SO"
+    },
+    {
+      "code": "RU-ROS",
+      "ru": "Ростовская область",
+      "en": "Rostov Oblast",
+      "fd": "SO"
+    },
+    {
+      "code": "RU-SEV",
+      "ru": "Севастополь",
+      "en": "Sevastopol",
+      "fd": "SO"
+    },
+    {
+      "code": "RU-KYA",
+      "ru": "Красноярский край",
+      "en": "Krasnoyarsk Krai",
+      "fd": "SI"
+    },
+    {
+      "code": "RU-NVS",
+      "ru": "Новосибирская область",
+      "en": "Novosibirsk Oblast",
+      "fd": "SI"
+    },
+    {
+      "code": "RU-OMS",
+      "ru": "Омская область",
+      "en": "Omsk Oblast",
+      "fd": "SI"
+    },
+    {
+      "code": "RU-TOM",
+      "ru": "Томская область",
+      "en": "Tomsk Oblast",
+      "fd": "SI"
+    },
+    {
+      "code": "RU-NIZ",
+      "ru": "Нижегородская область",
+      "en": "Nizhny Novgorod Oblast",
+      "fd": "VO"
+    },
+    {
+      "code": "RU-PNZ",
+      "ru": "Пензенская область",
+      "en": "Penza Oblast",
+      "fd": "VO"
+    },
+    {
+      "code": "RU-PER",
+      "ru": "Пермский край",
+      "en": "Perm Krai",
+      "fd": "VO"
+    },
+    {
+      "code": "RU-TA",
+      "ru": "Республика Татарстан",
+      "en": "Republic of Tatarstan",
+      "fd": "VO"
+    },
+    {
+      "code": "RU-UD",
+      "ru": "Удмуртская Республика",
+      "en": "Udmurt Republic",
+      "fd": "VO"
+    },
+    {
+      "code": "RU-CU",
+      "ru": "Чувашская Республика",
+      "en": "Chuvash Republic",
+      "fd": "VO"
+    },
+    {
+      "code": "RU-SVE",
+      "ru": "Свердловская область",
+      "en": "Sverdlovsk Oblast",
+      "fd": "UR"
+    },
+    {
+      "code": "RU-CHE",
+      "ru": "Челябинская область",
+      "en": "Chelyabinsk Oblast",
+      "fd": "UR"
+    },
+    {
+      "code": "RU-SAK",
+      "ru": "Сахалинская область",
+      "en": "Sakhalin Oblast",
+      "fd": "FE"
+    }
+  ]
+}

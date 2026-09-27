@@ -1,0 +1,65 @@
+{
+  "source": {
+    "title": "Примеры решений организатора (Примеры_решений_типы_объектов.docx)",
+    "date": "27.09.2026"
+  },
+  "note": "Дополнения к каталогу роботов из материалов организатора. Поля заполняют только пустые значения каталога; расхождения с каталогом build-catalog.ts выводит списком и не перезаписывает — их решает ответственный за каталог.",
+  "examples": [
+    { "id": "AM0001", "objectType": "warehouse", "process": "transport" },
+    { "id": "AM0001", "objectType": "airport", "process": "cargo" },
+    { "id": "FL0001", "objectType": "warehouse", "process": "receiving" },
+    { "id": "FL0001", "objectType": "airport", "process": "cargo" },
+    { "id": "FC0002", "objectType": "warehouse", "process": "cleaning" },
+    { "id": "FC0002", "objectType": "airport", "process": "cleaning" },
+    { "id": "FC0002", "objectType": "clinic", "process": "cleaning" },
+    { "id": "AS0004", "objectType": "warehouse", "process": "storage" },
+    { "id": "AV0003", "objectType": "airport", "process": "ramp" },
+    { "id": "AV0002", "objectType": "airport", "process": "ramp" },
+    { "id": "AM0004", "objectType": "clinic", "process": "delivery" },
+    { "id": "EX0001", "objectType": "clinic", "process": "delivery" }
+  ],
+  "fields": {
+    "AM0004": { "minAisleWidthM": 0.7 },
+    "AS0004": {
+      "payloadKg": 1500,
+      "payload": "1 500 кг",
+      "speed": "1 м/с",
+      "operatingConditions": "канальные стеллажи высотой до 12–15 м, есть исполнения для холодильных и морозильных складов",
+      "environment": "indoor"
+    },
+    "AV0003": {
+      "payloadKg": 3000,
+      "payload": "3 000 кг",
+      "operatingConditions": "круглогодично на перроне и в багажных зонах, в дождь, снег и туман"
+    },
+    "FL0001": {
+      "operatingConditions": "склад или цех с ровным бетонным покрытием"
+    }
+  },
+  "robots": [
+    {
+      "id": "EX0001",
+      "name": "PuduBot 2",
+      "vendor": "Pudu Robotics",
+      "useCase": "Доставка грузов в помещении: медикаменты, анализы, расходники",
+      "price": "—",
+      "payload": "10 кг на полку",
+      "speed": "1.2 м/с",
+      "maturity": "operation",
+      "confidence": "confirmed",
+      "solutionType": "courier",
+      "catalogCategory": "DL",
+      "country": "Китай",
+      "payloadKg": 10,
+      "weightKg": 39,
+      "dimensions": "580×535×1290 мм",
+      "autonomyHours": 12,
+      "navigation": "визуальный SLAM, лидарный SLAM",
+      "environment": "indoor",
+      "minAisleWidthM": 0.8,
+      "infrastructure": { "charging": "зарядка 4 ч" },
+      "limitations": ["Нет в каталоге ФЦ БАС: добавлен из примеров организатора, цена не указана"],
+      "unconfirmedFields": ["Страна происхождения — по стране производителя"]
+    }
+  ]
+}

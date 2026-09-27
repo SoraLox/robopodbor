@@ -22,7 +22,7 @@
     "exactOptionalPropertyTypes": false,
     "types": ["vitest/globals", "@testing-library/jest-dom"],
     "baseUrl": ".",
-    "paths": { "@/*": ["./src/*"] }
+    "paths": { "@/*": ["./src/*"], "@domain/*": ["../api/src/domain/*"] }
   },
   "include": ["src"]
 }

@@ -47,6 +47,29 @@ jobs:
         working-directory: apps/web
         run: npm run test
 
+  api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/api/package-lock.json
+
+      - name: Install
+        working-directory: apps/api
+        run: npm ci --no-audit --no-fund
+
+      - name: Prisma generate + validate
+        working-directory: apps/api
+        run: npx prisma generate && npx prisma validate
+
+      - name: Typecheck + build
+        working-directory: apps/api
+        run: npm run typecheck && npm run build
+
   build:
     runs-on: ubuntu-latest
     steps:

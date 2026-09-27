@@ -1,18 +1,33 @@
-import { useState } from 'react';
-import { ChevronRight, Pencil, Plus, Trash2 } from 'lucide-react';
-import { AppShell } from '@/app/AppShell';
+import { useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowLeft, ChevronRight, Download, Pencil, Plus, Trash2, Upload } from 'lucide-react';
+import { SOLUTION_TYPES } from '@domain/catalog';
+import { DashboardLayout } from '@/app/DashboardLayout';
 import {
+  downloadFile,
   useDeleteSolution,
+  useImportCatalog,
   useSolutions,
   useTaxonomy,
-  useUpdateSolution,
 } from '@/api/queries';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { SectionHeading, StatusBadge } from '@/shared/components';
+import { StatusBadge } from '@/shared/components';
 import type { Solution, TaxonomyNode } from '@/api/types';
 import { cn } from '@/lib/utils';
+import { RobotCatalogImport } from './RobotCatalogImport';
+import { SolutionEditor } from './SolutionEditor';
+
+const EMPTY_SOLUTION: Solution = {
+  id: '',
+  name: '',
+  vendor: '',
+  useCase: '',
+  price: '',
+  payload: '',
+  speed: '',
+  maturity: 'piloting',
+  confidence: 'needs-review',
+};
 
 const LEVEL_LABEL: Record<string, string> = {
   industry: 'Отрасль',
@@ -68,94 +83,169 @@ function TaxonomyBranch({ node, depth = 0 }: { node: TaxonomyNode; depth?: numbe
 export function CatalogAdminPage() {
   const { data: solutions, isLoading } = useSolutions();
   const { data: taxonomy } = useTaxonomy();
-  const updateSolution = useUpdateSolution();
   const deleteSolution = useDeleteSolution();
+  const importCatalog = useImportCatalog();
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [editing, setEditing] = useState<{ solution: Solution; isNew: boolean } | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
 
-  const [draft, setDraft] = useState<Solution | null>(null);
-
-  const startCreate = () =>
-    setDraft({
-      id: `new-${Date.now()}`,
-      name: '',
-      vendor: '',
-      useCase: '',
-      price: '0',
-      payload: '',
-      speed: '',
-      maturity: 'piloting',
-      confidence: 'needs-review',
-    });
-
-  const save = async () => {
-    if (!draft) return;
-    await updateSolution.mutateAsync(draft);
-    setDraft(null);
+  const open = (solution: Solution, isNew: boolean) => {
+    setEditing({ solution, isNew });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const exportAs = (format: 'xlsx' | 'csv') => {
+    setExportError(null);
+    downloadFile(`/catalog/solutions/export?format=${format}`, `catalog.${format}`).catch((error: unknown) =>
+      setExportError(error instanceof Error ? error.message : 'Не удалось выгрузить каталог'),
+    );
+  };
+
+  const onFile = (file: File | undefined) => {
+    if (!file) return;
+    if (fileInput.current) fileInput.current.value = '';
+    importCatalog.mutate(file);
+  };
+
+  const remove = (solution: Solution) => {
+    if (window.confirm(`Удалить «${solution.name}» из каталога? Действие попадёт в журнал изменений.`)) {
+      deleteSolution.mutate(solution.id);
+    }
+  };
+
+  const actionError = deleteSolution.error ?? importCatalog.error;
+
   return (
-    <AppShell>
-      <div className="flex flex-wrap items-stretch border-b border-border">
-        <div className="flex flex-col justify-center px-5 py-3.5">
-          <h1 className="text-[18px] font-semibold">Администрирование каталога</h1>
-          <div className="mt-1 meta-label">
-            Позиций: {solutions?.length ?? 0} · доступно роли «администратор»
-          </div>
+    <DashboardLayout>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <Link to="/admin" className="inline-flex items-center gap-1 text-[12.5px] text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="size-3.5" aria-hidden /> Справочники
+          </Link>
+          <h1 className="mt-1 text-[20px] font-semibold tracking-[-0.01em]">Каталог решений</h1>
+          <p className="mt-0.5 text-[12.5px] text-muted-foreground">
+            Позиций: {solutions?.length ?? 0} · правки видны пользователям сразу и попадают в журнал
+          </p>
         </div>
-        <div className="ml-auto flex items-stretch">
-          <Button className="px-5 py-3.5" onClick={startCreate}>
+        <div className="flex flex-wrap gap-2">
+          <input
+            ref={fileInput}
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            className="sr-only"
+            aria-label="Файл каталога"
+            tabIndex={-1}
+            onChange={(event) => onFile(event.target.files?.[0])}
+          />
+          <Button type="button" size="sm" variant="outline" onClick={() => fileInput.current?.click()} disabled={importCatalog.isPending}>
+            <Upload className="size-3.5" strokeWidth={2} />
+            {importCatalog.isPending ? 'Загружаем…' : 'Загрузить xlsx / csv'}
+          </Button>
+          <Button type="button" size="sm" variant="outline" onClick={() => exportAs('xlsx')}>
+            <Download className="size-3.5" strokeWidth={2} />
+            Выгрузить xlsx
+          </Button>
+          <Button type="button" size="sm" variant="outline" onClick={() => exportAs('csv')}>
+            CSV
+          </Button>
+          <Button type="button" size="sm" onClick={() => open(EMPTY_SOLUTION, true)}>
             <Plus className="size-3.5" strokeWidth={2} />
             Добавить позицию
           </Button>
         </div>
       </div>
 
-      <div className="grid gap-5 p-5 lg:grid-cols-[minmax(0,1fr)_300px]">
-        <div>
-          <SectionHeading className="mb-3" size="h2">
-            Позиции каталога
-          </SectionHeading>
+      <RobotCatalogImport solutions={solutions ?? []} />
 
+      {importCatalog.data ? (
+        <div role="status" className="panel mb-4 px-5 py-3 text-[13px]">
+          <p>
+            Загрузка завершена: добавлено {importCatalog.data.created}, обновлено {importCatalog.data.updated}
+            {importCatalog.data.errors.length ? `, строк с ошибками: ${importCatalog.data.errors.length}` : ''}.
+          </p>
+          {importCatalog.data.errors.length ? (
+            <ul className="mt-1.5 grid max-h-32 gap-0.5 overflow-y-auto text-[12px] text-status-danger">
+              {importCatalog.data.errors.map((issue, index) => (
+                <li key={`${issue.row ?? ''}-${index}`}>
+                  {issue.row ? `Строка ${issue.row}: ` : ''}
+                  {issue.message}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
+
+      {actionError || exportError ? (
+        <p role="alert" className="mb-3 text-[12.5px] text-status-danger">
+          {exportError ?? (actionError instanceof Error ? actionError.message : 'Операция не выполнена')}
+        </p>
+      ) : null}
+
+      {editing ? (
+        <div className="mb-4">
+          <SolutionEditor
+            key={editing.isNew ? 'new' : editing.solution.id}
+            initial={editing.solution}
+            isNew={editing.isNew}
+            onDone={() => setEditing(null)}
+          />
+        </div>
+      ) : null}
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
+        <section className="panel overflow-hidden">
           {isLoading ? (
-            <div className="h-40 animate-pulse rounded-lg bg-hairline" />
+            <div className="h-40 animate-pulse bg-hairline" />
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-border">
-              <table className="w-full min-w-[620px] border-collapse text-[13px]">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[720px] border-collapse text-[13px]">
                 <thead>
-                  <tr className="border-b border-border bg-canvas/60">
-                    <th scope="col" className="table-head px-3 py-2 text-left font-medium">Решение</th>
-                    <th scope="col" className="table-head px-3 py-2 text-left font-medium">Вендор</th>
-                    <th scope="col" className="table-head px-3 py-2 text-right font-medium">Цена</th>
-                    <th scope="col" className="table-head px-3 py-2 text-right font-medium">Данные</th>
-                    <th scope="col" className="table-head px-3 py-2 text-right font-medium">Действия</th>
+                  <tr className="border-b border-hairline bg-[#FAFAFA] text-left text-[11.5px] text-muted-foreground">
+                    <th scope="col" className="px-5 py-2 font-medium">Решение</th>
+                    <th scope="col" className="px-3 py-2 font-medium">Тип</th>
+                    <th scope="col" className="px-3 py-2 text-right font-medium">Цена, млн ₽</th>
+                    <th scope="col" className="px-3 py-2 text-right font-medium">Полнота</th>
+                    <th scope="col" className="px-3 py-2 text-right font-medium">Данные</th>
+                    <th scope="col" className="px-5 py-2 text-right font-medium">Действия</th>
                   </tr>
                 </thead>
                 <tbody>
                   {solutions?.map((solution) => (
                     <tr key={solution.id} className="border-b border-hairline last:border-0">
-                      <td className="px-3 py-2.5">{solution.name}</td>
-                      <td className="px-3 py-2.5 text-muted-foreground">{solution.vendor}</td>
-                      <td className="px-3 py-2.5 text-right tabular">{solution.price}</td>
-                      <td className="px-3 py-2.5 text-right">
-                        <StatusBadge
-                          variant={
-                            solution.confidence === 'confirmed' ? 'confirmed' : 'needs-review'
-                          }
-                        />
+                      <td className="px-5 py-2.5">
+                        <div className="font-medium">{solution.name}</div>
+                        <div className="text-[12px] text-muted-foreground">{solution.vendor}</div>
                       </td>
-                      <td className="px-3 py-2.5">
+                      <td className="px-3 py-2.5 text-muted-foreground">
+                        {solution.solutionType ? SOLUTION_TYPES[solution.solutionType] ?? solution.solutionType : '—'}
+                      </td>
+                      <td className="px-3 py-2.5 text-right tabular">{solution.price}</td>
+                      <td
+                        className={cn(
+                          'px-3 py-2.5 text-right tabular',
+                          (solution.completeness ?? 0) < 70 && 'text-status-piloting',
+                        )}
+                      >
+                        {solution.completeness ?? '—'}%
+                      </td>
+                      <td className="px-3 py-2.5 text-right">
+                        <StatusBadge variant={solution.confidence === 'confirmed' ? 'confirmed' : 'needs-review'} />
+                      </td>
+                      <td className="px-5 py-2.5">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             type="button"
                             aria-label={`Редактировать ${solution.name}`}
-                            onClick={() => setDraft(solution)}
-                            className="rounded-md border border-border p-1.5 text-muted-foreground hover:border-primary hover:text-primary"
+                            onClick={() => open(solution, false)}
+                            className="rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground"
                           >
                             <Pencil className="size-3.5" strokeWidth={1.8} />
                           </button>
                           <button
                             type="button"
                             aria-label={`Удалить ${solution.name}`}
-                            onClick={() => deleteSolution.mutate(solution.id)}
+                            onClick={() => remove(solution)}
                             className="rounded-md border border-border p-1.5 text-muted-foreground hover:border-status-danger hover:text-status-danger"
                           >
                             <Trash2 className="size-3.5" strokeWidth={1.8} />
@@ -168,76 +258,19 @@ export function CatalogAdminPage() {
               </table>
             </div>
           )}
+        </section>
 
-          {deleteSolution.isError || updateSolution.isError ? (
-            <p role="alert" className="mt-3 text-[12px] text-status-danger">
-              {(deleteSolution.error ?? updateSolution.error) instanceof Error
-                ? (deleteSolution.error ?? updateSolution.error as Error).message
-                : 'Операция не выполнена'}
-            </p>
-          ) : null}
-
-          {draft ? (
-            <form
-              onSubmit={(event) => {
-                event.preventDefault();
-                void save();
-              }}
-              className="mt-5 rounded-lg border border-border p-4"
-            >
-              <SectionHeading size="h2" className="mb-4">
-                {solutions?.some((s) => s.id === draft.id) ? 'Редактирование' : 'Новая позиция'}
-              </SectionHeading>
-
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {([
-                  ['name', 'Название'],
-                  ['vendor', 'Вендор'],
-                  ['useCase', 'Применение'],
-                  ['price', 'Цена, млн ₽'],
-                  ['payload', 'Грузоподъёмность'],
-                  ['speed', 'Скорость'],
-                ] as const).map(([key, label]) => (
-                  <div key={key} className="grid gap-1.5">
-                    <Label htmlFor={`f-${key}`}>{label}</Label>
-                    <Input
-                      id={`f-${key}`}
-                      value={draft[key]}
-                      onChange={(event) =>
-                        setDraft({ ...draft, [key]: event.target.value })
-                      }
-                    />
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-4 flex gap-2">
-                <Button type="submit" size="sm" disabled={updateSolution.isPending}>
-                  {updateSolution.isPending ? 'Сохраняем…' : 'Сохранить'}
-                </Button>
-                <Button type="button" size="sm" variant="outline" onClick={() => setDraft(null)}>
-                  Отмена
-                </Button>
-              </div>
-            </form>
-          ) : null}
-        </div>
-
-        <div>
-          <SectionHeading className="mb-3" size="h2">
-            Иерархия
-          </SectionHeading>
-          <div className="rounded-lg border border-border p-3">
-            <ul>
-              {taxonomy?.map((node) => <TaxonomyBranch key={node.id} node={node} />)}
-            </ul>
-          </div>
-          <p className="mt-2 text-[11px] leading-relaxed text-meta-foreground">
-            Отрасль → объект → процесс → тип решения → продукт
+        <aside className="panel p-4">
+          <h2 className="text-[14px] font-semibold">Иерархия</h2>
+          <p className="mt-0.5 text-[11.5px] text-muted-foreground">
+            Отрасль → объект → процесс → тип решения → продукт. Строится из каталога.
           </p>
-        </div>
+          <ul className="mt-2">
+            {taxonomy?.map((node) => <TaxonomyBranch key={node.id} node={node} />)}
+          </ul>
+        </aside>
       </div>
-    </AppShell>
+    </DashboardLayout>
   );
 }
 

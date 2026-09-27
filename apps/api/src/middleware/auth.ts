@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { prisma } from "../db.js";
+import { wrap } from "../asyncHandler.js";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -15,21 +16,40 @@ const SESSION_COOKIE = "sid";
 // Читает сессию по cookie на каждый запрос и, если она валидна и не истекла,
 // прикрепляет пользователя к req.user. Не блокирует запрос сама по себе —
 // для этого есть requireAuth/requireRole ниже.
-export async function attachSession(req: Request, _res: Response, next: NextFunction) {
+export const attachSession = wrap(async (req, _res, next) => {
   const sid = req.cookies?.[SESSION_COOKIE];
   if (!sid) return next();
 
-  const session = await prisma.session.findUnique({ where: { id: sid }, include: { user: true } });
-  if (!session || session.expiresAt < new Date()) return next();
+  // passwordHash и прочие поля пользователя на каждый запрос не нужны.
+  const session = await prisma.session.findUnique({
+    where: { id: sid },
+    select: {
+      expiresAt: true,
+      user: { select: { id: true, email: true, name: true, organization: true, role: true } },
+    },
+  });
+  if (!session) return next();
+  if (session.expiresAt < new Date()) {
+    await prisma.session.deleteMany({ where: { id: sid } });
+    return next();
+  }
 
-  req.user = {
-    id: session.user.id,
-    email: session.user.email,
-    name: session.user.name,
-    organization: session.user.organization,
-    role: session.user.role,
-  };
+  req.user = session.user;
   next();
+});
+
+const SWEEP_INTERVAL_MS = 60 * 60 * 1000;
+
+// Истёкшие сессии, к которым больше никто не обратится, иначе копились бы вечно.
+export function startSessionSweeper() {
+  const sweep = () =>
+    prisma.session
+      .deleteMany({ where: { expiresAt: { lt: new Date() } } })
+      .catch((error) => console.error("[sessions] не удалось очистить истёкшие сессии", error));
+  void sweep();
+  const timer = setInterval(sweep, SWEEP_INTERVAL_MS);
+  timer.unref();
+  return () => clearInterval(timer);
 }
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {

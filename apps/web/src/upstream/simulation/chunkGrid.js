@@ -31,16 +31,3 @@ export function computeFloorChunks(floorAreaM2) {
     areaPerUnit2: (sideM / FLOOR) ** 2,
   };
 }
-
-function formatNumber(value) {
-  const rounded = Math.round(value * 10) / 10;
-  return (Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)).replace(".", ",");
-}
-
-// Две строки подписи чанка: размеры и площадь.
-export function chunkLabelLines(grid) {
-  return [
-    `${formatNumber(grid.chunkSideM)} × ${formatNumber(grid.chunkSideM)} м`,
-    `${Math.round(grid.chunkAreaM2).toLocaleString("ru-RU")} м²`,
-  ];
-}

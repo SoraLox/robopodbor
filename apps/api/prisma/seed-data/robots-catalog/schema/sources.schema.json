@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sources.schema.json",
+  "title": "Sources and provenance of every value",
+  "type": "object",
+  "properties": {
+    "schema_ver": {
+      "type": "string"
+    },
+    "updated": {
+      "type": "string",
+      "format": "date"
+    },
+    "docs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sid": {
+            "type": "string",
+            "pattern": "^SR\\d{4}$"
+          },
+          "type": {
+            "enum": [
+              "OR",
+              "VN",
+              "RS",
+              "MD",
+              "GV"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string",
+            "description": "URL or organizer file name"
+          },
+          "pub": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "acc": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "required": [
+          "sid",
+          "type",
+          "title",
+          "ref",
+          "pub",
+          "acc"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "facts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rid": {
+            "type": "string",
+            "pattern": "^[A-Z]{2}\\d{4}$"
+          },
+          "path": {
+            "type": "string"
+          },
+          "val": {},
+          "sid": {
+            "type": "string",
+            "pattern": "^SR\\d{4}$"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "used": {
+            "type": "boolean"
+          },
+          "raw": {
+            "type": "string"
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "rid",
+          "path",
+          "val",
+          "sid",
+          "ok",
+          "used",
+          "raw",
+          "note"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schema_ver",
+    "updated",
+    "docs",
+    "facts"
+  ],
+  "additionalProperties": false
+}

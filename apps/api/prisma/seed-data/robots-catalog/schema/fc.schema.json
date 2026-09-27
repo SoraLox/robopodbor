@@ -1,0 +1,3070 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "fc.schema.json",
+  "title": "FC — Indoor floor cleaning robot",
+  "type": "object",
+  "properties": {
+    "schema_ver": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "cat": {
+      "const": "FC"
+    },
+    "cat_name": {
+      "type": "string"
+    },
+    "updated": {
+      "type": "string",
+      "format": "date"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/item"
+      }
+    }
+  },
+  "required": [
+    "schema_ver",
+    "cat",
+    "cat_name",
+    "updated",
+    "items"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "rng": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "min",
+        "max"
+      ],
+      "properties": {
+        "min": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "max": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "item": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^FC\\d{4}$",
+          "description": "internal robot ID"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "model name as the vendor writes it"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true,
+          "description": "other spellings: Latin / Cyrillic, marketing names"
+        },
+        "vid": {
+          "type": "string",
+          "pattern": "^VN\\d{4}$",
+          "description": "vendor ID, see vendors.json"
+        },
+        "origin": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "RU",
+            "CN",
+            "BY",
+            "KR",
+            "JP",
+            "TW",
+            "DE",
+            "IT",
+            "US",
+            "TR",
+            null
+          ],
+          "description": "country of manufacture; codes: country"
+        },
+        "status": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "OP",
+            "PI",
+            "RD",
+            null
+          ],
+          "description": "availability status; codes: status"
+        },
+        "trl": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 9,
+          "description": "technology readiness level 1-9"
+        },
+        "photos": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^FC\\d{4}_\\d{2}\\.(jpg|png|webp)$"
+          },
+          "description": "photo file names <ID>_<NN>.jpg"
+        },
+        "scen": {
+          "type": "object",
+          "properties": {
+            "wl": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "pl": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "so": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "op": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "iv": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "mh": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "lm": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "cd": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "rd": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "wd": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "or": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "cs": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "lh": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "hl": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "bm": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "pp": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "pc": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "vn": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ra": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "bv": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ci": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "co": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ww": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "fw": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "mf": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ws": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "la": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "bc": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "rw": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "rr": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "de": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "pw": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "hv": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ap": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "cm": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "mk": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "po": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "mo": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "pt": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "cl": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "id": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ic": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "pm": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "hn": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "tl": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "rm": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "rs": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "uc": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "im": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ui": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "bd": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "qc": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "lf": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "lu": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "sv": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ge": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "tr": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ac": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "uw": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "sh": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ow": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "fi": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "fc": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ff": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "fm": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ev": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "sr": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ma": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "cw": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "gg": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "fl": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "da": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ie": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "rp": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ti": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "wc": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ft": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "fp": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "il": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "rn": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ud": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ul": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ec": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "wl",
+            "pl",
+            "so",
+            "op",
+            "iv",
+            "mh",
+            "lm",
+            "cd",
+            "rd",
+            "wd",
+            "or",
+            "cs",
+            "lh",
+            "hl",
+            "bm",
+            "pp",
+            "pc",
+            "vn",
+            "ra",
+            "bv",
+            "ci",
+            "co",
+            "ww",
+            "fw",
+            "mf",
+            "ws",
+            "la",
+            "bc",
+            "rw",
+            "rr",
+            "de",
+            "pw",
+            "hv",
+            "ap",
+            "cm",
+            "mk",
+            "po",
+            "mo",
+            "pt",
+            "cl",
+            "id",
+            "ic",
+            "pm",
+            "hn",
+            "tl",
+            "rm",
+            "rs",
+            "uc",
+            "im",
+            "ui",
+            "bd",
+            "qc",
+            "lf",
+            "lu",
+            "sv",
+            "ge",
+            "tr",
+            "ac",
+            "uw",
+            "sh",
+            "ow",
+            "fi",
+            "fc",
+            "ff",
+            "fm",
+            "ev",
+            "sr",
+            "ma",
+            "cw",
+            "gg",
+            "fl",
+            "da",
+            "ie",
+            "rp",
+            "ti",
+            "wc",
+            "ft",
+            "fp",
+            "il",
+            "rn",
+            "ud",
+            "ul",
+            "ec"
+          ],
+          "additionalProperties": false,
+          "description": "application scenarios; codes: scen"
+        },
+        "ind": {
+          "type": "object",
+          "properties": {
+            "ts": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "in": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ag": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "hu": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "co": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "en": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "se": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "tl": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "fo": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "ts",
+            "in",
+            "ag",
+            "hu",
+            "co",
+            "en",
+            "se",
+            "tl",
+            "fo"
+          ],
+          "additionalProperties": false,
+          "description": "industries; codes: ind"
+        },
+        "site": {
+          "type": "object",
+          "properties": {
+            "wh": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "pr": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "rt": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "of": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ap": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "md": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ed": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "rs": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "cu": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "th": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ho": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "fs": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "lb": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "st": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "pk": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "yd": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "pz": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "pl": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "rd": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "it": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "cs": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "qr": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "fi": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "gh": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "or": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "fm": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "fr": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "rw": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "pi": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "un": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "pw": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "og": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "po": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "wa": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "uw": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "hr": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "rm": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ez": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "wh",
+            "pr",
+            "rt",
+            "of",
+            "ap",
+            "md",
+            "ed",
+            "rs",
+            "cu",
+            "th",
+            "ho",
+            "fs",
+            "lb",
+            "st",
+            "pk",
+            "yd",
+            "pz",
+            "pl",
+            "rd",
+            "it",
+            "cs",
+            "qr",
+            "fi",
+            "gh",
+            "or",
+            "fm",
+            "fr",
+            "rw",
+            "pi",
+            "un",
+            "pw",
+            "og",
+            "po",
+            "wa",
+            "uw",
+            "hr",
+            "rm",
+            "ez"
+          ],
+          "additionalProperties": false,
+          "description": "target sites; codes: site"
+        },
+        "org": {
+          "type": "object",
+          "properties": {
+            "uuid": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "record id in catalog_export_v4.csv"
+            },
+            "type": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "MO",
+                "AV",
+                "ST",
+                "RM",
+                "MM",
+                "HU",
+                "MA",
+                "UA",
+                "SW",
+                "SR",
+                "OT",
+                null
+              ],
+              "description": "organizer top-level type; codes: org_type"
+            },
+            "mkt_pot": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1,
+              "maximum": 5,
+              "description": "market potential score 1-5"
+            },
+            "reg719": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "description": "badge «Есть в 719» in the catalog PDF"
+            },
+            "tested": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "description": "badge «Протестировано ФЦ БАС» in the catalog PDF"
+            },
+            "pages": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "description": "pages of the catalog PDF"
+            }
+          },
+          "required": [
+            "uuid",
+            "type",
+            "mkt_pot",
+            "reg719",
+            "tested",
+            "pages"
+          ],
+          "additionalProperties": false,
+          "description": "link to organizer catalog"
+        },
+        "search": {
+          "type": "string",
+          "description": "normalized search string, generated"
+        },
+        "meta": {
+          "type": "object",
+          "properties": {
+            "upd": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date",
+              "description": "last update date"
+            },
+            "fill_pct": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 100,
+              "description": "share of filled leaf fields [%]"
+            },
+            "n_src": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "number of distinct sources"
+            }
+          },
+          "required": [
+            "upd",
+            "fill_pct",
+            "n_src"
+          ],
+          "additionalProperties": false,
+          "description": "record metadata, generated"
+        },
+        "dims": {
+          "type": "object",
+          "properties": {
+            "l_mm": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "length [mm]"
+            },
+            "w_mm": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "width [mm]"
+            },
+            "h_mm": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "height [mm]"
+            },
+            "mass_kg": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "mass, empty [kg]"
+            },
+            "mass_full_kg": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "mass, operating / max [kg]"
+            }
+          },
+          "required": [
+            "l_mm",
+            "w_mm",
+            "h_mm",
+            "mass_kg",
+            "mass_full_kg"
+          ],
+          "additionalProperties": false,
+          "description": "dimensions and mass"
+        },
+        "move": {
+          "type": "object",
+          "properties": {
+            "loco": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "WH",
+                "TR",
+                "LG",
+                "WT",
+                "RL",
+                "MG",
+                "PC",
+                "ST",
+                null
+              ],
+              "description": "locomotion; codes: loco"
+            },
+            "drive": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "FR",
+                "RR",
+                "AW",
+                "DF",
+                "OM",
+                null
+              ],
+              "description": "drive type; codes: drive"
+            },
+            "spd_mps": {
+              "$ref": "#/$defs/rng",
+              "description": "working speed [m/s]"
+            },
+            "spd_max_mps": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "max speed [m/s]"
+            },
+            "slope_deg": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "max slope [°]"
+            },
+            "step_mm": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "max step / threshold / curb [mm]"
+            },
+            "clear_mm": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "ground clearance [mm]"
+            },
+            "wade_mm": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "fording depth [mm]"
+            },
+            "pass_min_mm": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "min passage width [mm]"
+            },
+            "turn_r_mm": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "min turning radius (0 = turns in place) [mm]"
+            },
+            "range_km": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "range per charge / tank [km]"
+            },
+            "surf": {
+              "type": "object",
+              "properties": {
+                "cn": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "ep": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "ti": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "pg": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "st": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "vn": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "ln": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "lm": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "wd": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "cp": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "rb": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "as": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "pv": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "gr": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "gv": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "sd": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "mu": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "sn": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "rl": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "wt": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "cn",
+                "ep",
+                "ti",
+                "pg",
+                "st",
+                "vn",
+                "ln",
+                "lm",
+                "wd",
+                "cp",
+                "rb",
+                "as",
+                "pv",
+                "gr",
+                "gv",
+                "sd",
+                "mu",
+                "sn",
+                "rl",
+                "wt"
+              ],
+              "additionalProperties": false,
+              "description": "supported surfaces; codes: surf"
+            }
+          },
+          "required": [
+            "loco",
+            "drive",
+            "spd_mps",
+            "spd_max_mps",
+            "slope_deg",
+            "step_mm",
+            "clear_mm",
+            "wade_mm",
+            "pass_min_mm",
+            "turn_r_mm",
+            "range_km",
+            "surf"
+          ],
+          "additionalProperties": false,
+          "description": "mobility"
+        },
+        "power": {
+          "type": "object",
+          "properties": {
+            "pwr": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "EL",
+                "HY",
+                "IC",
+                "HF",
+                "MN",
+                "TE",
+                "CT",
+                null
+              ],
+              "description": "power source; codes: pwr"
+            },
+            "chem": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "LF",
+                "LN",
+                "LP",
+                "LI",
+                "PB",
+                "NH",
+                null
+              ],
+              "description": "battery chemistry; codes: chem"
+            },
+            "cap_ah": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "battery capacity [Ah]"
+            },
+            "volt_v": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "battery voltage [V]"
+            },
+            "energy_kwh": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "battery energy [kWh]"
+            },
+            "motor_w": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "total drive motor power [W]"
+            },
+            "eng_kw": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "combustion engine power [kW]"
+            },
+            "fuel": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "PE",
+                "DI",
+                "KE",
+                "GS",
+                "HD",
+                null
+              ],
+              "description": "fuel; codes: fuel"
+            },
+            "fuel_l": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "fuel tank [l]"
+            },
+            "cons_kw": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "power consumption (stationary) [kW]"
+            },
+            "mains_v": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "mains voltage [V]"
+            },
+            "run_min": {
+              "$ref": "#/$defs/rng",
+              "description": "runtime per charge / refuel; min = heavy mode, max = eco [min]"
+            },
+            "chg_min": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "full charge time [min]"
+            },
+            "chg": {
+              "type": "object",
+              "properties": {
+                "mn": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "dk": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "sw": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "in": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "op": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "mn",
+                "dk",
+                "sw",
+                "in",
+                "op"
+              ],
+              "additionalProperties": false,
+              "description": "charging methods; codes: chg"
+            },
+            "swap": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "description": "battery is removable / swappable"
+            }
+          },
+          "required": [
+            "pwr",
+            "chem",
+            "cap_ah",
+            "volt_v",
+            "energy_kwh",
+            "motor_w",
+            "eng_kw",
+            "fuel",
+            "fuel_l",
+            "cons_kw",
+            "mains_v",
+            "run_min",
+            "chg_min",
+            "chg",
+            "swap"
+          ],
+          "additionalProperties": false,
+          "description": "power"
+        },
+        "nav": {
+          "type": "object",
+          "properties": {
+            "method": {
+              "type": "object",
+              "properties": {
+                "sl": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "vs": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "qr": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "mg": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "ln": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "rf": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "gn": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "rk": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "in": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "ms": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "rc": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "sl",
+                "vs",
+                "qr",
+                "mg",
+                "ln",
+                "rf",
+                "gn",
+                "rk",
+                "in",
+                "ms",
+                "rc"
+              ],
+              "additionalProperties": false,
+              "description": "navigation methods; codes: navm"
+            },
+            "sens": {
+              "type": "object",
+              "properties": {
+                "ld": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "l2": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "l3": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "rg": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "dp": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "sv": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "th": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "us": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "ir": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "rd": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "bp": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "cf": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "im": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "gn": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "rk": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "qr": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "mg": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "ft": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "gs": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "dv": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "ub": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "pr": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "ss": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "mb": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "es": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "gp": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "ld",
+                "l2",
+                "l3",
+                "rg",
+                "dp",
+                "sv",
+                "th",
+                "us",
+                "ir",
+                "rd",
+                "bp",
+                "cf",
+                "im",
+                "gn",
+                "rk",
+                "qr",
+                "mg",
+                "ft",
+                "gs",
+                "dv",
+                "ub",
+                "pr",
+                "ss",
+                "mb",
+                "es",
+                "gp"
+              ],
+              "additionalProperties": false,
+              "description": "sensor types present; codes: sens"
+            },
+            "n_lidar": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "number of lidars"
+            },
+            "n_cam": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "number of cameras of all kinds"
+            },
+            "n_us": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "number of ultrasonic sensors"
+            },
+            "lidar_range_m": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "lidar range [m]"
+            },
+            "gnss": {
+              "type": "object",
+              "properties": {
+                "gp": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "gl": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "bd": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "ga": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "gp",
+                "gl",
+                "bd",
+                "ga"
+              ],
+              "additionalProperties": false,
+              "description": "GNSS systems; codes: gnss"
+            },
+            "pos_acc_mm": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "positioning accuracy [mm]"
+            }
+          },
+          "required": [
+            "method",
+            "sens",
+            "n_lidar",
+            "n_cam",
+            "n_us",
+            "lidar_range_m",
+            "gnss",
+            "pos_acc_mm"
+          ],
+          "additionalProperties": false,
+          "description": "navigation and sensors"
+        },
+        "conn": {
+          "type": "object",
+          "properties": {
+            "wf": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "lt": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "g5": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "et": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "bt": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "rc": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "mh": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "sa": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "lr": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "fo": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "wf",
+            "lt",
+            "g5",
+            "et",
+            "bt",
+            "rc",
+            "mh",
+            "sa",
+            "lr",
+            "fo"
+          ],
+          "additionalProperties": false,
+          "description": "connectivity; codes: conn"
+        },
+        "ctrl": {
+          "type": "object",
+          "properties": {
+            "au": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "rc": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "tp": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "mn": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "pd": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "sw": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "au",
+            "rc",
+            "tp",
+            "mn",
+            "pd",
+            "sw"
+          ],
+          "additionalProperties": false,
+          "description": "control modes; codes: ctrl"
+        },
+        "soft": {
+          "type": "object",
+          "properties": {
+            "sw": {
+              "type": "object",
+              "properties": {
+                "ap": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "wb": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "rm": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "sc": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "rp": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "fm": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "mp": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "mf": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "ot": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "ai": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "ap",
+                "wb",
+                "rm",
+                "sc",
+                "rp",
+                "fm",
+                "mp",
+                "mf",
+                "ot",
+                "ai"
+              ],
+              "additionalProperties": false,
+              "description": "software features; codes: sw"
+            },
+            "api": {
+              "type": "object",
+              "properties": {
+                "rs": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "mq": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "ro": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "wk": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "sd": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "mb": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "pn": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "op": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "mv": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "cn": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "rs",
+                "mq",
+                "ro",
+                "wk",
+                "sd",
+                "mb",
+                "pn",
+                "op",
+                "mv",
+                "cn"
+              ],
+              "additionalProperties": false,
+              "description": "API / protocols; codes: api"
+            },
+            "integ": {
+              "type": "object",
+              "properties": {
+                "el": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "dr": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "ac": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "bm": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "wm": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "er": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "me": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "pl": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "vs": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "el",
+                "dr",
+                "ac",
+                "bm",
+                "wm",
+                "er",
+                "me",
+                "pl",
+                "vs"
+              ],
+              "additionalProperties": false,
+              "description": "integrations with site systems; codes: integ"
+            },
+            "fleet_max": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "max robots in one fleet"
+            }
+          },
+          "required": [
+            "sw",
+            "api",
+            "integ",
+            "fleet_max"
+          ],
+          "additionalProperties": false,
+          "description": "software and integrations"
+        },
+        "env": {
+          "type": "object",
+          "properties": {
+            "io": {
+              "type": "object",
+              "properties": {
+                "in": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "ou": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "in",
+                "ou"
+              ],
+              "additionalProperties": false,
+              "description": "indoor / outdoor; codes: io"
+            },
+            "t_op_c": {
+              "$ref": "#/$defs/rng",
+              "description": "operating temperature [°C]"
+            },
+            "hum_max_pct": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 100,
+              "description": "max relative humidity [%]"
+            },
+            "ip_s": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 6,
+              "description": "IP code, 1st digit: solids 0-6"
+            },
+            "ip_w": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 9,
+              "description": "IP code, 2nd digit: water 0-9"
+            },
+            "wind_max_mps": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "max wind [m/s]"
+            },
+            "rain": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "description": "works in rain"
+            },
+            "snow": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "description": "works in snow"
+            },
+            "night": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "description": "works at night / in darkness"
+            },
+            "noise_db": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "noise level [dB]"
+            }
+          },
+          "required": [
+            "io",
+            "t_op_c",
+            "hum_max_pct",
+            "ip_s",
+            "ip_w",
+            "wind_max_mps",
+            "rain",
+            "snow",
+            "night",
+            "noise_db"
+          ],
+          "additionalProperties": false,
+          "description": "operating environment"
+        },
+        "safety": {
+          "type": "object",
+          "properties": {
+            "estop": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "description": "emergency stop button"
+            },
+            "obst_stop": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "description": "stops before obstacles"
+            },
+            "obst_avoid": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "description": "plans path around obstacles"
+            },
+            "light_sound": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "description": "light / sound warning"
+            },
+            "speed_zones": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "description": "speed-limit zones"
+            },
+            "fence_free": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "description": "works without safety fence"
+            }
+          },
+          "required": [
+            "estop",
+            "obst_stop",
+            "obst_avoid",
+            "light_sound",
+            "speed_zones",
+            "fence_free"
+          ],
+          "additionalProperties": false,
+          "description": "safety"
+        },
+        "econ": {
+          "type": "object",
+          "properties": {
+            "price_rub": {
+              "$ref": "#/$defs/rng",
+              "description": "equipment price; min = max when a single price is known [RUB]"
+            },
+            "vat_incl": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "description": "price includes VAT"
+            },
+            "rent_rub_mo": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "rent / subscription per month [RUB]"
+            },
+            "acq": {
+              "type": "object",
+              "properties": {
+                "pu": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "ls": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "rt": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "sb": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "sv": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "pu",
+                "ls",
+                "rt",
+                "sb",
+                "sv"
+              ],
+              "additionalProperties": false,
+              "description": "acquisition models offered; codes: acq"
+            },
+            "warranty_mo": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "warranty [months]"
+            },
+            "life_yr": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "service life [years]"
+            },
+            "svc_int_h": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "service interval [h]"
+            },
+            "local_pct": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 100,
+              "description": "localization level, lower bound [%]"
+            },
+            "cert": {
+              "type": "object",
+              "properties": {
+                "ea": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "rp": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "rs": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "ip": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "ex": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "md": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "av": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "ea",
+                "rp",
+                "rs",
+                "ip",
+                "ex",
+                "md",
+                "av"
+              ],
+              "additionalProperties": false,
+              "description": "certificates and registries; codes: cert"
+            }
+          },
+          "required": [
+            "price_rub",
+            "vat_incl",
+            "rent_rub_mo",
+            "acq",
+            "warranty_mo",
+            "life_yr",
+            "svc_int_h",
+            "local_pct",
+            "cert"
+          ],
+          "additionalProperties": false,
+          "description": "economics"
+        },
+        "clean": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "object",
+              "properties": {
+                "wt": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "dy": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "sw": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "vc": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "sc": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "mp": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "ds": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "pl": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "wt",
+                "dy",
+                "sw",
+                "vc",
+                "sc",
+                "mp",
+                "ds",
+                "pl"
+              ],
+              "additionalProperties": false,
+              "description": "cleaning modes; codes: fc_mode"
+            },
+            "w_clean_mm": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "cleaning (brush) width [mm]"
+            },
+            "w_sqg_mm": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "squeegee width [mm]"
+            },
+            "prod_m2h": {
+              "$ref": "#/$defs/rng",
+              "description": "productivity [m²/h]"
+            },
+            "area_max_m2": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "max area per charge / per site [m²]"
+            },
+            "tank_cw_l": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "clean water tank [l]"
+            },
+            "tank_dw_l": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "dirty water tank [l]"
+            },
+            "bin_l": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "debris bin [l]"
+            },
+            "n_disc": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "disc brushes"
+            },
+            "n_roll": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "roller brushes"
+            },
+            "n_side": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "side brushes"
+            },
+            "brush_d_mm": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "main brush diameter [mm]"
+            },
+            "brush_p_pa": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "brush pressure [Pa]"
+            },
+            "mop_p_kg": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "mop / pad pressure [kg]"
+            },
+            "suction_w": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "vacuum motor power [W]"
+            },
+            "water_lph": {
+              "$ref": "#/$defs/rng",
+              "description": "water consumption [l/h]"
+            },
+            "dose_auto": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "description": "automatic detergent dosing"
+            }
+          },
+          "required": [
+            "mode",
+            "w_clean_mm",
+            "w_sqg_mm",
+            "prod_m2h",
+            "area_max_m2",
+            "tank_cw_l",
+            "tank_dw_l",
+            "bin_l",
+            "n_disc",
+            "n_roll",
+            "n_side",
+            "brush_d_mm",
+            "brush_p_pa",
+            "mop_p_kg",
+            "suction_w",
+            "water_lph",
+            "dose_auto"
+          ],
+          "additionalProperties": false,
+          "description": "cleaning system"
+        },
+        "dock": {
+          "type": "object",
+          "properties": {
+            "has": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "description": "base station available"
+            },
+            "fill": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "description": "auto clean-water refill"
+            },
+            "drain": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "description": "auto dirty-water drain"
+            },
+            "filt": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "description": "dirty-water filtration"
+            },
+            "l_mm": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "station length [mm]"
+            },
+            "w_mm": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "station width [mm]"
+            },
+            "h_mm": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "station height [mm]"
+            },
+            "mass_kg": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "station mass [kg]"
+            }
+          },
+          "required": [
+            "has",
+            "fill",
+            "drain",
+            "filt",
+            "l_mm",
+            "w_mm",
+            "h_mm",
+            "mass_kg"
+          ],
+          "additionalProperties": false,
+          "description": "docking / base station"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "aliases",
+        "vid",
+        "origin",
+        "status",
+        "trl",
+        "photos",
+        "scen",
+        "ind",
+        "site",
+        "org",
+        "search",
+        "meta",
+        "dims",
+        "move",
+        "power",
+        "nav",
+        "conn",
+        "ctrl",
+        "soft",
+        "env",
+        "safety",
+        "econ",
+        "clean",
+        "dock"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

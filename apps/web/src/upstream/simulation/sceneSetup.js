@@ -2,7 +2,6 @@ import * as THREE from "three";
 import { FLOOR } from "./layout.js";
 import { PALETTE, ISO_ELEV, SCENE_HEIGHT_PX } from "./constants.js";
 import { applyColorSpace, disposeTree } from "./sceneUtils.js";
-import { createChunkLabelLayer } from "./chunkLabels.js";
 import { createFloorLevel, createSharedLevelAssets, FLOOR_PITCH } from "./floorLevel.js";
 
 const CAM_DIST = 108;
@@ -16,7 +15,9 @@ const GHOST_OPACITY = 0.17;
 // для всех этажей. Сами этажи (createFloorLevel) добавляются и убираются по
 // мере надобности через setLevelCount.
 export function createWarehouseScene(mount) {
-  const width = mount.clientWidth;
+  // Высота берётся из контейнера (immersive hero) с запасным SCENE_HEIGHT_PX.
+  const sceneHeight = () => Math.max(1, mount.clientHeight || SCENE_HEIGHT_PX);
+  const width = Math.max(1, mount.clientWidth);
 
   const scene = new THREE.Scene();
   scene.fog = new THREE.Fog(0x77798f, 145, 245);
@@ -24,7 +25,6 @@ export function createWarehouseScene(mount) {
   addLights(scene);
 
   const shared = createSharedLevelAssets();
-  const chunkLabels = createChunkLabelLayer();
   const beltTexture = createBeltTexture();
 
   const staticGroup = new THREE.Group(); // основание — не участвует в «прозрачном» проходе
@@ -39,7 +39,12 @@ export function createWarehouseScene(mount) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
   renderer.setClearColor(0x000000, 0);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(width, SCENE_HEIGHT_PX);
+  // updateStyle=false: размеры буфера отдельно от CSS. Иначе canvas style width/height
+  // в пикселях раздувает absolute-контейнер (clientWidth растёт → setSize → ещё больше).
+  renderer.setSize(width, sceneHeight(), false);
+  renderer.domElement.style.width = "100%";
+  renderer.domElement.style.height = "100%";
+  renderer.domElement.style.display = "block";
   applyColorSpace(renderer, true);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.92;
@@ -86,7 +91,7 @@ export function createWarehouseScene(mount) {
   };
 
   const applyFrustum = () => {
-    const a = mount.clientWidth / SCENE_HEIGHT_PX;
+    const a = Math.max(1, mount.clientWidth) / sceneHeight();
     const hh = cameraState.zoom;
 
     camera.left = -hh * a;
@@ -105,7 +110,7 @@ export function createWarehouseScene(mount) {
     }
 
     while (levels.length < count) {
-      const level = createFloorLevel(shared, chunkLabels, levels.length);
+      const level = createFloorLevel(shared, levels.length);
       levels.push(level);
       levelsGroup.add(level.group);
     }
@@ -152,18 +157,27 @@ export function createWarehouseScene(mount) {
   applyFrustum();
 
   const onResize = () => {
-    renderer.setSize(mount.clientWidth, SCENE_HEIGHT_PX);
+    const nextW = Math.max(1, mount.clientWidth);
+    const nextH = sceneHeight();
+    // Защита от разгона: если контейнер внезапно стал гигантским — не пишем в буфер.
+    if (nextW > 4000 || nextH > 4000) return;
+    renderer.setSize(nextW, nextH, false);
+    renderer.domElement.style.width = "100%";
+    renderer.domElement.style.height = "100%";
     applyFrustum();
   };
 
   window.addEventListener("resize", onResize);
+  const resizeObserver =
+    typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => onResize()) : null;
+  resizeObserver?.observe(mount);
 
   const dispose = (raf) => {
+    resizeObserver?.disconnect();
     window.removeEventListener("resize", onResize);
     cancelAnimationFrame(raf);
     setLevelCount(0);
     renderer.dispose();
-    chunkLabels.dispose();
     ghostMaterial.dispose();
     beltTexture.dispose();
     disposeTree(staticGroup);
@@ -187,7 +201,6 @@ export function createWarehouseScene(mount) {
     floorCtx: shared.floorCtx,
     floorTexture: shared.floorTexture,
     beltTexture,
-    chunkLabels,
     cameraState,
     setLevelCount,
     updateCamera,

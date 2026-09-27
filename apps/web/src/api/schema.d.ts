@@ -4,6 +4,66 @@
  */
 
 export interface paths {
+    "/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Проверка доступности API и базы данных
+         * @description Проверка живости API и доступности базы данных.
+         */
+        get: operations["health"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/selection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Подбор решений под паспорт объекта
+         * @description Подбор решений под паспорт объекта (ТЗ 3.4): для каждого решения — статус (рекомендовано / требует проверки / исключено), причины соответствия, ограничения, недостающие данные и разложение балла по критериям.
+         */
+        post: operations["selectSolutions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/object-types/{slug}/parameters/template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Шаблон паспорта объекта (xlsx/csv)
+         * @description Шаблон паспорта объекта для заполнения и загрузки (ТЗ 3.2.3).
+         */
+        get: operations["getParametersTemplate"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/object-types": {
         parameters: {
             query?: never;
@@ -11,6 +71,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Типы объектов */
         get: operations["listObjectTypes"];
         put?: never;
         post?: never;
@@ -27,6 +88,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Результат расчёта */
         get: operations["getCalculation"];
         put?: never;
         post?: never;
@@ -43,9 +105,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Каталог решений */
         get: operations["listSolutions"];
         put?: never;
-        post?: never;
+        /**
+         * Добавить решение в каталог
+         * @description Добавление решения в каталог. Доступно роли admin.
+         */
+        post: operations["createSolution"];
         delete?: never;
         options?: never;
         head?: never;
@@ -59,9 +126,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Только для авторизованного пользователя. */
+        /**
+         * Проекты пользователя
+         * @description Только для авторизованного пользователя. Без limit возвращается весь список.
+         */
         get: operations["listProjects"];
         put?: never;
+        /** Создать проект */
         post: operations["createProject"];
         delete?: never;
         options?: never;
@@ -78,7 +149,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Создаёт пользователя и открывает сессию (httpOnly cookie). */
+        /**
+         * Регистрация
+         * @description Создаёт пользователя и открывает сессию (httpOnly cookie).
+         */
         post: operations["register"];
         delete?: never;
         options?: never;
@@ -95,6 +169,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Вход */
         post: operations["login"];
         delete?: never;
         options?: never;
@@ -111,6 +186,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Выход */
         post: operations["logout"];
         delete?: never;
         options?: never;
@@ -125,7 +201,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Текущий пользователь по cookie. 401, если сессии нет. */
+        /**
+         * Текущая сессия
+         * @description Текущий пользователь по cookie. 401, если сессии нет.
+         */
         get: operations["getSession"];
         put?: never;
         post?: never;
@@ -142,7 +221,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Состав полей паспорта объекта зависит от типа объекта. */
+        /**
+         * Состав паспорта объекта
+         * @description Состав полей паспорта объекта зависит от типа объекта.
+         */
         get: operations["getObjectParameters"];
         put?: never;
         post?: never;
@@ -161,7 +243,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Разбор загруженного Excel/CSV в значения паспорта объекта. */
+        /**
+         * Загрузить паспорт объекта из файла
+         * @description Разбор загруженного Excel/CSV в значения паспорта объекта.
+         */
         post: operations["importObjectParameters"];
         delete?: never;
         options?: never;
@@ -176,10 +261,40 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Проект */
         get: operations["getProject"];
         put?: never;
         post?: never;
+        /** Удалить проект */
         delete: operations["deleteProject"];
+        options?: never;
+        head?: never;
+        /**
+         * Изменить проект
+         * @description Переименование, смена статуса, правка паспорта объекта (ТЗ 3.1.3).
+         */
+        patch: operations["updateProject"];
+        trace?: never;
+    };
+    "/projects/{projectId}/calculations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * История расчётов проекта
+         * @description История сохранённых расчётов проекта, новые сверху (ТЗ 3.1.5).
+         */
+        get: operations["listProjectCalculations"];
+        put?: never;
+        /**
+         * Сохранить снимок расчёта
+         * @description Сохраняет снимок расчёта: результат целиком, паспорт объекта на момент расчёта, версию данных (каталог и нормативы) и версию расчётной модели. Повторное открытие снимка воспроизводит тот же результат без пересчёта.
+         */
+        post: operations["saveProjectCalculation"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -194,7 +309,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Создаёт копию проекта для сравнения сценариев внутри проекта (см. 3.1.3 ТЗ: не менее трёх сценариев). Доступно только владельцу проекта. */
+        /**
+         * Копировать проект
+         * @description Создаёт копию проекта для сравнения сценариев внутри проекта (см. 3.1.3 ТЗ: не менее трёх сценариев). Доступно только владельцу проекта.
+         */
         post: operations["copyProject"];
         delete?: never;
         options?: never;
@@ -210,10 +328,169 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** @description Доступно роли admin. */
+        /**
+         * Изменить решение
+         * @description Доступно роли admin.
+         */
         put: operations["updateSolution"];
         post?: never;
+        /** Удалить решение */
         delete: operations["deleteSolution"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/solutions/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Выгрузить каталог
+         * @description Выгрузка каталога в таблицу организатора (ТЗ 3.3.2). Только администратор.
+         */
+        get: operations["exportCatalog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/solutions/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Загрузить каталог из файла
+         * @description Загрузка каталога из xlsx/csv (ТЗ 3.8.2). Строка обновляет позицию по id или по паре «наименование + производитель», иначе создаёт новую. Ошибки — по строкам.
+         */
+        post: operations["importCatalog"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/robot-catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Загрузить новую версию каталога роботов
+         * @description Файлы папки каталога роботов (структура v2: index.json, categories.json, vendors.json, codes.json, sources.json, data/*.json) — каждый файл в поле files, имя файла с путём внутри папки. Каталог собирается по тем же правилам, что и при первом запуске, с дополнениями организатора. Характеристики обновляются из каталога, кроме полей, которые правил администратор. Решения, которых нет в новой версии, не удаляются. С dryRun=1 возвращает отчёт без записи (ТЗ 3.3.2, 3.3.6).
+         */
+        post: operations["importRobotCatalog"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Источники данных
+         * @description Источники данных каталога и нормативов (ТЗ 3.1.4, 3.7.5).
+         */
+        get: operations["listSources"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Добавить источник */
+        post: operations["createSource"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/sources/{sourceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Изменить источник */
+        put: operations["updateSource"];
+        post?: never;
+        /** Удалить источник */
+        delete: operations["deleteSource"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/parameters/{fieldId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Изменить норматив паспорта
+         * @description Правка норматива паспорта объекта: значение по умолчанию, границы, источник, обязательность (ТЗ 3.2.5, 3.8.1). Значение по умолчанию проверяется по границам поля.
+         */
+        patch: operations["updateParameterField"];
+        trace?: never;
+    };
+    "/admin/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Журнал изменений
+         * @description Журнал изменений каталога, нормативов и источников (ТЗ 3.3.6).
+         */
+        get: operations["listChanges"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -226,7 +503,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Иерархия отрасль → объект → процесс → тип решения → продукт. */
+        /**
+         * Иерархия каталога
+         * @description Иерархия отрасль → объект → процесс → тип решения → продукт.
+         */
         get: operations["getTaxonomy"];
         put?: never;
         post?: never;
@@ -266,17 +546,35 @@ export interface components {
             min?: number;
             max?: number;
             defaultValue?: string;
+            /** @description Обязательный параметр (true) или дополнительный. */
+            required?: boolean;
+            /** @description Источник значения по умолчанию (норматива). */
+            source?: string;
             options?: {
                 value: string;
                 label: string;
             }[];
         };
+        ImportIssue: {
+            /** @description Номер строки в файле (с 1). */
+            row?: number;
+            fieldId?: string;
+            label?: string;
+            /** @description Что не так и как исправить. */
+            message: string;
+        };
         ImportedParameters: {
+            /** @description Только прошедшие проверку значения. */
             values: {
                 [key: string]: string;
             };
             recognized: number;
+            /** @description Строки, ключ которых не найден в паспорте. */
             skipped?: string[];
+            /** @description Значения, не прошедшие проверку типа, единиц или диапазона. */
+            errors?: components["schemas"]["ImportIssue"][];
+            /** @description Незаполненные обязательные поля — подставлено значение по умолчанию. */
+            warnings?: components["schemas"]["ImportIssue"][];
         };
         ProjectInput: {
             title: string;
@@ -285,6 +583,83 @@ export interface components {
                 [key: string]: string;
             };
             processes?: string[];
+            /** @description Решение каталога, выбранное на шаге подбора. */
+            solutionId?: string;
+            calculation?: components["schemas"]["CalculationResult"];
+            /** @description Версия расчётной модели, выдавшей результат. */
+            modelVersion?: string;
+        };
+        CatalogImportResult: {
+            created: number;
+            updated: number;
+            errors: components["schemas"]["ImportIssue"][];
+        };
+        DataSourceInput: {
+            title: string;
+            scope: string;
+            /** @enum {string} */
+            kind: "price" | "tariff" | "registry" | "benchmark" | "cases" | "dataset" | "open";
+            url?: string;
+            /** @description Дата актуализации в формате источника */
+            actualAt: string;
+            confirmed: boolean;
+        };
+        DataSource: components["schemas"]["DataSourceInput"] & {
+            id: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ParameterFieldPatch: {
+            defaultValue?: string;
+            min?: number | null;
+            max?: number | null;
+            source?: string;
+            required?: boolean;
+            hint?: string;
+        };
+        ChangeLogEntry: {
+            id: string;
+            /** Format: date-time */
+            createdAt: string;
+            userEmail?: string;
+            /** @enum {string} */
+            entity: "solution" | "source" | "parameter" | "catalog-import";
+            entityId: string;
+            /** @enum {string} */
+            action: "create" | "update" | "delete" | "import";
+            summary: string;
+            /** @description Изменённые поля — «было → стало». */
+            diff?: {
+                [key: string]: {
+                    from?: unknown;
+                    to?: unknown;
+                };
+            };
+        };
+        ProjectPatch: {
+            title?: string;
+            status?: components["schemas"]["Maturity"];
+            parameters?: {
+                [key: string]: string;
+            };
+            processes?: string[];
+            solutionId?: string;
+        };
+        CalculationSnapshotInput: {
+            calculation: components["schemas"]["CalculationResult"];
+            solutionId?: string;
+            modelVersion?: string;
+        };
+        CalculationSnapshot: {
+            /** @description Идентификатор снимка; его же принимает GET /calculations/{calculationId}. */
+            id: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** @description Версия каталога и нормативов на момент расчёта (data-YYYYMMDDHHMMSS). */
+            dataVersion: string;
+            modelVersion: string;
+            solutionId?: string;
+            payback?: string;
         };
         ProjectDetail: components["schemas"]["Project"] & {
             objectType: string;
@@ -295,6 +670,11 @@ export interface components {
             /** @description Минимум три — «как есть», «покупка», «услуга/RaaS». */
             scenarios: components["schemas"]["ScenarioBar"][];
             calculationId?: string;
+            solutionId?: string;
+            dataVersion?: string;
+            modelVersion?: string;
+            /** Format: date-time */
+            calculatedAt?: string;
         };
         TaxonomyNode: {
             id: string;
@@ -368,6 +748,12 @@ export interface components {
             scenarios: components["schemas"]["ScenarioBar"][];
             costGroups: components["schemas"]["CostGroup"][];
             totalTco: number;
+            /** @description Версия каталога и нормативов, на которых сделан расчёт (ТЗ 3.1.5). */
+            dataVersion?: string;
+            /** @description Версия расчётной модели. */
+            modelVersion?: string;
+            /** Format: date-time */
+            calculatedAt?: string;
             /** @description Параметры, ранжированные по влиянию на результат. */
             sensitivity?: components["schemas"]["SensitivityFactor"][];
         };
@@ -379,29 +765,206 @@ export interface components {
             /** @enum {string} */
             trend?: "up" | "down" | "none";
         };
+        /** @description Карточка решения каталога. Группы полей повторяют таблицу 3.3 ТЗ: идентификация, технические характеристики, инфраструктура, экономика, применимость, качество данных. Денежные значения — млн ₽ с НДС. */
         Solution: {
             id: string;
             name: string;
+            /** @description Производитель. */
             vendor: string;
+            /** @description Назначение. */
             useCase: string;
+            /** @description Ориентировочная цена единицы, млн ₽. */
             price: string;
+            /** @description Грузоподъёмность для отображения. */
             payload: string;
             speed: string;
             maturity: components["schemas"]["Maturity"];
             confidence: components["schemas"]["DataConfidence"];
             /** @description Название источника характеристик. */
             source?: string;
-            /** @description Дата актуальности источника. */
+            /** @description Дата получения или обновления данных. */
             sourceDate?: string;
+            /** @description Ссылка на источник. */
+            sourceUrl?: string;
             /** @description Типы объектов, для которых решение применимо. */
             objectTypes?: string[];
-            /** @description Итоговый балл ранжирования */
+            /** @description Итоговый балл ранжирования, 0..100. */
             score?: number;
             /** @description Вклад критериев в позицию решения. */
-            scoreFactors?: {
-                label: string;
-                weight: number;
+            scoreFactors?: components["schemas"]["ScoreFactor"][];
+            /** @description Тип решения: ключ справочника SOLUTION_TYPES (amr, fmr, asrs, cleaner, courier, inventory, security, …). */
+            solutionType?: string;
+            /** @description Страна происхождения. */
+            country?: string;
+            /**
+             * @description Статус доступности.
+             * @enum {string}
+             */
+            availability?: "available" | "on-order" | "pilot";
+            /** @description Грузоподъёмность, кг (0 — решение не перевозит грузы). */
+            payloadKg?: number;
+            /** @description Собственная масса, кг. */
+            weightKg?: number;
+            /** @description Габариты, Д×Ш×В. */
+            dimensions?: string;
+            /** @description Производительность в единицах throughputUnit. */
+            throughput?: number;
+            throughputUnit?: string;
+            /** @description Автономность, ч. Для стационарных систем 24 — работа от сети. */
+            autonomyHours?: number;
+            /** @description Точность позиционирования, мм. */
+            positioningAccuracyMm?: number;
+            /** @description Тип навигации. */
+            navigation?: string;
+            /** @description Допустимые условия эксплуатации. */
+            operatingConditions?: string;
+            /** @enum {string} */
+            environment?: "indoor" | "outdoor" | "both";
+            minTempC?: number;
+            maxTempC?: number;
+            /** @description Уровень шума, дБА. */
+            noiseDb?: number;
+            /** @description Минимальная ширина прохода, м. */
+            minAisleWidthM?: number;
+            /** @description Допуск ровности пола, мм на 2 м. */
+            maxFloorDeviationMm?: number;
+            /** @description Минимальная высота помещения, м. */
+            minCeilingHeightM?: number;
+            /** @description Умеет ли вызывать лифт. */
+            elevatorIntegration?: boolean;
+            /** @description Допуск к работе на перроне. */
+            airsideCertified?: boolean;
+            /** @description Требования к инфраструктуре. */
+            infrastructure?: {
+                /** @description Покрытие и проходы. */
+                floor?: string;
+                charging?: string;
+                connectivity?: string;
+                integration?: string;
+                service?: string;
+            };
+            /** @description Ориентировочная стоимость, млн ₽ с НДС. */
+            costs?: {
+                equipment?: number;
+                software?: number;
+                implementation?: number;
+                maintenancePerYear?: number;
+            };
+            acquisitionModels?: ("purchase" | "leasing" | "raas")[];
+            /** @description Срок службы, лет. */
+            lifespanYears?: number;
+            /** @description Поддерживаемые процессы (идентификаторы уровня «процесс» иерархии). */
+            processes?: string[];
+            limitations?: string[];
+            /** @description Реализованные кейсы. */
+            cases?: string[];
+            /** @description Характеристики, значения которых приняты как допущение. */
+            unconfirmedFields?: string[];
+            /** @description Полнота карточки по обязательным характеристикам, %. Считается сервером. */
+            completeness?: number;
+            /** @description Код категории каталога роботов (AM, FL, FC, …). */
+            catalogCategory?: string;
+            /** @description Уровень готовности технологии (УГТ), 1–9. */
+            trl?: number;
+            /** @description Имена файлов фото в /robots_photo. */
+            photos?: string[];
+            /** @description Откуда известно, что решение подходит типу объекта: declared — объект указан в каталоге, example — пример решения для объекта в материалах организатора, inferred — выведено по сценариям применения. */
+            objectFit?: {
+                [key: string]: "declared" | "example" | "inferred";
+            };
+            /** @description Происхождение характеристик (ТЗ 3.3.4): ключ — поле карточки (payloadKg, dimensions, infrastructure.charging, …). Считается из источников каталога, правка администратора заменяет запись на «правка администратора». */
+            fieldSources?: {
+                [key: string]: components["schemas"]["FieldProvenance"];
+            };
+        };
+        RobotCatalogImportReport: {
+            /** @description false — только отчёт (dryRun), в базу ничего не записано. */
+            applied: boolean;
+            version: {
+                schema: string;
+                /** @description Дата версии каталога, ДД.ММ.ГГГГ. */
+                updated: string;
+            };
+            /** @description Решений в версии вместе с дополнениями организатора. */
+            total: number;
+            /** @description Тип объекта → число решений по основаниям применимости. */
+            fit: {
+                [key: string]: {
+                    declared: number;
+                    example: number;
+                    inferred: number;
+                };
+            };
+            /** @description Поля каталога */
+            filled: string[];
+            /** @description Расхождения каталога и организатора — для ответственного за каталог. */
+            conflicts: string[];
+            added: components["schemas"]["NamedSolution"][];
+            updated: (components["schemas"]["NamedSolution"] & {
+                fields: string[];
+            })[];
+            unchanged: number;
+            /** @description Были в базе из каталога, но в этой версии их нет. Не удалены. */
+            missing: components["schemas"]["NamedSolution"][];
+            /** @description Решения, в которых сохранены правки администратора. */
+            keptAdmin: (components["schemas"]["NamedSolution"] & {
+                fields: string[];
+            })[];
+        };
+        NamedSolution: {
+            id: string;
+            name: string;
+        };
+        FieldProvenance: {
+            /** @description true — значение в источнике точное; false — «около», значение серии, пересчёт или вывод. */
+            confirmed: boolean;
+            note?: string;
+            sources: {
+                /** @enum {string} */
+                kind: "organizer" | "vendor" | "reseller" | "media" | "registry" | "team" | "admin";
+                title: string;
+                url?: string;
+                /** @description ДД.ММ.ГГГГ */
+                date?: string;
             }[];
+        };
+        ScoreFactor: {
+            label: string;
+            /** @description Набранные баллы. */
+            weight: number;
+            /** @description Максимум баллов по критерию. */
+            max?: number;
+        };
+        SelectionRequest: {
+            objectType: string;
+            /** @description Значения паспорта объекта; пропущенные берутся по умолчанию. */
+            parameters?: {
+                [key: string]: string;
+            };
+        };
+        SelectionItem: {
+            solutionId: string;
+            /** @enum {string} */
+            status: "recommended" | "needs-review" | "excluded";
+            score: number;
+            factors: components["schemas"]["ScoreFactor"][];
+            /** @description Причины соответствия. */
+            reasons: string[];
+            limitations: string[];
+            /** @description Недостающие данные. */
+            missing: string[];
+            /** @description Причины исключения. */
+            blockers: string[];
+        };
+        SelectionResult: {
+            objectType: string;
+            rulesVersion: string;
+            summary: {
+                recommended: number;
+                needsReview: number;
+                excluded: number;
+            };
+            items: components["schemas"]["SelectionItem"][];
         };
         Project: {
             id: string;
@@ -419,6 +982,99 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    health: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description API и база доступны */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        status: "ok";
+                    };
+                };
+            };
+            /** @description База данных недоступна */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    selectSolutions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SelectionRequest"];
+            };
+        };
+        responses: {
+            /** @description Результат подбора */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SelectionResult"];
+                };
+            };
+            /** @description Некорректный запрос */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getParametersTemplate: {
+        parameters: {
+            query?: {
+                format?: "xlsx" | "csv";
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Файл шаблона */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                    "text/csv": string;
+                };
+            };
+            /** @description Тип объекта не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listObjectTypes: {
         parameters: {
             query?: never;
@@ -484,9 +1140,50 @@ export interface operations {
             };
         };
     };
-    listProjects: {
+    createSolution: {
         parameters: {
             query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Solution"];
+            };
+        };
+        responses: {
+            /** @description Создано */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Solution"];
+                };
+            };
+            /** @description Некорректные данные */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Недостаточно прав */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listProjects: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -758,6 +1455,129 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Требуется вход */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectPatch"];
+            };
+        };
+        responses: {
+            /** @description Проект обновлён */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDetail"];
+                };
+            };
+            /** @description Некорректные данные */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listProjectCalculations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Снимки расчётов с версиями данных и модели */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalculationSnapshot"][];
+                };
+            };
+            /** @description Не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    saveProjectCalculation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalculationSnapshotInput"];
+            };
+        };
+        responses: {
+            /** @description Снимок сохранён */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalculationSnapshot"];
+                };
+            };
+            /** @description Некорректные данные */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     copyProject: {
@@ -842,6 +1662,370 @@ export interface operations {
         responses: {
             /** @description Удалено */
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Недостаточно прав */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    exportCatalog: {
+        parameters: {
+            query?: {
+                format?: "xlsx" | "csv";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Файл каталога */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                    "text/csv": string;
+                };
+            };
+            /** @description Требуется вход */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Недостаточно прав */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    importCatalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Итог загрузки */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogImportResult"];
+                };
+            };
+            /** @description Требуется вход */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Недостаточно прав */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Файл не передан или не читается */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    importRobotCatalog: {
+        parameters: {
+            query?: {
+                dryRun?: "1";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    files: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Отчёт о версии каталога */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RobotCatalogImportReport"];
+                };
+            };
+            /** @description Требуется вход */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Недостаточно прав */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Нет файлов */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listSources: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Список источников */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataSource"][];
+                };
+            };
+        };
+    };
+    createSource: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DataSourceInput"];
+            };
+        };
+        responses: {
+            /** @description Источник добавлен */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataSource"];
+                };
+            };
+            /** @description Некорректные данные */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Требуется вход */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Недостаточно прав */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateSource: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sourceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DataSourceInput"];
+            };
+        };
+        responses: {
+            /** @description Источник обновлён */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataSource"];
+                };
+            };
+            /** @description Некорректные данные */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Недостаточно прав */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteSource: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sourceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Удалён */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Недостаточно прав */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateParameterField: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                fieldId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParameterFieldPatch"];
+            };
+        };
+        responses: {
+            /** @description Поле обновлено */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParameterField"];
+                };
+            };
+            /** @description Некорректные данные */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Недостаточно прав */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Поле не найдено */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listChanges: {
+        parameters: {
+            query?: {
+                limit?: number;
+                entity?: "solution" | "source" | "parameter" | "catalog-import";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Записи журнала, новые сверху */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangeLogEntry"][];
+                };
+            };
+            /** @description Требуется вход */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };

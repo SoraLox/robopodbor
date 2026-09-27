@@ -36,13 +36,7 @@ function titleFor(step: Step, objectType: string, objectTitle: string): string {
 
 function subtitleFor(step: Step): ReactNode {
   if (step === 'calculating') return null;
-  if (step === 'processes') {
-    return (
-      <p className="text-[13px] leading-[1.4] text-[#8E8E93]">
-        Нажмите на решение — справа откроется карточка с деталями.
-      </p>
-    );
-  }
+  if (step === 'processes') return null;
   if (step === 'form') return null;
   return (
     <p className="text-[13px] leading-[1.4] text-[#8E8E93]">
@@ -51,10 +45,24 @@ function subtitleFor(step: Step): ReactNode {
   );
 }
 
+function applyStepFlags(
+  step: Step,
+  set: {
+    setSelectOn: (v: boolean) => void;
+    setFormOn: (v: boolean) => void;
+    setProcessesOn: (v: boolean) => void;
+    setCalculatingOn: (v: boolean) => void;
+  },
+) {
+  set.setSelectOn(step === 'select');
+  set.setFormOn(step === 'form');
+  set.setProcessesOn(step === 'processes');
+  set.setCalculatingOn(step === 'calculating');
+}
+
 /**
  * Layout мастера: select → form → processes → calculating.
- * Переход: fade-out → разъезд/сжатие ширины → fade-in.
- * Список роботов — узкая карточка, как выбор объекта; широкая только форма.
+ * Клики всегда по текущему route-шагу; opacity анимируется отдельно.
  */
 export function ObjectWizardLayout() {
   const navigate = useNavigate();
@@ -77,71 +85,74 @@ export function ObjectWizardLayout() {
   const [wide, setWide] = useState(step === 'form');
   const [heading, setHeading] = useState(() => titleFor(step, objectType, objectTitle));
   const [subtitle, setSubtitle] = useState<ReactNode>(() => subtitleFor(step));
+
   const prevStep = useRef<Step | null>(null);
   const objectTitleRef = useRef(objectTitle);
   const objectTypeRef = useRef(objectType);
+  const runId = useRef(0);
+  const processesBackRef = useRef<(() => boolean) | null>(null);
   objectTitleRef.current = objectTitle;
   objectTypeRef.current = objectType;
+
+  const flagSetters = { setSelectOn, setFormOn, setProcessesOn, setCalculatingOn };
 
   useEffect(() => {
     if (prevStep.current === null) {
       prevStep.current = step;
       setHeading(titleFor(step, objectTypeRef.current, objectTitleRef.current));
       setSubtitle(subtitleFor(step));
+      applyStepFlags(step, flagSetters);
+      setWide(step === 'form');
       return;
     }
     if (prevStep.current === step) return;
+
     const from = prevStep.current;
-    prevStep.current = step;
+    const myRun = ++runId.current;
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduced) {
-      setSelectOn(step === 'select');
-      setFormOn(step === 'form');
-      setProcessesOn(step === 'processes');
-      setCalculatingOn(step === 'calculating');
+      prevStep.current = step;
+      applyStepFlags(step, flagSetters);
       setWide(step === 'form');
       setHeading(titleFor(step, objectTypeRef.current, objectTitleRef.current));
       setSubtitle(subtitleFor(step));
       return;
     }
 
-    const timers: number[] = [];
     const nextWide = step === 'form';
     const widthChanges = (from === 'form') !== (step === 'form');
+    const nextHeading = titleFor(step, objectTypeRef.current, objectTitleRef.current);
+    const nextSubtitle = subtitleFor(step);
 
     setSelectOn(false);
     setFormOn(false);
     setProcessesOn(false);
     setCalculatingOn(false);
-
-    const nextHeading = titleFor(step, objectTypeRef.current, objectTitleRef.current);
-    const nextSubtitle = subtitleFor(step);
-    // Сразу убираем описание при уходе на форму — высота сжимается во время fade, без рывка.
     if (!nextSubtitle) setSubtitle(null);
 
+    const timers: number[] = [];
+
     const reveal = () => {
-      if (step === 'select') setSelectOn(true);
-      else if (step === 'form') setFormOn(true);
-      else if (step === 'processes') setProcessesOn(true);
-      else setCalculatingOn(true);
+      if (runId.current !== myRun) return;
+      prevStep.current = step;
+      applyStepFlags(step, flagSetters);
     };
 
     if (widthChanges) {
-      // После fade: заголовок + разъезд/сжатие ширины при пустом теле.
       timers.push(
         window.setTimeout(() => {
+          if (runId.current !== myRun) return;
           setWide(nextWide);
           setHeading(nextHeading);
           setSubtitle(nextSubtitle);
         }, FADE_MS),
       );
-      // Контент только после полной ширины — fade in на месте.
       timers.push(window.setTimeout(reveal, FADE_MS + WIZARD_EXPAND_MS));
     } else {
-      // узкие шаги — только заголовок и fade
       timers.push(
         window.setTimeout(() => {
+          if (runId.current !== myRun) return;
           setHeading(nextHeading);
           setSubtitle(nextSubtitle);
           reveal();
@@ -149,75 +160,76 @@ export function ObjectWizardLayout() {
       );
     }
 
-    return () => timers.forEach((id) => window.clearTimeout(id));
+    return () => {
+      timers.forEach((id) => window.clearTimeout(id));
+    };
+    // flagSetters стабильны по смыслу (setState)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
-  // Заголовок формы зависит от названия типа — обновить без анимации, если уже на форме.
   useEffect(() => {
-    if (step === 'form' && formOn) {
+    if (step === 'form') {
       setHeading(titleFor('form', objectType, objectTitle));
     }
-  }, [objectTitle, objectType, step, formOn]);
+  }, [objectTitle, objectType, step]);
 
   const onBack = () => {
+    if (step === 'processes' && processesBackRef.current?.()) return;
     if (step === 'calculating') navigate(`/calculate/${objectType}/processes`);
     else if (step === 'processes') navigate(`/calculate/${objectType}/form`);
     else if (step === 'form') navigate(`/calculate/${objectType}`);
     else navigate(-1);
   };
 
-  const fadeStyle = {
-    transitionProperty: 'opacity',
-    transitionDuration: `${FADE_MS}ms`,
-    transitionTimingFunction: FADE_EASE,
-  } as const;
-
   return (
     <WizardCard activeStep={activeStep} expanded={wide} onBack={onBack} title={heading} subtitle={subtitle}>
-      <div
-        className={cn(
-          'absolute inset-0 flex flex-col',
-          selectOn ? 'opacity-100' : 'pointer-events-none opacity-0',
-        )}
-        style={fadeStyle}
-        aria-hidden={!selectOn}
-      >
+      <WizardPane active={step === 'select'} visible={selectOn}>
         <ObjectSelectPage />
-      </div>
-
-      <div
-        className={cn(
-          'absolute inset-0 flex flex-col',
-          formOn ? 'opacity-100' : 'pointer-events-none opacity-0',
-        )}
-        style={fadeStyle}
-        aria-hidden={!formOn}
-      >
-        <ObjectFormPage showTitleImport={wide} />
-      </div>
-
-      <div
-        className={cn(
-          'absolute inset-0 flex flex-col',
-          processesOn ? 'opacity-100' : 'pointer-events-none opacity-0',
-        )}
-        style={fadeStyle}
-        aria-hidden={!processesOn}
-      >
-        <ProcessesPage active={processesOn} />
-      </div>
-
-      <div
-        className={cn(
-          'absolute inset-0 flex flex-col',
-          calculatingOn ? 'opacity-100' : 'pointer-events-none opacity-0',
-        )}
-        style={fadeStyle}
-        aria-hidden={!calculatingOn}
-      >
+      </WizardPane>
+      <WizardPane active={step === 'form'} visible={formOn}>
+        <ObjectFormPage showTitleImport={step === 'form'} />
+      </WizardPane>
+      <WizardPane active={step === 'processes'} visible={processesOn}>
+        <ProcessesPage active={step === 'processes'} backRef={processesBackRef} />
+      </WizardPane>
+      <WizardPane active={step === 'calculating'} visible={calculatingOn}>
         <CalculatingStep active={step === 'calculating'} revealed={calculatingOn} />
-      </div>
+      </WizardPane>
     </WizardCard>
+  );
+}
+
+const FADE_STYLE = {
+  transitionProperty: 'opacity',
+  transitionDuration: `${FADE_MS}ms`,
+  transitionTimingFunction: FADE_EASE,
+} as const;
+
+/**
+ * active — клики по route; панель сверху и всегда pointer-events-auto.
+ * visible — только opacity для fade.
+ */
+function WizardPane({
+  active,
+  visible,
+  children,
+}: {
+  active: boolean;
+  visible: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={cn(
+        'absolute inset-0 flex flex-col',
+        visible ? 'opacity-100' : 'opacity-0',
+        active ? 'z-[1] pointer-events-auto' : 'z-0 pointer-events-none',
+      )}
+      style={FADE_STYLE}
+      aria-hidden={!active}
+    >
+      {children}
+    </div>
   );
 }
 

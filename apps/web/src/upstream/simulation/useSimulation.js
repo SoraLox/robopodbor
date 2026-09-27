@@ -8,6 +8,9 @@ import { createArmFleet } from "./arms/armFleet.js";
 import { createLoaderSystem } from "./loaders/loaderSystem.js";
 import { createWarehouseScene } from "./sceneSetup.js";
 import { EMPTY_STATS, readStats, sameStats } from "./simStats.js";
+import { createFrameProfiler } from "@/lib/perf/frameProfiler";
+import { createAdaptivePixelRatio } from "@/lib/perf/adaptivePixelRatio";
+import { FLOOR_PITCH } from "./floorLevel.js";
 
 // Связка React ↔ Three.js: сборка сцены один раз, пересборка этажей и роботов при
 // смене параметров и покадровый цикл симуляции. Компонент WarehouseScene остаётся
@@ -24,6 +27,19 @@ const STEP_BUDGET_MS = 12; // сколько миллисекунд кадра �
 const FLOOR_STAGGER_SECONDS = 7; // на сколько позже на каждом следующем этаже приезжает первая фура
 const QUARTER = Math.PI / 2;
 const YARD_FOCUS_Z = -16; // со складом погрузчиков камера смотрит ближе к воротам и фурам
+
+const SETTLE_EPSILON = 1e-4;
+
+// Камера доводится к цели экспоненциально (см. updateCamera), поэтому «доехала» —
+// это когда до цели осталось меньше, чем видно глазом.
+function isCameraSettling(camera, activeFloor) {
+  return (
+    Math.abs(camera.thetaTarget - camera.theta) > SETTLE_EPSILON ||
+    Math.abs(camera.elevationTarget - camera.elevation) > SETTLE_EPSILON ||
+    Math.abs(camera.focusZTarget - camera.focusZ) > SETTLE_EPSILON ||
+    Math.abs(activeFloor * FLOOR_PITCH - camera.focusY) > SETTLE_EPSILON
+  );
+}
 
 function disposeFleets(level) {
   level.armFleet?.dispose();
@@ -93,7 +109,35 @@ export function useSimulation(cfg) {
       raf: null,
       simAcc: 0,
       lastPublish: 0,
+      profiler: createFrameProfiler("warehouse", () => {
+        const { render, memory } = created.renderer.info;
+        const size = created.renderer.getDrawingBufferSize(new THREE.Vector2());
+        return {
+          drawCalls: render.calls,
+          triangles: render.triangles,
+          geometries: memory.geometries,
+          textures: memory.textures,
+          pixelRatio: created.renderer.getPixelRatio(),
+          drawingBuffer: `${size.x}x${size.y}`,
+          onScreen: st.onScreen,
+        };
+      }),
+      quality: createAdaptivePixelRatio(created.renderer),
+      onScreen: true,
+      needsRender: true,
+      lastCanvasSize: "",
     });
+
+    // Сцена за пределами экрана не рисуется: симуляция продолжает считаться
+    // (это доли миллисекунды), а отрисовка — основная нагрузка — простаивает.
+    const visibility =
+      typeof IntersectionObserver === "undefined"
+        ? null
+        : new IntersectionObserver(([entry]) => {
+            st.onScreen = entry.isIntersecting;
+            if (st.onScreen) st.needsRender = true;
+          });
+    visibility?.observe(mount);
 
     loadRobotModels()
       .then(() => setModelState("ready"))
@@ -103,6 +147,7 @@ export function useSimulation(cfg) {
       });
 
     return () => {
+      visibility?.disconnect();
       created.levels.forEach(disposeFleets);
       created.dispose(st.raf);
     };
@@ -118,8 +163,7 @@ export function useSimulation(cfg) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [useLoader]);
 
-  // 3D-изометрия ↔ 2D-вид сверху: камера поднимается над складом и встаёт на ось,
-  // подписи чанков разворачиваются под новый вид.
+  // 3D-изометрия ↔ 2D-вид сверху: камера поднимается над складом и встаёт на ось.
   useEffect(() => {
     if (!st.scene) return;
 
@@ -130,7 +174,6 @@ export function useSimulation(cfg) {
       ? Math.round(camera.thetaTarget / (4 * QUARTER)) * 4 * QUARTER // север сверху
       : Math.round((camera.thetaTarget - Math.PI / 4) / QUARTER) * QUARTER + Math.PI / 4;
 
-    st.chunkLabels.setTopView(topView, camera.thetaTarget);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [topView]);
 
@@ -140,13 +183,6 @@ export function useSimulation(cfg) {
     st.applyFrustum();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [camZoom]);
-
-  // Подписи чанков зависят только от площади помещения.
-  useEffect(() => {
-    if (!st.scene) return;
-    st.chunkLabels.setGrid(chunkGrid, st.cameraState.theta);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chunkGrid]);
 
   // ==========================================================
   // Пересборка этажей и роботов
@@ -274,15 +310,15 @@ export function useSimulation(cfg) {
 
     const tick = (timestamp) => {
       st.raf = requestAnimationFrame(tick);
+      st.profiler.frameStart(timestamp);
       st.clock.update(timestamp);
       const realDt = Math.min(st.clock.getDelta(), MAX_FRAME_SECONDS);
 
       st.cameraState.theta += (st.cameraState.thetaTarget - st.cameraState.theta) * 0.12;
       st.updateCamera(st.activeFloor);
-      st.chunkLabels.update(st.cameraState.theta);
 
       if (running) {
-        const executed = stepSimulation(realDt, speedMult);
+        const executed = st.profiler.time("step", () => stepSimulation(realDt, speedMult));
 
         st.simAcc += realDt * executed;
         if (st.beltTexture) st.beltTexture.offset.y -= 0.45 * realDt * executed;
@@ -296,7 +332,25 @@ export function useSimulation(cfg) {
         }
       }
 
-      st.render(st.activeFloor);
+      // Кадр перерисовывается, только если в нём что-то изменилось: идёт симуляция,
+      // камера ещё доезжает до цели, поменялись параметры сцены или размер канваса
+      // (смена размера очищает канвас). На паузе и вне экрана GPU простаивает.
+      const canvas = st.renderer.domElement;
+      const canvasSize = `${canvas.width}x${canvas.height}`;
+      if (canvasSize !== st.lastCanvasSize) {
+        st.lastCanvasSize = canvasSize;
+        st.needsRender = true;
+      }
+
+      if (st.onScreen && (running || st.needsRender || isCameraSettling(st.cameraState, st.activeFloor))) {
+        st.needsRender = false;
+        if (st.quality.onRenderedFrame(timestamp)) st.lastCanvasSize = "";
+        st.profiler.time("render", () => st.render(st.activeFloor));
+      } else {
+        st.quality.onSkippedFrame();
+        st.profiler.skipRender();
+      }
+      st.profiler.frameEnd();
     };
 
     tick(performance.now());
@@ -310,6 +364,13 @@ export function useSimulation(cfg) {
     if (st.scene) publish();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [floorIndex]);
+
+  // Любой коммит (смена этажа, вида, зума, пересборка роботов, загрузка моделей)
+  // мог поменять сцену — на паузе её нужно перерисовать хотя бы один раз.
+  // Эффект объявлен последним, чтобы сработать после всех, что правят сцену.
+  useEffect(() => {
+    st.needsRender = true;
+  });
 
   return {
     mountRef,

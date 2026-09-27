@@ -88,7 +88,7 @@ function addSideCrates(parent) {
 //
 //   decals — то, что не показываем на «прозрачных» этажах (стены, след, подписи);
 //   dispose — освобождает то, что этаж создал сам.
-export function createFloorLevel(shared, chunkLabels, index) {
+export function createFloorLevel(shared, index) {
   const group = new THREE.Group();
   group.position.y = index * FLOOR_PITCH;
 
@@ -114,9 +114,6 @@ export function createFloorLevel(shared, chunkLabels, index) {
   trailPlane.position.y = 0.02;
   group.add(trailPlane);
 
-  const labelPlane = chunkLabels.mesh.clone();
-  group.add(labelPlane);
-
   const crates = addSideCrates(group);
 
   const walls = createWalls();
@@ -137,7 +134,7 @@ export function createFloorLevel(shared, chunkLabels, index) {
     armGroup,
     loaderGroup,
     crates,
-    decals: [trailPlane, labelPlane, walls.group],
+    decals: [trailPlane, walls.group],
     // Состояние симуляции этого этажа (заполняет WarehouseScene).
     grid: new Uint8Array(FLOOR * FLOOR),
     vacuumFleet: null,

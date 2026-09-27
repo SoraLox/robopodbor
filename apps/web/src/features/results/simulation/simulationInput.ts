@@ -29,7 +29,7 @@ import {
 export type SimRobotType = 'vacuum' | 'arm' | 'loader';
 
 export const SIMULATION_ASSUMPTIONS = [
-  'Тип робота в сцене определяется по назначению решения: уборка — пылесосы, сортировка и пикинг — роборуки, паллеты и штабелирование — погрузчики.',
+  'Тип робота в сцене определяется по типу решения каталога: уборщики — пылесосы, манипуляторы и ячейки — роборуки, AMR, тележки и погрузчики — погрузчики.',
   'Потоки приёмки, отгрузки и отбора переведены из суточных в часовые делением на часы работы (смены × длительность смены).',
   'Путь погрузчика от ворот до места хранения — половина стороны склада, если считать его квадратным.',
   'Энергопрофиль (время на зарядке, мощность) взят из демо-каталога симуляции для того же типа робота: в нашем каталоге этих данных нет.',
@@ -42,7 +42,22 @@ const TYPE_KEYWORDS: ReadonlyArray<readonly [SimRobotType, RegExp]> = [
   ['loader', /паллет|штабел|погрузчик|agv|буксир|тележ|транспорт/i],
 ];
 
+const TYPE_BY_SOLUTION_TYPE: Record<string, SimRobotType> = {
+  cleaner: 'vacuum',
+  disinfection: 'vacuum',
+  manipulator: 'arm',
+  cell: 'arm',
+  sorter: 'arm',
+  amr: 'loader',
+  fmr: 'loader',
+  stacker: 'loader',
+  tug: 'loader',
+};
+
 export function simRobotTypeOf(solution: Solution): SimRobotType | null {
+  // Тип решения известен — сцены для него либо есть, либо нет (ПО, дроны, охрана).
+  // Ключевые слова — только для решений без типа, например добавленных вручную.
+  if (solution.solutionType) return TYPE_BY_SOLUTION_TYPE[solution.solutionType] ?? null;
   const text = `${solution.name} ${solution.useCase}`;
   return TYPE_KEYWORDS.find(([, pattern]) => pattern.test(text))?.[0] ?? null;
 }
@@ -59,9 +74,17 @@ function hourlyRateFrom(useCase: string): number | null {
   return match?.[1] ? parseLeadingNumber(match[1]) : null;
 }
 
-/** «1200×800×1600» (мм) → [120, 80, 160] (см). */
-function dimensionsCm(text: string | undefined): number[] {
-  return (text ?? '')
+/** «1200» мм → см; запасной разбор старого «1200×800×1600». */
+function dimensionsCm(values: Record<string, string>): number[] {
+  const fromParts = [
+    parseLeadingNumber(values.wh_pallet_length),
+    parseLeadingNumber(values.wh_pallet_width),
+    parseLeadingNumber(values.wh_pallet_height),
+  ];
+  if (fromParts.every((value): value is number => value !== null)) {
+    return fromParts.map((mm) => mm / 10);
+  }
+  return (values.wh_pallet_dimensions ?? '')
     .split(/[×xх*]/i)
     .map((part) => parseLeadingNumber(part))
     .filter((value): value is number => value !== null)
@@ -97,7 +120,7 @@ export function toUpstreamParams(values: Record<string, string>): UpstreamParams
   const shiftHours = num('wh_prodolzhitelnost_smeny', 8);
   const shifts = num('wh_kolichestvo_rabochih_smen_sutki', 1);
   const hoursPerDay = Math.max(1, shiftHours * shifts);
-  const [lengthCm = 120, widthCm = 80, heightCm = 100] = dimensionsCm(values.wh_pallet_dimensions);
+  const [lengthCm = 120, widthCm = 80, heightCm = 100] = dimensionsCm(values);
   const floorAreaM2 = withinSchema('floorAreaM2', totalArea);
 
   return {
@@ -144,7 +167,7 @@ export function toUpstreamSolution(
   if (type === 'vacuum' && reference.technical.speed && speed) {
     technical.throughput = (reference.technical.throughput * speed) / reference.technical.speed;
   } else if (type === 'arm') {
-    technical.throughput = hourlyRateFrom(solution.useCase) ?? reference.technical.throughput;
+    technical.throughput = solution.throughput ?? hourlyRateFrom(solution.useCase) ?? reference.technical.throughput;
   } else if (type === 'loader') {
     technical.throughput = 3600 / loaderCycleSeconds({ technical }, params);
   }

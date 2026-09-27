@@ -3,6 +3,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "../src/password.js";
+import { DEFAULT_SOURCES } from "../src/domain/sources.js";
+import type { CatalogSolution } from "../src/domain/catalog.js";
+import { applyCatalogVersion } from "../src/catalogSync.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dataDir = path.join(__dirname, "seed-data");
@@ -22,23 +25,6 @@ type ObjectTypeJson = {
   photoCaption: string;
 };
 
-type SolutionJson = {
-  id: string;
-  name: string;
-  vendor: string;
-  useCase: string;
-  price: string;
-  payload: string;
-  speed: string;
-  maturity: "operation" | "piloting" | "rnd";
-  confidence: "confirmed" | "needs-review";
-  source?: string;
-  sourceDate?: string;
-  objectTypes?: string[];
-  score?: number;
-  scoreFactors?: Array<{ label: string; weight: number }>;
-};
-
 type ParameterFieldJson = {
   id: string;
   label: string;
@@ -49,14 +35,9 @@ type ParameterFieldJson = {
   min?: number;
   max?: number;
   defaultValue?: string;
+  required?: boolean;
+  source?: string;
   options?: Array<{ value: string; label: string }>;
-};
-
-type TaxonomyNodeJson = {
-  id: string;
-  label: string;
-  level: string;
-  children?: TaxonomyNodeJson[];
 };
 
 async function seedDemoUsers() {
@@ -100,76 +81,73 @@ async function seedObjectTypesAndParameters() {
       },
     });
 
+    // id поля — стабильный ключ из датасета (wh_…, ap_…, cl_…): по нему работают
+    // импорт паспорта и правила подбора. Структура поля обновляется из сида,
+    // а обязательность, значение по умолчанию, диапазон и источник — нет: их правит администратор.
     const fields = parametersByType[ot.slug] ?? [];
-    await prisma.parameterField.deleteMany({ where: { objectTypeSlug: ot.slug } });
+    await prisma.parameterField.deleteMany({
+      where: { objectTypeSlug: ot.slug, id: { notIn: fields.map((field) => field.id) } },
+    });
     for (const [index, field] of fields.entries()) {
-      await prisma.parameterField.create({
-        data: {
+      const structure = {
+        label: field.label,
+        hint: field.hint,
+        unit: field.unit,
+        section: field.section,
+        kind: field.kind,
+        options: field.options as never,
+        sortOrder: index,
+      };
+      await prisma.parameterField.upsert({
+        where: { id: field.id },
+        update: structure,
+        create: {
+          id: field.id,
           objectTypeSlug: ot.slug,
-          label: field.label,
-          hint: field.hint,
-          unit: field.unit,
-          section: field.section,
-          kind: field.kind,
+          ...structure,
+          required: field.required ?? true,
           min: field.min,
           max: field.max,
           defaultValue: field.defaultValue,
-          options: field.options as never,
-          sortOrder: index,
+          source: field.source,
         },
       });
     }
   }
 }
 
+// Демо-решения до получения каталога роботов: выдуманные, из базы удаляются.
+const DEMO_SOLUTION_IDS = [
+  "p15", "s20", "srt8", "ams", "drone", "p22", "wf3", "srt3", "bg12",
+  "ams1", "ams3", "sanit1", "courier1", "ivchassis", "towtug", "gseasrs", "droneair", "floorclean",
+];
+
 async function seedSolutions() {
-  const solutions = loadJson<SolutionJson[]>("solutions.json");
-  for (const s of solutions) {
-    await prisma.catalogSolution.upsert({
-      where: { id: s.id },
-      update: {},
-      create: {
-        id: s.id,
-        name: s.name,
-        vendor: s.vendor,
-        useCase: s.useCase,
-        price: s.price,
-        payload: s.payload,
-        speed: s.speed,
-        maturity: s.maturity,
-        confidence: s.confidence === "needs-review" ? "needs_review" : "confirmed",
-        source: s.source,
-        sourceDate: s.sourceDate,
-        objectTypes: s.objectTypes ?? [],
-        score: s.score,
-        scoreFactors: s.scoreFactors as never,
-      },
-    });
-  }
+  await prisma.catalogSolution.deleteMany({ where: { id: { in: DEMO_SOLUTION_IDS } } });
+
+  // Собирается из seed-data/robots-catalog скриптом build-catalog.ts. Характеристики
+  // обновляются из каталога, правки администратора остаются (src/catalogSync.ts).
+  const solutions = JSON.parse(
+    readFileSync(path.join(__dirname, "../src/domain/catalogSolutions.json"), "utf8"),
+  ) as CatalogSolution[];
+  const report = await applyCatalogVersion(prisma, solutions);
+  console.log(
+    `Каталог: добавлено ${report.added.length}, обновлено ${report.updated.length}, без изменений ${report.unchanged}` +
+      (report.keptAdmin.length ? `, с правками администратора ${report.keptAdmin.length}` : "") +
+      (report.missing.length ? `, нет в каталоге ${report.missing.length}` : ""),
+  );
 }
 
-async function seedTaxonomy() {
-  const tree = loadJson<TaxonomyNodeJson[]>("taxonomy.json");
-  await prisma.taxonomyNode.deleteMany();
-
-  async function insert(nodes: TaxonomyNodeJson[], parentId: string | null) {
-    for (const node of nodes) {
-      // Не переиспользуем node.id из фикстур как первичный ключ: один и тот же продукт
-      // (например, "p15") встречается листом в нескольких ветках дерева одновременно.
-      const created = await prisma.taxonomyNode.create({
-        data: { label: node.label, level: node.level, parentId },
-      });
-      if (node.children?.length) await insert(node.children, created.id);
-    }
-  }
-  await insert(tree, null);
+async function seedDataSources() {
+  if ((await prisma.dataSource.count()) > 0) return;
+  await prisma.dataSource.createMany({ data: DEFAULT_SOURCES });
 }
 
 async function main() {
   await seedDemoUsers();
   await seedObjectTypesAndParameters();
   await seedSolutions();
-  await seedTaxonomy();
+  await seedDataSources();
   console.log("Сид базы данных выполнен.");
 }
 

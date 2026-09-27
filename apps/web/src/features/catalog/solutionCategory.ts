@@ -1,4 +1,18 @@
-import { Hand, Shuffle, Truck, Warehouse, ScanEye, Bot, type LucideIcon } from 'lucide-react';
+import {
+  Bot,
+  Brush,
+  Forklift,
+  Hand,
+  Layers,
+  Package,
+  ScanEye,
+  Shuffle,
+  ShieldPlus,
+  Truck,
+  Warehouse,
+  type LucideIcon,
+} from 'lucide-react';
+import { SOLUTION_TYPES } from '@domain/catalog';
 import type { Solution } from '@/api/types';
 
 export interface SolutionCategory {
@@ -7,23 +21,39 @@ export interface SolutionCategory {
   icon: LucideIcon;
 }
 
-const CATEGORIES: (SolutionCategory & { match: RegExp })[] = [
-  { id: 'amr', label: 'AMR / транспортировка', icon: Truck, match: /паллетовоз|amr|транспортир/i },
-  { id: 'asrs', label: 'AS/RS · хранение', icon: Warehouse, match: /as\/rs|штабел|хранени/i },
-  { id: 'sort', label: 'Сортировка', icon: Shuffle, match: /сортир/i },
-  { id: 'pick', label: 'Пикинг / манипуляторы', icon: Hand, match: /манипулятор|пикинг|отбор|захват/i },
-  { id: 'uav', label: 'Инвентаризация БАС', icon: ScanEye, match: /бас|дрон|инвентариза/i },
+const ICONS: Record<string, LucideIcon> = {
+  amr: Truck,
+  fmr: Forklift,
+  stacker: Layers,
+  tug: Truck,
+  asrs: Warehouse,
+  sorter: Shuffle,
+  manipulator: Hand,
+  cleaner: Brush,
+  uav: ScanEye,
+  disinfection: ShieldPlus,
+  courier: Package,
+};
+
+/** Для позиций без поля solutionType (например, импортированных без типа) — по названию. */
+const GUESS: Array<{ id: string; match: RegExp }> = [
+  { id: 'amr', match: /паллетовоз|amr|транспортир/i },
+  { id: 'asrs', match: /as\/rs|штабел|хранени/i },
+  { id: 'sorter', match: /сортир/i },
+  { id: 'manipulator', match: /манипулятор|пикинг|отбор|захват/i },
+  { id: 'uav', match: /бас|дрон|инвентариза/i },
 ];
 
 const FALLBACK: SolutionCategory = { id: 'other', label: 'Другое решение', icon: Bot };
 
-/** Класс решения выводится из названия/задачи — у Solution нет отдельного поля класса. */
-export function categorize(solution: Pick<Solution, 'name' | 'useCase'>): SolutionCategory {
-  const haystack = `${solution.name} ${solution.useCase}`;
-  const found = CATEGORIES.find((category) => category.match.test(haystack));
-  return found ? { id: found.id, label: found.label, icon: found.icon } : FALLBACK;
+export function categorize(solution: Pick<Solution, 'name' | 'useCase' | 'solutionType'>): SolutionCategory {
+  const id =
+    solution.solutionType ?? GUESS.find((entry) => entry.match.test(`${solution.name} ${solution.useCase}`))?.id;
+  const label = id ? SOLUTION_TYPES[id] : undefined;
+  if (!id || !label) return FALLBACK;
+  return { id, label, icon: ICONS[id] ?? Bot };
 }
 
 export function listCategories(): SolutionCategory[] {
-  return CATEGORIES.map(({ id, label, icon }) => ({ id, label, icon }));
+  return Object.entries(SOLUTION_TYPES).map(([id, label]) => ({ id, label, icon: ICONS[id] ?? Bot }));
 }

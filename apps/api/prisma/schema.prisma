@@ -42,102 +42,193 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   expiresAt DateTime
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 // Проект пользователя: паспорт объекта + параметры + снапшот расчёта.
 // Изолирован по userId (см. 4.4.3 ТЗ — доступ к проекту только у его владельца и админа).
 model Project {
-  id          String   @id @default(cuid())
+  id          String     @id @default(cuid())
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   title       String
   objectType  String
   parameters  Json // значения полей паспорта объекта, ключ -> строка
-  processes   String[] @default([])
-  status      Maturity @default(piloting)
+  processes   String[]   @default([])
+  status      Maturity   @default(piloting)
   // Снапшот последнего расчёта (CalculationResult из контракта) — хранится целиком,
   // чтобы повторное открытие проекта воспроизводило тот же результат (см. 3.1.5 ТЗ)
   // без пересчёта по возможно изменившимся нормативам.
   calculation Json?
   scenarios   Scenario[]
-  dataVersion String   @default("v1") // версия исходных нормативов/каталога на момент расчёта
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  dataVersion String     @default("v1") // версия исходных нормативов/каталога на момент расчёта
+  modelVersion String?   // версия расчётной модели, выдавшей снапшот
+  calculatedAt DateTime?
+  solutionId  String?    // решение каталога, выбранное для расчёта
+  calculations ProjectCalculation[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
-  @@index([userId])
+  // Список проектов: фильтр по владельцу + сортировка по дате — одним проходом по индексу.
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+// История расчётов проекта: каждый сохранённый результат со своими версиями
+// данных и модели — чтобы воспроизвести любой прошлый расчёт (ТЗ 3.1.5).
+model ProjectCalculation {
+  id           String   @id @default(cuid())
+  projectId    String
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  dataVersion  String
+  modelVersion String
+  solutionId   String?
+  parameters   Json // паспорт объекта на момент расчёта
+  result       Json // CalculationResult целиком
+
+  @@index([projectId, createdAt(sort: Desc)])
+}
+
+// Источники данных, на которые ссылаются каталог и нормативы (ТЗ 3.1.4, 3.3.4).
+model DataSource {
+  id        String   @id @default(cuid())
+  title     String
+  scope     String
+  kind      String // price | tariff | registry | benchmark | cases | dataset | open
+  url       String?
+  actualAt  String // дата актуализации в виде, в котором её дал источник
+  confirmed Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Журнал изменений справочников: кто, когда и что поменял (ТЗ 3.5.4, 3.3.6).
+// По последней записи вычисляется версия данных для снапшотов расчёта.
+model ChangeLog {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userEmail String?
+  entity    String // solution | source | parameter | catalog-import
+  entityId  String
+  action    String // create | update | delete | import
+  summary   String
+  diff      Json?
+
+  @@index([createdAt(sort: Desc)])
 }
 
 model Scenario {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   projectId   String
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   title       String
   subtitle    String
   tco         Float
   share       Float
   delta       String
   detail      String?
-  recommended Boolean  @default(false)
-  sortOrder   Int      @default(0)
+  recommended Boolean @default(false)
+  sortOrder   Int     @default(0)
+
+  @@index([projectId, sortOrder])
 }
 
-// Каталог роботизированных решений (см. 3.3 ТЗ).
+// Каталог роботизированных решений (см. 3.3 ТЗ). Группы полей — по таблице 3.3.
+// Иерархия отрасль → объект → процесс → тип решения → продукт строится из
+// objectTypes, processes и solutionType (src/domain/catalog.ts, buildTaxonomy).
 model CatalogSolution {
   id           String         @id @default(cuid())
+  // Идентификация
   name         String
   vendor       String
   useCase      String
-  price        String
-  payload      String
-  speed        String
+  solutionType String?
+  country      String?
+  availability String? // available | on-order | pilot
+  // Технические характеристики
+  price                 String
+  payload               String
+  speed                 String
+  payloadKg             Float?
+  weightKg              Float?
+  dimensions            String?
+  throughput            Float?
+  throughputUnit        String?
+  autonomyHours         Float?
+  positioningAccuracyMm Float?
+  navigation            String?
+  operatingConditions   String?
+  environment           String? // indoor | outdoor | both
+  minTempC              Float?
+  maxTempC              Float?
+  noiseDb               Float?
+  // Ограничения, по которым подбор исключает решение
+  minAisleWidthM        Float?
+  maxFloorDeviationMm   Float?
+  minCeilingHeightM     Float?
+  elevatorIntegration   Boolean?
+  airsideCertified      Boolean?
+  // Инфраструктура и экономика
+  infrastructure        Json? // {floor, charging, connectivity, integration, service}
+  costs                 Json? // {equipment, software, implementation, maintenancePerYear}, млн ₽
+  acquisitionModels     String[] @default([])
+  lifespanYears         Float?
+  // Применимость
   maturity     Maturity
-  confidence   DataConfidence
-  source       String?
-  sourceDate   String?
   objectTypes  String[]       @default([])
+  processes    String[]       @default([])
+  limitations  String[]       @default([])
+  cases        String[]       @default([])
+  // Качество данных
+  confidence        DataConfidence
+  source            String?
+  sourceDate        String?
+  sourceUrl         String?
+  unconfirmedFields String[] @default([])
+  // Каталог роботов (seed-data/robots-catalog)
+  catalogCategory String?
+  trl             Int?
+  photos          String[] @default([])
+  objectFit       Json? // {warehouse: "declared" | "example" | "inferred", ...}
+  fieldSources    Json? // {payloadKg: {confirmed, sources: [{kind, title, url, date}], note}, ...}
   score        Float?
   scoreFactors Json? // [{label, weight}]
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
-}
 
-// Иерархия отрасль -> объект -> процесс -> тип решения -> продукт (см. 3.3.1 ТЗ).
-model TaxonomyNode {
-  id       String         @id @default(cuid())
-  label    String
-  level    String // industry | object | process | solutionType | product
-  parentId String?
-  parent   TaxonomyNode?  @relation("TaxonomyChildren", fields: [parentId], references: [id], onDelete: Cascade)
-  children TaxonomyNode[] @relation("TaxonomyChildren")
-
-  @@index([parentId])
+  // Фильтр каталога objectTypes: { has } — это оператор @>, ему нужен GIN.
+  @@index([objectTypes], type: Gin)
 }
 
 // Типы объектов (склад/аэропорт/клиника/...) и состав их паспортных полей (см. 3.2 ТЗ).
 model ObjectTypeDef {
-  slug              String  @id
-  title             String
-  description       String
-  photoCaption      String?
-  paybackRange      String?
+  slug                String           @id
+  title               String
+  description         String
+  photoCaption        String?
+  paybackRange        String?
   solutionsCountLabel String?
-  parameters        ParameterField[]
+  parameters          ParameterField[]
 }
 
 model ParameterField {
-  id           String        @id @default(cuid())
-  objectType   ObjectTypeDef @relation(fields: [objectTypeSlug], references: [slug], onDelete: Cascade)
+  id             String        @id @default(cuid())
+  objectType     ObjectTypeDef @relation(fields: [objectTypeSlug], references: [slug], onDelete: Cascade)
   objectTypeSlug String
-  label        String
-  hint         String?
-  unit         String?
-  section      String?
-  kind         String // number | text | select
-  min          Float?
-  max          Float?
-  defaultValue String?
-  options      Json? // [{value, label}]
-  sortOrder    Int           @default(0)
+  label          String
+  hint           String?
+  unit           String?
+  section        String?
+  kind           String // number | text | select
+  min            Float?
+  max            Float?
+  defaultValue   String?
+  required       Boolean       @default(true)
+  source         String? // источник значения по умолчанию (ТЗ 3.2.5)
+  options        Json? // [{value, label}]
+  sortOrder      Int           @default(0)
 
   @@index([objectTypeSlug])
 }

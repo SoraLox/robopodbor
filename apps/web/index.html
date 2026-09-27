@@ -3,7 +3,26 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Роботоподбор · платформа подбора роботизированных решений</title>
+    <title>РОБОПОДБОР · независимый расчёт окупаемости роботов</title>
+    <script>
+      // Картинка первого экрана лендинга — это LCP. Без preload браузер узнаёт о ней
+      // только после загрузки и выполнения JS-бандла. На остальных маршрутах не грузим.
+      // imagesizes должен совпадать с HERO_IMAGE_SIZES в LandingPage.tsx.
+      (function () {
+        var base = '%BASE_URL%';
+        var hash = location.hash;
+        var route = hash.indexOf('#/') === 0 ? hash.slice(1) : location.pathname.slice(base.length - 1);
+        if (route !== '/' && route !== '') return;
+        var link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'image';
+        link.setAttribute('fetchpriority', 'high');
+        link.setAttribute('imagesrcset', base + 'pics/roboarm3-560.webp 560w, ' + base + 'pics/roboarm3.webp 1121w');
+        link.setAttribute('imagesizes', '(min-width: 1024px) 780px, (min-width: 640px) 58vw, 66vw');
+        link.href = base + 'pics/roboarm3.webp';
+        document.head.appendChild(link);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

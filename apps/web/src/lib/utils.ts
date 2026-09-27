@@ -10,7 +10,10 @@ import { extendTailwindMerge } from 'tailwind-merge';
   чёрному. Объявляем роли явно как группу font-size.
 */
 const FONT_SIZE_ROLES = [
+  'display-xl',
   'display',
+  'title',
+  'lead',
   'h1',
   'h2',
   'h3',

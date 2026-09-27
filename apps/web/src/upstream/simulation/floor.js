@@ -37,8 +37,7 @@ function drawArmPads(ctx, armZone, armCount) {
   }
 }
 
-// Сетка чанков: границы чанков — тонкие линии по всему полу. Размеры чанка
-// подписаны отдельно (chunkLabels.js).
+// Сетка чанков: границы чанков — тонкие линии по всему полу, без подписей размеров.
 function drawChunkGrid(ctx, grid) {
   ctx.strokeStyle = "rgba(255,255,255,0.16)";
   ctx.lineWidth = 1.5;

@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { HashRouter } from 'react-router-dom';
+import { BrowserRouter, HashRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import './styles/globals.css';
@@ -8,6 +8,17 @@ import './styles/globals.css';
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
 });
+
+// Статический хостинг (GitHub Pages) не умеет отдавать index.html на любой путь,
+// поэтому там остаётся hash-роутинг. За nginx (docker) SPA-фолбэк есть, и сборка
+// идёт с VITE_ROUTER=browser: чистые URL индексируются и не теряют якоря.
+const useBrowserHistory = import.meta.env.VITE_ROUTER === 'browser';
+const basename = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+// Старые ссылки вида /#/catalog продолжают работать после перехода на чистые URL.
+if (useBrowserHistory && window.location.hash.startsWith('#/')) {
+  window.history.replaceState(null, '', `${basename}${window.location.hash.slice(1)}`);
+}
 
 async function bootstrap() {
   // По умолчанию /api обслуживает MSW поверх contracts/openapi.yaml — это нужно
@@ -34,12 +45,14 @@ async function bootstrap() {
   const container = document.getElementById('root');
   if (!container) throw new Error('Не найден #root');
 
+  const Router = useBrowserHistory ? BrowserRouter : HashRouter;
+
   createRoot(container).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <HashRouter>
+        <Router {...(useBrowserHistory ? { basename } : {})}>
           <App />
-        </HashRouter>
+        </Router>
       </QueryClientProvider>
     </StrictMode>,
   );

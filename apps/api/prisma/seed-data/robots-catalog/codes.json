@@ -1,0 +1,3058 @@
+{
+  "schema_ver": "2.0.0",
+  "updated": "2026-09-25",
+  "groups": {
+    "status": [
+      {
+        "code": "OP",
+        "en": "in operation",
+        "ru": "серийная эксплуатация"
+      },
+      {
+        "code": "PI",
+        "en": "piloting",
+        "ru": "пилотное внедрение"
+      },
+      {
+        "code": "RD",
+        "en": "R&D",
+        "ru": "НИОКР, разработка"
+      }
+    ],
+    "country": [
+      {
+        "code": "RU",
+        "en": "Russia",
+        "ru": "Россия"
+      },
+      {
+        "code": "CN",
+        "en": "China",
+        "ru": "Китай"
+      },
+      {
+        "code": "BY",
+        "en": "Belarus",
+        "ru": "Беларусь"
+      },
+      {
+        "code": "KR",
+        "en": "South Korea",
+        "ru": "Южная Корея"
+      },
+      {
+        "code": "JP",
+        "en": "Japan",
+        "ru": "Япония"
+      },
+      {
+        "code": "TW",
+        "en": "Taiwan",
+        "ru": "Тайвань"
+      },
+      {
+        "code": "DE",
+        "en": "Germany",
+        "ru": "Германия"
+      },
+      {
+        "code": "IT",
+        "en": "Italy",
+        "ru": "Италия"
+      },
+      {
+        "code": "US",
+        "en": "USA",
+        "ru": "США"
+      },
+      {
+        "code": "TR",
+        "en": "Turkey",
+        "ru": "Турция"
+      }
+    ],
+    "fd": [
+      {
+        "code": "CE",
+        "en": "Central",
+        "ru": "Центральный ФО"
+      },
+      {
+        "code": "NW",
+        "en": "Northwestern",
+        "ru": "Северо-Западный ФО"
+      },
+      {
+        "code": "SO",
+        "en": "Southern",
+        "ru": "Южный ФО"
+      },
+      {
+        "code": "NC",
+        "en": "North Caucasian",
+        "ru": "Северо-Кавказский ФО"
+      },
+      {
+        "code": "VO",
+        "en": "Volga",
+        "ru": "Приволжский ФО"
+      },
+      {
+        "code": "UR",
+        "en": "Ural",
+        "ru": "Уральский ФО"
+      },
+      {
+        "code": "SI",
+        "en": "Siberian",
+        "ru": "Сибирский ФО"
+      },
+      {
+        "code": "FE",
+        "en": "Far Eastern",
+        "ru": "Дальневосточный ФО"
+      }
+    ],
+    "lform": [
+      {
+        "code": "OO",
+        "en": "limited liability company",
+        "ru": "ООО"
+      },
+      {
+        "code": "AO",
+        "en": "joint-stock company",
+        "ru": "АО"
+      },
+      {
+        "code": "PA",
+        "en": "public joint-stock company",
+        "ru": "ПАО"
+      },
+      {
+        "code": "ZA",
+        "en": "closed joint-stock company",
+        "ru": "ЗАО"
+      },
+      {
+        "code": "AN",
+        "en": "autonomous non-profit organization",
+        "ru": "АНО"
+      },
+      {
+        "code": "FA",
+        "en": "federal state autonomous educational institution",
+        "ru": "ФГАОУ ВО"
+      },
+      {
+        "code": "SC",
+        "en": "state corporation",
+        "ru": "госкорпорация"
+      },
+      {
+        "code": "UN",
+        "en": "university / institute, legal form not stated",
+        "ru": "вуз или институт, форма не указана"
+      }
+    ],
+    "org_type": [
+      {
+        "code": "MO",
+        "en": "mobile robots",
+        "ru": "Мобильные роботы"
+      },
+      {
+        "code": "AV",
+        "en": "autonomous ground vehicles",
+        "ru": "Автономные наземные транспортные средства"
+      },
+      {
+        "code": "ST",
+        "en": "stationary robotic systems",
+        "ru": "Стационарные роботизированные системы"
+      },
+      {
+        "code": "RM",
+        "en": "robot manipulators",
+        "ru": "Роботы-манипуляторы"
+      },
+      {
+        "code": "MM",
+        "en": "mobile manipulators",
+        "ru": "Мобильные манипуляторы"
+      },
+      {
+        "code": "HU",
+        "en": "anthropomorphic robots",
+        "ru": "Антропоморфные роботы"
+      },
+      {
+        "code": "MA",
+        "en": "marine robots",
+        "ru": "Морские роботы"
+      },
+      {
+        "code": "UA",
+        "en": "unmanned aircraft systems",
+        "ru": "БАС"
+      },
+      {
+        "code": "SW",
+        "en": "software",
+        "ru": "ПО"
+      },
+      {
+        "code": "SR",
+        "en": "software for robotic systems",
+        "ru": "ПО БРС"
+      },
+      {
+        "code": "OT",
+        "en": "other",
+        "ru": "Другое"
+      }
+    ],
+    "ind": [
+      {
+        "code": "TS",
+        "en": "trade and services",
+        "ru": "Торговля и услуги"
+      },
+      {
+        "code": "IN",
+        "en": "industry",
+        "ru": "Промышленность"
+      },
+      {
+        "code": "AG",
+        "en": "agriculture",
+        "ru": "Сельское хозяйство"
+      },
+      {
+        "code": "HU",
+        "en": "housing and utilities",
+        "ru": "ЖКХ"
+      },
+      {
+        "code": "CO",
+        "en": "construction",
+        "ru": "Строительство"
+      },
+      {
+        "code": "EN",
+        "en": "fuel and energy",
+        "ru": "ТЭК"
+      },
+      {
+        "code": "SE",
+        "en": "security",
+        "ru": "Безопасность"
+      },
+      {
+        "code": "TL",
+        "en": "transport and logistics",
+        "ru": "Транспорт и логистика"
+      },
+      {
+        "code": "FO",
+        "en": "forestry",
+        "ru": "Лесное хозяйство"
+      }
+    ],
+    "scen": [
+      {
+        "code": "WL",
+        "en": "in-warehouse logistics",
+        "ru": "внутрискладская логистика"
+      },
+      {
+        "code": "PL",
+        "en": "in-plant logistics",
+        "ru": "внутрипроизводственная логистика"
+      },
+      {
+        "code": "SO",
+        "en": "cargo sorting",
+        "ru": "сортировка грузов"
+      },
+      {
+        "code": "OP",
+        "en": "order picking",
+        "ru": "сборка заказов"
+      },
+      {
+        "code": "IV",
+        "en": "warehouse inventory",
+        "ru": "инвентаризация склада"
+      },
+      {
+        "code": "MH",
+        "en": "load handling / moving loads",
+        "ru": "перемещение грузов"
+      },
+      {
+        "code": "LM",
+        "en": "last-mile delivery",
+        "ru": "доставка последней мили"
+      },
+      {
+        "code": "CD",
+        "en": "cargo delivery",
+        "ru": "доставка грузов"
+      },
+      {
+        "code": "RD",
+        "en": "delivery to remote / hard-to-reach areas",
+        "ru": "доставка в удалённые, труднодоступные районы"
+      },
+      {
+        "code": "WD",
+        "en": "cargo delivery by water",
+        "ru": "доставка грузов по воде"
+      },
+      {
+        "code": "OR",
+        "en": "off-road cargo transport",
+        "ru": "перевозка грузов в труднодоступных районах"
+      },
+      {
+        "code": "CS",
+        "en": "cargo transport on closed sites",
+        "ru": "перевозка грузов на закрытых площадках"
+      },
+      {
+        "code": "LH",
+        "en": "long-haul trucking",
+        "ru": "магистральные грузоперевозки"
+      },
+      {
+        "code": "HL",
+        "en": "heavy cargo over long distances",
+        "ru": "логистика тяжёлых грузов на дальние расстояния"
+      },
+      {
+        "code": "BM",
+        "en": "biomaterial delivery",
+        "ru": "доставка биоматериалов"
+      },
+      {
+        "code": "PP",
+        "en": "public passenger transport",
+        "ru": "общественная перевозка пассажиров"
+      },
+      {
+        "code": "PC",
+        "en": "commercial passenger transport",
+        "ru": "коммерческая перевозка пассажиров"
+      },
+      {
+        "code": "VN",
+        "en": "mobile vending",
+        "ru": "нестационарная торговля"
+      },
+      {
+        "code": "RA",
+        "en": "retail floor assistance",
+        "ru": "администрирование торгового зала"
+      },
+      {
+        "code": "BV",
+        "en": "beverage preparation",
+        "ru": "приготовление напитков"
+      },
+      {
+        "code": "CI",
+        "en": "indoor cleaning",
+        "ru": "уборка помещений"
+      },
+      {
+        "code": "CO",
+        "en": "street cleaning",
+        "ru": "уборка улиц"
+      },
+      {
+        "code": "WW",
+        "en": "window washing",
+        "ru": "мойка окон"
+      },
+      {
+        "code": "FW",
+        "en": "facade washing",
+        "ru": "мойка фасадов"
+      },
+      {
+        "code": "MF",
+        "en": "manufacturing",
+        "ru": "производство изделий"
+      },
+      {
+        "code": "WS",
+        "en": "workpiece stacking",
+        "ru": "укладка заготовок"
+      },
+      {
+        "code": "LA",
+        "en": "laboratory analysis",
+        "ru": "лабораторный анализ"
+      },
+      {
+        "code": "BC",
+        "en": "building construction",
+        "ru": "возведение объектов"
+      },
+      {
+        "code": "RW",
+        "en": "road works",
+        "ru": "дорожные работы"
+      },
+      {
+        "code": "RR",
+        "en": "road surface repair",
+        "ru": "ремонт дорожного покрытия"
+      },
+      {
+        "code": "DE",
+        "en": "demolition",
+        "ru": "демонтаж объектов"
+      },
+      {
+        "code": "PW",
+        "en": "ploughing / field works",
+        "ru": "вспашка"
+      },
+      {
+        "code": "HV",
+        "en": "harvesting",
+        "ru": "сбор урожая"
+      },
+      {
+        "code": "AP",
+        "en": "agrochemical application",
+        "ru": "внесение веществ на поля"
+      },
+      {
+        "code": "CM",
+        "en": "crop and field monitoring",
+        "ru": "мониторинг посевов и полей"
+      },
+      {
+        "code": "MK",
+        "en": "milking",
+        "ru": "сбор молока"
+      },
+      {
+        "code": "PO",
+        "en": "poultry farming",
+        "ru": "птицеводство"
+      },
+      {
+        "code": "MO",
+        "en": "monitoring, general",
+        "ru": "мониторинг"
+      },
+      {
+        "code": "PT",
+        "en": "patrolling",
+        "ru": "патрулирование"
+      },
+      {
+        "code": "CL",
+        "en": "confined space inspection",
+        "ru": "мониторинг замкнутых пространств"
+      },
+      {
+        "code": "ID",
+        "en": "in-pipe diagnostics",
+        "ru": "внутритрубная диагностика"
+      },
+      {
+        "code": "IC",
+        "en": "in-pipe cleaning and repair",
+        "ru": "внутритрубная очистка и ремонт"
+      },
+      {
+        "code": "PM",
+        "en": "pipeline monitoring",
+        "ru": "мониторинг трубопроводов"
+      },
+      {
+        "code": "HN",
+        "en": "heating network monitoring",
+        "ru": "мониторинг теплотрасс"
+      },
+      {
+        "code": "TL",
+        "en": "power line inspection",
+        "ru": "анализ состояния ЛЭП"
+      },
+      {
+        "code": "RM",
+        "en": "railway monitoring",
+        "ru": "мониторинг железных дорог"
+      },
+      {
+        "code": "RS",
+        "en": "railway car servicing",
+        "ru": "обслуживание ж/д инфраструктуры и вагонов"
+      },
+      {
+        "code": "UC",
+        "en": "freight car uncoupling",
+        "ru": "расцепка грузовых вагонов"
+      },
+      {
+        "code": "IM",
+        "en": "infrastructure condition monitoring",
+        "ru": "мониторинг состояния инфраструктуры"
+      },
+      {
+        "code": "UI",
+        "en": "underground infrastructure survey",
+        "ru": "обследование подземной инфраструктуры"
+      },
+      {
+        "code": "BD",
+        "en": "building defect detection",
+        "ru": "поиск дефектов зданий и сооружений"
+      },
+      {
+        "code": "QC",
+        "en": "quarry, stockpile and earthworks control",
+        "ru": "контроль карьеров, отвалов, земляных работ"
+      },
+      {
+        "code": "LF",
+        "en": "landfill monitoring",
+        "ru": "мониторинг полигонов ТБО"
+      },
+      {
+        "code": "LU",
+        "en": "land use control",
+        "ru": "контроль использования земельных участков"
+      },
+      {
+        "code": "SV",
+        "en": "pre-design survey (photogrammetry, lidar)",
+        "ru": "предпроектные изыскания"
+      },
+      {
+        "code": "GE",
+        "en": "geophysical exploration",
+        "ru": "геофизическая разведка"
+      },
+      {
+        "code": "TR",
+        "en": "traffic monitoring",
+        "ru": "мониторинг ПДД"
+      },
+      {
+        "code": "AC",
+        "en": "road accident analysis",
+        "ru": "разбор ДТП"
+      },
+      {
+        "code": "UW",
+        "en": "underwater works and monitoring",
+        "ru": "подводные работы и мониторинг"
+      },
+      {
+        "code": "SH",
+        "en": "shallow water monitoring",
+        "ru": "мониторинг мелководья"
+      },
+      {
+        "code": "OW",
+        "en": "works on water",
+        "ru": "работы на воде"
+      },
+      {
+        "code": "FI",
+        "en": "illegal fishing control",
+        "ru": "контроль незаконного вылова рыбы"
+      },
+      {
+        "code": "FC",
+        "en": "river crossing monitoring",
+        "ru": "мониторинг переправ"
+      },
+      {
+        "code": "FF",
+        "en": "firefighting",
+        "ru": "тушение пожаров"
+      },
+      {
+        "code": "FM",
+        "en": "forest fire monitoring",
+        "ru": "мониторинг пожарной опасности в лесах"
+      },
+      {
+        "code": "EV",
+        "en": "casualty evacuation",
+        "ru": "эвакуация пострадавших"
+      },
+      {
+        "code": "SR",
+        "en": "search for missing people",
+        "ru": "поиск пропавших людей"
+      },
+      {
+        "code": "MA",
+        "en": "medical care / rehabilitation",
+        "ru": "оказание медицинской помощи"
+      },
+      {
+        "code": "CW",
+        "en": "construction works control",
+        "ru": "контроль строительно-монтажных работ"
+      },
+      {
+        "code": "GG",
+        "en": "geological supervision",
+        "ru": "геологический контроль"
+      },
+      {
+        "code": "FL",
+        "en": "flood monitoring",
+        "ru": "мониторинг паводков и затоплений"
+      },
+      {
+        "code": "DA",
+        "en": "emergency damage assessment",
+        "ru": "оценка ущерба от ЧС"
+      },
+      {
+        "code": "IE",
+        "en": "ice monitoring",
+        "ru": "ледовый мониторинг"
+      },
+      {
+        "code": "RP",
+        "en": "road pavement monitoring",
+        "ru": "мониторинг дорожного покрытия"
+      },
+      {
+        "code": "TI",
+        "en": "transport infrastructure monitoring",
+        "ru": "мониторинг транспортной инфраструктуры"
+      },
+      {
+        "code": "WC",
+        "en": "wildlife census in protected areas",
+        "ru": "учёт животных на ООПТ"
+      },
+      {
+        "code": "FT",
+        "en": "forest inventory",
+        "ru": "таксация лесов и лесосек"
+      },
+      {
+        "code": "FP",
+        "en": "forest pathology control",
+        "ru": "контроль лесопатологий"
+      },
+      {
+        "code": "IL",
+        "en": "illegal logging control",
+        "ru": "борьба с незаконными рубками"
+      },
+      {
+        "code": "RN",
+        "en": "reconnaissance support with micro UAV",
+        "ru": "информационная поддержка наземных сил"
+      },
+      {
+        "code": "UD",
+        "en": "urban delivery to parcel lockers",
+        "ru": "городская доставка в постаматы"
+      },
+      {
+        "code": "UL",
+        "en": "underwater cargo delivery",
+        "ru": "доставка грузов под водой"
+      },
+      {
+        "code": "EC",
+        "en": "EV charging",
+        "ru": "зарядка электромобилей"
+      }
+    ],
+    "site": [
+      {
+        "code": "WH",
+        "en": "warehouse / logistics hub",
+        "ru": "склад, логистический центр"
+      },
+      {
+        "code": "PR",
+        "en": "production shop",
+        "ru": "производственный цех"
+      },
+      {
+        "code": "RT",
+        "en": "retail / mall",
+        "ru": "магазин, торговый центр"
+      },
+      {
+        "code": "OF",
+        "en": "office / business center",
+        "ru": "офис, бизнес-центр"
+      },
+      {
+        "code": "AP",
+        "en": "airport",
+        "ru": "аэропорт"
+      },
+      {
+        "code": "MD",
+        "en": "medical facility",
+        "ru": "медучреждение"
+      },
+      {
+        "code": "ED",
+        "en": "education",
+        "ru": "учебное заведение"
+      },
+      {
+        "code": "RS",
+        "en": "residential building",
+        "ru": "жилой дом, ЖК"
+      },
+      {
+        "code": "CU",
+        "en": "museum / culture",
+        "ru": "музей, культура"
+      },
+      {
+        "code": "TH",
+        "en": "transport hub (station)",
+        "ru": "вокзал, транспортный узел"
+      },
+      {
+        "code": "HO",
+        "en": "hotel / resort",
+        "ru": "гостиница, курорт"
+      },
+      {
+        "code": "FS",
+        "en": "food service",
+        "ru": "общепит"
+      },
+      {
+        "code": "LB",
+        "en": "laboratory",
+        "ru": "лаборатория"
+      },
+      {
+        "code": "ST",
+        "en": "street / sidewalk",
+        "ru": "улица, тротуар"
+      },
+      {
+        "code": "PK",
+        "en": "park",
+        "ru": "парк"
+      },
+      {
+        "code": "YD",
+        "en": "courtyard",
+        "ru": "двор"
+      },
+      {
+        "code": "PZ",
+        "en": "pedestrian zone / square",
+        "ru": "пешеходная зона, площадь"
+      },
+      {
+        "code": "PL",
+        "en": "parking lot",
+        "ru": "парковка"
+      },
+      {
+        "code": "RD",
+        "en": "public road",
+        "ru": "дорога общего пользования"
+      },
+      {
+        "code": "IT",
+        "en": "industrial territory",
+        "ru": "промышленная территория"
+      },
+      {
+        "code": "CS",
+        "en": "construction site",
+        "ru": "стройплощадка"
+      },
+      {
+        "code": "QR",
+        "en": "quarry / mine",
+        "ru": "карьер, рудник"
+      },
+      {
+        "code": "FI",
+        "en": "agricultural field",
+        "ru": "поле"
+      },
+      {
+        "code": "GH",
+        "en": "greenhouse",
+        "ru": "теплица"
+      },
+      {
+        "code": "OR",
+        "en": "orchard / plantation",
+        "ru": "сад, плантация"
+      },
+      {
+        "code": "FM",
+        "en": "livestock / poultry farm",
+        "ru": "ферма, птицефабрика"
+      },
+      {
+        "code": "FR",
+        "en": "forest",
+        "ru": "лес"
+      },
+      {
+        "code": "RW",
+        "en": "railway / rail yard",
+        "ru": "железная дорога, станция"
+      },
+      {
+        "code": "PI",
+        "en": "pipeline",
+        "ru": "трубопровод"
+      },
+      {
+        "code": "UN",
+        "en": "utility networks (heating, water, sewer)",
+        "ru": "инженерные сети"
+      },
+      {
+        "code": "PW",
+        "en": "power lines / substations",
+        "ru": "ЛЭП, подстанции"
+      },
+      {
+        "code": "OG",
+        "en": "oil and gas field",
+        "ru": "нефтегазовое месторождение"
+      },
+      {
+        "code": "PO",
+        "en": "port",
+        "ru": "порт"
+      },
+      {
+        "code": "WA",
+        "en": "water area (sea, river, lake)",
+        "ru": "акватория"
+      },
+      {
+        "code": "UW",
+        "en": "underwater",
+        "ru": "под водой"
+      },
+      {
+        "code": "HR",
+        "en": "high-rise building exterior",
+        "ru": "фасады высотных зданий"
+      },
+      {
+        "code": "RM",
+        "en": "remote / hard-to-reach area",
+        "ru": "удалённые, труднодоступные районы"
+      },
+      {
+        "code": "EZ",
+        "en": "emergency zone",
+        "ru": "зона ЧС"
+      }
+    ],
+    "pwr": [
+      {
+        "code": "EL",
+        "en": "battery electric",
+        "ru": "электрический, от аккумулятора"
+      },
+      {
+        "code": "HY",
+        "en": "hybrid",
+        "ru": "гибридный"
+      },
+      {
+        "code": "IC",
+        "en": "internal combustion",
+        "ru": "ДВС"
+      },
+      {
+        "code": "HF",
+        "en": "hydrogen fuel cell",
+        "ru": "водородный топливный элемент"
+      },
+      {
+        "code": "MN",
+        "en": "mains power",
+        "ru": "от сети"
+      },
+      {
+        "code": "TE",
+        "en": "tethered power supply",
+        "ru": "по кабелю-тросу"
+      },
+      {
+        "code": "CT",
+        "en": "contact network (catenary / third rail)",
+        "ru": "контактная сеть"
+      }
+    ],
+    "chem": [
+      {
+        "code": "LF",
+        "en": "LiFePO4",
+        "ru": "литий-железо-фосфатный"
+      },
+      {
+        "code": "LN",
+        "en": "Li-ion NMC",
+        "ru": "литий-ионный NMC"
+      },
+      {
+        "code": "LP",
+        "en": "lithium polymer",
+        "ru": "литий-полимерный"
+      },
+      {
+        "code": "LI",
+        "en": "lithium, type not specified",
+        "ru": "литиевый, тип не указан"
+      },
+      {
+        "code": "PB",
+        "en": "lead-acid",
+        "ru": "свинцово-кислотный"
+      },
+      {
+        "code": "NH",
+        "en": "NiMH",
+        "ru": "никель-металлгидридный"
+      }
+    ],
+    "fuel": [
+      {
+        "code": "PE",
+        "en": "petrol",
+        "ru": "бензин"
+      },
+      {
+        "code": "DI",
+        "en": "diesel",
+        "ru": "дизель"
+      },
+      {
+        "code": "KE",
+        "en": "kerosene / jet fuel",
+        "ru": "керосин"
+      },
+      {
+        "code": "GS",
+        "en": "gas (LPG / CNG)",
+        "ru": "газ"
+      },
+      {
+        "code": "HD",
+        "en": "hydrogen",
+        "ru": "водород"
+      }
+    ],
+    "chg": [
+      {
+        "code": "mn",
+        "en": "manual cable",
+        "ru": "вручную кабелем"
+      },
+      {
+        "code": "dk",
+        "en": "auto docking",
+        "ru": "автостыковка с док-станцией"
+      },
+      {
+        "code": "sw",
+        "en": "battery swap",
+        "ru": "замена батареи"
+      },
+      {
+        "code": "in",
+        "en": "inductive",
+        "ru": "индукционная"
+      },
+      {
+        "code": "op",
+        "en": "opportunity charging at stops",
+        "ru": "подзарядка на остановках"
+      }
+    ],
+    "loco": [
+      {
+        "code": "WH",
+        "en": "wheels",
+        "ru": "колёса"
+      },
+      {
+        "code": "TR",
+        "en": "tracks",
+        "ru": "гусеницы"
+      },
+      {
+        "code": "LG",
+        "en": "legs",
+        "ru": "шагающий"
+      },
+      {
+        "code": "WT",
+        "en": "wheels + tracks",
+        "ru": "колёсно-гусеничный"
+      },
+      {
+        "code": "RL",
+        "en": "rails",
+        "ru": "рельсы"
+      },
+      {
+        "code": "MG",
+        "en": "magnetic crawler",
+        "ru": "магнитный движитель"
+      },
+      {
+        "code": "PC",
+        "en": "in-pipe crawler / push rod",
+        "ru": "внутритрубный движитель"
+      },
+      {
+        "code": "ST",
+        "en": "stationary",
+        "ru": "стационарный"
+      }
+    ],
+    "drive": [
+      {
+        "code": "FR",
+        "en": "front axle",
+        "ru": "передний привод"
+      },
+      {
+        "code": "RR",
+        "en": "rear axle",
+        "ru": "задний привод"
+      },
+      {
+        "code": "AW",
+        "en": "all-wheel",
+        "ru": "полный привод"
+      },
+      {
+        "code": "DF",
+        "en": "differential (tank-type)",
+        "ru": "дифференциальный (танковый)"
+      },
+      {
+        "code": "OM",
+        "en": "omnidirectional (mecanum / swerve)",
+        "ru": "всенаправленный"
+      }
+    ],
+    "navm": [
+      {
+        "code": "sl",
+        "en": "lidar SLAM",
+        "ru": "лидарный SLAM"
+      },
+      {
+        "code": "vs",
+        "en": "visual SLAM",
+        "ru": "визуальный SLAM"
+      },
+      {
+        "code": "qr",
+        "en": "QR / floor markers",
+        "ru": "QR-коды, метки на полу"
+      },
+      {
+        "code": "mg",
+        "en": "magnetic tape",
+        "ru": "магнитная лента"
+      },
+      {
+        "code": "ln",
+        "en": "line following",
+        "ru": "следование по линии"
+      },
+      {
+        "code": "rf",
+        "en": "radio beacons (UWB etc.)",
+        "ru": "радиомаяки"
+      },
+      {
+        "code": "gn",
+        "en": "GNSS",
+        "ru": "спутниковая навигация"
+      },
+      {
+        "code": "rk",
+        "en": "GNSS RTK",
+        "ru": "RTK-поправки"
+      },
+      {
+        "code": "in",
+        "en": "inertial",
+        "ru": "инерциальная"
+      },
+      {
+        "code": "ms",
+        "en": "multisensor autopilot",
+        "ru": "мультисенсорный автопилот"
+      },
+      {
+        "code": "rc",
+        "en": "remote operator only",
+        "ru": "только оператор"
+      }
+    ],
+    "sens": [
+      {
+        "code": "ld",
+        "en": "lidar, type not specified",
+        "ru": "лидар, тип не указан"
+      },
+      {
+        "code": "l2",
+        "en": "2D lidar",
+        "ru": "2D-лидар"
+      },
+      {
+        "code": "l3",
+        "en": "3D lidar",
+        "ru": "3D-лидар"
+      },
+      {
+        "code": "rg",
+        "en": "RGB / mono camera",
+        "ru": "обычная камера"
+      },
+      {
+        "code": "dp",
+        "en": "depth camera (ToF / structured light)",
+        "ru": "камера глубины"
+      },
+      {
+        "code": "sv",
+        "en": "stereo camera",
+        "ru": "стереокамера"
+      },
+      {
+        "code": "th",
+        "en": "thermal camera",
+        "ru": "тепловизор"
+      },
+      {
+        "code": "us",
+        "en": "ultrasonic",
+        "ru": "ультразвуковой датчик"
+      },
+      {
+        "code": "ir",
+        "en": "infrared",
+        "ru": "ИК-датчик"
+      },
+      {
+        "code": "rd",
+        "en": "radar",
+        "ru": "радар"
+      },
+      {
+        "code": "bp",
+        "en": "bumper / contact",
+        "ru": "бампер, контактный датчик"
+      },
+      {
+        "code": "cf",
+        "en": "cliff sensor",
+        "ru": "датчик перепада пола"
+      },
+      {
+        "code": "im",
+        "en": "IMU",
+        "ru": "инерциальный блок"
+      },
+      {
+        "code": "gn",
+        "en": "GNSS receiver",
+        "ru": "приёмник ГНСС"
+      },
+      {
+        "code": "rk",
+        "en": "RTK receiver",
+        "ru": "приёмник RTK"
+      },
+      {
+        "code": "qr",
+        "en": "floor marker reader",
+        "ru": "считыватель меток"
+      },
+      {
+        "code": "mg",
+        "en": "magnetic sensor",
+        "ru": "магнитный датчик"
+      },
+      {
+        "code": "ft",
+        "en": "force / torque sensor",
+        "ru": "датчик силы и момента"
+      },
+      {
+        "code": "gs",
+        "en": "gas sensor",
+        "ru": "газоанализатор"
+      },
+      {
+        "code": "dv",
+        "en": "DVL (doppler velocity log)",
+        "ru": "доплеровский лаг"
+      },
+      {
+        "code": "ub",
+        "en": "USBL positioning",
+        "ru": "гидроакустическая навигация USBL"
+      },
+      {
+        "code": "pr",
+        "en": "pressure / depth sensor",
+        "ru": "датчик давления, глубины"
+      },
+      {
+        "code": "ss",
+        "en": "side-scan sonar",
+        "ru": "гидролокатор бокового обзора"
+      },
+      {
+        "code": "mb",
+        "en": "multibeam echo sounder",
+        "ru": "многолучевой эхолот"
+      },
+      {
+        "code": "es",
+        "en": "single-beam echo sounder",
+        "ru": "однолучевой эхолот"
+      },
+      {
+        "code": "gp",
+        "en": "ground-penetrating radar",
+        "ru": "георадар"
+      }
+    ],
+    "gnss": [
+      {
+        "code": "gp",
+        "en": "GPS",
+        "ru": "GPS"
+      },
+      {
+        "code": "gl",
+        "en": "GLONASS",
+        "ru": "ГЛОНАСС"
+      },
+      {
+        "code": "bd",
+        "en": "BeiDou",
+        "ru": "BeiDou"
+      },
+      {
+        "code": "ga",
+        "en": "Galileo",
+        "ru": "Galileo"
+      }
+    ],
+    "surf": [
+      {
+        "code": "cn",
+        "en": "concrete",
+        "ru": "бетон"
+      },
+      {
+        "code": "ep",
+        "en": "epoxy / self-leveling",
+        "ru": "эпоксид, наливной пол"
+      },
+      {
+        "code": "ti",
+        "en": "ceramic tile",
+        "ru": "керамическая плитка"
+      },
+      {
+        "code": "pg",
+        "en": "porcelain stoneware",
+        "ru": "керамогранит"
+      },
+      {
+        "code": "st",
+        "en": "natural stone",
+        "ru": "натуральный камень"
+      },
+      {
+        "code": "vn",
+        "en": "vinyl / PVC",
+        "ru": "винил, ПВХ"
+      },
+      {
+        "code": "ln",
+        "en": "linoleum",
+        "ru": "линолеум"
+      },
+      {
+        "code": "lm",
+        "en": "laminate",
+        "ru": "ламинат"
+      },
+      {
+        "code": "wd",
+        "en": "wood / parquet",
+        "ru": "дерево, паркет"
+      },
+      {
+        "code": "cp",
+        "en": "low-pile carpet",
+        "ru": "ковролин"
+      },
+      {
+        "code": "rb",
+        "en": "rubber",
+        "ru": "резина"
+      },
+      {
+        "code": "as",
+        "en": "asphalt",
+        "ru": "асфальт"
+      },
+      {
+        "code": "pv",
+        "en": "paving tiles",
+        "ru": "тротуарная плитка"
+      },
+      {
+        "code": "gr",
+        "en": "grass / lawn",
+        "ru": "трава, газон"
+      },
+      {
+        "code": "gv",
+        "en": "gravel / soil",
+        "ru": "гравий, грунт"
+      },
+      {
+        "code": "sd",
+        "en": "sand",
+        "ru": "песок"
+      },
+      {
+        "code": "mu",
+        "en": "mud / swamp",
+        "ru": "грязь, болото"
+      },
+      {
+        "code": "sn",
+        "en": "snow / ice",
+        "ru": "снег, лёд"
+      },
+      {
+        "code": "rl",
+        "en": "rails",
+        "ru": "рельсы"
+      },
+      {
+        "code": "wt",
+        "en": "water surface",
+        "ru": "водная поверхность"
+      }
+    ],
+    "conn": [
+      {
+        "code": "wf",
+        "en": "Wi-Fi",
+        "ru": "Wi-Fi"
+      },
+      {
+        "code": "lt",
+        "en": "4G / LTE",
+        "ru": "4G / LTE"
+      },
+      {
+        "code": "g5",
+        "en": "5G",
+        "ru": "5G"
+      },
+      {
+        "code": "et",
+        "en": "Ethernet",
+        "ru": "Ethernet"
+      },
+      {
+        "code": "bt",
+        "en": "Bluetooth",
+        "ru": "Bluetooth"
+      },
+      {
+        "code": "rc",
+        "en": "radio channel",
+        "ru": "радиоканал"
+      },
+      {
+        "code": "mh",
+        "en": "mesh radio",
+        "ru": "mesh-радиосеть"
+      },
+      {
+        "code": "sa",
+        "en": "satellite",
+        "ru": "спутниковая связь"
+      },
+      {
+        "code": "lr",
+        "en": "LoRa",
+        "ru": "LoRa"
+      },
+      {
+        "code": "fo",
+        "en": "fiber optic tether",
+        "ru": "оптоволоконный кабель"
+      }
+    ],
+    "ctrl": [
+      {
+        "code": "au",
+        "en": "autonomous",
+        "ru": "автономно"
+      },
+      {
+        "code": "rc",
+        "en": "remote control",
+        "ru": "дистанционное управление"
+      },
+      {
+        "code": "tp",
+        "en": "teleoperation over network",
+        "ru": "телеуправление через сеть"
+      },
+      {
+        "code": "mn",
+        "en": "manual onboard",
+        "ru": "ручное на борту"
+      },
+      {
+        "code": "pd",
+        "en": "teach pendant / hand guiding",
+        "ru": "пульт обучения, ручное ведение"
+      },
+      {
+        "code": "sw",
+        "en": "swarm / group control",
+        "ru": "групповое управление"
+      }
+    ],
+    "sw": [
+      {
+        "code": "ap",
+        "en": "mobile app",
+        "ru": "мобильное приложение"
+      },
+      {
+        "code": "wb",
+        "en": "web interface",
+        "ru": "веб-интерфейс"
+      },
+      {
+        "code": "rm",
+        "en": "remote monitoring",
+        "ru": "удалённый мониторинг"
+      },
+      {
+        "code": "sc",
+        "en": "scheduling",
+        "ru": "расписание"
+      },
+      {
+        "code": "rp",
+        "en": "reporting",
+        "ru": "отчёты"
+      },
+      {
+        "code": "fm",
+        "en": "fleet management",
+        "ru": "управление парком"
+      },
+      {
+        "code": "mp",
+        "en": "map editing / zones",
+        "ru": "редактор карт и зон"
+      },
+      {
+        "code": "mf",
+        "en": "multi-floor maps",
+        "ru": "несколько этажей"
+      },
+      {
+        "code": "ot",
+        "en": "OTA updates",
+        "ru": "обновления по воздуху"
+      },
+      {
+        "code": "ai",
+        "en": "CV / AI recognition",
+        "ru": "распознавание (CV / ИИ)"
+      }
+    ],
+    "api": [
+      {
+        "code": "rs",
+        "en": "REST",
+        "ru": "REST"
+      },
+      {
+        "code": "mq",
+        "en": "MQTT",
+        "ru": "MQTT"
+      },
+      {
+        "code": "ro",
+        "en": "ROS",
+        "ru": "ROS"
+      },
+      {
+        "code": "wk",
+        "en": "WebSocket",
+        "ru": "WebSocket"
+      },
+      {
+        "code": "sd",
+        "en": "SDK",
+        "ru": "SDK"
+      },
+      {
+        "code": "mb",
+        "en": "Modbus",
+        "ru": "Modbus"
+      },
+      {
+        "code": "pn",
+        "en": "PROFINET / EtherNet/IP",
+        "ru": "PROFINET / EtherNet/IP"
+      },
+      {
+        "code": "op",
+        "en": "OPC UA",
+        "ru": "OPC UA"
+      },
+      {
+        "code": "mv",
+        "en": "MAVLink",
+        "ru": "MAVLink"
+      },
+      {
+        "code": "cn",
+        "en": "CAN",
+        "ru": "CAN"
+      }
+    ],
+    "integ": [
+      {
+        "code": "el",
+        "en": "elevators",
+        "ru": "лифты"
+      },
+      {
+        "code": "dr",
+        "en": "automatic doors",
+        "ru": "автоматические двери"
+      },
+      {
+        "code": "ac",
+        "en": "access control",
+        "ru": "СКУД"
+      },
+      {
+        "code": "bm",
+        "en": "BMS",
+        "ru": "система управления зданием"
+      },
+      {
+        "code": "wm",
+        "en": "WMS",
+        "ru": "WMS"
+      },
+      {
+        "code": "er",
+        "en": "ERP / 1C",
+        "ru": "ERP / 1С"
+      },
+      {
+        "code": "me",
+        "en": "MES",
+        "ru": "MES"
+      },
+      {
+        "code": "pl",
+        "en": "PLC / conveyors",
+        "ru": "ПЛК, конвейеры"
+      },
+      {
+        "code": "vs",
+        "en": "video surveillance",
+        "ru": "видеонаблюдение"
+      }
+    ],
+    "acq": [
+      {
+        "code": "pu",
+        "en": "purchase",
+        "ru": "покупка"
+      },
+      {
+        "code": "ls",
+        "en": "leasing",
+        "ru": "лизинг"
+      },
+      {
+        "code": "rt",
+        "en": "rent",
+        "ru": "аренда"
+      },
+      {
+        "code": "sb",
+        "en": "subscription / RaaS",
+        "ru": "подписка, робот как услуга"
+      },
+      {
+        "code": "sv",
+        "en": "service contract (pay per result)",
+        "ru": "услуга с оплатой за результат"
+      }
+    ],
+    "cert": [
+      {
+        "code": "ea",
+        "en": "EAC declaration / certificate",
+        "ru": "декларация или сертификат ЕАЭС"
+      },
+      {
+        "code": "rp",
+        "en": "Russian industrial products registry (PP 719)",
+        "ru": "реестр российской промпродукции (ПП 719)"
+      },
+      {
+        "code": "rs",
+        "en": "Russian software registry",
+        "ru": "реестр российского ПО"
+      },
+      {
+        "code": "ip",
+        "en": "patents",
+        "ru": "есть патенты"
+      },
+      {
+        "code": "ex",
+        "en": "explosion-proof (Ex)",
+        "ru": "взрывозащита"
+      },
+      {
+        "code": "md",
+        "en": "medical device registration",
+        "ru": "регистрационное удостоверение медизделия"
+      },
+      {
+        "code": "av",
+        "en": "aviation type certificate",
+        "ru": "сертификат типа БАС"
+      }
+    ],
+    "fc_mode": [
+      {
+        "code": "wt",
+        "en": "wet cleaning",
+        "ru": "влажная уборка"
+      },
+      {
+        "code": "dy",
+        "en": "dry cleaning",
+        "ru": "сухая уборка"
+      },
+      {
+        "code": "sw",
+        "en": "sweeping",
+        "ru": "подметание"
+      },
+      {
+        "code": "vc",
+        "en": "vacuuming",
+        "ru": "пылесос"
+      },
+      {
+        "code": "sc",
+        "en": "scrubbing (scrubber-dryer)",
+        "ru": "мойка щётками со сбором воды"
+      },
+      {
+        "code": "mp",
+        "en": "mopping",
+        "ru": "протирка шваброй"
+      },
+      {
+        "code": "ds",
+        "en": "disinfection",
+        "ru": "дезинфекция"
+      },
+      {
+        "code": "pl",
+        "en": "polishing",
+        "ru": "полировка"
+      }
+    ],
+    "ss_task": [
+      {
+        "code": "sw",
+        "en": "sweeping",
+        "ru": "подметание"
+      },
+      {
+        "code": "vc",
+        "en": "vacuum collection",
+        "ru": "вакуумный сбор мусора"
+      },
+      {
+        "code": "lt",
+        "en": "litter collection",
+        "ru": "сбор крупного мусора"
+      },
+      {
+        "code": "ws",
+        "en": "washing / water spraying",
+        "ru": "мойка, полив"
+      },
+      {
+        "code": "mw",
+        "en": "mowing",
+        "ru": "покос"
+      },
+      {
+        "code": "wc",
+        "en": "weed control",
+        "ru": "борьба с сорняками"
+      },
+      {
+        "code": "sn",
+        "en": "snow removal",
+        "ru": "уборка снега"
+      },
+      {
+        "code": "ai",
+        "en": "anti-icing",
+        "ru": "противогололёдная обработка"
+      },
+      {
+        "code": "ds",
+        "en": "disinfection",
+        "ru": "дезинфекция"
+      },
+      {
+        "code": "pt",
+        "en": "patrol / monitoring",
+        "ru": "патрулирование"
+      }
+    ],
+    "attach": [
+      {
+        "code": "bs",
+        "en": "summer brush",
+        "ru": "летняя щётка"
+      },
+      {
+        "code": "bw",
+        "en": "winter brush",
+        "ru": "зимняя щётка"
+      },
+      {
+        "code": "vs",
+        "en": "vacuum sweeper unit",
+        "ru": "вакуумно-подметальный модуль"
+      },
+      {
+        "code": "mw",
+        "en": "mower",
+        "ru": "косилка"
+      },
+      {
+        "code": "wp",
+        "en": "water sprayer",
+        "ru": "поливочный модуль"
+      },
+      {
+        "code": "pb",
+        "en": "snow plow blade",
+        "ru": "отвал"
+      },
+      {
+        "code": "sr",
+        "en": "rotary snow blower",
+        "ru": "роторный снегоочиститель"
+      },
+      {
+        "code": "sn",
+        "en": "snow module, type not specified",
+        "ru": "снегоуборочный модуль"
+      },
+      {
+        "code": "ad",
+        "en": "anti-icing dispenser",
+        "ru": "дозатор реагента"
+      }
+    ],
+    "load": [
+      {
+        "code": "pl",
+        "en": "pallet",
+        "ru": "паллета"
+      },
+      {
+        "code": "rk",
+        "en": "rack / shelf unit",
+        "ru": "стеллаж"
+      },
+      {
+        "code": "bx",
+        "en": "box / tote",
+        "ru": "короб, ящик"
+      },
+      {
+        "code": "ct",
+        "en": "cart / trolley",
+        "ru": "тележка"
+      },
+      {
+        "code": "pc",
+        "en": "parcel",
+        "ru": "посылка"
+      },
+      {
+        "code": "rc",
+        "en": "roll container",
+        "ru": "ролл-контейнер"
+      },
+      {
+        "code": "bg",
+        "en": "baggage",
+        "ru": "багаж"
+      },
+      {
+        "code": "sh",
+        "en": "sheet material",
+        "ru": "листовой материал"
+      },
+      {
+        "code": "lg",
+        "en": "large assemblies",
+        "ru": "крупногабаритные узлы"
+      },
+      {
+        "code": "cn",
+        "en": "ISO container",
+        "ru": "контейнер ISO"
+      },
+      {
+        "code": "bu",
+        "en": "bulk",
+        "ru": "сыпучий груз"
+      },
+      {
+        "code": "lq",
+        "en": "liquids",
+        "ru": "жидкости"
+      },
+      {
+        "code": "fd",
+        "en": "food / drinks",
+        "ru": "еда, напитки"
+      },
+      {
+        "code": "md",
+        "en": "medical items",
+        "ru": "медицинские грузы"
+      }
+    ],
+    "top": [
+      {
+        "code": "lf",
+        "en": "lifting top",
+        "ru": "подъёмная платформа"
+      },
+      {
+        "code": "rl",
+        "en": "roller conveyor",
+        "ru": "рольганг"
+      },
+      {
+        "code": "bl",
+        "en": "belt conveyor",
+        "ru": "ленточный конвейер"
+      },
+      {
+        "code": "tt",
+        "en": "tilt tray",
+        "ru": "откидная крышка"
+      },
+      {
+        "code": "hk",
+        "en": "tow hook",
+        "ru": "буксировочный крюк"
+      },
+      {
+        "code": "fk",
+        "en": "forks",
+        "ru": "вилы"
+      },
+      {
+        "code": "cl",
+        "en": "clamp",
+        "ru": "захват"
+      },
+      {
+        "code": "mn",
+        "en": "manipulator",
+        "ru": "манипулятор"
+      },
+      {
+        "code": "sh",
+        "en": "shelves / compartments",
+        "ru": "полки, отсеки"
+      },
+      {
+        "code": "rt",
+        "en": "rotating platform",
+        "ru": "поворотный круг"
+      }
+    ],
+    "arm_type": [
+      {
+        "code": "AR",
+        "en": "articulated (serial)",
+        "ru": "шарнирный (антропоморфный)"
+      },
+      {
+        "code": "SC",
+        "en": "SCARA",
+        "ru": "SCARA"
+      },
+      {
+        "code": "DL",
+        "en": "delta (parallel)",
+        "ru": "дельта"
+      },
+      {
+        "code": "CT",
+        "en": "cartesian / gantry",
+        "ru": "портальный"
+      },
+      {
+        "code": "CO",
+        "en": "collaborative articulated",
+        "ru": "коллаборативный"
+      }
+    ],
+    "mount": [
+      {
+        "code": "fl",
+        "en": "floor",
+        "ru": "пол"
+      },
+      {
+        "code": "cl",
+        "en": "ceiling",
+        "ru": "потолок"
+      },
+      {
+        "code": "wl",
+        "en": "wall",
+        "ru": "стена"
+      },
+      {
+        "code": "an",
+        "en": "any angle",
+        "ru": "любой угол"
+      },
+      {
+        "code": "mb",
+        "en": "mobile base",
+        "ru": "мобильная база"
+      },
+      {
+        "code": "rl",
+        "en": "linear rail / track",
+        "ru": "линейная ось"
+      }
+    ],
+    "tool": [
+      {
+        "code": "gr",
+        "en": "mechanical gripper",
+        "ru": "механический захват"
+      },
+      {
+        "code": "vg",
+        "en": "vacuum gripper",
+        "ru": "вакуумный захват"
+      },
+      {
+        "code": "mg",
+        "en": "magnetic gripper",
+        "ru": "магнитный захват"
+      },
+      {
+        "code": "aw",
+        "en": "arc welding",
+        "ru": "дуговая сварка"
+      },
+      {
+        "code": "sw",
+        "en": "spot welding",
+        "ru": "точечная сварка"
+      },
+      {
+        "code": "lw",
+        "en": "laser welding / cutting",
+        "ru": "лазерная сварка, резка"
+      },
+      {
+        "code": "pt",
+        "en": "painting",
+        "ru": "покраска"
+      },
+      {
+        "code": "gl",
+        "en": "gluing / dispensing",
+        "ru": "нанесение клея"
+      },
+      {
+        "code": "cu",
+        "en": "cutting / milling",
+        "ru": "резка, фрезеровка"
+      },
+      {
+        "code": "sc",
+        "en": "screwdriving",
+        "ru": "закручивание"
+      },
+      {
+        "code": "pz",
+        "en": "palletizing gripper",
+        "ru": "захват для паллетирования"
+      },
+      {
+        "code": "lb",
+        "en": "lab instruments",
+        "ru": "лабораторный инструмент"
+      },
+      {
+        "code": "ut",
+        "en": "ultrasonic probe",
+        "ru": "ультразвуковой датчик"
+      }
+    ],
+    "cell_type": [
+      {
+        "code": "wd",
+        "en": "welding",
+        "ru": "сварка"
+      },
+      {
+        "code": "pz",
+        "en": "palletizing / stacking",
+        "ru": "паллетирование, укладка"
+      },
+      {
+        "code": "mt",
+        "en": "machine tending",
+        "ru": "обслуживание станков"
+      },
+      {
+        "code": "as",
+        "en": "assembly",
+        "ru": "сборка"
+      },
+      {
+        "code": "lb",
+        "en": "laboratory",
+        "ru": "лаборатория"
+      },
+      {
+        "code": "ed",
+        "en": "education",
+        "ru": "обучение"
+      },
+      {
+        "code": "so",
+        "en": "sorting",
+        "ru": "сортировка"
+      },
+      {
+        "code": "pk",
+        "en": "packing",
+        "ru": "упаковка"
+      },
+      {
+        "code": "ld",
+        "en": "loading / unloading",
+        "ru": "погрузка-разгрузка"
+      }
+    ],
+    "as_type": [
+      {
+        "code": "SH",
+        "en": "pallet shuttle",
+        "ru": "паллетный шаттл"
+      },
+      {
+        "code": "SC",
+        "en": "stacker crane",
+        "ru": "кран-штабелёр"
+      },
+      {
+        "code": "SR",
+        "en": "stacker robot / mini-load",
+        "ru": "робот-штабелёр"
+      },
+      {
+        "code": "CU",
+        "en": "cube / grid storage",
+        "ru": "кубическое хранение"
+      },
+      {
+        "code": "VL",
+        "en": "vertical lift module",
+        "ru": "вертикальный лифтовый модуль"
+      }
+    ],
+    "av_type": [
+      {
+        "code": "TR",
+        "en": "truck",
+        "ru": "грузовик"
+      },
+      {
+        "code": "TT",
+        "en": "truck tractor",
+        "ru": "седельный тягач"
+      },
+      {
+        "code": "TG",
+        "en": "tug / baggage tractor",
+        "ru": "тягач-буксировщик"
+      },
+      {
+        "code": "BU",
+        "en": "bus",
+        "ru": "автобус"
+      },
+      {
+        "code": "TX",
+        "en": "robotaxi / passenger car",
+        "ru": "такси, легковой"
+      },
+      {
+        "code": "TM",
+        "en": "tram",
+        "ru": "трамвай"
+      },
+      {
+        "code": "MT",
+        "en": "metro train",
+        "ru": "поезд метро"
+      },
+      {
+        "code": "VD",
+        "en": "mobile vending vehicle",
+        "ru": "мобильный торговый автомат"
+      },
+      {
+        "code": "SP",
+        "en": "special vehicle",
+        "ru": "спецтехника"
+      }
+    ],
+    "ce_type": [
+      {
+        "code": "PV",
+        "en": "asphalt paver",
+        "ru": "асфальтоукладчик"
+      },
+      {
+        "code": "BD",
+        "en": "bulldozer",
+        "ru": "бульдозер"
+      },
+      {
+        "code": "RL",
+        "en": "road roller",
+        "ru": "каток"
+      },
+      {
+        "code": "EX",
+        "en": "excavator",
+        "ru": "экскаватор"
+      },
+      {
+        "code": "DM",
+        "en": "demolition machine",
+        "ru": "демонтажная машина"
+      },
+      {
+        "code": "PR",
+        "en": "construction 3D printer",
+        "ru": "строительный 3D-принтер"
+      }
+    ],
+    "crane": [
+      {
+        "code": "tw",
+        "en": "tower crane",
+        "ru": "башенный кран"
+      },
+      {
+        "code": "ov",
+        "en": "overhead / gantry crane",
+        "ru": "мостовой, козловой кран"
+      },
+      {
+        "code": "ld",
+        "en": "loader crane (knuckle boom)",
+        "ru": "кран-манипулятор"
+      },
+      {
+        "code": "mb",
+        "en": "mobile crane",
+        "ru": "автокран"
+      }
+    ],
+    "impl": [
+      {
+        "code": "pl",
+        "en": "plough",
+        "ru": "плуг"
+      },
+      {
+        "code": "cu",
+        "en": "cultivator / harrow",
+        "ru": "культиватор, борона"
+      },
+      {
+        "code": "sd",
+        "en": "seeder / planter",
+        "ru": "сеялка"
+      },
+      {
+        "code": "sp",
+        "en": "sprayer",
+        "ru": "опрыскиватель"
+      },
+      {
+        "code": "fs",
+        "en": "fertilizer spreader",
+        "ru": "разбрасыватель удобрений"
+      },
+      {
+        "code": "mw",
+        "en": "mower",
+        "ru": "косилка"
+      },
+      {
+        "code": "hv",
+        "en": "harvester header",
+        "ru": "уборочная жатка"
+      },
+      {
+        "code": "tr",
+        "en": "trailer",
+        "ru": "прицеп"
+      }
+    ],
+    "crop": [
+      {
+        "code": "ap",
+        "en": "apple",
+        "ru": "яблоко"
+      },
+      {
+        "code": "pe",
+        "en": "pear",
+        "ru": "груша"
+      },
+      {
+        "code": "sb",
+        "en": "strawberry",
+        "ru": "клубника"
+      },
+      {
+        "code": "rb",
+        "en": "raspberry",
+        "ru": "малина"
+      },
+      {
+        "code": "bb",
+        "en": "berries, other",
+        "ru": "ягоды, прочие"
+      },
+      {
+        "code": "tm",
+        "en": "tomato",
+        "ru": "томат"
+      },
+      {
+        "code": "cu",
+        "en": "cucumber",
+        "ru": "огурец"
+      },
+      {
+        "code": "pp",
+        "en": "pepper",
+        "ru": "перец"
+      },
+      {
+        "code": "ct",
+        "en": "citrus",
+        "ru": "цитрусовые"
+      },
+      {
+        "code": "gr",
+        "en": "grapes",
+        "ru": "виноград"
+      },
+      {
+        "code": "gn",
+        "en": "grain crops",
+        "ru": "зерновые"
+      }
+    ],
+    "anim": [
+      {
+        "code": "cw",
+        "en": "cattle",
+        "ru": "КРС"
+      },
+      {
+        "code": "gt",
+        "en": "goats / sheep",
+        "ru": "козы, овцы"
+      },
+      {
+        "code": "pg",
+        "en": "pigs",
+        "ru": "свиньи"
+      },
+      {
+        "code": "pl",
+        "en": "poultry",
+        "ru": "птица"
+      },
+      {
+        "code": "eg",
+        "en": "eggs",
+        "ru": "яйца"
+      }
+    ],
+    "insp": [
+      {
+        "code": "vi",
+        "en": "video",
+        "ru": "видеоинспекция"
+      },
+      {
+        "code": "lp",
+        "en": "laser profiling",
+        "ru": "лазерное профилирование"
+      },
+      {
+        "code": "ut",
+        "en": "ultrasonic testing",
+        "ru": "ультразвуковой контроль"
+      },
+      {
+        "code": "mf",
+        "en": "magnetic flux leakage",
+        "ru": "магнитный контроль (MFL)"
+      },
+      {
+        "code": "ec",
+        "en": "eddy current",
+        "ru": "вихретоковый контроль"
+      },
+      {
+        "code": "th",
+        "en": "thermography",
+        "ru": "термография"
+      },
+      {
+        "code": "gp",
+        "en": "ground-penetrating radar",
+        "ru": "георадар"
+      },
+      {
+        "code": "gs",
+        "en": "gas analysis",
+        "ru": "газоанализ"
+      },
+      {
+        "code": "cl",
+        "en": "cleaning",
+        "ru": "очистка"
+      },
+      {
+        "code": "rp",
+        "en": "repair",
+        "ru": "ремонт"
+      }
+    ],
+    "medium": [
+      {
+        "code": "em",
+        "en": "empty / drained",
+        "ru": "пустая труба"
+      },
+      {
+        "code": "wt",
+        "en": "water",
+        "ru": "вода"
+      },
+      {
+        "code": "sw",
+        "en": "sewage",
+        "ru": "стоки"
+      },
+      {
+        "code": "gs",
+        "en": "gas",
+        "ru": "газ"
+      },
+      {
+        "code": "oi",
+        "en": "oil / products",
+        "ru": "нефть, нефтепродукты"
+      },
+      {
+        "code": "st",
+        "en": "steam / hot water",
+        "ru": "пар, горячая вода"
+      }
+    ],
+    "secf": [
+      {
+        "code": "pt",
+        "en": "autonomous patrol",
+        "ru": "автономное патрулирование"
+      },
+      {
+        "code": "fr",
+        "en": "face recognition",
+        "ru": "распознавание лиц"
+      },
+      {
+        "code": "lp",
+        "en": "license plate recognition",
+        "ru": "распознавание номеров"
+      },
+      {
+        "code": "th",
+        "en": "thermal detection",
+        "ru": "тепловизионное обнаружение"
+      },
+      {
+        "code": "fd",
+        "en": "fire / smoke detection",
+        "ru": "обнаружение огня, дыма"
+      },
+      {
+        "code": "gs",
+        "en": "gas / air quality detection",
+        "ru": "контроль газов, воздуха"
+      },
+      {
+        "code": "au",
+        "en": "two-way audio",
+        "ru": "двусторонняя аудиосвязь"
+      },
+      {
+        "code": "al",
+        "en": "alarm / siren",
+        "ru": "сирена, тревога"
+      },
+      {
+        "code": "lt",
+        "en": "searchlight",
+        "ru": "прожектор"
+      },
+      {
+        "code": "nv",
+        "en": "night vision",
+        "ru": "ночное видение"
+      },
+      {
+        "code": "rc",
+        "en": "video recording",
+        "ru": "видеозапись"
+      },
+      {
+        "code": "ev",
+        "en": "casualty evacuation",
+        "ru": "эвакуация пострадавших"
+      }
+    ],
+    "mod": [
+      {
+        "code": "cg",
+        "en": "cargo platform",
+        "ru": "грузовая платформа"
+      },
+      {
+        "code": "mn",
+        "en": "manipulator",
+        "ru": "манипулятор"
+      },
+      {
+        "code": "ms",
+        "en": "camera mast",
+        "ru": "мачта с камерами"
+      },
+      {
+        "code": "sp",
+        "en": "sprayer",
+        "ru": "опрыскиватель"
+      },
+      {
+        "code": "fi",
+        "en": "firefighting",
+        "ru": "пожаротушение"
+      },
+      {
+        "code": "ev",
+        "en": "casualty evacuation",
+        "ru": "эвакуация"
+      },
+      {
+        "code": "mw",
+        "en": "mower",
+        "ru": "косилка"
+      },
+      {
+        "code": "gs",
+        "en": "gas analyzer",
+        "ru": "газоанализатор"
+      },
+      {
+        "code": "tw",
+        "en": "tow hitch",
+        "ru": "сцепка"
+      }
+    ],
+    "rwf": [
+      {
+        "code": "uc",
+        "en": "car uncoupling",
+        "ru": "расцепка вагонов"
+      },
+      {
+        "code": "br",
+        "en": "brake release",
+        "ru": "растормаживание"
+      },
+      {
+        "code": "in",
+        "en": "car inspection",
+        "ru": "осмотр вагонов"
+      },
+      {
+        "code": "tw",
+        "en": "car moving / towing",
+        "ru": "перемещение вагонов"
+      }
+    ],
+    "huf": [
+      {
+        "code": "sp",
+        "en": "speech dialog",
+        "ru": "голосовой диалог"
+      },
+      {
+        "code": "fr",
+        "en": "face recognition",
+        "ru": "распознавание лиц"
+      },
+      {
+        "code": "es",
+        "en": "escort / navigation help",
+        "ru": "сопровождение, навигация"
+      },
+      {
+        "code": "ad",
+        "en": "advertising / promo",
+        "ru": "реклама, промо"
+      },
+      {
+        "code": "pm",
+        "en": "payment terminal",
+        "ru": "платёжный терминал"
+      },
+      {
+        "code": "pr",
+        "en": "printer",
+        "ru": "принтер"
+      },
+      {
+        "code": "tm",
+        "en": "body temperature check",
+        "ru": "измерение температуры"
+      },
+      {
+        "code": "dl",
+        "en": "item delivery",
+        "ru": "доставка предметов"
+      },
+      {
+        "code": "gs",
+        "en": "gestures / facial expressions",
+        "ru": "жесты, мимика"
+      },
+      {
+        "code": "mn",
+        "en": "object manipulation",
+        "ru": "манипуляции предметами"
+      }
+    ],
+    "menu": [
+      {
+        "code": "cf",
+        "en": "coffee",
+        "ru": "кофе"
+      },
+      {
+        "code": "te",
+        "en": "tea",
+        "ru": "чай"
+      },
+      {
+        "code": "cd",
+        "en": "cold drinks / juices",
+        "ru": "холодные напитки, соки"
+      },
+      {
+        "code": "ic",
+        "en": "ice cream",
+        "ru": "мороженое"
+      },
+      {
+        "code": "fd",
+        "en": "hot food",
+        "ru": "горячая еда"
+      },
+      {
+        "code": "sn",
+        "en": "snacks",
+        "ru": "снеки"
+      }
+    ],
+    "pay": [
+      {
+        "code": "cd",
+        "en": "bank card / NFC",
+        "ru": "карта, NFC"
+      },
+      {
+        "code": "sb",
+        "en": "QR / SBP",
+        "ru": "QR, СБП"
+      },
+      {
+        "code": "cs",
+        "en": "cash",
+        "ru": "наличные"
+      },
+      {
+        "code": "ap",
+        "en": "mobile app",
+        "ru": "приложение"
+      }
+    ],
+    "airframe": [
+      {
+        "code": "MR",
+        "en": "multirotor",
+        "ru": "мультироторный"
+      },
+      {
+        "code": "FW",
+        "en": "fixed-wing",
+        "ru": "самолётного типа"
+      },
+      {
+        "code": "VT",
+        "en": "VTOL hybrid",
+        "ru": "вертикального взлёта (VTOL)"
+      },
+      {
+        "code": "HE",
+        "en": "helicopter",
+        "ru": "вертолётного типа"
+      },
+      {
+        "code": "TE",
+        "en": "tethered multirotor",
+        "ru": "привязной мультиротор"
+      }
+    ],
+    "launch": [
+      {
+        "code": "vt",
+        "en": "vertical take-off",
+        "ru": "вертикальный взлёт"
+      },
+      {
+        "code": "hd",
+        "en": "hand launch",
+        "ru": "с руки"
+      },
+      {
+        "code": "ct",
+        "en": "catapult",
+        "ru": "катапульта"
+      },
+      {
+        "code": "rw",
+        "en": "runway",
+        "ru": "с полосы"
+      },
+      {
+        "code": "vl",
+        "en": "vertical landing",
+        "ru": "вертикальная посадка"
+      },
+      {
+        "code": "pc",
+        "en": "parachute landing",
+        "ru": "посадка на парашюте"
+      },
+      {
+        "code": "bl",
+        "en": "belly landing",
+        "ru": "посадка на фюзеляж"
+      },
+      {
+        "code": "nt",
+        "en": "net landing",
+        "ru": "посадка в сеть"
+      }
+    ],
+    "pload": [
+      {
+        "code": "rg",
+        "en": "RGB camera",
+        "ru": "фотокамера / видеокамера"
+      },
+      {
+        "code": "zm",
+        "en": "zoom camera",
+        "ru": "камера с зумом"
+      },
+      {
+        "code": "th",
+        "en": "thermal camera",
+        "ru": "тепловизор"
+      },
+      {
+        "code": "ld",
+        "en": "lidar",
+        "ru": "лидар"
+      },
+      {
+        "code": "ms",
+        "en": "multispectral camera",
+        "ru": "мультиспектральная камера"
+      },
+      {
+        "code": "gs",
+        "en": "gas analyzer",
+        "ru": "газоанализатор"
+      },
+      {
+        "code": "mg",
+        "en": "magnetometer",
+        "ru": "магнитометр"
+      },
+      {
+        "code": "sp",
+        "en": "sprayer",
+        "ru": "опрыскиватель"
+      },
+      {
+        "code": "sd",
+        "en": "spreader",
+        "ru": "разбрасыватель"
+      },
+      {
+        "code": "cg",
+        "en": "cargo bay / drop / winch",
+        "ru": "грузовой отсек, сброс, лебёдка"
+      },
+      {
+        "code": "wh",
+        "en": "washing unit",
+        "ru": "моечный модуль"
+      },
+      {
+        "code": "sl",
+        "en": "searchlight",
+        "ru": "прожектор"
+      },
+      {
+        "code": "lo",
+        "en": "loudspeaker",
+        "ru": "громкоговоритель"
+      },
+      {
+        "code": "rl",
+        "en": "radio relay",
+        "ru": "ретранслятор"
+      },
+      {
+        "code": "gm",
+        "en": "stabilized gimbal",
+        "ru": "гиростабилизированный подвес"
+      }
+    ],
+    "hull": [
+      {
+        "code": "MH",
+        "en": "monohull",
+        "ru": "однокорпусное"
+      },
+      {
+        "code": "CT",
+        "en": "catamaran",
+        "ru": "катамаран"
+      },
+      {
+        "code": "TM",
+        "en": "trimaran",
+        "ru": "тримаран"
+      },
+      {
+        "code": "PL",
+        "en": "modular platform",
+        "ru": "модульная платформа"
+      },
+      {
+        "code": "HC",
+        "en": "hovercraft",
+        "ru": "на воздушной подушке"
+      }
+    ],
+    "prop": [
+      {
+        "code": "PR",
+        "en": "propeller",
+        "ru": "гребной винт"
+      },
+      {
+        "code": "WJ",
+        "en": "waterjet",
+        "ru": "водомёт"
+      },
+      {
+        "code": "OB",
+        "en": "outboard motor",
+        "ru": "подвесной мотор"
+      },
+      {
+        "code": "TH",
+        "en": "electric thrusters",
+        "ru": "электрические движители"
+      }
+    ],
+    "sonar": [
+      {
+        "code": "ss",
+        "en": "side-scan sonar",
+        "ru": "гидролокатор бокового обзора"
+      },
+      {
+        "code": "mb",
+        "en": "multibeam echo sounder",
+        "ru": "многолучевой эхолот"
+      },
+      {
+        "code": "es",
+        "en": "single-beam echo sounder",
+        "ru": "однолучевой эхолот"
+      },
+      {
+        "code": "fl",
+        "en": "forward-looking / imaging sonar",
+        "ru": "секторный гидролокатор"
+      },
+      {
+        "code": "ad",
+        "en": "ADCP current profiler",
+        "ru": "профилограф течений"
+      },
+      {
+        "code": "sb",
+        "en": "sub-bottom profiler",
+        "ru": "профилограф дна"
+      }
+    ],
+    "sw_type": [
+      {
+        "code": "fm",
+        "en": "fleet management",
+        "ru": "управление парком роботов"
+      },
+      {
+        "code": "wm",
+        "en": "WMS",
+        "ru": "WMS"
+      },
+      {
+        "code": "pv",
+        "en": "pick-by-voice",
+        "ru": "голосовой отбор"
+      },
+      {
+        "code": "pl",
+        "en": "pick-by-light",
+        "ru": "световой отбор"
+      },
+      {
+        "code": "ap",
+        "en": "autopilot",
+        "ru": "автопилот"
+      },
+      {
+        "code": "cv",
+        "en": "computer vision",
+        "ru": "компьютерное зрение"
+      },
+      {
+        "code": "rc",
+        "en": "remote control",
+        "ru": "дистанционное управление"
+      },
+      {
+        "code": "sm",
+        "en": "simulation / digital twin",
+        "ru": "моделирование, цифровой двойник"
+      }
+    ],
+    "deploy": [
+      {
+        "code": "cl",
+        "en": "cloud",
+        "ru": "облако"
+      },
+      {
+        "code": "op",
+        "en": "on-premise",
+        "ru": "на сервере заказчика"
+      },
+      {
+        "code": "eg",
+        "en": "on-board / edge",
+        "ru": "на борту"
+      }
+    ],
+    "lic": [
+      {
+        "code": "PE",
+        "en": "perpetual license",
+        "ru": "бессрочная лицензия"
+      },
+      {
+        "code": "SU",
+        "en": "subscription",
+        "ru": "подписка"
+      },
+      {
+        "code": "PR",
+        "en": "per-project",
+        "ru": "за проект"
+      }
+    ],
+    "src_type": [
+      {
+        "code": "OR",
+        "en": "organizer material (FCBAS)",
+        "ru": "материалы организатора (ФЦ БАС)"
+      },
+      {
+        "code": "VN",
+        "en": "vendor website / datasheet",
+        "ru": "сайт или документация производителя"
+      },
+      {
+        "code": "RS",
+        "en": "reseller / distributor",
+        "ru": "реселлер, дистрибьютор"
+      },
+      {
+        "code": "MD",
+        "en": "media / news",
+        "ru": "СМИ, новости"
+      },
+      {
+        "code": "GV",
+        "en": "government registry",
+        "ru": "государственный реестр"
+      }
+    ],
+    "io": [
+      {
+        "code": "in",
+        "en": "indoor",
+        "ru": "в помещении"
+      },
+      {
+        "code": "ou",
+        "en": "outdoor",
+        "ru": "на улице"
+      }
+    ],
+    "insp_scan": [
+      {
+        "code": "rg",
+        "en": "RGB camera",
+        "ru": "камера"
+      },
+      {
+        "code": "rf",
+        "en": "RFID",
+        "ru": "RFID"
+      },
+      {
+        "code": "bc",
+        "en": "barcode / QR",
+        "ru": "штрихкод, QR"
+      },
+      {
+        "code": "ld",
+        "en": "lidar",
+        "ru": "лидар"
+      },
+      {
+        "code": "dp",
+        "en": "depth camera",
+        "ru": "камера глубины"
+      }
+    ]
+  }
+}

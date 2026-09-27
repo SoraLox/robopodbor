@@ -17,16 +17,20 @@ describe('simulationInput', () => {
   });
 
   it('относит решения каталога к типу робота в сцене', () => {
-    expect(simRobotTypeOf(byId('p15'))).toBe('loader');
-    expect(simRobotTypeOf(byId('wf3'))).toBe('loader');
-    expect(simRobotTypeOf(byId('srt8'))).toBe('arm');
-    expect(simRobotTypeOf(byId('ams'))).toBe('arm');
-    expect(simRobotTypeOf(byId('floorclean'))).toBe('vacuum');
-    expect(simRobotTypeOf(byId('drone'))).toBeNull();
+    expect(simRobotTypeOf(byId('AM0001'))).toBe('loader');
+    expect(simRobotTypeOf(byId('FL0002'))).toBe('loader');
+    expect(simRobotTypeOf(byId('IM0001'))).toBe('arm');
+    expect(simRobotTypeOf(byId('RC0007'))).toBe('arm');
+    expect(simRobotTypeOf(byId('FC0003'))).toBe('vacuum');
+    // ПО со сценарием «сортировка» — не роборука
+    expect(simRobotTypeOf(byId('SW0001'))).toBeNull();
+    expect(simRobotTypeOf(byId('IN0001'))).toBeNull();
+    // без типа решения — по ключевым словам назначения
+    expect(simRobotTypeOf({ ...byId('AM0001'), solutionType: undefined, useCase: 'Уборка терминала' })).toBe('vacuum');
   });
 
   it('переносит параметры склада и паспорт погрузчика в сцену', () => {
-    const input = buildSimulationInput(fields, {}, byId('p15'), 'loader');
+    const input = buildSimulationInput(fields, {}, byId('AM0001'), 'loader');
 
     expect(input.params.floorAreaM2).toBe(20000);
     expect(input.params.workZonePct).toBe(50);
@@ -34,20 +38,20 @@ describe('simulationInput', () => {
     // 1000 поддонов/сут при 2 сменах по 11 ч
     expect(input.params.requiredLoadThroughput).toBeCloseTo(1000 / 22);
     expect(input.capacityKg).toBe(1500);
-    expect(input.speedMps).toBe(1.8);
+    expect(input.speedMps).toBe(1.5);
     expect(input.throughput).toBeGreaterThan(0);
     expect(input.recommendedCount).toBeGreaterThanOrEqual(1);
     expect(input.recommendedCount).toBeLessThanOrEqual(input.maxCount);
   });
 
   it('больше приёмка — больше погрузчиков по расчёту', () => {
-    const low = buildSimulationInput(fields, { wh_obem_priemki: '500', wh_obem_otgruzki: '500' }, byId('p15'), 'loader');
-    const high = buildSimulationInput(fields, { wh_obem_priemki: '5000', wh_obem_otgruzki: '5000' }, byId('p15'), 'loader');
+    const low = buildSimulationInput(fields, { wh_obem_priemki: '500', wh_obem_otgruzki: '500' }, byId('AM0001'), 'loader');
+    const high = buildSimulationInput(fields, { wh_obem_priemki: '5000', wh_obem_otgruzki: '5000' }, byId('AM0001'), 'loader');
     expect(high.requiredCount).toBeGreaterThan(low.requiredCount);
   });
 
-  it('берёт производительность сортировщика из описания решения', () => {
-    const input = buildSimulationInput(fields, {}, byId('srt8'), 'arm');
-    expect(input.throughput).toBe(8000);
+  it('берёт производительность роборуки из карточки каталога', () => {
+    const input = buildSimulationInput(fields, {}, byId('RC0007'), 'arm');
+    expect(input.throughput).toBe(6000);
   });
 });

@@ -38,10 +38,17 @@ export function ObjectSelectPage() {
                   onClick={() => setObjectType(type.slug)}
                   className={cn(
                     'flex w-full min-w-0 items-center gap-3 rounded-[12px] border bg-white px-3 py-2.5 text-left transition-colors duration-100',
-                    isSelected ? 'border-foreground' : 'border-[#E5E5EA] hover:border-[#C7C7CC]',
+                    isSelected
+                      ? 'border-primary-bright'
+                      : 'border-[#E5E5EA] hover:border-[#C7C7CC]',
                   )}
                 >
-                  <span className="flex size-9 flex-none items-center justify-center text-foreground">
+                  <span
+                    className={cn(
+                      'flex size-9 flex-none items-center justify-center transition-colors duration-100',
+                      isSelected ? 'text-primary-bright' : 'text-foreground',
+                    )}
+                  >
                     <Icon className="size-[22px]" strokeWidth={1.5} />
                   </span>
 
@@ -60,7 +67,7 @@ export function ObjectSelectPage() {
         type="button"
         disabled={!hasSelection}
         onClick={() => navigate(`/calculate/${selectedSlug}/form`)}
-        className="mt-auto flex h-11 w-full flex-none items-center justify-center rounded-[10px] bg-foreground text-[14px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[#E5E5EA] disabled:text-[#8E8E93] disabled:opacity-100"
+        className="mt-auto flex h-11 w-full flex-none items-center justify-center rounded-[10px] bg-primary-bright text-[14px] font-semibold text-white transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:active:scale-100 disabled:bg-[#E5E5EA] disabled:text-[#8E8E93] disabled:opacity-100"
       >
         Продолжить
       </button>

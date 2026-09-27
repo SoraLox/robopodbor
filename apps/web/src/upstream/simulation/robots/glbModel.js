@@ -1,5 +1,10 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+
+// Модели в public/models сжаты gltf-transform (meshopt + WebP-текстуры, исходники —
+// в assets-src/models): без декодера GLTFLoader их не откроет.
+const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
 
 // Общая загрузка glb-моделей роботов: асинхронно, один раз на приложение
 // (повторные вызовы получают тот же промис), с прогревом до открытия сцены.
@@ -16,7 +21,7 @@ export function createGlbModel(fileName, prepare) {
   return {
     load() {
       if (!loadingPromise) {
-        loadingPromise = new GLTFLoader().loadAsync(url).then((gltf) => {
+        loadingPromise = loader.loadAsync(url).then((gltf) => {
           template = prepare(gltf.scene);
         });
       }

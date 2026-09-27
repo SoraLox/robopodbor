@@ -1,15 +1,11 @@
 /*
   THESIS: первый экран — ясность, не реклама: вопрос про цену/окупаемость
   и одна кнопка уйти в расчёт. Справа — рука робота как визуальный якорь.
-  OWN-WORLD: светлый full-bleed hero на весь viewport, ч/б + grainy blue
-  wash в углу; Inter; чёрная кнопка с мягкой тенью (референс Sorcerer).
-  STORY: посетитель сразу понимает цену и срок окупаемости роботов —
-  и жмёт «Рассчитать окупаемость».
-  FIRST VIEWPORT: edge-to-edge плоскость во весь экран; заголовок; описание;
-  одна CTA; робот справа.
-  FORM: full-bleed сплит текст/изображение — не inset-карточка.
-  FINISH: unreviewed and undocumented is unfinished; this build ends with the
-  finish review, the verdict, and DESIGN.md
+  SYSTEM: секции на одной вертикальной ступени (Section), двухколоночные блоки
+  на одной сетке 5/7 (Split), заголовки — две роли: text-display-xl для
+  первого и последнего экрана, text-title для остальных. Тёмная поверхность
+  одна (surface-ink), форма у каждого появления своя: карточка с фото,
+  полоса во всю ширину, карточка со свечением.
 */
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, Check, ChevronDown } from 'lucide-react';
@@ -24,6 +20,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { FAQ, PLANS, SOURCES } from './content';
+
+/** Должно совпадать с imagesizes у preload в index.html, иначе браузер скачает картинку дважды. */
+const HERO_IMAGE_SIZES = '(min-width: 1024px) 780px, (min-width: 640px) 58vw, 66vw';
+
+/** Единственный стиль текстовой ссылки на странице. */
+const TEXT_LINK =
+  'inline-flex w-fit items-center gap-1.5 text-control text-foreground underline decoration-foreground/25 underline-offset-4 transition-colors hover:decoration-foreground';
 
 /** Короткая, в три слова, суть каждого типа объекта — без выдуманных цифр. */
 const SHORT_BLURB: Record<string, string> = {
@@ -58,31 +61,110 @@ function useLandingTypes(): { options: LandingObjectType[] | null } {
   return { options: null };
 }
 
-/**
- * Секция на белом листе: воздуха много, рамок нет. Границы между смыслами
- * держит расстояние, а не карточка — карточная система снята намеренно.
- */
+/** Секция на общей ступени: между соседними секциями ровно 2 × py. */
 function Section({
   children,
   className,
+  innerClassName,
 }: {
   children: React.ReactNode;
   className?: string;
+  innerClassName?: string;
 }) {
   return (
-    <section className={cn('px-5 py-16 sm:px-8 md:py-24', className)}>
-      <div className="mx-auto max-w-site">{children}</div>
+    <section className={cn('px-5 py-12 sm:px-8 md:py-16', className)}>
+      <div className={cn('mx-auto max-w-site', innerClassName)}>{children}</div>
     </section>
   );
 }
 
+/** Общая сетка двухколоночных блоков: заголовок слева, содержание справа. */
+function Split({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div
+      className={cn(
+        'grid items-start gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16',
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
 function SectionTitle({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <h2 className={cn('text-h1 max-w-[18ch] text-balance', className)}>{children}</h2>;
+  return (
+    <h2
+      className={cn(
+        'max-w-[18ch] text-balance font-heading text-[1.875rem] font-bold leading-[1.08] tracking-h1 sm:text-[2.25rem] lg:text-[2.5rem]',
+        className,
+      )}
+    >
+      {children}
+    </h2>
+  );
+}
+
+type Plan = (typeof PLANS)[number];
+
+function PlanCard({ plan }: { plan: Plan }) {
+  const isFree = plan.id === 'calc';
+  const href = isFree ? '/calculate/warehouse' : '/login';
+  const cta = isFree ? 'Начать расчёт' : 'Обсудить';
+  const featured = Boolean(plan.featured);
+  const priced = plan.price.match(/^(.+)\s(₽)$/);
+
+  return (
+    <article
+      className={cn(
+        'relative flex h-full flex-col overflow-hidden rounded-xl border p-6 sm:p-7',
+        featured
+          ? 'border-primary-bright bg-background shadow-lift'
+          : 'border-hairline bg-background shadow-soft',
+      )}
+    >
+      <h3 className="relative text-h3">{plan.name}</h3>
+
+      <div className="relative mt-6 flex items-baseline gap-1.5 text-foreground">
+        <span className="text-h1 tabular leading-none">{priced ? priced[1] : plan.price}</span>
+        {priced ? <span className="text-body text-muted-foreground">{priced[2]}</span> : null}
+      </div>
+      <p className="relative mt-2 text-body text-muted-foreground">{plan.note}</p>
+
+      <Button
+        asChild
+        variant={featured ? 'default' : 'outline'}
+        className={cn(
+          'relative mt-6 w-full',
+          featured &&
+            'bg-primary-bright hover:bg-[hsl(214_80%_46%)] focus-visible:outline-primary-bright',
+        )}
+      >
+        <Link to={href}>{cta}</Link>
+      </Button>
+
+      <ul className="relative mt-6 flex flex-1 flex-col gap-3 border-t border-hairline pt-6">
+        {plan.features.map((feature) => (
+          <li key={feature} className="flex items-start gap-2.5 text-body text-muted-foreground">
+            <Check
+              className={cn(
+                'mt-[0.2em] size-4 flex-none',
+                featured ? 'text-primary-bright' : 'text-foreground',
+              )}
+              strokeWidth={2}
+              aria-hidden
+            />
+            <span>{feature}</span>
+          </li>
+        ))}
+      </ul>
+    </article>
+  );
 }
 
 /**
- * Full-bleed hero. Текст в сетке сайта; робот — к правому низу viewport,
- * иначе на широком экране он «уезжает» вместе с max-w-site к центру.
+ * Full-bleed hero. Текст и робот — две колонки одной max-w-site сетки;
+ * паддинг снаружи, как у шапки, чтобы левый край совпал с логотипом.
  */
 function HeroScreen() {
   return (
@@ -94,42 +176,53 @@ function HeroScreen() {
     >
       <div className="hero-grain" aria-hidden />
 
-      <img
-        src={`${import.meta.env.BASE_URL}pics/roboarm3.webp`}
-        alt=""
-        aria-hidden
-        width={1121}
-        height={1403}
-        loading="eager"
-        fetchPriority="high"
-        decoding="async"
-        className="hero-robot pointer-events-none absolute bottom-0 z-[1] h-[min(92svh,940px)] w-auto max-w-[min(62vw,780px)] origin-bottom translate-y-[8%] scale-x-[-1] object-contain object-bottom sm:max-w-[min(56vw,740px)] lg:max-w-[740px]"
-      />
+      <div className="relative z-[2] px-5 sm:px-8">
+        <div className="mx-auto grid min-h-[calc(100svh-3.5rem)] max-w-site lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-16 xl:gap-20">
+          <div className="relative order-2 flex flex-col justify-center py-12 sm:py-14 lg:order-1 lg:pb-28 lg:pt-12">
+            <div className="flex w-full max-w-[32rem] flex-col">
+              <h1 className="max-w-[15ch] text-balance font-heading text-[2.5rem] font-bold leading-[1.05] tracking-display text-foreground sm:text-[3.25rem] lg:text-[3.75rem]">
+                Сколько стоят роботы и когда они окупятся
+              </h1>
 
-      <div className="relative z-[2] mx-auto grid min-h-[calc(100svh-3.5rem)] max-w-site px-5 sm:px-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-        <div className="relative order-1 min-h-[36svh] sm:min-h-[40svh] lg:order-2 lg:min-h-0" aria-hidden />
+              <p className="mt-6 max-w-[38ch] text-body-lg text-muted-foreground sm:text-[1.0625rem] sm:leading-relaxed">
+                Введите параметры склада, аэропорта или клиники — получите расчёт окупаемости по
+                каталогу реальных решений с указанием источника каждой цифры
+              </p>
 
-        <div className="relative order-2 flex flex-col justify-center py-10 lg:order-1 lg:py-16">
-          <div className="flex w-full max-w-[34rem] flex-col">
-            <h1 className="max-w-[15ch] text-balance font-heading text-[2.5rem] font-bold leading-[1.05] tracking-display text-foreground sm:text-[3.25rem] lg:text-[3.75rem]">
-              Сколько стоят роботы и когда они окупятся
-            </h1>
-
-            <p className="mt-5 max-w-[38ch] text-body-lg text-muted-foreground sm:text-[1.0625rem] sm:leading-relaxed">
-              Введите параметры склада, аэропорта или клиники — получите расчёт окупаемости по каталогу реальных решений с указанием источника каждой цифры
-            </p>
-
-            <div className="mt-10 flex flex-wrap items-center gap-x-7 gap-y-3">
-              <Button asChild size="lg">
-                <Link to="/calculate/warehouse">Рассчитать окупаемость</Link>
-              </Button>
-              <Link
-                to="/catalog"
-                className="text-control text-foreground/70 underline underline-offset-4 transition-colors hover:text-foreground"
-              >
-                Каталог
-              </Link>
+              <div className="mt-12 flex flex-wrap items-center gap-x-7 gap-y-3">
+                <Button
+                  asChild
+                  size="lg"
+                  className="bg-primary-bright hover:bg-[hsl(214_80%_46%)] focus-visible:outline-primary-bright"
+                >
+                  <Link to="/calculate/warehouse">Рассчитать окупаемость</Link>
+                </Button>
+                <Link
+                  to="/catalog"
+                  className="text-control text-foreground/70 underline underline-offset-4 transition-colors hover:text-foreground"
+                >
+                  Каталог
+                </Link>
+              </div>
             </div>
+          </div>
+
+          <div
+            className="relative order-1 min-h-[40svh] sm:min-h-[44svh] lg:order-2 lg:min-h-0"
+            aria-hidden
+          >
+            <img
+              src={`${import.meta.env.BASE_URL}pics/roboarm3.webp`}
+              srcSet={`${import.meta.env.BASE_URL}pics/roboarm3-560.webp 560w, ${import.meta.env.BASE_URL}pics/roboarm3.webp 1121w`}
+              sizes={HERO_IMAGE_SIZES}
+              alt=""
+              width={1121}
+              height={1403}
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+              className="pointer-events-none absolute bottom-0 right-0 z-[1] h-[min(96svh,980px)] w-auto max-w-[min(110%,780px)] origin-bottom translate-y-[1%] scale-x-[-1] object-contain object-bottom"
+            />
           </div>
         </div>
       </div>
@@ -145,7 +238,7 @@ function CatalogSection() {
   const rows = options ?? Array.from<LandingObjectType | undefined>({ length: 3 });
 
   return (
-    <section className="relative z-10 -mt-2 bg-background px-5 pb-16 pt-0 sm:-mt-3 sm:px-8 md:-mt-4 md:pb-24">
+    <section className="relative z-10 -mt-10 bg-background px-5 pb-16 pt-0 sm:-mt-12 sm:px-8 md:-mt-14 md:pb-24">
       <div className="relative mx-auto max-w-site">
         <div className="hero-panel-catalog relative overflow-hidden rounded-[28px] p-5 sm:p-6 md:p-7">
           <div className="hero-grain" aria-hidden />
@@ -153,7 +246,7 @@ function CatalogSection() {
           <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
             <div className="mx-auto size-[300px] shrink-0 overflow-hidden rounded-[22px] bg-black/30 sm:size-[340px] lg:mx-0 lg:size-[360px]">
               <img
-                src={`${import.meta.env.BASE_URL}pics/warehouse2.png`}
+                src={`${import.meta.env.BASE_URL}pics/warehouse2.webp`}
                 alt=""
                 width={480}
                 height={480}
@@ -169,8 +262,8 @@ function CatalogSection() {
                   Расчёт строится от объекта
                 </h2>
                 <p className="mt-3 max-w-[44ch] text-body text-white/70 sm:text-body-lg">
-                  У склада, аэропорта и клиники разные процессы и статьи затрат.
-                  Выберите тип площадки — откроем сценарии на семь лет под ваши данные.
+                  У склада, аэропорта и клиники разные процессы и статьи затрат. Выберите тип
+                  площадки — откроем сценарии на семь лет под ваши данные.
                 </p>
               </header>
 
@@ -231,230 +324,220 @@ function CatalogSection() {
   );
 }
 
-export function LandingPage() {
+const SCENARIOS = [
+  {
+    label: 'Ничего не менять',
+    value: '214,0',
+    delta: null,
+    pct: 100,
+    bar: 'bg-foreground/45',
+  },
+  {
+    label: 'Купить роботов',
+    value: '134,6',
+    delta: '−79,4',
+    pct: 63,
+    bar: 'bg-primary',
+  },
+  {
+    label: 'Взять в аренду',
+    value: '154,2',
+    delta: '−59,8',
+    pct: 72,
+    bar: 'bg-foreground/25',
+  },
+] as const;
+
+function ComparisonSection() {
   return (
-    <div className="min-h-screen bg-canvas">
-      {/* 1 — ПЕРВЫЙ ЭКРАН */}
-      <HeroScreen />
-
-      {/* 2 — КАТАЛОГ: наезжает на низ hero и касается робота */}
-      <CatalogSection />
-
-      {/* 3 — РЕШЕНИЕ. Белая плоскость на всю ширину, без карточки. */}
-      <section className="bg-background px-5 py-10 sm:px-8 md:py-12">
-        <div className="mx-auto grid max-w-site items-start gap-8 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-16">
-          <div>
-            <SectionTitle>Сравните решения</SectionTitle>
-            <p className="mt-3 max-w-[36ch] text-body text-muted-foreground">
-              Столько за семь лет теряет склад на 20 000 м², если не покупает
-              роботов. Справа — настоящий расчёт, а не иллюстрация: каждую сумму
-              можно раскрыть построчно.
-            </p>
-            <Link
-              to="/calculate/warehouse/results/demo"
-              className="mt-4 inline-flex w-fit items-center gap-2 text-control text-foreground underline-offset-4 hover:underline"
-            >
-              Открыть расчёт целиком
-              <ArrowUpRight className="size-4" strokeWidth={2.25} />
-            </Link>
-          </div>
-
-          <figure>
-            <div className="grid gap-4">
-              {(
-                [
-                  { label: 'Ничего не менять', value: '214,0 млн', delta: null, pct: 100, tone: 'base' },
-                  { label: 'Купить роботов', value: '134,6 млн', delta: '−79,4', pct: 63, tone: 'primary' },
-                  { label: 'Взять в аренду', value: '154,2 млн', delta: '−59,8', pct: 72, tone: 'muted' },
-                ] as const
-              ).map((row) => (
-                <div key={row.label} className="grid gap-1.5">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <span className="min-w-0 text-body text-foreground">{row.label}</span>
-                    <span className="flex shrink-0 items-baseline gap-2">
-                      <span className="font-heading text-h3 tabular leading-none sm:text-h2">{row.value}</span>
-                      {row.delta ? (
-                        <span className="text-meta tabular text-status-operation">{row.delta}</span>
-                      ) : null}
-                    </span>
-                  </div>
-                  <div className="relative h-1 overflow-hidden rounded-full bg-accent-tint">
-                    <div
-                      className={cn(
-                        'absolute inset-y-0 left-0 rounded-full',
-                        row.tone === 'primary' && 'bg-primary',
-                        row.tone === 'base' && 'bg-foreground/55',
-                        row.tone === 'muted' && 'bg-foreground/35',
-                      )}
-                      style={{ width: `${row.pct}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-            <figcaption className="mt-4 max-w-[62ch] text-meta text-muted-foreground">
-              Покупка окупается за <span className="tabular">3,2</span> года — на{' '}
-              <span className="tabular">0,6</span> года раньше аренды. Средний CAPEX проекта в базе —{' '}
-              <span className="whitespace-nowrap tabular">80 млн ₽</span>.
-            </figcaption>
-          </figure>
+    <Section>
+      <Split>
+        <div>
+          <SectionTitle>Сравните решения</SectionTitle>
+          <p className="mt-4 max-w-[38ch] text-lead text-muted-foreground">
+            Столько стоит склад на <span className="whitespace-nowrap tabular">20 000 м²</span> за
+            семь лет в каждом сценарии. Это настоящий расчёт, а не иллюстрация: каждую сумму можно
+            раскрыть построчно.
+          </p>
+          <Link to="/calculate/warehouse/results/demo" className={cn(TEXT_LINK, 'mt-6')}>
+            Открыть расчёт целиком
+            <ArrowUpRight className="size-4" strokeWidth={2} aria-hidden />
+          </Link>
         </div>
-      </section>
 
-      {/* 4 — ДОВЕРИЕ. Одна мысль: у каждой цифры есть проверяемый источник. */}
-      <Section>
-        <div className="grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-          <div className="min-w-0">
-            <SectionTitle>Мы — независимый агрегатор</SectionTitle>
-            <p className="mt-5 max-w-[42ch] text-body-lg text-muted-foreground">
-              Мы зарабатываем на расчёте, а не на продаже техники. Поэтому честно
-              показываем и вариант «ничего не покупать».
+        <figure className="lg:pt-2">
+          <div className="grid gap-6">
+            {SCENARIOS.map((row) => (
+              <div key={row.label} className="grid gap-2.5">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="min-w-0 text-body text-foreground">{row.label}</span>
+                  <span className="flex shrink-0 items-baseline gap-2.5">
+                    {row.delta ? (
+                      <span className="text-label tabular text-positive">{row.delta} млн</span>
+                    ) : null}
+                    <span className="text-h2 tabular">
+                      {row.value}
+                      <span className="ml-1 text-body text-muted-foreground">млн ₽</span>
+                    </span>
+                  </span>
+                </div>
+                <div className="relative h-1.5 overflow-hidden rounded-full bg-accent-tint">
+                  <div
+                    className={cn('absolute inset-y-0 left-0 rounded-full', row.bar)}
+                    style={{ width: `${row.pct}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+          <figcaption className="mt-6 max-w-[62ch] text-meta text-muted-foreground">
+            Покупка окупается за <span className="tabular">3,2</span> года, на{' '}
+            <span className="tabular">0,6</span> года раньше аренды. Средний CAPEX проекта в базе
+            составляет <span className="whitespace-nowrap tabular">80 млн ₽</span>.
+          </figcaption>
+        </figure>
+      </Split>
+    </Section>
+  );
+}
+
+/** Доверие: полоса во всю ширину — глава посреди светлой страницы, а не ещё одна карточка. */
+function TrustSection() {
+  return (
+    <section className="surface-ink relative overflow-hidden px-5 py-20 sm:px-8 md:py-28">
+      <div className="hero-grain" aria-hidden />
+
+      <div className="relative z-10 mx-auto max-w-site">
+        <Split>
+          <div>
+            <SectionTitle className="text-white">Мы не&nbsp;продаём технику</SectionTitle>
+            <p className="mt-4 max-w-[38ch] text-lead text-white/70">
+              Зарабатываем на расчёте, а не на продаже и не берём процент с внедрения. Поэтому
+              честно показываем и вариант «ничего не покупать».
             </p>
+            <Button asChild variant="inverse" className="mt-8">
+              <Link to="/methodology">
+                Как считаем
+                <ArrowUpRight className="size-4" strokeWidth={2} aria-hidden />
+              </Link>
+            </Button>
           </div>
 
-          <div className="min-w-0">
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 pb-3 text-meta text-meta-foreground">
+          <div className="min-w-0 lg:pt-2">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 border-b border-white/15 pb-3 text-meta text-white/55">
               <span>Источник данных</span>
               <span className="text-right">Обновлён</span>
             </div>
 
-            <div className="border-t border-hairline">
+            <ul className="m-0 list-none p-0" aria-label="Источники данных расчёта">
               {SOURCES.map((source) => (
-                <div
+                <li
                   key={source.title}
-                  className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-hairline py-4"
+                  className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-baseline gap-x-3 border-b border-white/15 py-4"
                 >
-                  <span className="min-w-0 text-body">{source.title}</span>
-                  <span className="whitespace-nowrap text-right text-meta text-meta-foreground">
-                    {source.note}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </Section>
-
-      {/* 5 — ЦЕНЫ. Выделенный тариф берёт тёмную панель — то же пятно, что в герое. */}
-      <Section>
-        <SectionTitle>Расчёт бесплатный</SectionTitle>
-
-        <div className="mt-12 grid gap-5 lg:grid-cols-3">
-          {PLANS.map((plan) => (
-            <div
-              key={plan.id}
-              className={cn(
-                'relative flex flex-col gap-7 overflow-hidden rounded-3xl p-8',
-                plan.featured ? 'hero-panel' : 'bg-canvas',
-              )}
-            >
-              {plan.featured ? <div className="hero-grain" aria-hidden /> : null}
-
-              <div className="relative z-10">
-                <h3 className={cn('text-h3', plan.featured && 'text-white')}>{plan.name}</h3>
-                <div
-                  className={cn(
-                    'mt-5 text-display tabular',
-                    plan.featured ? 'text-white' : 'text-foreground',
-                  )}
-                >
-                  {plan.price}
-                </div>
-                <div
-                  className={cn(
-                    'mt-2 text-meta',
-                    plan.featured ? 'text-white/60' : 'text-meta-foreground',
-                  )}
-                >
-                  {plan.note}
-                </div>
-              </div>
-
-              <ul className="relative z-10 grid gap-3">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex gap-2.5 text-body">
+                  <span className="relative top-0.5 grid size-6 flex-none place-items-center rounded-full bg-white">
                     <Check
-                      className={cn(
-                        'mt-1 size-4 flex-none',
-                        plan.featured ? 'text-white' : 'text-foreground',
-                      )}
-                      strokeWidth={2.25}
+                      className="size-3.5 text-primary-bright"
+                      strokeWidth={3}
                       aria-hidden
                     />
-                    <span className={plan.featured ? 'text-white/80' : 'text-muted-foreground'}>
-                      {feature}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              <Button
-                asChild
-                variant={plan.featured ? 'default' : 'outline'}
-                className={cn(
-                  'relative z-10 mt-auto w-fit rounded-[14px]',
-                  plan.featured && 'bg-background text-foreground hover:bg-background/90',
-                )}
-              >
-                <Link to={plan.id === 'calc' ? '/calculate/warehouse' : '/login'}>
-                  {plan.id === 'calc' ? 'Начать расчёт' : 'Обсудить'}
-                </Link>
-              </Button>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      {/* 6 — ВОЗРАЖЕНИЯ. */}
-      <Section>
-        <div className="grid gap-12 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)]">
-          <SectionTitle>Вопросы</SectionTitle>
-
-          <Accordion type="single" collapsible className="border-t border-hairline">
-            {FAQ.map((item) => (
-              <AccordionItem key={item.q} value={item.q} className="border-b border-hairline">
-                <AccordionTrigger className="group flex w-full items-center justify-between gap-6 py-6 text-left">
-                  <span className="text-h3">{item.q}</span>
-                  <ChevronDown
-                    className="size-4 flex-none text-meta-foreground transition-transform duration-200 group-data-[state=open]:rotate-180"
-                    strokeWidth={2}
-                    aria-hidden
-                  />
-                </AccordionTrigger>
-                <AccordionContent className="max-w-[66ch] pb-6 text-body text-muted-foreground">
-                  {item.a}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </div>
-      </Section>
-
-      {/* 7 — ФИНАЛЬНЫЙ ПРИЗЫВ. */}
-      <Section className="pt-0">
-        <div className="hero-panel relative overflow-hidden rounded-3xl px-8 py-20 sm:px-14 md:py-28">
-          <div className="hero-grain" aria-hidden />
-          <div className="relative z-10">
-            <h2 className="max-w-[16ch] text-balance text-display text-white">Посчитайте свой объект</h2>
-            <p className="mt-5 max-w-[42ch] text-body-lg text-white/60">
-              Бесплатно и без регистрации. Отчёт — в PDF и Excel.
-            </p>
-            <Button
-              asChild
-              size="lg"
-              className="mt-9 rounded-[14px] bg-background text-foreground hover:bg-background/90"
-            >
-              <Link to="/calculate/warehouse">
-                Рассчитать объект
-                <ArrowUpRight className="size-4" strokeWidth={2.25} />
-              </Link>
-            </Button>
+                  </span>
+                  <span className="min-w-0 text-body text-white">{source.title}</span>
+                  <span className="whitespace-nowrap text-right text-meta tabular text-white/55">
+                    {source.note}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
-      </Section>
+        </Split>
+      </div>
+    </section>
+  );
+}
 
-      <div className="mx-auto max-w-site px-5 pb-[18px] sm:px-8">
-        <SiteFooter />
+function PricingSection() {
+  return (
+    <Section>
+      <SectionTitle>Расчёт бесплатный</SectionTitle>
+
+      <div className="mt-12 grid gap-5 lg:grid-cols-3">
+        {PLANS.map((plan) => (
+          <PlanCard key={plan.id} plan={plan} />
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+function FaqSection() {
+  return (
+    <Section>
+      <Split>
+        <SectionTitle>Вопросы</SectionTitle>
+
+        <Accordion type="single" collapsible className="border-t border-hairline">
+          {FAQ.map((item) => (
+            <AccordionItem key={item.q} value={item.q} className="border-b border-hairline">
+              <AccordionTrigger className="group flex w-full items-center justify-between gap-6 py-6 text-left">
+                <span className="text-h3">{item.q}</span>
+                <ChevronDown
+                  className="size-4 flex-none text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180"
+                  strokeWidth={2}
+                  aria-hidden
+                />
+              </AccordionTrigger>
+              <AccordionContent className="max-w-[66ch] pb-6 text-body text-muted-foreground">
+                {item.a}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </Split>
+    </Section>
+  );
+}
+
+/** Финал повторяет масштаб первого экрана: страница начинается и заканчивается одним вопросом. */
+function FinalCtaSection() {
+  return (
+    <Section>
+      <div className="surface-ink-glow relative overflow-hidden rounded-xl px-6 py-20 sm:px-14 md:py-28">
+        <div className="hero-grain" aria-hidden />
+        <div className="relative z-10 mx-auto flex max-w-[40rem] flex-col items-center text-center">
+          <h2 className="max-w-[16ch] text-balance font-heading text-[2.5rem] font-bold leading-[1.05] tracking-display text-white sm:max-w-none sm:text-[3.25rem] lg:text-[3.75rem]">
+            Посчитайте свой объект
+          </h2>
+          <p className="mt-5 max-w-[36ch] text-balance text-lead text-white/70">
+            Бесплатно и без регистрации. Отчёт выгружается в PDF и Excel.
+          </p>
+          <Button asChild size="lg" variant="inverse" className="mt-10">
+            <Link to="/calculate/warehouse">
+              Начать расчёт
+              <ArrowUpRight className="size-4" strokeWidth={2} aria-hidden />
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </Section>
+  );
+}
+
+export function LandingPage() {
+  return (
+    <div className="min-h-screen bg-background">
+      <HeroScreen />
+      <CatalogSection />
+      <ComparisonSection />
+      <TrustSection />
+      <PricingSection />
+      <FaqSection />
+      <FinalCtaSection />
+
+      <div className="px-5 sm:px-8">
+        <div className="mx-auto max-w-site">
+          <SiteFooter />
+        </div>
       </div>
     </div>
   );

@@ -1,14 +1,17 @@
-import { useMemo, useState } from 'react';
+import { Suspense, lazy, useMemo, useState } from 'react';
 import { useObjectParameters, useSolutions } from '@/api/queries';
 import type { Solution } from '@/api/types';
 import { useWizardStore } from '@/app/store';
-import WarehouseScene from '@/upstream/simulation/WarehouseScene.jsx';
 import {
   SIMULATION_ASSUMPTIONS,
   buildSimulationInput,
   simRobotTypeOf,
   type SimulationInput,
 } from './simulationInput';
+
+// three.js (~300 КБ gzip) грузится отдельным чанком: KPI и графики отчёта
+// показываются сразу, сцена догружается следом.
+const WarehouseScene = lazy(() => import('@/upstream/simulation/WarehouseScene.jsx'));
 
 function hasWebGL(): boolean {
   try {
@@ -29,19 +32,47 @@ function pickSolution(solutions: Solution[], selectedId: string | null): Solutio
   );
 }
 
-function Note({ children }: { children: string }) {
+function Note({ children, fill }: { children: string; fill?: boolean }) {
   return (
-    <div className="grid min-h-[240px] place-items-center rounded-xl border border-border p-8 text-center text-[13.5px] text-muted-foreground">
+    <div
+      className={
+        fill
+          ? 'grid h-full min-h-[240px] place-items-center bg-[#E8D5E8] p-8 text-center text-[13.5px] text-[#3F4159]'
+          : 'grid min-h-[240px] place-items-center rounded-xl border border-border p-8 text-center text-[13.5px] text-muted-foreground'
+      }
+    >
       {children}
     </div>
   );
 }
 
-export function ResultSimulation({ objectType }: { objectType: string }) {
+function SceneFallback({ fill }: { fill?: boolean }) {
+  return (
+    <div
+      className={
+        fill
+          ? 'grid h-full place-items-center bg-[#E8D5E8] text-[13.5px] text-[#3F4159]'
+          : 'grid min-h-[320px] place-items-center rounded-2xl border border-border text-[13.5px] text-muted-foreground'
+      }
+    >
+      Загружаем 3D-сцену…
+    </div>
+  );
+}
+
+export function ResultSimulation({
+  immersive = false,
+}: {
+  /** @deprecated сцена всегда складская; оставлен для совместимости вызовов */
+  objectType?: string;
+  immersive?: boolean;
+}) {
   const parameters = useWizardStore((s) => s.parameters);
   const selectedId = useWizardStore((s) => s.solutionId);
-  const { data: fields } = useObjectParameters(objectType);
-  const { data: solutions } = useSolutions(objectType);
+  // Сцена upstream пока только складская; для аэропорта/клиники берём складской
+  // каталог и параметры — экономика демо общая, отдельной 3D-модели объекта нет.
+  const { data: fields } = useObjectParameters('warehouse');
+  const { data: solutions } = useSolutions('warehouse');
   const [webgl] = useState(hasWebGL);
 
   const solution = solutions ? pickSolution(solutions, selectedId) : null;
@@ -52,16 +83,32 @@ export function ResultSimulation({ objectType }: { objectType: string }) {
     [fields, parameters, solution, type],
   );
 
-  if (objectType !== 'warehouse') return <Note>3D-симуляция пока есть только для склада.</Note>;
-  if (!fields || !solutions) return <Note>Готовим симуляцию…</Note>;
-  if (!solution) return <Note>Не найдено решение для симуляции.</Note>;
-  if (!input) return <Note>{`Для «${solution.name}» 3D-модели в симуляции нет.`}</Note>;
-  if (!webgl) return <Note>Браузер не поддерживает WebGL — 3D-симуляцию показать нельзя.</Note>;
+  if (!fields || !solutions) return <Note fill={immersive}>Готовим симуляцию…</Note>;
+  if (!solution) return <Note fill={immersive}>Не найдено решение для симуляции.</Note>;
+  if (!input) return <Note fill={immersive}>{`Для «${solution.name}» 3D-модели в симуляции нет.`}</Note>;
+  if (!webgl) {
+    return <Note fill={immersive}>Браузер не поддерживает WebGL — 3D-симуляцию показать нельзя.</Note>;
+  }
 
-  return <SimulationScene key={`${solution.id}:${JSON.stringify(input.params)}`} input={input} solution={solution} />;
+  return (
+    <SimulationScene
+      key={`${solution.id}:${JSON.stringify(input.params)}`}
+      input={input}
+      solution={solution}
+      immersive={immersive}
+    />
+  );
 }
 
-function SimulationScene({ input, solution }: { input: SimulationInput; solution: Solution }) {
+function SimulationScene({
+  input,
+  solution,
+  immersive,
+}: {
+  input: SimulationInput;
+  solution: Solution;
+  immersive: boolean;
+}) {
   const [count, setCount] = useState(input.recommendedCount);
   const { params } = input;
   const counts = {
@@ -70,8 +117,8 @@ function SimulationScene({ input, solution }: { input: SimulationInput; solution
     loader: input.type === 'loader' ? count : 0,
   };
 
-  return (
-    <div className="grid gap-3">
+  const scene = (
+    <Suspense fallback={<SceneFallback fill={immersive} />}>
       <WarehouseScene
         robotTypes={input.robotTypes}
         floorAreaM2={params.floorAreaM2}
@@ -104,8 +151,18 @@ function SimulationScene({ input, solution }: { input: SimulationInput; solution
         onManualVacuumCountChange={setCount}
         onManualArmCountChange={setCount}
         onManualLoaderCountChange={setCount}
+        immersive={immersive}
       />
+    </Suspense>
+  );
 
+  if (immersive) {
+    return <div className="h-full w-full">{scene}</div>;
+  }
+
+  return (
+    <div className="grid gap-3">
+      {scene}
       <details className="rounded-xl border border-border p-4 text-[12.5px] text-muted-foreground">
         <summary className="cursor-pointer font-medium text-foreground">
           Как параметры расчёта перенесены в симуляцию
@@ -122,5 +179,21 @@ function SimulationScene({ input, solution }: { input: SimulationInput; solution
         </ul>
       </details>
     </div>
+  );
+}
+
+/** Краткая справка под hero — те же допущения, что раньше жили под сценой. */
+export function SimulationAssumptions() {
+  return (
+    <details className="rounded-xl border border-border p-4 text-[12.5px] text-muted-foreground">
+      <summary className="cursor-pointer font-medium text-foreground">
+        Как параметры расчёта перенесены в симуляцию
+      </summary>
+      <ul className="mt-2 list-disc space-y-1 pl-5">
+        {SIMULATION_ASSUMPTIONS.map((line) => (
+          <li key={line}>{line}</li>
+        ))}
+      </ul>
+    </details>
   );
 }

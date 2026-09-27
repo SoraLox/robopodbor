@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "../db.js";
 import { hashPassword, verifyPassword } from "../password.js";
 import { SESSION_COOKIE } from "../middleware/auth.js";
+import { wrap } from "../asyncHandler.js";
 
 const router = Router();
 
@@ -39,7 +40,7 @@ async function openSession(res: import("express").Response, userId: string) {
   });
 }
 
-router.post("/register", async (req, res) => {
+router.post("/register", wrap(async (req, res) => {
   const parsed = credentialsSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: "Некорректные данные", issues: parsed.error.issues });
 
@@ -54,9 +55,9 @@ router.post("/register", async (req, res) => {
 
   await openSession(res, user.id);
   res.status(201).json(toUserDto(user));
-});
+}));
 
-router.post("/login", async (req, res) => {
+router.post("/login", wrap(async (req, res) => {
   const parsed = credentialsSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: "Некорректные данные" });
 
@@ -68,14 +69,14 @@ router.post("/login", async (req, res) => {
 
   await openSession(res, user.id);
   res.json(toUserDto(user));
-});
+}));
 
-router.post("/logout", async (req, res) => {
+router.post("/logout", wrap(async (req, res) => {
   const sid = req.cookies?.[SESSION_COOKIE];
   if (sid) await prisma.session.deleteMany({ where: { id: sid } });
   res.clearCookie(SESSION_COOKIE, { path: "/" });
   res.status(204).end();
-});
+}));
 
 router.get("/session", (req, res) => {
   if (!req.user) return res.status(401).json({ message: "Сессии нет" });

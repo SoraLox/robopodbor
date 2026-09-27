@@ -1,27 +1,30 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { useSession } from '@/api/auth';
 import {
-  BarChart3,
-  Building2,
   FileText,
   Home,
+  Info,
   Layers,
   LibraryBig,
   Menu,
+  ToggleLeft,
   X,
-  ShieldCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { MenuRowPlus, menuRowClassName } from './menuRow';
 
-const NAV = [
-  { to: '/dashboard', label: 'Главная', icon: Home },
-  { to: '/projects', label: 'Расчёты', icon: FileText, badge: 12 },
+const PRIMARY_NAV = [
+  { to: '/dashboard', label: 'Главная', icon: Home, end: true },
+  { to: '/projects', label: 'Расчёты', icon: FileText, plus: true },
   { to: '/catalog', label: 'Каталог решений', icon: Layers },
-  { to: '/admin', label: 'Справочники', icon: LibraryBig },
-  { to: '/methodology', label: 'Методика', icon: BarChart3 },
-  { to: '/calculate/warehouse', label: 'Новый расчёт', icon: Building2 },
-];
+  { to: '/admin', label: 'Справочники', icon: LibraryBig, adminOnly: true },
+  { to: '/settings', label: 'Настройки', icon: ToggleLeft },
+] as const;
+
+const SECONDARY_NAV = [
+  { to: '/methodology', label: 'Методика расчёта', icon: Info },
+] as const;
 
 export interface DashboardLayoutProps {
   children: ReactNode;
@@ -38,8 +41,8 @@ export function DashboardLayout({ children, aside }: DashboardLayoutProps) {
 
   return (
     <div className="min-h-screen bg-canvas">
-      <div className="flex min-h-screen">
-        <div className="hidden lg:flex">
+      <div className="flex min-h-screen items-start">
+        <div className="hidden p-4 lg:block xl:p-5">
           <Sidebar />
         </div>
 
@@ -54,9 +57,9 @@ export function DashboardLayout({ children, aside }: DashboardLayoutProps) {
               onClick={() => setMenuOpen(true)}
               aria-label="Открыть меню"
               aria-expanded={menuOpen}
-              className="grid size-11 flex-none place-items-center rounded-lg border border-border bg-background text-muted-foreground hover:bg-canvas hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 lg:hidden"
+              className="grid size-11 flex-none place-items-center rounded-[12px] border border-[#E5E5EA] bg-white text-foreground hover:bg-[#FAFAFA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 lg:hidden"
             >
-              <Menu className="size-5" strokeWidth={1.7} />
+              <Menu className="size-5" strokeWidth={1.75} />
             </button>
 
             <main className="min-w-0 w-full flex-1">{children}</main>
@@ -135,7 +138,7 @@ function MobileMenu({ onClose }: { onClose: () => void }) {
         onClick={onClose}
         className="absolute inset-0 bg-foreground/40"
       />
-      <div ref={panel} className="absolute inset-y-0 left-0 flex">
+      <div ref={panel} className="absolute inset-y-0 left-0 flex p-3">
         <Sidebar onNavigate={onClose} onClose={onClose} />
       </div>
     </div>
@@ -147,74 +150,86 @@ function Sidebar({
   onClose,
 }: { onNavigate?: () => void; onClose?: () => void } = {}) {
   const { data: user } = useSession();
-  // «Справочники» ведёт на /admin, который теперь требует роль admin —
-  // обычному пользователю показывать пункт, ведущий на «доступ запрещён», незачем.
-  const items = NAV.filter((item) => item.to !== '/admin' || user?.role === 'admin');
+  const primary = PRIMARY_NAV.filter(
+    (item) => !('adminOnly' in item && item.adminOnly) || user?.role === 'admin',
+  );
 
   return (
-    <div className="flex w-[232px] flex-none flex-col border-r border-border bg-background">
-      <Link to="/" className="flex items-start gap-3 border-b border-border px-5 py-4">
-        <ShieldCheck className="mt-0.5 size-6 flex-none text-primary" strokeWidth={1.7} />
-        <span className="text-[13px] font-semibold leading-tight">
-          Роботоподбор
-          <span className="mt-0.5 block text-[11px] font-normal text-meta-foreground">
-            платформа подбора решений
-          </span>
-        </span>
-      </Link>
-
-      {onClose ? (
-        <button
-          type="button"
-          onClick={onClose}
-          className="mx-2 mt-2 flex min-h-[44px] items-center gap-2 rounded-lg px-3 text-[12px] text-muted-foreground hover:bg-canvas hover:text-foreground lg:hidden"
-        >
-          <X className="size-4" strokeWidth={1.7} aria-hidden />
-          Закрыть меню
-        </button>
-      ) : null}
-
-      <nav className="flex-1 space-y-0.5 p-2">
-        {items.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            onClick={onNavigate}
-            className={({ isActive }) =>
-              cn(
-                // Активный пункт держится не только подложкой: у неё контраст
-                // 1.09:1, поэтому состояние несёт ещё и оранжевая планка слева.
-                'flex min-h-[44px] items-center gap-3 rounded-lg border-l-[3px] px-3 py-2.5 text-[13px] transition-colors',
-                isActive
-                  ? 'border-l-primary bg-accent-tint font-medium text-foreground'
-                  : 'border-l-transparent text-muted-foreground hover:bg-canvas hover:text-foreground',
-              )
-            }
+    <div
+      className={cn(
+        'w-[248px] flex-none',
+        !onClose &&
+          'sticky top-[calc(3.5rem+1rem)] self-start xl:top-[calc(3.5rem+1.25rem)]',
+      )}
+    >
+      <div className="overflow-hidden rounded-[20px] border border-[#E5E5EA] bg-white p-1.5 shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+        {onClose ? (
+          <button
+            type="button"
+            onClick={onClose}
+            className={cn(menuRowClassName(false), 'mb-0.5 lg:hidden')}
           >
-            {({ isActive }) => (
-              <>
-                <item.icon
-                  className={cn('size-[18px] flex-none', isActive && 'text-primary')}
-                  strokeWidth={1.7}
-                />
-                <span className="truncate">{item.label}</span>
-                {item.badge ? (
-                  <span className="ml-auto text-[11px] tabular text-meta-foreground">
-                    {item.badge}
-                  </span>
-                ) : null}
-              </>
-            )}
-          </NavLink>
-        ))}
-      </nav>
+            <X className="size-4 flex-none" strokeWidth={1.75} aria-hidden />
+            <span className="min-w-0 flex-1 truncate">Закрыть</span>
+          </button>
+        ) : null}
 
-      <div className="border-t border-border px-5 py-4">
-        <div className="text-[11px] leading-snug text-meta-foreground">
-          Данные о 37 внедрениях
-          <span className="mt-1 block">2021–2026</span>
-        </div>
-        <div className="mt-2 text-[11px] text-meta-foreground">v 0.1.0</div>
+        <nav aria-label="Разделы кабинета" className="flex flex-col gap-0.5 py-1.5">
+          {primary.map((item) => {
+            const withPlus = 'plus' in item && item.plus;
+            return (
+              <div key={item.to} className="relative">
+                <NavLink
+                  to={item.to}
+                  end={'end' in item ? item.end : false}
+                  onClick={onNavigate}
+                  className={({ isActive }) =>
+                    cn(menuRowClassName(isActive), withPlus && 'pr-9')
+                  }
+                >
+                  <item.icon
+                    className="size-4 flex-none text-foreground"
+                    strokeWidth={1.75}
+                    aria-hidden
+                  />
+                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                </NavLink>
+                {withPlus ? (
+                  <div className="pointer-events-auto absolute inset-y-0 right-2.5 flex items-center">
+                    <MenuRowPlus
+                      to="/calculate/warehouse"
+                      label="Новый расчёт"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onNavigate?.();
+                      }}
+                    />
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+        </nav>
+
+        <div className="mx-1 h-px bg-accent-tint" />
+
+        <nav aria-label="Справка" className="flex flex-col gap-0.5 py-1.5">
+          {SECONDARY_NAV.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              onClick={onNavigate}
+              className={({ isActive }) => menuRowClassName(isActive)}
+            >
+              <item.icon
+                className="size-4 flex-none text-foreground"
+                strokeWidth={1.75}
+                aria-hidden
+              />
+              <span className="min-w-0 flex-1 truncate">{item.label}</span>
+            </NavLink>
+          ))}
+        </nav>
       </div>
     </div>
   );

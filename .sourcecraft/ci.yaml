@@ -1,7 +1,7 @@
 # CI/CD SourceCraft.
 # Документация: https://sourcecraft.dev/portal/docs/ru/sourcecraft/ci-cd-ref/
 #
-# Обязателен для проверок и находится в apps/web (единственный пакет в apps/).
+# Проверяет оба пакета: apps/web (lint, типы, тесты, сборка) и apps/api (типы, сборка).
 
 on:
   pull_request:
@@ -49,6 +49,20 @@ workflows:
             script:
               - cd apps/web
               - npm run test
+
+      # API раньше в CI не проверялся вовсе — так и потерялись маршруты,
+      # которые фронт уже вызывал (/calculations, /parameters/import).
+      - name: api-checks
+        cubes:
+          - name: api-typecheck-build
+            image: node:22-alpine
+            script:
+              - cd apps/api
+              - npm ci --no-audit --no-fund
+              - npx prisma generate
+              - npx prisma validate
+              - npm run typecheck
+              - npm run build
 
       - name: build
         needs: [lint-typecheck-test]

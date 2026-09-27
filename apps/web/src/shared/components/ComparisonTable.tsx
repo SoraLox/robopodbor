@@ -15,9 +15,9 @@
  *   ]}
  *   rows={[
  *     {
- *       id: 'p15',
+ *       id: 'AM0001',
  *       selected: true,
- *       onClick: () => toggle('p15'),
+ *       onClick: () => toggle('AM0001'),
  *       cells: {
  *         name: 'AMR-паллетовоз P15',
  *         price: '7.4',

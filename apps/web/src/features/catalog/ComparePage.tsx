@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
 import { AppShell } from '@/app/AppShell';
-import { useSolutions } from '@/api/queries';
+import { useSelection, useSolutions } from '@/api/queries';
 import { useWizardStore } from '@/app/store';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import type { Maturity } from '@/api/types';
+import type { Maturity, SelectionItem } from '@/api/types';
+import { OBJECT_LABEL } from '@domain/catalog';
+import { provenanceTag, specGroups } from './solutionSpecs';
 
 const MATURITY_LABEL: Record<Maturity, string> = {
   operation: 'В эксплуатации',
@@ -25,22 +27,21 @@ const MATURITY_TEXT: Record<Maturity, string> = {
   rnd: 'text-status-rnd',
 };
 
-/** Построчные характеристики: таблица разворачивается по колонке на решение. */
-const ROWS = [
-  { key: 'vendor', label: 'Вендор' },
-  { key: 'useCase', label: 'Применение' },
-  { key: 'price', label: 'Цена, млн ₽' },
-  { key: 'payload', label: 'Грузоподъёмность' },
-  { key: 'speed', label: 'Скорость' },
-  { key: 'maturity', label: 'Зрелость' },
-  { key: 'confidence', label: 'Данные' },
-] as const;
+const SELECTION_LABEL: Record<SelectionItem['status'], { label: string; className: string }> = {
+  recommended: { label: 'Подходит', className: 'text-status-operation' },
+  'needs-review': { label: 'Требует проверки', className: 'text-status-piloting' },
+  excluded: { label: 'Не подходит', className: 'text-status-danger' },
+};
 
 export function ComparePage() {
   const { data: solutions } = useSolutions();
-  const { comparedIds } = useWizardStore();
+  const { comparedIds, objectType, parameters } = useWizardStore();
+  const { data: selection } = useSelection(objectType, parameters);
 
   const picked = (solutions ?? []).filter((solution) => comparedIds.includes(solution.id));
+  const specs = picked.map((solution) => specGroups(solution));
+  const verdicts = picked.map((solution) => selection?.items.find((item) => item.solutionId === solution.id));
+  const columns = `200px repeat(${picked.length}, minmax(0, 1fr))`;
 
   return (
     <AppShell>
@@ -77,7 +78,7 @@ export function ComparePage() {
             className="min-w-[680px]"
             style={{
               display: 'grid',
-              gridTemplateColumns: `180px repeat(${picked.length}, minmax(0, 1fr))`,
+              gridTemplateColumns: columns,
             }}
           >
             {/* Шапка: названия решений */}
@@ -89,62 +90,94 @@ export function ComparePage() {
               </div>
             ))}
 
-            {/* Строки характеристик */}
-            {ROWS.map((row, rowIndex) => (
-              <div key={row.key} className="contents">
-                <div
-                  className={cn(
-                    'px-5 py-3 text-[12px] font-medium text-muted-foreground',
-                    rowIndex < ROWS.length - 1 && 'border-b border-hairline',
-                  )}
-                >
-                  {row.label}
+            {objectType && selection ? (
+              <>
+                <GroupTitle title={`Подбор для объекта «${OBJECT_LABEL[objectType] ?? objectType}»`} />
+                <div className="border-b border-hairline px-5 py-3 text-[12px] font-medium text-muted-foreground">
+                  Результат
                 </div>
-                {picked.map((solution) => (
-                  <div
-                    key={solution.id + row.key}
-                    className={cn(
-                      'border-l border-hairline px-5 py-3 text-[13px]',
-                      rowIndex < ROWS.length - 1 && 'border-b',
-                    )}
-                  >
-                    {row.key === 'maturity' ? (
-                      <span
-                        className={cn(
-                          'inline-flex items-center gap-1.5 text-[12px] font-medium',
-                          MATURITY_TEXT[solution.maturity],
-                        )}
-                      >
-                        <span className={cn('size-1.5 rounded-full', MATURITY_DOT[solution.maturity])} aria-hidden />
-                        {MATURITY_LABEL[solution.maturity]}
-                      </span>
-                    ) : row.key === 'confidence' ? (
-                      <span
-                        className={cn(
-                          'inline-flex items-center gap-1.5 text-[12px] font-medium',
-                          solution.confidence === 'confirmed' ? 'text-status-confirmed' : 'text-status-piloting',
-                        )}
-                      >
-                        <span
-                          className={cn(
-                            'size-1.5 rounded-full',
-                            solution.confidence === 'confirmed' ? 'bg-status-confirmed' : 'bg-status-piloting',
-                          )}
-                          aria-hidden
-                        />
-                        {solution.confidence === 'confirmed' ? 'Подтверждено' : 'Требует проверки'}
-                      </span>
+                {verdicts.map((item, index) => (
+                  <div key={picked[index]!.id} className="border-b border-l border-hairline px-5 py-3 text-[12.5px]">
+                    {item ? (
+                      <>
+                        <span className={cn('font-semibold', SELECTION_LABEL[item.status].className)}>
+                          {SELECTION_LABEL[item.status].label}
+                          {item.status !== 'excluded' ? ` · ${item.score}` : ''}
+                        </span>
+                        {item.blockers.length > 0 ? (
+                          <p className="mt-1 leading-snug text-muted-foreground">{item.blockers.join('; ')}</p>
+                        ) : item.missing.length > 0 ? (
+                          <p className="mt-1 leading-snug text-muted-foreground">{item.missing.join('; ')}</p>
+                        ) : null}
+                      </>
                     ) : (
-                      <span className="font-mono tabular">{solution[row.key]}</span>
+                      <span className="text-muted-foreground">не для этого типа объекта</span>
                     )}
                   </div>
                 ))}
+              </>
+            ) : null}
+
+            {specs[0]?.map((group, groupIndex) => (
+              <div key={group.title} className="contents">
+                <GroupTitle title={group.title} />
+                {group.rows.map((row, rowIndex) => (
+                  <div key={row.label} className="contents">
+                    <div className="border-b border-hairline px-5 py-2.5 text-[12px] font-medium text-muted-foreground">
+                      {row.label}
+                    </div>
+                    {picked.map((solution, index) => {
+                      const cell = specs[index]?.[groupIndex]?.rows[rowIndex];
+                      return (
+                        <div key={solution.id} className="border-b border-l border-hairline px-5 py-2.5 text-[13px]">
+                          {cell?.value ?? <span className="text-muted-foreground">нет данных</span>}
+                          {cell && (provenanceTag(cell.provenance) ?? (cell.assumption ? 'допущение' : undefined)) ? (
+                            <span
+                              className="ml-1.5 rounded-sm bg-status-piloting-tint px-1 py-px text-[10.5px] font-medium text-status-piloting"
+                              title={cell.provenance?.note}
+                            >
+                              {provenanceTag(cell.provenance) ?? 'допущение'}
+                            </span>
+                          ) : null}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+                {groupIndex === 0 ? (
+                  <div className="contents">
+                    <div className="border-b border-hairline px-5 py-2.5 text-[12px] font-medium text-muted-foreground">
+                      Зрелость
+                    </div>
+                    {picked.map((solution) => (
+                      <div key={solution.id} className="border-b border-l border-hairline px-5 py-2.5">
+                        <span
+                          className={cn(
+                            'inline-flex items-center gap-1.5 text-[12px] font-medium',
+                            MATURITY_TEXT[solution.maturity],
+                          )}
+                        >
+                          <span className={cn('size-1.5 rounded-full', MATURITY_DOT[solution.maturity])} aria-hidden />
+                          {MATURITY_LABEL[solution.maturity]}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             ))}
           </div>
         </div>
       )}
     </AppShell>
+  );
+}
+
+function GroupTitle({ title }: { title: string }) {
+  return (
+    <div className="col-span-full border-b border-hairline bg-[#FAFAFA] px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+      {title}
+    </div>
   );
 }
 

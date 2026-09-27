@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { exposeForPerf } from '@/lib/perf/frameProfiler';
 
 interface WizardState {
   /** Введённые параметры паспорта объекта — переживают шаги мастера. */
@@ -64,3 +65,5 @@ export const useWizardStore = create<WizardState>((set) => ({
     })),
   resetCompared: () => set({ comparedIds: [] }),
 }));
+
+exposeForPerf('wizard', useWizardStore);

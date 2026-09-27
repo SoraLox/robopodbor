@@ -16,19 +16,18 @@ describe('ResultsPage', () => {
       { route: '/calculate/warehouse/results/demo' },
     );
 
-    // Мок держит паузу, имитируя долгий прогон модели на бэкенде.
     expect(screen.getByText('Считаем экономику')).toBeInTheDocument();
 
     await waitFor(
-      () => expect(screen.getByText('Срок окупаемости')).toBeInTheDocument(),
+      () => expect(screen.getAllByText('Срок окупаемости').length).toBeGreaterThan(0),
       { timeout: 5000 },
     );
 
-    expect(screen.getByText('3.2')).toBeInTheDocument();
+    expect(screen.getAllByText('3.2').length).toBeGreaterThan(0);
     expect(screen.getByText('Рекомендуем')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Сравнение решений' })).toBeInTheDocument();
-    expect(screen.getByText('Структура затрат')).toBeInTheDocument();
-    expect(screen.getByText('Анализ чувствительности')).toBeInTheDocument();
+    expect(screen.getAllByText('Сравнение решений').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Структура затрат').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Чувствительность').length).toBeGreaterThan(0);
     expect(screen.getByTestId('visualization-slot')).toBeInTheDocument();
   });
 });

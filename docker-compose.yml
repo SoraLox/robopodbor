@@ -1,14 +1,37 @@
 # Полный стек: nginx (фронт) -> api (Express/Prisma) -> postgres.
 # "docker compose up" — единственная команда для воспроизводимого запуска
 # и демонстрационного расчёта (см. 4.2.3, 8.2.2 ТЗ).
+#
+# Секреты берутся из .env рядом с этим файлом (см. .env.example); без него
+# поднимаются демо-значения, чтобы локальный запуск по-прежнему был одной командой.
+#
+# HTTPS + HTTP/2: docker compose --profile tls up (нужен DOMAIN в .env, см. deploy/Caddyfile).
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   db:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: robopodbor
-      POSTGRES_PASSWORD: robopodbor
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-robopodbor}
       POSTGRES_DB: robopodbor
+    # Значения по умолчанию у postgres рассчитаны на 128 МБ памяти; под лимит контейнера ниже.
+    command:
+      - postgres
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - effective_cache_size=768MB
+      - -c
+      - work_mem=8MB
+      - -c
+      - max_connections=50
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
@@ -16,31 +39,89 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    deploy:
+      resources:
+        limits: { cpus: "1.0", memory: 1g }
+    logging: *logging
+
+  # Миграции и сид — один раз перед стартом API, а не при каждом рестарте контейнера api.
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: migrate
+    environment:
+      DATABASE_URL: postgresql://robopodbor:${POSTGRES_PASSWORD:-robopodbor}@db:5432/robopodbor
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+    logging: *logging
 
   api:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
+      target: runtime
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://robopodbor:robopodbor@db:5432/robopodbor
-      WEB_ORIGIN: http://localhost:8080
+      DATABASE_URL: postgresql://robopodbor:${POSTGRES_PASSWORD:-robopodbor}@db:5432/robopodbor
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:8080}
       NODE_ENV: production
+      # nginx — один прокси; с Caddy перед ним (профиль tls) — два.
+      TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:-1}
+    # Наружу порт не публикуется: весь трафик идёт через nginx (rate limit, сжатие).
+    # Для отладки: docker compose run --service-ports или override-файл с ports.
+    expose:
+      - "4000"
     depends_on:
-      db:
-        condition: service_healthy
-    ports:
-      - "4000:4000"
+      migrate:
+        condition: service_completed_successfully
+    stop_grace_period: 15s
+    deploy:
+      resources:
+        limits: { cpus: "1.0", memory: 512m }
+    logging: *logging
 
   web:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
     ports:
-      - "8080:80"
+      - "${WEB_BIND:-0.0.0.0}:8080:80"
     restart: unless-stopped
     depends_on:
-      - api
+      api:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 128m }
+    logging: *logging
+
+  # TLS-терминатор с автоматическими сертификатами Let's Encrypt и HTTP/2/3.
+  # В этом режиме в .env стоит WEB_BIND=127.0.0.1, чтобы nginx не был доступен в обход TLS.
+  caddy:
+    image: caddy:2-alpine
+    profiles: ["tls"]
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - web
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 128m }
+    logging: *logging
 
 volumes:
   db-data:
+  caddy-data:
+  caddy-config:

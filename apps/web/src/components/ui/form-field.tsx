@@ -20,13 +20,15 @@ function FieldHint({ id, text }: { id: string; text: string }) {
         <TooltipTrigger asChild>
           <button
             type="button"
-            className="inline-flex size-4 flex-none items-center justify-center rounded-full text-meta-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-bright/40"
+            className="inline-flex size-4 flex-none items-center justify-center rounded-full text-[#8E8E93] transition-colors hover:text-[#1C1C1E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1C1C1E]/20"
             aria-label="Пояснение к полю"
           >
             <HelpCircle className="size-3.5" strokeWidth={2} />
           </button>
         </TooltipTrigger>
-        <TooltipContent id={`${id}-hint-tooltip`}>{text}</TooltipContent>
+        <TooltipContent id={`${id}-hint-tooltip`} side="top" align="center">
+          {text}
+        </TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );

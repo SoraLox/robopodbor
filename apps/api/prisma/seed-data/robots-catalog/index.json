@@ -1,0 +1,5716 @@
+{
+  "schema_ver": "2.0.0",
+  "updated": "2026-09-25",
+  "items": [
+    {
+      "id": "FC0001",
+      "cat": "FC",
+      "name": "РУБИ-С-03",
+      "vid": "VN0010",
+      "vendor": "РОБО",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 2200000.0,
+        "max": 2200000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "CI"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "RT",
+        "OF",
+        "ED",
+        "RS",
+        "CU"
+      ],
+      "io": [
+        "IN"
+      ],
+      "reg719": false,
+      "tested": true,
+      "fill_pct": 45.0,
+      "search": "рубис03 руби с 03 rubi s робо robo роботуборщик робот уборщик помещений robot uborschik pomescheniy indoor floor cleaning"
+    },
+    {
+      "id": "FC0002",
+      "cat": "FC",
+      "name": "MARK 2 SE",
+      "vid": "VN0011",
+      "vendor": "Р2Б",
+      "region": "RU-YAR",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 1900000.0,
+        "max": 1900000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "CI"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "WH",
+        "PR",
+        "RT",
+        "AP",
+        "ED"
+      ],
+      "io": [
+        "IN"
+      ],
+      "reg719": false,
+      "tested": true,
+      "fill_pct": 28.0,
+      "search": "mark 2 se р2б r2b роботуборщик робот уборщик помещений robot uborschik pomescheniy indoor floor cleaning"
+    },
+    {
+      "id": "FC0003",
+      "cat": "FC",
+      "name": "АК-SC80",
+      "vid": "VN0005",
+      "vendor": "ГК Автомакон",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 4056000.0,
+        "max": 4056000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "CI"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "WH",
+        "PR",
+        "RT"
+      ],
+      "io": [
+        "IN"
+      ],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 7.0,
+      "search": "акsc80 ак sc80 ak гк автомакон gk avtomakon роботуборщик робот уборщик помещений robot uborschik pomescheniy indoor floor cleaning"
+    },
+    {
+      "id": "FC0004",
+      "cat": "FC",
+      "name": "Клинботикс 400 PRO",
+      "vid": "VN0012",
+      "vendor": "Вейбот Автомакон Роботикс",
+      "region": "RU-ROS",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 1500000.0,
+        "max": 1500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "CI"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "RT"
+      ],
+      "io": [
+        "IN"
+      ],
+      "reg719": false,
+      "tested": true,
+      "fill_pct": 30.0,
+      "search": "клинботикс 400 pro klinbotiks вейбот автомакон роботикс veybot avtomakon robotiks роботуборщик робот уборщик помещений robot uborschik pomescheniy indoor floor cleaning"
+    },
+    {
+      "id": "FC0005",
+      "cat": "FC",
+      "name": "Клинботикс 600",
+      "vid": "VN0012",
+      "vendor": "Вейбот Автомакон Роботикс",
+      "region": "RU-ROS",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 2310000.0,
+        "max": 2310000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "CI"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "MD"
+      ],
+      "io": [
+        "IN"
+      ],
+      "reg719": false,
+      "tested": true,
+      "fill_pct": 29.0,
+      "search": "клинботикс 600 klinbotiks вейбот автомакон роботикс veybot avtomakon robotiks роботуборщик робот уборщик помещений robot uborschik pomescheniy indoor floor cleaning"
+    },
+    {
+      "id": "FC0006",
+      "cat": "FC",
+      "name": "Unit",
+      "vid": "VN0013",
+      "vendor": "Яку Роботикс",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "PI",
+      "trl": 8,
+      "price_rub": {
+        "min": 2300000.0,
+        "max": 2300000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "CI"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "WH",
+        "PR",
+        "RT",
+        "AP"
+      ],
+      "io": [
+        "IN"
+      ],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 10.0,
+      "search": "unit яку роботикс yaku robotiks роботуборщик робот уборщик помещений robot uborschik pomescheniy indoor floor cleaning"
+    },
+    {
+      "id": "SS0001",
+      "cat": "SS",
+      "name": "БРО 2.1",
+      "vid": "VN0056",
+      "vendor": "168Роботикс",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 15000000.0,
+        "max": 15000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "CO"
+      ],
+      "ind": [
+        "HU"
+      ],
+      "site": [
+        "HO",
+        "ST",
+        "PK",
+        "YD",
+        "IT"
+      ],
+      "io": [
+        "OU"
+      ],
+      "reg719": false,
+      "tested": true,
+      "fill_pct": 27.7,
+      "search": "бро 2 1 bro 168роботикс 168robotiks роботуборщик уличный робот уборщик ulichnyy robot uborschik outdoor street & territory cleaning"
+    },
+    {
+      "id": "SS0002",
+      "cat": "SS",
+      "name": "БРО 3.0",
+      "vid": "VN0056",
+      "vendor": "168Роботикс",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "RD",
+      "trl": 7,
+      "price_rub": {
+        "min": 15000000.0,
+        "max": 15000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "CO"
+      ],
+      "ind": [
+        "HU"
+      ],
+      "site": [
+        "ST"
+      ],
+      "io": [
+        "OU"
+      ],
+      "reg719": false,
+      "tested": true,
+      "fill_pct": 31.9,
+      "search": "бро 3 0 bro 168роботикс 168robotiks роботуборщик уличный робот уборщик ulichnyy robot uborschik outdoor street & territory cleaning"
+    },
+    {
+      "id": "SS0003",
+      "cat": "SS",
+      "name": "Пиксель",
+      "vid": "VN0057",
+      "vendor": "Автономика",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "RD",
+      "trl": 7,
+      "price_rub": {
+        "min": 15600000.0,
+        "max": 15600000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "CO"
+      ],
+      "ind": [
+        "HU"
+      ],
+      "site": [
+        "ST",
+        "PK",
+        "YD",
+        "PZ"
+      ],
+      "io": [
+        "OU"
+      ],
+      "reg719": false,
+      "tested": true,
+      "fill_pct": 26.6,
+      "search": "пиксель piksel автономика avtonomika роботуборщик уличный робот уборщик ulichnyy robot uborschik outdoor street & territory cleaning"
+    },
+    {
+      "id": "SS0004",
+      "cat": "SS",
+      "name": "Веном Саранча",
+      "vid": "VN0058",
+      "vendor": "Робком",
+      "region": "RU-NVS",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 3000000.0,
+        "max": 3000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "CO"
+      ],
+      "ind": [
+        "HU"
+      ],
+      "site": [
+        "ST"
+      ],
+      "io": [
+        "OU"
+      ],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 10.6,
+      "search": "веном саранча venom sarancha робком robkom роботуборщик уличный робот уборщик ulichnyy robot uborschik outdoor street & territory cleaning"
+    },
+    {
+      "id": "SS0005",
+      "cat": "SS",
+      "name": "МАРК",
+      "vid": "VN0059",
+      "vendor": "Виафор",
+      "region": "RU-KDA",
+      "origin": "RU",
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 4500000.0,
+        "max": 4500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "CO"
+      ],
+      "ind": [
+        "HU"
+      ],
+      "site": [
+        "ST",
+        "PK",
+        "PL"
+      ],
+      "io": [
+        "OU"
+      ],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 9.6,
+      "search": "марк mark виафор viafor роботуборщик уличный робот уборщик ulichnyy robot uborschik outdoor street & territory cleaning"
+    },
+    {
+      "id": "SS0006",
+      "cat": "SS",
+      "name": "Депеша-3",
+      "vid": "VN0060",
+      "vendor": "НПО Высокоточные комплексы",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 5000000.0,
+        "max": 5000000.0
+      },
+      "payload_kg": 150,
+      "scen": [
+        "CO"
+      ],
+      "ind": [
+        "HU"
+      ],
+      "site": [
+        "ST"
+      ],
+      "io": [
+        "OU"
+      ],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 16.0,
+      "search": "депеша3 депеша 3 depesha нпо высокоточные комплексы npo vysokotochnye kompleksy роботуборщик уличный робот уборщик ulichnyy robot uborschik outdoor street & territory cleaning"
+    },
+    {
+      "id": "SS0007",
+      "cat": "SS",
+      "name": "Astramis SurfexUnit",
+      "vid": "VN0061",
+      "vendor": "Астрамис",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "RD",
+      "trl": 5,
+      "price_rub": {
+        "min": 3000000.0,
+        "max": 3000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "CO"
+      ],
+      "ind": [
+        "HU"
+      ],
+      "site": [
+        "WH",
+        "ST"
+      ],
+      "io": [
+        "IN"
+      ],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 8.5,
+      "search": "astramis surfexunit астрамис роботуборщик уличный робот уборщик ulichnyy robot uborschik outdoor street & territory cleaning"
+    },
+    {
+      "id": "AM0001",
+      "cat": "AM",
+      "name": "Ronavi H1500",
+      "vid": "VN0001",
+      "vendor": "Ронави Роботикс",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 2700000.0,
+        "max": 2700000.0
+      },
+      "payload_kg": 1500,
+      "scen": [
+        "WL",
+        "PL"
+      ],
+      "ind": [
+        "TS",
+        "IN"
+      ],
+      "site": [
+        "WH",
+        "PR"
+      ],
+      "io": [
+        "IN"
+      ],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 30.2,
+      "search": "ronavi h1500 amr ронави роботикс robotiks автономный мобильный робот тележка тягач avtonomnyy mobilnyy robot telezhka tyagach autonomous mobile load carrier tugger"
+    },
+    {
+      "id": "AM0002",
+      "cat": "AM",
+      "name": "Ronavi SR",
+      "vid": "VN0001",
+      "vendor": "Ронави Роботикс",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 950000.0,
+        "max": 950000.0
+      },
+      "payload_kg": 50,
+      "scen": [
+        "WL"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "WH"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 23.3,
+      "search": "ronavi sr amr ронави роботикс robotiks автономный мобильный робот тележка тягач avtonomnyy mobilnyy robot telezhka tyagach autonomous mobile load carrier tugger"
+    },
+    {
+      "id": "AM0003",
+      "cat": "AM",
+      "name": "Ronavi H2000",
+      "vid": "VN0001",
+      "vendor": "Ронави Роботикс",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 2640000.0,
+        "max": 2640000.0
+      },
+      "payload_kg": 2000,
+      "scen": [
+        "WL",
+        "PL"
+      ],
+      "ind": [
+        "TS",
+        "IN"
+      ],
+      "site": [
+        "WH",
+        "PR"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 20.9,
+      "search": "ronavi h2000 amr ронави роботикс robotiks автономный мобильный робот тележка тягач avtonomnyy mobilnyy robot telezhka tyagach autonomous mobile load carrier tugger"
+    },
+    {
+      "id": "AM0004",
+      "cat": "AM",
+      "name": "Ronavi SD",
+      "vid": "VN0001",
+      "vendor": "Ронави Роботикс",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "PI",
+      "trl": 8,
+      "price_rub": {
+        "min": 1400000.0,
+        "max": 1400000.0
+      },
+      "payload_kg": 10,
+      "scen": [
+        "WL"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "WH"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 23.3,
+      "search": "ronavi sd amr ронави роботикс robotiks автономный мобильный робот тележка тягач avtonomnyy mobilnyy robot telezhka tyagach autonomous mobile load carrier tugger"
+    },
+    {
+      "id": "AM0005",
+      "cat": "AM",
+      "name": "Ronavi M",
+      "vid": "VN0001",
+      "vendor": "Ронави Роботикс",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 2400000.0,
+        "max": 2400000.0
+      },
+      "payload_kg": 1200,
+      "scen": [
+        "WL"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "WH"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 20.9,
+      "search": "ronavi m amr ронави роботикс robotiks автономный мобильный робот тележка тягач avtonomnyy mobilnyy robot telezhka tyagach autonomous mobile load carrier tugger"
+    },
+    {
+      "id": "AM0006",
+      "cat": "AM",
+      "name": "Ronavi RCM",
+      "vid": "VN0001",
+      "vendor": "Ронави Роботикс",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "RD",
+      "trl": 3,
+      "price_rub": {
+        "min": 2000000.0,
+        "max": 2000000.0
+      },
+      "payload_kg": 350,
+      "scen": [
+        "WL"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "WH"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 7.0,
+      "search": "ronavi rcm ронави роботикс robotiks автономный мобильный робот amr тележка тягач avtonomnyy mobilnyy robot telezhka tyagach autonomous mobile load carrier tugger"
+    },
+    {
+      "id": "AM0007",
+      "cat": "AM",
+      "name": "AMR 100",
+      "vid": "VN0002",
+      "vendor": "Морос",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 1500000.0,
+        "max": 1500000.0
+      },
+      "payload_kg": 100,
+      "scen": [
+        "WL"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "WH"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 14.0,
+      "search": "amr 100 amr100 морос moros автономный мобильный робот тележка тягач avtonomnyy mobilnyy robot telezhka tyagach autonomous mobile load carrier tugger"
+    },
+    {
+      "id": "AM0008",
+      "cat": "AM",
+      "name": "AMR 800",
+      "vid": "VN0002",
+      "vendor": "Морос",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 1800000.0,
+        "max": 1800000.0
+      },
+      "payload_kg": 800,
+      "scen": [
+        "WL"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "WH"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": true,
+      "fill_pct": 11.6,
+      "search": "amr 800 amr800 морос moros автономный мобильный робот тележка тягач avtonomnyy mobilnyy robot telezhka tyagach autonomous mobile load carrier tugger"
+    },
+    {
+      "id": "AM0009",
+      "cat": "AM",
+      "name": "AMR 1500",
+      "vid": "VN0002",
+      "vendor": "Морос",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "PI",
+      "trl": 8,
+      "price_rub": {
+        "min": 2200000.0,
+        "max": 2200000.0
+      },
+      "payload_kg": 1500,
+      "scen": [
+        "WL"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "WH"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": true,
+      "fill_pct": 12.8,
+      "search": "amr 1500 amr1500 морос moros автономный мобильный робот тележка тягач avtonomnyy mobilnyy robot telezhka tyagach autonomous mobile load carrier tugger"
+    },
+    {
+      "id": "AM0010",
+      "cat": "AM",
+      "name": "DMR 1200",
+      "vid": "VN0003",
+      "vendor": "Диком-Сервис",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "PI",
+      "trl": 8,
+      "price_rub": {
+        "min": 4000000.0,
+        "max": 4000000.0
+      },
+      "payload_kg": 1200,
+      "scen": [
+        "WL"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "WH"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": true,
+      "fill_pct": 18.6,
+      "search": "dmr 1200 диком dikom дикомсервис сервис servis автономный мобильный робот amr тележка тягач avtonomnyy mobilnyy robot telezhka tyagach autonomous mobile load carrier tugger"
+    },
+    {
+      "id": "AM0011",
+      "cat": "AM",
+      "name": "DMR 600",
+      "vid": "VN0003",
+      "vendor": "Диком-Сервис",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 3750000.0,
+        "max": 3750000.0
+      },
+      "payload_kg": 600,
+      "scen": [
+        "WL",
+        "PL"
+      ],
+      "ind": [
+        "TS",
+        "IN"
+      ],
+      "site": [
+        "WH",
+        "PR"
+      ],
+      "io": [],
+      "reg719": true,
+      "tested": true,
+      "fill_pct": 15.1,
+      "search": "dmr 600 диком dikom дикомсервис сервис servis автономный мобильный робот amr тележка тягач avtonomnyy mobilnyy robot telezhka tyagach autonomous mobile load carrier tugger"
+    },
+    {
+      "id": "AM0012",
+      "cat": "AM",
+      "name": "Сёмабот",
+      "vid": "VN0004",
+      "vendor": "Семаргл",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "PI",
+      "trl": 8,
+      "price_rub": {
+        "min": 2500000.0,
+        "max": 2500000.0
+      },
+      "payload_kg": 1500,
+      "scen": [
+        "WL"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "WH"
+      ],
+      "io": [],
+      "reg719": true,
+      "tested": true,
+      "fill_pct": 14.0,
+      "search": "семабот semabot семаргл semargl автономный мобильный робот amr тележка тягач avtonomnyy mobilnyy robot telezhka tyagach autonomous mobile load carrier tugger"
+    },
+    {
+      "id": "AM0013",
+      "cat": "AM",
+      "name": "Робот-тягач RoboCV",
+      "vid": "VN0006",
+      "vendor": "Робосиви",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 2500000.0,
+        "max": 2500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "WL"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "WH"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 18.6,
+      "search": "роботтягач робот тягач robocv robot tyagach робосиви robosivi автономный мобильный amr тележка avtonomnyy mobilnyy telezhka autonomous mobile load carrier tugger"
+    },
+    {
+      "id": "AM0014",
+      "cat": "AM",
+      "name": "Робот-комплектовщик",
+      "vid": "VN0016",
+      "vendor": "Яндекс Роботикс",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "RD",
+      "trl": 7,
+      "price_rub": {
+        "min": 2500000.0,
+        "max": 2500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "SO"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 7.0,
+      "search": "роботкомплектовщик робот комплектовщик robot komplektovschik яндекс роботикс yandeks robotiks автономный мобильный amr тележка тягач avtonomnyy mobilnyy telezhka tyagach autonomous mobile load carrier tugger"
+    },
+    {
+      "id": "AM0015",
+      "cat": "AM",
+      "name": "DMR 300 Carrier B",
+      "vid": "VN0003",
+      "vendor": "Диком-Сервис",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 10800000.0,
+        "max": 10800000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "PL"
+      ],
+      "ind": [
+        "IN"
+      ],
+      "site": [
+        "PR"
+      ],
+      "io": [],
+      "reg719": true,
+      "tested": false,
+      "fill_pct": 8.1,
+      "search": "dmr 300 carrier b диком dikom дикомсервис сервис servis автономный мобильный робот amr тележка тягач avtonomnyy mobilnyy robot telezhka tyagach autonomous mobile load tugger"
+    },
+    {
+      "id": "AM0016",
+      "cat": "AM",
+      "name": "DMP 15000",
+      "vid": "VN0003",
+      "vendor": "Диком-Сервис",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "OP",
+      "trl": 6,
+      "price_rub": {
+        "min": 4500000.0,
+        "max": 4500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "PL"
+      ],
+      "ind": [
+        "IN"
+      ],
+      "site": [
+        "PR"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 9.3,
+      "search": "dmp 15000 дикомсервис диком сервис dikom servis автономный мобильный робот amr тележка тягач avtonomnyy mobilnyy robot telezhka tyagach autonomous mobile load carrier tugger"
+    },
+    {
+      "id": "AM0017",
+      "cat": "AM",
+      "name": "Tagarka",
+      "vid": "VN0004",
+      "vendor": "Семаргл",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "PI",
+      "trl": 8,
+      "price_rub": {
+        "min": 8000000.0,
+        "max": 8000000.0
+      },
+      "payload_kg": 6000,
+      "scen": [
+        "PL"
+      ],
+      "ind": [
+        "IN"
+      ],
+      "site": [
+        "PR"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 7.0,
+      "search": "tagarka семаргл semargl автономный мобильный робот amr тележка тягач avtonomnyy mobilnyy robot telezhka tyagach autonomous mobile load carrier tugger"
+    },
+    {
+      "id": "AM0018",
+      "cat": "AM",
+      "name": "Tagarka",
+      "vid": "VN0004",
+      "vendor": "Семаргл",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "PI",
+      "trl": 8,
+      "price_rub": {
+        "min": 5000000.0,
+        "max": 5000000.0
+      },
+      "payload_kg": 35000,
+      "scen": [
+        "PL"
+      ],
+      "ind": [
+        "IN"
+      ],
+      "site": [
+        "PR"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 7.0,
+      "search": "tagarka семаргл semargl автономный мобильный робот amr тележка тягач avtonomnyy mobilnyy robot telezhka tyagach autonomous mobile load carrier tugger"
+    },
+    {
+      "id": "AM0019",
+      "cat": "AM",
+      "name": "Робот для транспортировки деталей и инструментов",
+      "vid": "VN0032",
+      "vendor": "ОДК-СТАР",
+      "region": "RU-PER",
+      "origin": null,
+      "status": "RD",
+      "trl": 5,
+      "price_rub": {
+        "min": 7500000.0,
+        "max": 7500000.0
+      },
+      "payload_kg": 100,
+      "scen": [
+        "PL"
+      ],
+      "ind": [
+        "IN"
+      ],
+      "site": [
+        "PR"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 11.6,
+      "search": "робот для транспортировки деталей и инструментов robot dlya transportirovki detaley i instrumentov садко sadko одкстар одк стар odk star автономный мобильный amr тележка тягач avtonomnyy mobilnyy telezhka tyagach autonomous mobile load carrier tugger"
+    },
+    {
+      "id": "FL0001",
+      "cat": "FL",
+      "name": "DMR Carrier P",
+      "vid": "VN0003",
+      "vendor": "Диком-Сервис",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "PI",
+      "trl": 8,
+      "price_rub": {
+        "min": 4300000.0,
+        "max": 4300000.0
+      },
+      "payload_kg": 1500,
+      "scen": [
+        "WL"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "WH",
+        "PR"
+      ],
+      "io": [
+        "IN"
+      ],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 25.8,
+      "search": "dmr carrier p диком dikom дикомсервис сервис servis беспилотный погрузчик штабелер fmr bespilotnyy pogruzchik shtabeler forklift & stacker robot"
+    },
+    {
+      "id": "FL0002",
+      "cat": "FL",
+      "name": "AK-2000-2",
+      "vid": "VN0005",
+      "vendor": "ГК Автомакон",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 2940000.0,
+        "max": 2940000.0
+      },
+      "payload_kg": 2000,
+      "scen": [
+        "WL"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "WH"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 28.1,
+      "search": "ak20002 ak 2000 2 гк автомакон gk avtomakon беспилотный погрузчик штабелер fmr bespilotnyy pogruzchik shtabeler forklift & stacker robot"
+    },
+    {
+      "id": "FL0003",
+      "cat": "FL",
+      "name": "Робот-штабелёр RoboCV",
+      "vid": "VN0006",
+      "vendor": "Робосиви",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 2500000.0,
+        "max": 2500000.0
+      },
+      "payload_kg": 1400,
+      "scen": [
+        "WL"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "WH"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 20.2,
+      "search": "роботштабелер робот штабелер robocv robot shtabeler робосиви robosivi беспилотный погрузчик fmr bespilotnyy pogruzchik forklift & stacker"
+    },
+    {
+      "id": "FL0004",
+      "cat": "FL",
+      "name": "Беспилотный погрузчик",
+      "vid": "VN0008",
+      "vendor": "МФТИ",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 3000000.0,
+        "max": 3000000.0
+      },
+      "payload_kg": 2000,
+      "scen": [
+        "WL"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "WH"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 15.7,
+      "search": "беспилотный погрузчик bespilotnyy pogruzchik мфти mfti штабелер fmr shtabeler forklift & stacker robot"
+    },
+    {
+      "id": "FL0005",
+      "cat": "FL",
+      "name": "MULE",
+      "vid": "VN0009",
+      "vendor": "СМ РОБОТИКС",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 3000000.0,
+        "max": 3000000.0
+      },
+      "payload_kg": 1500,
+      "scen": [
+        "WL"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "WH"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 14.6,
+      "search": "mule см роботикс sm robotiks беспилотный погрузчик штабелер fmr bespilotnyy pogruzchik shtabeler forklift & stacker robot"
+    },
+    {
+      "id": "IN0001",
+      "cat": "IN",
+      "name": "Робот инвентаризатор",
+      "vid": "VN0016",
+      "vendor": "Яндекс Роботикс",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 2000000.0,
+        "max": 2000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "IV"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "WH"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 11.2,
+      "search": "робот инвентаризатор robot inventarizator яндекс роботикс yandeks robotiks роботинвентаризатор inventory"
+    },
+    {
+      "id": "IN0002",
+      "cat": "IN",
+      "name": "Инвентаризатор AI Stock Counter 12M",
+      "vid": "VN0005",
+      "vendor": "ГК Автомакон",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 2600000.0,
+        "max": 2600000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "IV"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "WH"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 15.0,
+      "search": "инвентаризатор ai stock counter 12m inventarizator neurus ausc12 гк автомакон gk avtomakon роботинвентаризатор робот robot inventory"
+    },
+    {
+      "id": "DL0001",
+      "cat": "DL",
+      "name": "Яндекс-ровер R 4.0",
+      "vid": "VN0016",
+      "vendor": "Яндекс Роботикс",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 700000.0,
+        "max": 700000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "LM"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 9.1,
+      "search": "яндексровер яндекс ровер r 4 0 yandeks rover роботикс robotiks роботкурьер робот курьер robot kurer ground delivery"
+    },
+    {
+      "id": "DL0002",
+      "cat": "DL",
+      "name": "Белка",
+      "vid": "VN0026",
+      "vendor": "Дронсхаб",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "RD",
+      "trl": 7,
+      "price_rub": {
+        "min": 1200000.0,
+        "max": 1200000.0
+      },
+      "payload_kg": 30,
+      "scen": [
+        "CD"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "PR",
+        "OF",
+        "RS"
+      ],
+      "io": [
+        "IN"
+      ],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 15.9,
+      "search": "белка belka дронсхаб dronskhab роботкурьер робот курьер robot kurer ground delivery"
+    },
+    {
+      "id": "SC0001",
+      "cat": "SC",
+      "name": "Легат Патрол",
+      "vid": "VN0026",
+      "vendor": "Дронсхаб",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 6,
+      "price_rub": {
+        "min": 4500000.0,
+        "max": 4500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "MO"
+      ],
+      "ind": [
+        "IN"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 15.0,
+      "search": "легат патрол legat patrol дронсхаб dronskhab охранный патрульный робот okhrannyy patrulnyy robot security & environmental monitoring"
+    },
+    {
+      "id": "SC0002",
+      "cat": "SC",
+      "name": "Робот Городовой",
+      "vid": "VN0084",
+      "vendor": "Гумич РТК",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 3500000.0,
+        "max": 3500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "PT"
+      ],
+      "ind": [
+        "SE"
+      ],
+      "site": [
+        "WH",
+        "PR",
+        "CU",
+        "ST",
+        "PK",
+        "PL"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 13.8,
+      "search": "робот городовой robot gorodovoy гумич ртк gumich rtk охранный патрульный okhrannyy patrulnyy security patrol & environmental monitoring"
+    },
+    {
+      "id": "SC0003",
+      "cat": "SC",
+      "name": "Трал Патруль 5",
+      "vid": "VN0085",
+      "vendor": "СМП Сервис",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 4000000.0,
+        "max": 4000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "PT"
+      ],
+      "ind": [
+        "SE"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 25.0,
+      "search": "трал патруль 5 tral patrul 2 1 смп сервис smp servis охранный патрульный робот okhrannyy patrulnyy robot security patrol & environmental monitoring"
+    },
+    {
+      "id": "SC0004",
+      "cat": "SC",
+      "name": "Роботизированная система патрулирования и охраны",
+      "vid": "VN0072",
+      "vendor": "МАИ",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 3000000.0,
+        "max": 3600000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "MO",
+        "PT",
+        "TI"
+      ],
+      "ind": [
+        "SE",
+        "TL"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 5.0,
+      "search": "роботизированная система патрулирования и охраны robotizirovannaya sistema patrulirovaniya i okhrany маи mai охранный патрульный робот okhrannyy patrulnyy robot security patrol & environmental monitoring"
+    },
+    {
+      "id": "ER0001",
+      "cat": "ER",
+      "name": "Роботизированный лафетный ствол",
+      "vid": "VN0089",
+      "vendor": "Коруфайер",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 2200000.0,
+        "max": 2200000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "FF"
+      ],
+      "ind": [
+        "SE"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 12.1,
+      "search": "роботизированный лафетный ствол robotizirovannyy lafetnyy stvol крфлсд крф лсд krf lsd коруфайер korufayer пожарный спасательный робот pozharnyy spasatelnyy robot firefighting & rescue"
+    },
+    {
+      "id": "ER0002",
+      "cat": "ER",
+      "name": "Гумич спасатель",
+      "vid": "VN0084",
+      "vendor": "Гумич РТК",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 5500000.0,
+        "max": 5500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "EV"
+      ],
+      "ind": [
+        "SE"
+      ],
+      "site": [
+        "EZ"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 12.1,
+      "search": "гумич спасатель gumich spasatel ртк rtk пожарный спасательный робот pozharnyy spasatelnyy robot firefighting & rescue"
+    },
+    {
+      "id": "IR0001",
+      "cat": "IR",
+      "name": "Робот-паук",
+      "vid": "VN0034",
+      "vendor": "Атоммаш",
+      "region": "RU-PNZ",
+      "origin": null,
+      "status": "OP",
+      "trl": 7,
+      "price_rub": {
+        "min": 2000000.0,
+        "max": 2000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "IM"
+      ],
+      "ind": [
+        "IN"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 8.3,
+      "search": "роботпаук робот паук robot pauk атоммаш atommash инспекционный трубы конструкции грунт inspektsionnyy truby konstruktsii grunt inspection pipes structures underground"
+    },
+    {
+      "id": "IR0002",
+      "cat": "IR",
+      "name": "Внутритрубные роботизированные системы Тьюбот",
+      "vid": "VN0051",
+      "vendor": "Тьюбот",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 3500000.0,
+        "max": 3500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "ID",
+        "IC"
+      ],
+      "ind": [
+        "HU",
+        "EN"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 10.7,
+      "search": "внутритрубные роботизированные системы тьюбот vnutritrubnye robotizirovannye sistemy tyubot tubot инспекционный робот трубы конструкции грунт inspektsionnyy robot truby konstruktsii grunt inspection pipes structures underground"
+    },
+    {
+      "id": "IR0003",
+      "cat": "IR",
+      "name": "Sigma (100D, 150, 200, 250A)",
+      "vid": "VN0052",
+      "vendor": "Тарис",
+      "region": "RU-MOS",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 3000000.0,
+        "max": 3000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "ID"
+      ],
+      "ind": [
+        "HU"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 10.7,
+      "search": "sigma 100d 150 200 250a тарис taris инспекционный робот трубы конструкции грунт inspektsionnyy robot truby konstruktsii grunt inspection pipes structures underground"
+    },
+    {
+      "id": "IR0004",
+      "cat": "IR",
+      "name": "Роботизированный диагностический комплекс",
+      "vid": "VN0053",
+      "vendor": "Диаконт",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 8000000.0,
+        "max": 8000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "ID"
+      ],
+      "ind": [
+        "HU"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 7.1,
+      "search": "роботизированный диагностический комплекс robotizirovannyy diagnosticheskiy kompleks диаконт diakont инспекционный робот трубы конструкции грунт inspektsionnyy robot truby konstruktsii grunt inspection pipes structures underground"
+    },
+    {
+      "id": "IR0005",
+      "cat": "IR",
+      "name": "Внутренняя диагностика труб ЖКХ",
+      "vid": "VN0054",
+      "vendor": "Юникон",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 2700000.0,
+        "max": 2700000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "ID"
+      ],
+      "ind": [
+        "HU"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 8.3,
+      "search": "внутренняя диагностика труб жкх vnutrennyaya diagnostika trub zhkkh юникон yunikon инспекционный робот трубы конструкции грунт inspektsionnyy robot truby konstruktsii grunt inspection pipes structures underground"
+    },
+    {
+      "id": "IR0006",
+      "cat": "IR",
+      "name": "MARTin",
+      "vid": "VN0077",
+      "vendor": "Миррико",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 2500000.0,
+        "max": 2500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "ID",
+        "IC"
+      ],
+      "ind": [
+        "EN"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 11.9,
+      "search": "martin martin™ миррико mirriko инспекционный робот трубы конструкции грунт inspektsionnyy robot truby konstruktsii grunt inspection pipes structures underground"
+    },
+    {
+      "id": "IR0007",
+      "cat": "IR",
+      "name": "Роботизированный комплекс по обследованию грунта",
+      "vid": "VN0024",
+      "vendor": "Аврора Роботикс",
+      "region": "RU-RYA",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 3400000.0,
+        "max": 3400000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "UI"
+      ],
+      "ind": [
+        "SE"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 8.3,
+      "search": "роботизированный комплекс по обследованию грунта robotizirovannyy kompleks po obsledovaniyu grunta аврора роботикс avrora robotiks инспекционный робот трубы конструкции грунт inspektsionnyy robot truby konstruktsii grunt inspection pipes structures underground"
+    },
+    {
+      "id": "UG0001",
+      "cat": "UG",
+      "name": "ИРБИС",
+      "vid": "VN0029",
+      "vendor": "Прикладная Робототехника",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 7500000.0,
+        "max": 7500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "CM"
+      ],
+      "ind": [
+        "AG"
+      ],
+      "site": [
+        "FI"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 5.8,
+      "search": "ирбис irbis прикладная робототехника prikladnaya robototekhnika платформа высокой проходимости platforma vysokoy prokhodimosti offroad off road robotic platform ugv"
+    },
+    {
+      "id": "UG0002",
+      "cat": "UG",
+      "name": "Cargo UNIT",
+      "vid": "VN0026",
+      "vendor": "Дронсхаб",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 2634670.0,
+        "max": 2634670.0
+      },
+      "payload_kg": 150,
+      "scen": [
+        "MH"
+      ],
+      "ind": [
+        "CO"
+      ],
+      "site": [
+        "WH"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 10.5,
+      "search": "cargo unit карго юнит kargo yunit dh дронсхаб dronskhab платформа высокой проходимости platforma vysokoy prokhodimosti offroad off road robotic platform ugv"
+    },
+    {
+      "id": "UG0003",
+      "cat": "UG",
+      "name": "Багира",
+      "vid": "VN0029",
+      "vendor": "Прикладная Робототехника",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "RD",
+      "trl": 4,
+      "price_rub": {
+        "min": 4000000.0,
+        "max": 4000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "OR"
+      ],
+      "ind": [
+        "TL"
+      ],
+      "site": [
+        "RM"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 5.8,
+      "search": "багира bagira прикладная робототехника prikladnaya robototekhnika платформа высокой проходимости platforma vysokoy prokhodimosti offroad off road robotic platform ugv"
+    },
+    {
+      "id": "RW0001",
+      "cat": "RW",
+      "name": "Робот-расцепщик",
+      "vid": "VN0097",
+      "vendor": "Концерн Телематика",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "PI",
+      "trl": 8,
+      "price_rub": {
+        "min": 4200000.0,
+        "max": 4200000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "UC"
+      ],
+      "ind": [
+        "TL"
+      ],
+      "site": [
+        "RW"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 13.3,
+      "search": "роботрасцепщик робот расцепщик robot rastsepschik вагонник vagonnik концерн телематика kontsern telematika для обслуживания вагонов dlya obsluzhivaniya vagonov railway service"
+    },
+    {
+      "id": "RW0002",
+      "cat": "RW",
+      "name": "Робот-растормаживатель",
+      "vid": "VN0097",
+      "vendor": "Концерн Телематика",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "PI",
+      "trl": 8,
+      "price_rub": {
+        "min": 4200000.0,
+        "max": 4200000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "RS"
+      ],
+      "ind": [
+        "TL"
+      ],
+      "site": [
+        "RW"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 8.9,
+      "search": "роботрастормаживатель робот растормаживатель robot rastormazhivatel концерн телематика kontsern telematika для обслуживания вагонов dlya obsluzhivaniya vagonov railway service"
+    },
+    {
+      "id": "RW0003",
+      "cat": "RW",
+      "name": "Ровер для работы с грузовыми вагонами",
+      "vid": "VN0098",
+      "vendor": "Нииас",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 4200000.0,
+        "max": 4200000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "RS"
+      ],
+      "ind": [
+        "TL"
+      ],
+      "site": [
+        "RW"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 7.8,
+      "search": "ровер для работы с грузовыми вагонами rover dlya raboty s gruzovymi vagonami нииас niias робот обслуживания вагонов robot obsluzhivaniya vagonov railway service"
+    },
+    {
+      "id": "AG0001",
+      "cat": "AG",
+      "name": "Роботизированный автономный минитрактор CP",
+      "vid": "VN0042",
+      "vendor": "Когнитив Пилот",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 4000000.0,
+        "max": 4000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "PW"
+      ],
+      "ind": [
+        "AG"
+      ],
+      "site": [
+        "FI"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 25.9,
+      "search": "роботизированный автономный минитрактор cp robotizirovannyy avtonomnyy minitraktor cognitive pilot когнитив пилот kognitiv беспилотный трактор полевой робот bespilotnyy traktor polevoy robot autonomous tractor & field"
+    },
+    {
+      "id": "AG0002",
+      "cat": "AG",
+      "name": "85ТК",
+      "vid": "VN0043",
+      "vendor": "Завод Агромаш",
+      "region": "RU-CU",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 12000000.0,
+        "max": 12000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "PW"
+      ],
+      "ind": [
+        "AG"
+      ],
+      "site": [
+        "FI"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 19.8,
+      "search": "85тк 85tk агромаш agromash завод zavod беспилотный трактор полевой робот bespilotnyy traktor polevoy robot autonomous tractor & field"
+    },
+    {
+      "id": "AG0003",
+      "cat": "AG",
+      "name": "Агробот",
+      "vid": "VN0024",
+      "vendor": "Аврора Роботикс",
+      "region": "RU-RYA",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 3500000.0,
+        "max": 3500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "PW"
+      ],
+      "ind": [
+        "AG"
+      ],
+      "site": [
+        "FI"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 19.8,
+      "search": "агробот agrobot аврора роботикс avrora robotiks беспилотный трактор полевой робот bespilotnyy traktor polevoy robot autonomous tractor & field"
+    },
+    {
+      "id": "AG0004",
+      "cat": "AG",
+      "name": "Роботизированный трактор с гибридной силовой установкой",
+      "vid": "VN0044",
+      "vendor": "Донской государственный технический университет (ДГТУ)",
+      "region": "RU-ROS",
+      "origin": "RU",
+      "status": "RD",
+      "trl": 7,
+      "price_rub": {
+        "min": 8000000.0,
+        "max": 8000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "PW"
+      ],
+      "ind": [
+        "AG"
+      ],
+      "site": [
+        "FI"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 17.3,
+      "search": "роботизированный трактор с гибридной силовой установкой robotizirovannyy traktor s gibridnoy silovoy ustanovkoy донтех dontekh донской государственный технический университет дгту donskoy gosudarstvennyy tekhnicheskiy universitet dgtu беспилотный полевой робот bespilotnyy polevoy robot autonomous tractor & field"
+    },
+    {
+      "id": "AG0005",
+      "cat": "AG",
+      "name": "Кировец Агробот",
+      "vid": "VN0047",
+      "vendor": "Петербургский Тракторный Завод",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "RD",
+      "trl": 6,
+      "price_rub": {
+        "min": 20000000.0,
+        "max": 20000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "HV"
+      ],
+      "ind": [
+        "AG"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.2,
+      "search": "кировец агробот kirovets agrobot петербургский тракторный завод peterburgskiy traktornyy zavod беспилотный трактор полевой робот bespilotnyy traktor polevoy robot autonomous tractor & field"
+    },
+    {
+      "id": "HV0001",
+      "cat": "HV",
+      "name": "MARK A (Agro)",
+      "vid": "VN0045",
+      "vendor": "Электромотив",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 3500000.0,
+        "max": 3500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "HV"
+      ],
+      "ind": [
+        "AG"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 4.4,
+      "search": "mark a agro электромотив elektromotiv робот для сбора плодов и ягод robot dlya sbora plodov i yagod fruit & berry harvesting"
+    },
+    {
+      "id": "HV0002",
+      "cat": "HV",
+      "name": "Роботизированная платформа для выборочного сбора плодов",
+      "vid": "VN0046",
+      "vendor": "Финансовый Университет",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "PI",
+      "trl": 6,
+      "price_rub": {
+        "min": 2500000.0,
+        "max": 2500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "HV"
+      ],
+      "ind": [
+        "AG"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 9.9,
+      "search": "роботизированная платформа для выборочного сбора плодов robotizirovannaya platforma dlya vyborochnogo sbora plodov финансовый университет finansovyy universitet робот и ягод robot i yagod fruit & berry harvesting"
+    },
+    {
+      "id": "HV0003",
+      "cat": "HV",
+      "name": "Интеллектуальный робот-манипулятор для автоматического сбора томатов",
+      "vid": "VN0048",
+      "vendor": "Новосибирский Государственный Университет",
+      "region": "RU-NVS",
+      "origin": null,
+      "status": "RD",
+      "trl": 5,
+      "price_rub": {
+        "min": 2500000.0,
+        "max": 2500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "HV"
+      ],
+      "ind": [
+        "AG"
+      ],
+      "site": [
+        "GH"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 11.0,
+      "search": "роботманипулятор интеллектуальный робот манипулятор для автоматического сбора томатов intellektualnyy robot manipulyator dlya avtomaticheskogo sbora tomatov новосибирский государственный университет novosibirskiy gosudarstvennyy universitet плодов и ягод plodov i yagod fruit & berry harvesting"
+    },
+    {
+      "id": "HV0004",
+      "cat": "HV",
+      "name": "Система автоматизированного сбора ягод с использованием группы мобильных роботов",
+      "vid": "VN0049",
+      "vendor": "ПНИПУ",
+      "region": "RU-PER",
+      "origin": null,
+      "status": "RD",
+      "trl": 4,
+      "price_rub": {
+        "min": 2500000.0,
+        "max": 2500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "HV"
+      ],
+      "ind": [
+        "AG"
+      ],
+      "site": [
+        "FI"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 11.0,
+      "search": "система автоматизированного сбора ягод с использованием группы мобильных роботов sistema avtomatizirovannogo sbora yagod s ispolzovaniem gruppy mobilnykh robotov пнипу pnipu робот для плодов и robot dlya plodov i fruit & berry harvesting"
+    },
+    {
+      "id": "LV0001",
+      "cat": "LV",
+      "name": "Кати",
+      "vid": "VN0040",
+      "vendor": "Агробит",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 7500000.0,
+        "max": 7500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "PO"
+      ],
+      "ind": [
+        "AG"
+      ],
+      "site": [
+        "FM"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 5.6,
+      "search": "кати kati агробит agrobit робот для животноводства и птицеводства robot dlya zhivotnovodstva i ptitsevodstva livestock & poultry"
+    },
+    {
+      "id": "LV0002",
+      "cat": "LV",
+      "name": "Колесный робот",
+      "vid": "VN0040",
+      "vendor": "Агробит",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "RD",
+      "trl": 7,
+      "price_rub": {
+        "min": 3500000.0,
+        "max": 3500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "PO"
+      ],
+      "ind": [
+        "AG"
+      ],
+      "site": [
+        "FM"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 5.6,
+      "search": "колесный робот kolesnyy robot агробит agrobit для животноводства и птицеводства dlya zhivotnovodstva i ptitsevodstva livestock & poultry"
+    },
+    {
+      "id": "LV0003",
+      "cat": "LV",
+      "name": "Волшебник",
+      "vid": "VN0041",
+      "vendor": "Промтехника-Приволжье",
+      "region": "RU-NIZ",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 12000000.0,
+        "max": 12000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "MK"
+      ],
+      "ind": [
+        "AG"
+      ],
+      "site": [
+        "FM"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 17.8,
+      "search": "волшебник volshebnik 2 0 промтехникаприволжье промтехника приволжье promtekhnika privolzhe робот для животноводства и птицеводства robot dlya zhivotnovodstva i ptitsevodstva livestock & poultry"
+    },
+    {
+      "id": "AV0001",
+      "cat": "AV",
+      "name": "IQ-BUS V",
+      "vid": "VN0024",
+      "vendor": "Аврора Роботикс",
+      "region": "RU-RYA",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 7800000.0,
+        "max": 7800000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "VN"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 8.9,
+      "search": "iqbus iq bus v vseries series аврора роботикс avrora robotiks беспилотный транспорт грузовик тягач такси трамвай метро bespilotnyy transport gruzovik tyagach taksi tramvay metro autonomous road rail vehicle"
+    },
+    {
+      "id": "AV0002",
+      "cat": "AV",
+      "name": "EVOCARGO N1",
+      "vid": "VN0091",
+      "vendor": "Эвокарго",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 6000000.0,
+        "max": 6000000.0
+      },
+      "payload_kg": 2000,
+      "scen": [
+        "CS"
+      ],
+      "ind": [
+        "TL"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 26.7,
+      "search": "evocargo n1 эвокарго evokargo беспилотный транспорт грузовик тягач такси трамвай метро bespilotnyy transport gruzovik tyagach taksi tramvay metro autonomous road rail vehicle"
+    },
+    {
+      "id": "AV0003",
+      "cat": "AV",
+      "name": "Беспилотный тягач (Когнитив Пилот)",
+      "vid": "VN0042",
+      "vendor": "Когнитив Пилот",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 4000000.0,
+        "max": 4000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "CS"
+      ],
+      "ind": [
+        "TL"
+      ],
+      "site": [
+        "AP"
+      ],
+      "io": [
+        "OU"
+      ],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 30.0,
+      "search": "беспилотный тягач когнитив пилот bespilotnyy tyagach kognitiv pilot транспорт грузовик такси трамвай метро transport gruzovik taksi tramvay metro autonomous road rail vehicle"
+    },
+    {
+      "id": "AV0004",
+      "cat": "AV",
+      "name": "Беспилотный AMT 6×6",
+      "vid": "VN0092",
+      "vendor": "Амт Н.В.",
+      "region": "RU-CHE",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 14000000.0,
+        "max": 14000000.0
+      },
+      "payload_kg": 24000,
+      "scen": [
+        "OR"
+      ],
+      "ind": [
+        "TL"
+      ],
+      "site": [
+        "RM"
+      ],
+      "io": [],
+      "reg719": true,
+      "tested": false,
+      "fill_pct": 17.8,
+      "search": "беспилотный amt 6×6 bespilotnyy амт н в n v транспорт грузовик тягач такси трамвай метро transport gruzovik tyagach taksi tramvay metro autonomous road rail vehicle"
+    },
+    {
+      "id": "AV0005",
+      "cat": "AV",
+      "name": "Беспилотный «Львёнок-Москва»",
+      "vid": "VN0093",
+      "vendor": "ПК ТС",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 120000000.0,
+        "max": 120000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "PP"
+      ],
+      "ind": [
+        "TL"
+      ],
+      "site": [
+        "RD"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 12.2,
+      "search": "львенокмосква беспилотный львенок москва bespilotnyy lvenok moskva пк тс pk ts транспорт грузовик тягач такси трамвай метро transport gruzovik tyagach taksi tramvay metro autonomous road rail vehicle"
+    },
+    {
+      "id": "AV0006",
+      "cat": "AV",
+      "name": "Беспилотный поезд \"2024\"",
+      "vid": "VN0094",
+      "vendor": "Метровагонмаш",
+      "region": "RU-MOS",
+      "origin": null,
+      "status": "PI",
+      "trl": 6,
+      "price_rub": {
+        "min": 120000000.0,
+        "max": 120000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "PP"
+      ],
+      "ind": [
+        "TL"
+      ],
+      "site": [
+        "RD"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 13.3,
+      "search": "беспилотный поезд 2024 bespilotnyy poezd москва2024 москва moskva метровагонмаш metrovagonmash транспорт грузовик тягач такси трамвай метро transport gruzovik tyagach taksi tramvay metro autonomous road rail vehicle"
+    },
+    {
+      "id": "AV0007",
+      "cat": "AV",
+      "name": "L5",
+      "vid": "VN0095",
+      "vendor": "Автотех",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 20000000.0,
+        "max": 20000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "LH"
+      ],
+      "ind": [
+        "TL"
+      ],
+      "site": [
+        "RD"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 12.2,
+      "search": "l5 navio автотех avtotekh беспилотный транспорт грузовик тягач такси трамвай метро bespilotnyy transport gruzovik tyagach taksi tramvay metro autonomous road rail vehicle"
+    },
+    {
+      "id": "AV0008",
+      "cat": "AV",
+      "name": "Беспилотное такси Яндекс",
+      "vid": "VN0096",
+      "vendor": "Яндекс",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 4500000.0,
+        "max": 4500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "PC"
+      ],
+      "ind": [
+        "TL"
+      ],
+      "site": [
+        "RD"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 14.4,
+      "search": "беспилотное такси яндекс bespilotnoe taksi yandeks роботакси яндекса robotaksi yandeksa беспилотный транспорт грузовик тягач трамвай метро bespilotnyy transport gruzovik tyagach tramvay metro autonomous road rail vehicle"
+    },
+    {
+      "id": "CE0001",
+      "cat": "CE",
+      "name": "Беспилотный бульдозер",
+      "vid": "VN0055",
+      "vendor": "ДСТ-УРАЛ",
+      "region": "RU-CHE",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 8600000.0,
+        "max": 8600000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "RR"
+      ],
+      "ind": [
+        "HU"
+      ],
+      "site": [
+        "QR"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 11.8,
+      "search": "беспилотный бульдозер bespilotnyy buldozer дстурал дст урал dst ural беспилотная строительная и демонтажная техника bespilotnaya stroitelnaya i demontazhnaya tekhnika autonomous construction & demolition machine"
+    },
+    {
+      "id": "CE0002",
+      "cat": "CE",
+      "name": "Беспилотный каток",
+      "vid": "VN0062",
+      "vendor": "Раскат",
+      "region": "RU-YAR",
+      "origin": null,
+      "status": "PI",
+      "trl": 8,
+      "price_rub": {
+        "min": 12000000.0,
+        "max": 12000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "RW"
+      ],
+      "ind": [
+        "HU"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 10.6,
+      "search": "беспилотный каток bespilotnyy katok рв11ддбп рв 11дд бп rv 11dd bp раскат raskat беспилотная строительная и демонтажная техника bespilotnaya stroitelnaya i demontazhnaya tekhnika autonomous construction & demolition machine"
+    },
+    {
+      "id": "CE0003",
+      "cat": "CE",
+      "name": "Беспилотный асфальтоукладчик",
+      "vid": "VN0063",
+      "vendor": "НПО ГКМП",
+      "region": "RU-BRY",
+      "origin": "RU",
+      "status": "PI",
+      "trl": 8,
+      "price_rub": {
+        "min": 12000000.0,
+        "max": 12000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "RW"
+      ],
+      "ind": [
+        "HU"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 29.4,
+      "search": "беспилотный асфальтоукладчик bespilotnyy asfaltoukladchik десна 2100 desna нпо гкмп npo gkmp беспилотная строительная и демонтажная техника bespilotnaya stroitelnaya i demontazhnaya tekhnika autonomous construction & demolition machine"
+    },
+    {
+      "id": "CE0004",
+      "cat": "CE",
+      "name": "АМТ S300",
+      "vid": "VN0069",
+      "vendor": "АМТ",
+      "region": "RU-YAR",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 8920000.0,
+        "max": 8920000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "BC"
+      ],
+      "ind": [
+        "CO"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 22.4,
+      "search": "амт s300 amt s 300 беспилотная строительная и демонтажная техника bespilotnaya stroitelnaya i demontazhnaya tekhnika autonomous construction & demolition machine"
+    },
+    {
+      "id": "CE0005",
+      "cat": "CE",
+      "name": "Azarrus 1.0A",
+      "vid": "VN0073",
+      "vendor": "Деморобот",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 6000000.0,
+        "max": 6000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "DE"
+      ],
+      "ind": [
+        "CO"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 9.4,
+      "search": "azarrus 1 0a деморобот demorobot беспилотная строительная и демонтажная техника bespilotnaya stroitelnaya i demontazhnaya tekhnika autonomous construction & demolition machine"
+    },
+    {
+      "id": "IM0001",
+      "cat": "IM",
+      "name": "Модель А25-1720",
+      "vid": "VN0014",
+      "vendor": "Эйдос Робототехника",
+      "region": "RU-TA",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 2000000.0,
+        "max": 2500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "SO",
+        "MF"
+      ],
+      "ind": [
+        "TS",
+        "IN"
+      ],
+      "site": [
+        "PR"
+      ],
+      "io": [],
+      "reg719": true,
+      "tested": false,
+      "fill_pct": 9.1,
+      "search": "а251720 модель а25 1720 model a25 эйдос робототехника eydos robototekhnika промышленный манипулятор promyshlennyy manipulyator industrial robot arm"
+    },
+    {
+      "id": "IM0002",
+      "cat": "IM",
+      "name": "Модель А12-1450",
+      "vid": "VN0014",
+      "vendor": "Эйдос Робототехника",
+      "region": "RU-TA",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 2000000.0,
+        "max": 2500000.0
+      },
+      "payload_kg": 12,
+      "scen": [
+        "SO",
+        "MF"
+      ],
+      "ind": [
+        "TS",
+        "IN"
+      ],
+      "site": [
+        "PR"
+      ],
+      "io": [],
+      "reg719": true,
+      "tested": false,
+      "fill_pct": 30.3,
+      "search": "а121450 модель а12 1450 model a12 эйдос eydos робот манипулятор а 12 robot manipulyator a робототехника robototekhnika промышленный promyshlennyy industrial arm"
+    },
+    {
+      "id": "IM0003",
+      "cat": "IM",
+      "name": "RH06A2",
+      "vid": "VN0028",
+      "vendor": "СМД",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 3500000.0,
+        "max": 3500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "MF"
+      ],
+      "ind": [
+        "IN"
+      ],
+      "site": [
+        "PR"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 7.6,
+      "search": "rh06a2 смд smd промышленный манипулятор promyshlennyy manipulyator industrial robot arm"
+    },
+    {
+      "id": "IM0004",
+      "cat": "IM",
+      "name": "ARM95-200",
+      "vid": "VN0029",
+      "vendor": "Прикладная Робототехника",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 6800000.0,
+        "max": 6800000.0
+      },
+      "payload_kg": 18,
+      "scen": [
+        "MF"
+      ],
+      "ind": [
+        "IN"
+      ],
+      "site": [
+        "PR"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 16.7,
+      "search": "arm95200 arm95 200 прикладная робототехника prikladnaya robototekhnika промышленный манипулятор promyshlennyy manipulyator industrial robot arm"
+    },
+    {
+      "id": "IM0005",
+      "cat": "IM",
+      "name": "Модель А6-2000",
+      "vid": "VN0014",
+      "vendor": "Эйдос Робототехника",
+      "region": "RU-TA",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 2500000.0,
+        "max": 2500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "MF"
+      ],
+      "ind": [
+        "IN"
+      ],
+      "site": [
+        "PR"
+      ],
+      "io": [],
+      "reg719": true,
+      "tested": false,
+      "fill_pct": 9.1,
+      "search": "а62000 модель а6 2000 model a6 эйдос робототехника eydos robototekhnika промышленный манипулятор promyshlennyy manipulyator industrial robot arm"
+    },
+    {
+      "id": "IM0006",
+      "cat": "IM",
+      "name": "Модель А220-2700",
+      "vid": "VN0014",
+      "vendor": "Эйдос Робототехника",
+      "region": "RU-TA",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 2500000.0,
+        "max": 2500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "MF"
+      ],
+      "ind": [
+        "IN"
+      ],
+      "site": [
+        "PR"
+      ],
+      "io": [],
+      "reg719": true,
+      "tested": false,
+      "fill_pct": 9.1,
+      "search": "а2202700 модель а220 2700 model a220 эйдос робототехника eydos robototekhnika промышленный манипулятор promyshlennyy manipulyator industrial robot arm"
+    },
+    {
+      "id": "IM0007",
+      "cat": "IM",
+      "name": "Дельта-робот",
+      "vid": "VN0031",
+      "vendor": "Битроботикс",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 8000000.0,
+        "max": 8000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "MF"
+      ],
+      "ind": [
+        "IN"
+      ],
+      "site": [
+        "PR"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 10.6,
+      "search": "дельтаробот дельта робот delta robot битроботикс bitrobotiks промышленный манипулятор promyshlennyy manipulyator industrial arm"
+    },
+    {
+      "id": "CB0001",
+      "cat": "CB",
+      "name": "RC5-16",
+      "vid": "VN0022",
+      "vendor": "Робопро",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 2500000.0,
+        "max": 2500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "MF"
+      ],
+      "ind": [
+        "IN"
+      ],
+      "site": [
+        "PR"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 21.2,
+      "search": "rc516 rc5 16 doka робопро rc16 robopro коллаборативный робот kollaborativnyy robot collaborative cobot"
+    },
+    {
+      "id": "CB0002",
+      "cat": "CB",
+      "name": "Берилл",
+      "vid": "VN0027",
+      "vendor": "Валдай Роботы",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 2500000.0,
+        "max": 2500000.0
+      },
+      "payload_kg": 25,
+      "scen": [
+        "MF"
+      ],
+      "ind": [
+        "IN"
+      ],
+      "site": [
+        "PR"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 27.3,
+      "search": "берилл berill рп25 22шс rp25 22shs валдай роботы valday roboty коллаборативный робот kollaborativnyy robot collaborative cobot"
+    },
+    {
+      "id": "MM0001",
+      "cat": "MM",
+      "name": "Роборука",
+      "vid": "VN0017",
+      "vendor": "Сбербанк",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "RD",
+      "trl": 5,
+      "price_rub": {
+        "min": 2600000.0,
+        "max": 2600000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "SO"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 4.3,
+      "search": "роборука roboruka сбербанк sberbank мобильный манипулятор mobilnyy manipulyator mobile manipulator"
+    },
+    {
+      "id": "MM0002",
+      "cat": "MM",
+      "name": "Воркер",
+      "vid": "VN0017",
+      "vendor": "Сбербанк",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 4500000.0,
+        "max": 4500000.0
+      },
+      "payload_kg": 15,
+      "scen": [
+        "OP"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "RT"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 11.7,
+      "search": "воркер vorker сбербанк sberbank мобильный манипулятор mobilnyy manipulyator mobile manipulator"
+    },
+    {
+      "id": "RC0001",
+      "cat": "RC",
+      "name": "Робототехнический комплекс REDLOAD PRO 10 COBOT",
+      "vid": "VN0030",
+      "vendor": "Технорэд",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 3500000.0,
+        "max": 3500000.0
+      },
+      "payload_kg": 10,
+      "scen": [
+        "MF"
+      ],
+      "ind": [
+        "IN"
+      ],
+      "site": [
+        "PR"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 23.6,
+      "search": "робототехнический комплекс redload pro 10 cobot robototekhnicheskiy kompleks технорэд tekhnored роботизированная ячейка robotizirovannaya yacheyka robotic cell complex"
+    },
+    {
+      "id": "RC0002",
+      "cat": "RC",
+      "name": "Робототехнический комплекс REDWELD BASIC",
+      "vid": "VN0030",
+      "vendor": "Технорэд",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 3500000.0,
+        "max": 3500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "MF"
+      ],
+      "ind": [
+        "IN"
+      ],
+      "site": [
+        "PR"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 9.7,
+      "search": "робототехнический комплекс redweld basic robototekhnicheskiy kompleks технорэд tekhnored роботизированная ячейка robotizirovannaya yacheyka robotic cell complex"
+    },
+    {
+      "id": "RC0003",
+      "cat": "RC",
+      "name": "Робототехнический комплекс REDWELD PRO 10 COBOT",
+      "vid": "VN0030",
+      "vendor": "Технорэд",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 3500000.0,
+        "max": 3500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "MF"
+      ],
+      "ind": [
+        "IN"
+      ],
+      "site": [
+        "PR"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.9,
+      "search": "робототехнический комплекс redweld pro 10 cobot robototekhnicheskiy kompleks технорэд tekhnored роботизированная ячейка robotizirovannaya yacheyka robotic cell complex"
+    },
+    {
+      "id": "RC0004",
+      "cat": "RC",
+      "name": "Учебная ячейка REDEDUCATION PRO",
+      "vid": "VN0030",
+      "vendor": "Технорэд",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 2500000.0,
+        "max": 2500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "MF"
+      ],
+      "ind": [
+        "IN"
+      ],
+      "site": [
+        "PR",
+        "ED"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 13.9,
+      "search": "учебная ячейка rededucation pro uchebnaya yacheyka технорэд tekhnored роботизированная комплекс robotizirovannaya kompleks robotic cell complex"
+    },
+    {
+      "id": "RC0005",
+      "cat": "RC",
+      "name": "D. Operator P",
+      "vid": "VN0003",
+      "vendor": "Диком-Сервис",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 9400000.0,
+        "max": 9400000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "MF"
+      ],
+      "ind": [
+        "IN"
+      ],
+      "site": [
+        "PR"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.9,
+      "search": "d operator p дикомсервис диком сервис dikom servis роботизированная ячейка комплекс robotizirovannaya yacheyka kompleks robotic cell complex"
+    },
+    {
+      "id": "RC0006",
+      "cat": "RC",
+      "name": "ARIPIX A1",
+      "vid": "VN0033",
+      "vendor": "Арипикс Роботикс",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 2000000.0,
+        "max": 2000000.0
+      },
+      "payload_kg": 10,
+      "scen": [
+        "WS"
+      ],
+      "ind": [
+        "IN"
+      ],
+      "site": [
+        "PR"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 15.3,
+      "search": "aripix a1 а1 арипикс роботикс aripiks robotiks роботизированная ячейка комплекс robotizirovannaya yacheyka kompleks robotic cell complex"
+    },
+    {
+      "id": "RC0007",
+      "cat": "RC",
+      "name": "Роботизированный комплекс по укладке заготовок",
+      "vid": "VN0031",
+      "vendor": "Битроботикс",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 12000000.0,
+        "max": 12000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "WS"
+      ],
+      "ind": [
+        "IN"
+      ],
+      "site": [
+        "PR"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 15.3,
+      "search": "роботизированный комплекс по укладке заготовок robotizirovannyy kompleks po ukladke zagotovok битроботикс bitrobotiks роботизированная ячейка robotizirovannaya yacheyka robotic cell complex"
+    },
+    {
+      "id": "RC0008",
+      "cat": "RC",
+      "name": "Яша",
+      "vid": "VN0035",
+      "vendor": "Свеза-Лес",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 2000000.0,
+        "max": 2000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "SO"
+      ],
+      "ind": [
+        "IN"
+      ],
+      "site": [
+        "PR"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 12.5,
+      "search": "яша yasha свезалес свеза лес sveza les роботизированная ячейка комплекс robotizirovannaya yacheyka kompleks robotic cell complex"
+    },
+    {
+      "id": "RC0009",
+      "cat": "RC",
+      "name": "Робот-лаборант",
+      "vid": "VN0036",
+      "vendor": "Газпром Нефть",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "RD",
+      "trl": 7,
+      "price_rub": {
+        "min": 2000000.0,
+        "max": 2000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "LA"
+      ],
+      "ind": [
+        "IN"
+      ],
+      "site": [
+        "LB"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 11.1,
+      "search": "роботлаборант робот лаборант robot laborant газпром нефть gazprom neft роботизированная ячейка комплекс robotizirovannaya yacheyka kompleks robotic cell complex"
+    },
+    {
+      "id": "RC0010",
+      "cat": "RC",
+      "name": "МРСК",
+      "vid": "VN0071",
+      "vendor": "КБ-интеграл",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 3500000.0,
+        "max": 3500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "BC"
+      ],
+      "ind": [
+        "CO"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 5.6,
+      "search": "мрск mrsk кбинтеграл кб интеграл kb integral роботизированная ячейка комплекс robotizirovannaya yacheyka kompleks robotic cell complex"
+    },
+    {
+      "id": "AS0001",
+      "cat": "AS",
+      "name": "SmartCube",
+      "vid": "VN0007",
+      "vendor": "АРС",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 2700000.0,
+        "max": 2700000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "WL"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "WH"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 16.4,
+      "search": "smartcube ars smartcube™ арс автоматизированная система хранения avtomatizirovannaya sistema khraneniya automated storage & retrieval system"
+    },
+    {
+      "id": "AS0002",
+      "cat": "AS",
+      "name": "AS-RS P",
+      "vid": "VN0003",
+      "vendor": "Диком-Сервис",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 10000000.0,
+        "max": 10000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "SO"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": true,
+      "tested": false,
+      "fill_pct": 8.2,
+      "search": "asrs as rs p дикомсервис диком сервис dikom servis автоматизированная система хранения avtomatizirovannaya sistema khraneniya automated storage & retrieval system"
+    },
+    {
+      "id": "AS0003",
+      "cat": "AS",
+      "name": "AS-RS B",
+      "vid": "VN0003",
+      "vendor": "Диком-Сервис",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "PI",
+      "trl": 6,
+      "price_rub": {
+        "min": 10000000.0,
+        "max": 10000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "SO"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": true,
+      "tested": false,
+      "fill_pct": 8.2,
+      "search": "asrs as rs b дикомсервис диком сервис dikom servis автоматизированная система хранения avtomatizirovannaya sistema khraneniya automated storage & retrieval system"
+    },
+    {
+      "id": "AS0004",
+      "cat": "AS",
+      "name": "Pallet Shuttle",
+      "vid": "VN0015",
+      "vendor": "Завод Стелкон",
+      "region": "RU-MOS",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 7000000.0,
+        "max": 7000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "SO"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "WH"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 24.6,
+      "search": "pallet shuttle завод стелкон zavod stelkon автоматизированная система хранения avtomatizirovannaya sistema khraneniya automated storage & retrieval system"
+    },
+    {
+      "id": "CA0001",
+      "cat": "CA",
+      "name": "Комплекс управления кранами ВИРСАЙН СДУ",
+      "vid": "VN0070",
+      "vendor": "Вирсайн Инновации",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 2000000.0,
+        "max": 2000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "BC"
+      ],
+      "ind": [
+        "CO"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 11.9,
+      "search": "комплекс управления кранами вирсайн сду kompleks upravleniya kranami virsayn sdu инновации innovatsii система автоматизации кранов sistema avtomatizatsii kranov crane automation system"
+    },
+    {
+      "id": "CA0002",
+      "cat": "CA",
+      "name": "DH: Cloud Control",
+      "vid": "VN0026",
+      "vendor": "Дронсхаб",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 2200000.0,
+        "max": 2200000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "MH"
+      ],
+      "ind": [
+        "CO"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 13.6,
+      "search": "dh cloud control center дронсхаб dronskhab система автоматизации кранов sistema avtomatizatsii kranov crane automation system"
+    },
+    {
+      "id": "FB0001",
+      "cat": "FB",
+      "name": "R-Cafe 1.3",
+      "vid": "VN0022",
+      "vendor": "Робопро",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 5000000.0,
+        "max": 5000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "BV"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 12.9,
+      "search": "rcafe r cafe 1 3 rozum café робопро robopro робокафе роботбариста робо кафе робот бариста robo kafe robot barista food & beverage"
+    },
+    {
+      "id": "FB0002",
+      "cat": "FB",
+      "name": "Фудтрак",
+      "vid": "VN0023",
+      "vendor": "Соло Кофе",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 2800000.0,
+        "max": 2800000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "BV"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 12.9,
+      "search": "фудтрак fudtrak соло кофе solo kofe робокафе роботбариста робо кафе робот бариста robo kafe robot barista food & beverage"
+    },
+    {
+      "id": "HU0001",
+      "cat": "HU",
+      "name": "Аркус",
+      "vid": "VN0019",
+      "vendor": "НИУ ВШЭ",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "RD",
+      "trl": 3,
+      "price_rub": {
+        "min": 1800000.0,
+        "max": 1800000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "LM"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [],
+      "io": [
+        "OU"
+      ],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 12.5,
+      "search": "аркус arkus arcus ниу вшэ niu vshe антропоморфный сервисный робот antropomorfnyy servisnyy robot humanoid & service"
+    },
+    {
+      "id": "HU0002",
+      "cat": "HU",
+      "name": "Promobot V.4",
+      "vid": "VN0020",
+      "vendor": "Промобот",
+      "region": "RU-PER",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 4265395.0,
+        "max": 4265395.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "RA"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "RT"
+      ],
+      "io": [
+        "IN"
+      ],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 30.7,
+      "search": "promobot v 4 v4 промобот антропоморфный сервисный робот antropomorfnyy servisnyy robot humanoid & service"
+    },
+    {
+      "id": "HU0003",
+      "cat": "HU",
+      "name": "Арди",
+      "vid": "VN0020",
+      "vendor": "Промобот",
+      "region": "RU-PER",
+      "origin": null,
+      "status": "RD",
+      "trl": 6,
+      "price_rub": {
+        "min": 15000000.0,
+        "max": 15000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "RA"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "RT"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 12.5,
+      "search": "арди ardi промобот promobot антропоморфный сервисный робот antropomorfnyy servisnyy robot humanoid & service"
+    },
+    {
+      "id": "HU0004",
+      "cat": "HU",
+      "name": "Грин",
+      "vid": "VN0017",
+      "vendor": "Сбербанк",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "RD",
+      "trl": 4,
+      "price_rub": {
+        "min": 7000000.0,
+        "max": 7000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "RA"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "RT"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 17.0,
+      "search": "грин grin сбербанк sberbank антропоморфный сервисный робот antropomorfnyy servisnyy robot humanoid & service"
+    },
+    {
+      "id": "HU0005",
+      "cat": "HU",
+      "name": "Айдол",
+      "vid": "VN0021",
+      "vendor": "Айдол",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 7000000.0,
+        "max": 7000000.0
+      },
+      "payload_kg": 10,
+      "scen": [
+        "RA"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "RT"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 14.8,
+      "search": "айдол aydol aidol антропоморфный сервисный робот antropomorfnyy servisnyy robot humanoid & service"
+    },
+    {
+      "id": "UA0001",
+      "cat": "UA",
+      "name": "Геоскан 401",
+      "vid": "VN0037",
+      "vendor": "Геоскан",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 4000000.0,
+        "max": 4000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "PM",
+        "TL",
+        "LU",
+        "GE",
+        "FI",
+        "GG",
+        "WC",
+        "FT"
+      ],
+      "ind": [
+        "AG",
+        "CO",
+        "EN",
+        "SE",
+        "FO"
+      ],
+      "site": [
+        "FR",
+        "PI",
+        "PW",
+        "WA"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.2,
+      "search": "геоскан 401 geoskan беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0002",
+      "cat": "UA",
+      "name": "Supercam X4E",
+      "vid": "VN0038",
+      "vendor": "Финко",
+      "region": "RU-UD",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 5038000.0,
+        "max": 5038000.0
+      },
+      "payload_kg": 4,
+      "scen": [
+        "HN",
+        "BD",
+        "SV",
+        "FI",
+        "SR",
+        "CW",
+        "GG",
+        "FT"
+      ],
+      "ind": [
+        "AG",
+        "CO",
+        "EN",
+        "SE",
+        "FO"
+      ],
+      "site": [
+        "FR",
+        "UN",
+        "WA"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 29.6,
+      "search": "supercam x4e финко finko беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0003",
+      "cat": "UA",
+      "name": "Supercam X6M2",
+      "vid": "VN0038",
+      "vendor": "Финко",
+      "region": "RU-UD",
+      "origin": null,
+      "status": "RD",
+      "trl": 7,
+      "price_rub": {
+        "min": 5500000.0,
+        "max": 5500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "FI"
+      ],
+      "ind": [
+        "AG"
+      ],
+      "site": [
+        "WA"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 28.4,
+      "search": "supercam x6m2 финко finko беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0004",
+      "cat": "UA",
+      "name": "ДИАМ 20К",
+      "vid": "VN0039",
+      "vendor": "ГК Икар",
+      "region": "RU-MOW",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 7,
+      "price_rub": {
+        "min": 13000000.0,
+        "max": 13000000.0
+      },
+      "payload_kg": 5,
+      "scen": [
+        "FI",
+        "GG"
+      ],
+      "ind": [
+        "AG",
+        "EN"
+      ],
+      "site": [
+        "WA"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 23.5,
+      "search": "диам 20к diam 20k диам20к гк икар gk ikar беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0005",
+      "cat": "UA",
+      "name": "Геоскан 701",
+      "vid": "VN0037",
+      "vendor": "Геоскан",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "OP",
+      "trl": 7,
+      "price_rub": {
+        "min": 13000000.0,
+        "max": 13000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "PM",
+        "HN",
+        "TL",
+        "RM",
+        "GE",
+        "FI",
+        "FL",
+        "DA",
+        "IE",
+        "RP",
+        "FP",
+        "IL"
+      ],
+      "ind": [
+        "AG",
+        "CO",
+        "EN",
+        "SE",
+        "TL",
+        "FO"
+      ],
+      "site": [
+        "FR",
+        "RW",
+        "PI",
+        "UN",
+        "PW",
+        "WA"
+      ],
+      "io": [],
+      "reg719": true,
+      "tested": false,
+      "fill_pct": 7.4,
+      "search": "геоскан 701 geoskan беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0006",
+      "cat": "UA",
+      "name": "Геоскан 201",
+      "vid": "VN0037",
+      "vendor": "Геоскан",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 3200000.0,
+        "max": 3200000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "CM",
+        "PM",
+        "SV",
+        "WC",
+        "FT"
+      ],
+      "ind": [
+        "AG",
+        "CO",
+        "EN",
+        "FO"
+      ],
+      "site": [
+        "FI",
+        "FR",
+        "PI"
+      ],
+      "io": [],
+      "reg719": true,
+      "tested": false,
+      "fill_pct": 7.4,
+      "search": "геоскан 201 geoskan беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0007",
+      "cat": "UA",
+      "name": "Геоскан 201 Агро",
+      "vid": "VN0037",
+      "vendor": "Геоскан",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 6422000.0,
+        "max": 6422000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "CM"
+      ],
+      "ind": [
+        "AG"
+      ],
+      "site": [
+        "FI"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.2,
+      "search": "геоскан 201 агро geoskan agro беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0008",
+      "cat": "UA",
+      "name": "А-50",
+      "vid": "VN0050",
+      "vendor": "Аэромакс",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 5500000.0,
+        "max": 5500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "AP",
+        "CM"
+      ],
+      "ind": [
+        "AG"
+      ],
+      "site": [
+        "FI"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.2,
+      "search": "а50 а 50 a аэромакс aeromaks беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0009",
+      "cat": "UA",
+      "name": "Атлант",
+      "vid": "VN0064",
+      "vendor": "Кингпро",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 5000000.0,
+        "max": 5000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "FW"
+      ],
+      "ind": [
+        "HU"
+      ],
+      "site": [
+        "HR"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.2,
+      "search": "атлант atlant кингпро kingpro беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0010",
+      "cat": "UA",
+      "name": "Марк",
+      "vid": "VN0064",
+      "vendor": "Кингпро",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 4000000.0,
+        "max": 4000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "FW"
+      ],
+      "ind": [
+        "HU"
+      ],
+      "site": [
+        "HR"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.2,
+      "search": "марк mark кингпро kingpro беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0011",
+      "cat": "UA",
+      "name": "Сибирячок",
+      "vid": "VN0065",
+      "vendor": "ЭВР",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 3500000.0,
+        "max": 3500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "MO",
+        "HN"
+      ],
+      "ind": [
+        "HU",
+        "CO"
+      ],
+      "site": [
+        "UN"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 21.0,
+      "search": "сибирячок sibiryachok беспилотная авиационная система bespilotnaya aviatsionnaya sistema эвр evr беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0012",
+      "cat": "UA",
+      "name": "Astramis AeroUnit",
+      "vid": "VN0061",
+      "vendor": "Астрамис",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "RD",
+      "trl": 6,
+      "price_rub": {
+        "min": 5000000.0,
+        "max": 5000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "WW"
+      ],
+      "ind": [
+        "HU"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 4.9,
+      "search": "astramis aerounit астрамис беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0013",
+      "cat": "UA",
+      "name": "Геоскан 401 Геодезия",
+      "vid": "VN0037",
+      "vendor": "Геоскан",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 3965000.0,
+        "max": 3965000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "HN",
+        "BD",
+        "QC",
+        "LF"
+      ],
+      "ind": [
+        "CO",
+        "EN"
+      ],
+      "site": [
+        "QR",
+        "UN"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.2,
+      "search": "геоскан 401 геодезия geoskan geodeziya беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0014",
+      "cat": "UA",
+      "name": "Геоскан 401 Лидар",
+      "vid": "VN0037",
+      "vendor": "Геоскан",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 4650000.0,
+        "max": 4650000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "SV"
+      ],
+      "ind": [
+        "CO"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 4.9,
+      "search": "геоскан 401 лидар geoskan lidar беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0015",
+      "cat": "UA",
+      "name": "Альбатрос М5",
+      "vid": "VN0067",
+      "vendor": "Альбатрос",
+      "region": "RU-TA",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 7000000.0,
+        "max": 7000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "HN",
+        "FL",
+        "WC"
+      ],
+      "ind": [
+        "CO",
+        "SE",
+        "FO"
+      ],
+      "site": [
+        "UN"
+      ],
+      "io": [],
+      "reg719": true,
+      "tested": false,
+      "fill_pct": 7.4,
+      "search": "альбатрос м5 albatros m5 беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0016",
+      "cat": "UA",
+      "name": "Геоскан Gemini",
+      "vid": "VN0037",
+      "vendor": "Геоскан",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 1795000.0,
+        "max": 1795000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "LU",
+        "FL",
+        "DA"
+      ],
+      "ind": [
+        "CO",
+        "SE"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 4.9,
+      "search": "геоскан gemini geoskan беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0017",
+      "cat": "UA",
+      "name": "Легионер Е29",
+      "vid": "VN0068",
+      "vendor": "ГК Тихие Крылья",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 8500000.0,
+        "max": 8500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "LU"
+      ],
+      "ind": [
+        "CO"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 4.9,
+      "search": "легионер е29 legioner e29 гк тихие крылья gk tikhie krylya беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0018",
+      "cat": "UA",
+      "name": "Дефектоскоп",
+      "vid": "VN0072",
+      "vendor": "МАИ",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "RD",
+      "trl": 6,
+      "price_rub": {
+        "min": 3500000.0,
+        "max": 3500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "BD"
+      ],
+      "ind": [
+        "CO"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 4.9,
+      "search": "дефектоскоп defektoskop маи mai беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0019",
+      "cat": "UA",
+      "name": "Innospector",
+      "vid": "VN0074",
+      "vendor": "Университет Иннополис",
+      "region": "RU-TA",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 4200000.0,
+        "max": 4200000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "CL"
+      ],
+      "ind": [
+        "CO"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 4.9,
+      "search": "innospector университет иннополис universitet innopolis беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0020",
+      "cat": "UA",
+      "name": "БВС ОМДЖЕТ-М01",
+      "vid": "VN0075",
+      "vendor": "Роспроект",
+      "region": "RU-OMS",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 2400000.0,
+        "max": 2400000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "LU"
+      ],
+      "ind": [
+        "CO"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 4.9,
+      "search": "омджетм01 бвс омджет м01 bvs omdzhet m01 роспроект rosproekt беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0021",
+      "cat": "UA",
+      "name": "Omega",
+      "vid": "VN0076",
+      "vendor": "НПП Авакс-Геосервис",
+      "region": "RU-KYA",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 3500000.0,
+        "max": 3500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "MO"
+      ],
+      "ind": [
+        "CO"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 4.9,
+      "search": "omega аваксгеосервис нпп авакс геосервис npp avaks geoservis беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0022",
+      "cat": "UA",
+      "name": "Supercam X4",
+      "vid": "VN0038",
+      "vendor": "Финко",
+      "region": "RU-UD",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 3137600.0,
+        "max": 3137600.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "PM",
+        "TL",
+        "RM"
+      ],
+      "ind": [
+        "EN",
+        "TL"
+      ],
+      "site": [
+        "RW",
+        "PI",
+        "PW"
+      ],
+      "io": [],
+      "reg719": true,
+      "tested": false,
+      "fill_pct": 25.9,
+      "search": "supercam x4 финко finko беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0023",
+      "cat": "UA",
+      "name": "T-16",
+      "vid": "VN0081",
+      "vendor": "Зала Аэро",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 4600000.0,
+        "max": 4600000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "PM"
+      ],
+      "ind": [
+        "EN"
+      ],
+      "site": [
+        "PI"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.2,
+      "search": "t16 t 16 зала аэро zala aero беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0024",
+      "cat": "UA",
+      "name": "Грузовик M700 V2",
+      "vid": "VN0082",
+      "vendor": "Лаборатория Будущего",
+      "region": "RU-SVE",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 4500000.0,
+        "max": 4500000.0
+      },
+      "payload_kg": 70,
+      "scen": [
+        "PM"
+      ],
+      "ind": [
+        "EN"
+      ],
+      "site": [
+        "PI"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 21.0,
+      "search": "грузовик m700 v2 gruzovik бас м700 bas лаборатория будущего laboratoriya buduschego беспилотное воздушное судно bespilotnoe vozdushnoe sudno unmanned aircraft uav"
+    },
+    {
+      "id": "UA0025",
+      "cat": "UA",
+      "name": "Грузовик М500 V2",
+      "vid": "VN0082",
+      "vendor": "Лаборатория Будущего",
+      "region": "RU-SVE",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 4775080.0,
+        "max": 4775080.0
+      },
+      "payload_kg": 40,
+      "scen": [
+        "PM"
+      ],
+      "ind": [
+        "EN"
+      ],
+      "site": [
+        "PI"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 22.2,
+      "search": "грузовик м500 v2 gruzovik m500 бас bas лаборатория будущего laboratoriya buduschego беспилотное воздушное судно bespilotnoe vozdushnoe sudno unmanned aircraft uav"
+    },
+    {
+      "id": "UA0026",
+      "cat": "UA",
+      "name": "Геоскан 801",
+      "vid": "VN0037",
+      "vendor": "Геоскан",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 2155000.0,
+        "max": 2155000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "TR",
+        "AC",
+        "SR",
+        "RN"
+      ],
+      "ind": [
+        "SE",
+        "FO"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 4.9,
+      "search": "геоскан 801 geoskan беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0027",
+      "cat": "UA",
+      "name": "Пегас",
+      "vid": "VN0083",
+      "vendor": "Аэродин",
+      "region": "RU-LEN",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 2500000.0,
+        "max": 2500000.0
+      },
+      "payload_kg": 7,
+      "scen": [
+        "GE"
+      ],
+      "ind": [
+        "SE"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 28.4,
+      "search": "пегас pegas udrone аэродин aerodin беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0028",
+      "cat": "UA",
+      "name": "Геоскан 201 Термо",
+      "vid": "VN0037",
+      "vendor": "Геоскан",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 5090000.0,
+        "max": 5090000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "SR"
+      ],
+      "ind": [
+        "SE"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 4.9,
+      "search": "геоскан 201 термо geoskan termo беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0029",
+      "cat": "UA",
+      "name": "ДИАМ 20",
+      "vid": "VN0039",
+      "vendor": "ГК Икар",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 10500000.0,
+        "max": 10500000.0
+      },
+      "payload_kg": 5,
+      "scen": [
+        "GE",
+        "FT"
+      ],
+      "ind": [
+        "SE",
+        "FO"
+      ],
+      "site": [
+        "FR"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 25.9,
+      "search": "диам 20 diam диам20 гк икар gk ikar беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0030",
+      "cat": "UA",
+      "name": "TFM-15-8E",
+      "vid": "VN0086",
+      "vendor": "ЛМТ",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 19338818.0,
+        "max": 19338818.0
+      },
+      "payload_kg": 12.2,
+      "scen": [
+        "LM",
+        "BM",
+        "PT"
+      ],
+      "ind": [
+        "SE",
+        "TL"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": true,
+      "tested": false,
+      "fill_pct": 14.8,
+      "search": "tfm158e tfm 15 8e лмт lmt беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0031",
+      "cat": "UA",
+      "name": "Курьер-30",
+      "vid": "VN0087",
+      "vendor": "Клеверкоптер",
+      "region": "RU-NIZ",
+      "origin": "RU",
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 2200000.0,
+        "max": 2200000.0
+      },
+      "payload_kg": 6,
+      "scen": [
+        "BM",
+        "UD"
+      ],
+      "ind": [
+        "SE",
+        "TL"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 22.2,
+      "search": "курьер30 курьер 30 kurer клеверкоптер kleverkopter беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0032",
+      "cat": "UA",
+      "name": "Муравей",
+      "vid": "VN0082",
+      "vendor": "Лаборатория Будущего",
+      "region": "RU-SVE",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 1700000.0,
+        "max": 1700000.0
+      },
+      "payload_kg": 12,
+      "scen": [
+        "OR",
+        "RM"
+      ],
+      "ind": [
+        "TL"
+      ],
+      "site": [
+        "RW",
+        "RM"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": true,
+      "fill_pct": 30.9,
+      "search": "муравей muravey бас bas лаборатория будущего laboratoriya buduschego беспилотное воздушное судно bespilotnoe vozdushnoe sudno unmanned aircraft uav"
+    },
+    {
+      "id": "UA0033",
+      "cat": "UA",
+      "name": "В-120",
+      "vid": "VN0050",
+      "vendor": "Аэромакс",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "RD",
+      "trl": 7,
+      "price_rub": {
+        "min": 4000000.0,
+        "max": 4000000.0
+      },
+      "payload_kg": 120,
+      "scen": [
+        "RD"
+      ],
+      "ind": [
+        "TL"
+      ],
+      "site": [
+        "RM"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 21.0,
+      "search": "в120 в 120 v b120 b аэромакс aeromaks беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0034",
+      "cat": "UA",
+      "name": "T-300-8E",
+      "vid": "VN0086",
+      "vendor": "ЛМТ",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "PI",
+      "trl": 6,
+      "price_rub": {
+        "min": 42000000.0,
+        "max": 42000000.0
+      },
+      "payload_kg": 100,
+      "scen": [
+        "HL"
+      ],
+      "ind": [
+        "TL"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 13.6,
+      "search": "t3008e t 300 8e т3008е т 8е лмт lmt беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0035",
+      "cat": "UA",
+      "name": "ВТ-440м",
+      "vid": "VN0099",
+      "vendor": "НПП Радар ММС",
+      "region": "RU-SPE",
+      "origin": "RU",
+      "status": "PI",
+      "trl": 8,
+      "price_rub": {
+        "min": 80000000.0,
+        "max": 80000000.0
+      },
+      "payload_kg": 100,
+      "scen": [
+        "RD"
+      ],
+      "ind": [
+        "TL"
+      ],
+      "site": [
+        "RM"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 23.5,
+      "search": "вт440м вт 440м vt 440m бвс bvs нпп радар ммс npp radar mms беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0036",
+      "cat": "UA",
+      "name": "БВС ОМДЖЕТ-03",
+      "vid": "VN0075",
+      "vendor": "Роспроект",
+      "region": "RU-OMS",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 3000000.0,
+        "max": 3000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "FC",
+        "FM"
+      ],
+      "ind": [
+        "TL",
+        "FO"
+      ],
+      "site": [
+        "FR",
+        "WA"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.2,
+      "search": "омджет03 бвс омджет 03 bvs omdzhet роспроект rosproekt беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0037",
+      "cat": "UA",
+      "name": "OG-07 \"Стрекоза\"",
+      "vid": "VN0101",
+      "vendor": "Бас Глори Эйр",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 4200000.0,
+        "max": 4200000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "RD"
+      ],
+      "ind": [
+        "TL"
+      ],
+      "site": [
+        "RM"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.2,
+      "search": "og07 og 07 стрекоза strekoza бас глори эйр bas glori eyr беспилотное воздушное судно bespilotnoe vozdushnoe sudno unmanned aircraft uav"
+    },
+    {
+      "id": "UA0038",
+      "cat": "UA",
+      "name": "Вихрь-1М",
+      "vid": "VN0102",
+      "vendor": "Интэк",
+      "region": "RU-TOM",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 4200000.0,
+        "max": 4200000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "RD"
+      ],
+      "ind": [
+        "TL"
+      ],
+      "site": [
+        "RM"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.2,
+      "search": "вихрь1м вихрь 1м vikhr 1m интэк intek беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0039",
+      "cat": "UA",
+      "name": "Горгона 15",
+      "vid": "VN0103",
+      "vendor": "КБ Атл",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 4200000.0,
+        "max": 4200000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "RD"
+      ],
+      "ind": [
+        "TL"
+      ],
+      "site": [
+        "RM"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.2,
+      "search": "горгона 15 gorgona кб атл kb atl беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0040",
+      "cat": "UA",
+      "name": "InnoVTOL-3S",
+      "vid": "VN0074",
+      "vendor": "Университет Иннополис",
+      "region": "RU-TA",
+      "origin": null,
+      "status": "RD",
+      "trl": 5,
+      "price_rub": {
+        "min": 7870000.0,
+        "max": 7870000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "FM"
+      ],
+      "ind": [
+        "FO"
+      ],
+      "site": [
+        "FR"
+      ],
+      "io": [],
+      "reg719": true,
+      "tested": false,
+      "fill_pct": 7.4,
+      "search": "innovtol3s innovtol 3s университет иннополис universitet innopolis беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0041",
+      "cat": "UA",
+      "name": "Геоскан 701 Видео",
+      "vid": "VN0037",
+      "vendor": "Геоскан",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 17025000.0,
+        "max": 17025000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "MO"
+      ],
+      "ind": [
+        "FO"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": true,
+      "tested": false,
+      "fill_pct": 6.2,
+      "search": "геоскан 701 видео geoskan video беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0042",
+      "cat": "UA",
+      "name": "miniSIGMA",
+      "vid": "VN0076",
+      "vendor": "НПП Авакс-Геосервис",
+      "region": "RU-KYA",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 3500000.0,
+        "max": 3500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "MO"
+      ],
+      "ind": [
+        "FO"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 4.9,
+      "search": "minisigma аваксгеосервис нпп авакс геосервис npp avaks geoservis беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "UA0043",
+      "cat": "UA",
+      "name": "SIGMA",
+      "vid": "VN0076",
+      "vendor": "НПП Авакс-Геосервис",
+      "region": "RU-KYA",
+      "origin": null,
+      "status": "OP",
+      "trl": 9,
+      "price_rub": {
+        "min": 4500000.0,
+        "max": 4500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "MO"
+      ],
+      "ind": [
+        "FO"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 4.9,
+      "search": "sigma аваксгеосервис нпп авакс геосервис npp avaks geoservis беспилотное воздушное судно бас bespilotnoe vozdushnoe sudno bas unmanned aircraft uav"
+    },
+    {
+      "id": "MS0001",
+      "cat": "MS",
+      "name": "Морской скорпион",
+      "vid": "VN0066",
+      "vendor": "Севастопольский Государственный Университет",
+      "region": "RU-SEV",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 4000000.0,
+        "max": 4000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "OW"
+      ],
+      "ind": [
+        "HU"
+      ],
+      "site": [
+        "WA"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.5,
+      "search": "морской скорпион morskoy skorpion севастопольский государственный университет sevastopolskiy gosudarstvennyy universitet безэкипажное надводное судно bezekipazhnoe nadvodnoe sudno uncrewed surface vessel"
+    },
+    {
+      "id": "MS0002",
+      "cat": "MS",
+      "name": "МК",
+      "vid": "VN0066",
+      "vendor": "Севастопольский Государственный Университет",
+      "region": "RU-SEV",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 5000000.0,
+        "max": 5000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "UW"
+      ],
+      "ind": [
+        "EN"
+      ],
+      "site": [
+        "WA",
+        "UW"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.5,
+      "search": "мк mk севастопольский государственный университет sevastopolskiy gosudarstvennyy universitet безэкипажное надводное судно bezekipazhnoe nadvodnoe sudno uncrewed surface vessel"
+    },
+    {
+      "id": "MS0003",
+      "cat": "MS",
+      "name": "БЭК-Р",
+      "vid": "VN0066",
+      "vendor": "Севастопольский Государственный Университет",
+      "region": "RU-SEV",
+      "origin": null,
+      "status": "RD",
+      "trl": 6,
+      "price_rub": {
+        "min": 5000000.0,
+        "max": 5000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "CD",
+        "UW"
+      ],
+      "ind": [
+        "EN"
+      ],
+      "site": [
+        "WA",
+        "UW"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.5,
+      "search": "бэкр бэк р bek r севастопольский государственный университет sevastopolskiy gosudarstvennyy universitet безэкипажное надводное судно bezekipazhnoe nadvodnoe sudno uncrewed surface vessel"
+    },
+    {
+      "id": "MS0004",
+      "cat": "MS",
+      "name": "БЭК \"Сивуч\"",
+      "vid": "VN0078",
+      "vendor": "Техносфера",
+      "region": "RU-SAK",
+      "origin": null,
+      "status": "RD",
+      "trl": 7,
+      "price_rub": {
+        "min": 5000000.0,
+        "max": 5000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "PM"
+      ],
+      "ind": [
+        "EN"
+      ],
+      "site": [
+        "PI"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.5,
+      "search": "бэк сивуч bek sivuch техносфера tekhnosfera безэкипажное надводное судно bezekipazhnoe nadvodnoe sudno uncrewed surface vessel"
+    },
+    {
+      "id": "MS0005",
+      "cat": "MS",
+      "name": "РБ-100",
+      "vid": "VN0079",
+      "vendor": "Ровбилдер",
+      "region": "RU-KLU",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 5000000.0,
+        "max": 5000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "UW"
+      ],
+      "ind": [
+        "EN"
+      ],
+      "site": [
+        "WA",
+        "UW"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.5,
+      "search": "рб100 рб 100 rb ровбилдер rovbilder безэкипажное надводное судно bezekipazhnoe nadvodnoe sudno uncrewed surface vessel"
+    },
+    {
+      "id": "MS0006",
+      "cat": "MS",
+      "name": "РБ-150",
+      "vid": "VN0079",
+      "vendor": "Ровбилдер",
+      "region": "RU-KLU",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 5000000.0,
+        "max": 5000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "UW"
+      ],
+      "ind": [
+        "EN"
+      ],
+      "site": [
+        "WA",
+        "UW"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.5,
+      "search": "рб150 рб 150 rb ровбилдер rovbilder безэкипажное надводное судно bezekipazhnoe nadvodnoe sudno uncrewed surface vessel"
+    },
+    {
+      "id": "MS0007",
+      "cat": "MS",
+      "name": "РБ-300",
+      "vid": "VN0079",
+      "vendor": "Ровбилдер",
+      "region": "RU-KLU",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 5000000.0,
+        "max": 5000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "UW"
+      ],
+      "ind": [
+        "EN"
+      ],
+      "site": [
+        "WA",
+        "UW"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.5,
+      "search": "рб300 рб 300 rb ровбилдер rovbilder безэкипажное надводное судно bezekipazhnoe nadvodnoe sudno uncrewed surface vessel"
+    },
+    {
+      "id": "MS0008",
+      "cat": "MS",
+      "name": "РБ-600",
+      "vid": "VN0079",
+      "vendor": "Ровбилдер",
+      "region": "RU-KLU",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 8500000.0,
+        "max": 8500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "UW"
+      ],
+      "ind": [
+        "EN"
+      ],
+      "site": [
+        "WA",
+        "UW"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.5,
+      "search": "рб600 рб 600 rb ровбилдер rovbilder безэкипажное надводное судно bezekipazhnoe nadvodnoe sudno uncrewed surface vessel"
+    },
+    {
+      "id": "MS0009",
+      "cat": "MS",
+      "name": "РБ-Мираж 1000",
+      "vid": "VN0079",
+      "vendor": "Ровбилдер",
+      "region": "RU-KLU",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 9500000.0,
+        "max": 9500000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "UW"
+      ],
+      "ind": [
+        "EN"
+      ],
+      "site": [
+        "WA",
+        "UW"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.5,
+      "search": "рбмираж рб мираж 1000 rb mirazh ровбилдер rovbilder безэкипажное надводное судно bezekipazhnoe nadvodnoe sudno uncrewed surface vessel"
+    },
+    {
+      "id": "MS0010",
+      "cat": "MS",
+      "name": "ОМДЖЕТ-ГМ01",
+      "vid": "VN0075",
+      "vendor": "Роспроект",
+      "region": "RU-OMS",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 400000.0,
+        "max": 400000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "UW"
+      ],
+      "ind": [
+        "EN"
+      ],
+      "site": [
+        "WA",
+        "UW"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.5,
+      "search": "омджетгм01 омджет гм01 omdzhet gm01 роспроект rosproekt безэкипажное надводное судно bezekipazhnoe nadvodnoe sudno uncrewed surface vessel"
+    },
+    {
+      "id": "MS0011",
+      "cat": "MS",
+      "name": "Лоцман",
+      "vid": "VN0090",
+      "vendor": "НПП ПТ Океанос",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "PI",
+      "trl": 6,
+      "price_rub": {
+        "min": 5000000.0,
+        "max": 5000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "SH"
+      ],
+      "ind": [
+        "SE"
+      ],
+      "site": [
+        "WA"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.5,
+      "search": "лоцман lotsman нпп пт океанос npp pt okeanos безэкипажное надводное судно bezekipazhnoe nadvodnoe sudno uncrewed surface vessel"
+    },
+    {
+      "id": "MS0012",
+      "cat": "MS",
+      "name": "Сарган",
+      "vid": "VN0066",
+      "vendor": "Севастопольский Государственный Университет",
+      "region": "RU-SEV",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 5000000.0,
+        "max": 5000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "MO",
+        "PT"
+      ],
+      "ind": [
+        "SE"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 5.2,
+      "search": "сарган sargan севастопольский государственный университет sevastopolskiy gosudarstvennyy universitet безэкипажное надводное судно bezekipazhnoe nadvodnoe sudno uncrewed surface vessel"
+    },
+    {
+      "id": "MS0013",
+      "cat": "MS",
+      "name": "Калкан",
+      "vid": "VN0066",
+      "vendor": "Севастопольский Государственный Университет",
+      "region": "RU-SEV",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 5000000.0,
+        "max": 5000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "CD",
+        "MO",
+        "PT"
+      ],
+      "ind": [
+        "SE"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 5.2,
+      "search": "калкан kalkan севастопольский государственный университет sevastopolskiy gosudarstvennyy universitet безэкипажное надводное судно bezekipazhnoe nadvodnoe sudno uncrewed surface vessel"
+    },
+    {
+      "id": "MS0014",
+      "cat": "MS",
+      "name": "Барабулька",
+      "vid": "VN0066",
+      "vendor": "Севастопольский Государственный Университет",
+      "region": "RU-SEV",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 5000000.0,
+        "max": 5000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "WD"
+      ],
+      "ind": [
+        "TL"
+      ],
+      "site": [
+        "WA"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.5,
+      "search": "барабулька barabulka севастопольский государственный университет sevastopolskiy gosudarstvennyy universitet безэкипажное надводное судно bezekipazhnoe nadvodnoe sudno uncrewed surface vessel"
+    },
+    {
+      "id": "MS0015",
+      "cat": "MS",
+      "name": "ОРКАН",
+      "vid": "VN0100",
+      "vendor": "Си Проект",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 5000000.0,
+        "max": 5000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "WD"
+      ],
+      "ind": [
+        "TL"
+      ],
+      "site": [
+        "WA"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.5,
+      "search": "оркан orkan си проект si proekt безэкипажное надводное судно bezekipazhnoe nadvodnoe sudno uncrewed surface vessel"
+    },
+    {
+      "id": "MS0016",
+      "cat": "MS",
+      "name": "БРИЗ",
+      "vid": "VN0100",
+      "vendor": "Си Проект",
+      "region": "RU-SPE",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 5000000.0,
+        "max": 5000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "WD"
+      ],
+      "ind": [
+        "TL"
+      ],
+      "site": [
+        "WA"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.5,
+      "search": "бриз briz си проект si proekt безэкипажное надводное судно bezekipazhnoe nadvodnoe sudno uncrewed surface vessel"
+    },
+    {
+      "id": "MU0001",
+      "cat": "MU",
+      "name": "Херсонес",
+      "vid": "VN0066",
+      "vendor": "Севастопольский Государственный Университет",
+      "region": "RU-SEV",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 5000000.0,
+        "max": 5000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "UW",
+        "UL"
+      ],
+      "ind": [
+        "EN",
+        "TL"
+      ],
+      "site": [
+        "WA",
+        "UW"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 6.9,
+      "search": "херсонес khersones севастопольский государственный университет sevastopolskiy gosudarstvennyy universitet телеуправляемый подводный аппарат тнпа teleupravlyaemyy podvodnyy apparat tnpa underwater vehicle rov"
+    },
+    {
+      "id": "MU0002",
+      "cat": "MU",
+      "name": "ТНПА «ГНОМ Про Вектор»",
+      "vid": "VN0080",
+      "vendor": "Подводная робототехника",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 5700000.0,
+        "max": 5700000.0
+      },
+      "payload_kg": 7,
+      "scen": [
+        "UW"
+      ],
+      "ind": [
+        "EN"
+      ],
+      "site": [
+        "WA",
+        "UW"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 25.0,
+      "search": "тнпа гном про вектор tnpa gnom pro vektor подводная робототехника podvodnaya robototekhnika телеуправляемый подводный аппарат teleupravlyaemyy podvodnyy apparat underwater vehicle rov"
+    },
+    {
+      "id": "MU0003",
+      "cat": "MU",
+      "name": "ТНПА «ГНОМ Про»",
+      "vid": "VN0080",
+      "vendor": "Подводная робототехника",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 4800000.0,
+        "max": 4800000.0
+      },
+      "payload_kg": 5,
+      "scen": [
+        "UW"
+      ],
+      "ind": [
+        "EN"
+      ],
+      "site": [
+        "WA",
+        "UW"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 22.2,
+      "search": "тнпа гном про tnpa gnom pro подводная робототехника podvodnaya robototekhnika телеуправляемый подводный аппарат teleupravlyaemyy podvodnyy apparat underwater vehicle rov"
+    },
+    {
+      "id": "MU0004",
+      "cat": "MU",
+      "name": "ТНПА «ГНОМ X»",
+      "vid": "VN0080",
+      "vendor": "Подводная робототехника",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "PI",
+      "trl": 7,
+      "price_rub": {
+        "min": 2380000.0,
+        "max": 2380000.0
+      },
+      "payload_kg": 3,
+      "scen": [
+        "UW"
+      ],
+      "ind": [
+        "EN"
+      ],
+      "site": [
+        "WA",
+        "UW"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 20.8,
+      "search": "тнпа гном x tnpa gnom подводная робототехника podvodnaya robototekhnika телеуправляемый подводный аппарат teleupravlyaemyy podvodnyy apparat underwater vehicle rov"
+    },
+    {
+      "id": "SW0001",
+      "cat": "SW",
+      "name": "Pick by Voice",
+      "vid": "VN0018",
+      "vendor": "Умный сервис",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "OP",
+      "trl": 8,
+      "price_rub": {
+        "min": 1000000.0,
+        "max": 1000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "SO"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "WH"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 35.0,
+      "search": "pick by voice voiceman умный сервис umnyy servis по для роботов и автоматизации po dlya robotov i avtomatizatsii robotics software"
+    },
+    {
+      "id": "SW0002",
+      "cat": "SW",
+      "name": "Pick by light",
+      "vid": "VN0018",
+      "vendor": "Умный сервис",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "RD",
+      "trl": 8,
+      "price_rub": {
+        "min": 1000000.0,
+        "max": 1000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "SO"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 30.0,
+      "search": "pick by light to умный сервис umnyy servis по для роботов и автоматизации po dlya robotov i avtomatizatsii robotics software"
+    },
+    {
+      "id": "SW0003",
+      "cat": "SW",
+      "name": "COGNITIVE AGRO PILOT для трактора с ИИ",
+      "vid": "VN0042",
+      "vendor": "Когнитив Пилот",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "PI",
+      "trl": 6,
+      "price_rub": {
+        "min": 1250000.0,
+        "max": 1250000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "AP"
+      ],
+      "ind": [
+        "AG"
+      ],
+      "site": [
+        "FI"
+      ],
+      "io": [],
+      "reg719": true,
+      "tested": false,
+      "fill_pct": 45.0,
+      "search": "cognitive agro pilot для трактора с ии dlya traktora s ii когнитив пилот kognitiv по роботов и автоматизации po robotov i avtomatizatsii robotics software"
+    },
+    {
+      "id": "OT0001",
+      "cat": "OT",
+      "name": "Роботизированная передвижная зарядная станция для электромобилей",
+      "vid": "VN0025",
+      "vendor": "Росатом",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "RD",
+      "trl": 3,
+      "price_rub": {
+        "min": 6000000.0,
+        "max": 6000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "EC"
+      ],
+      "ind": [
+        "TS"
+      ],
+      "site": [
+        "PL"
+      ],
+      "io": [],
+      "reg719": false,
+      "tested": false,
+      "fill_pct": 18.7,
+      "search": "роботизированная передвижная зарядная станция для электромобилей robotizirovannaya peredvizhnaya zaryadnaya stantsiya dlya elektromobiley беспилотная мобильная электрозарядная эзс bespilotnaya mobilnaya elektrozaryadnaya ezs роботзаправщик робот заправщик robot zapravschik росатом rosatom прочие роботы единичные prochie roboty edinichnye other robots single items"
+    },
+    {
+      "id": "OT0002",
+      "cat": "OT",
+      "name": "Ортез-1",
+      "vid": "VN0088",
+      "vendor": "НПО Андроидная Техника",
+      "region": "RU-MOW",
+      "origin": null,
+      "status": "RD",
+      "trl": 9,
+      "price_rub": {
+        "min": 4000000.0,
+        "max": 4000000.0
+      },
+      "payload_kg": null,
+      "scen": [
+        "MA"
+      ],
+      "ind": [
+        "SE"
+      ],
+      "site": [
+        "MD"
+      ],
+      "io": [],
+      "reg719": true,
+      "tested": false,
+      "fill_pct": 21.3,
+      "search": "ортез1 ортез 1 ortez orthosis1 orthosis нпо андроидная техника npo androidnaya tekhnika прочие роботы единичные prochie roboty edinichnye other robots single items"
+    }
+  ]
+}

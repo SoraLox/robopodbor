@@ -1,0 +1,1421 @@
+{
+  "schema_ver": "2.0.0",
+  "updated": "2026-09-25",
+  "items": [
+    {
+      "vid": "VN0001",
+      "legal": "ООО «Ронави Роботикс»",
+      "form": "OO",
+      "name": "Ронави Роботикс",
+      "aliases": [
+        "Ronavi Robotics"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://ronavi-robotics.ru",
+      "inn": "7751527058",
+      "search": "ронави роботикс ronavi robotiks robotics"
+    },
+    {
+      "vid": "VN0002",
+      "legal": "ООО «Морос»",
+      "form": "OO",
+      "name": "Морос",
+      "aliases": [
+        "МОРОС",
+        "ООО «Мобильные роботизированные системы»"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://xn--l1aeahg.xn--p1ai",
+      "inn": null,
+      "search": "морос moros ооо мобильные роботизированные системы ooo mobilnye robotizirovannye sistemy"
+    },
+    {
+      "vid": "VN0003",
+      "legal": "ООО «Диком-Сервис»",
+      "form": "OO",
+      "name": "Диком-Сервис",
+      "aliases": [
+        "ДиКом",
+        "DiKom",
+        "Dikom"
+      ],
+      "region": "RU-SPE",
+      "country": "RU",
+      "site": "https://dikom-a.ru",
+      "inn": "7817045805",
+      "search": "дикомсервис диком сервис dikom servis"
+    },
+    {
+      "vid": "VN0004",
+      "legal": "ООО «Семаргл»",
+      "form": "OO",
+      "name": "Семаргл",
+      "aliases": [
+        "Semargl"
+      ],
+      "region": "RU-SPE",
+      "country": "RU",
+      "site": "https://semargl.pro",
+      "inn": "7814454694",
+      "search": "семаргл semargl"
+    },
+    {
+      "vid": "VN0005",
+      "legal": "ООО «ГК Автомакон»",
+      "form": "OO",
+      "name": "ГК Автомакон",
+      "aliases": [
+        "Автомакон",
+        "Automacon"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://automacon.ru",
+      "inn": "7751203198",
+      "search": "гк автомакон gk avtomakon automacon"
+    },
+    {
+      "vid": "VN0006",
+      "legal": "ООО «Робосиви»",
+      "form": "OO",
+      "name": "Робосиви",
+      "aliases": [
+        "RoboCV",
+        "РобоСиВи"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://robocv.ru",
+      "inn": "7726689591",
+      "search": "робосиви robosivi robocv"
+    },
+    {
+      "vid": "VN0007",
+      "legal": "ООО «АРС»",
+      "form": "OO",
+      "name": "АРС",
+      "aliases": [
+        "ARS Smart Robotics",
+        "АРС Смарт Роботикс"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://arobosys.ru",
+      "inn": "7722366007",
+      "search": "арс ars smart robotics смарт роботикс robotiks"
+    },
+    {
+      "vid": "VN0008",
+      "legal": "МФТИ",
+      "form": "UN",
+      "name": "МФТИ",
+      "aliases": [
+        "МФТИ",
+        "Физтех",
+        "MIPT"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://mipt.ru",
+      "inn": "5008006211",
+      "search": "мфти mfti физтех fiztekh mipt"
+    },
+    {
+      "vid": "VN0009",
+      "legal": "ООО «СМ РОБОТИКС»",
+      "form": "OO",
+      "name": "СМ РОБОТИКС",
+      "aliases": [
+        "SM Robotics"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://sm-robotics.ru",
+      "inn": "9723228934",
+      "search": "см роботикс sm robotiks robotics"
+    },
+    {
+      "vid": "VN0010",
+      "legal": "ООО «РОБО»",
+      "form": "OO",
+      "name": "РОБО",
+      "aliases": [],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "робо robo"
+    },
+    {
+      "vid": "VN0011",
+      "legal": "ООО «Р2Б»",
+      "form": "OO",
+      "name": "Р2Б",
+      "aliases": [],
+      "region": "RU-YAR",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "р2б r2b"
+    },
+    {
+      "vid": "VN0012",
+      "legal": "ООО «Вейбот Автомакон Роботикс»",
+      "form": "OO",
+      "name": "Вейбот Автомакон Роботикс",
+      "aliases": [],
+      "region": "RU-ROS",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "вейбот автомакон роботикс veybot avtomakon robotiks"
+    },
+    {
+      "vid": "VN0013",
+      "legal": "ООО «Яку Роботикс»",
+      "form": "OO",
+      "name": "Яку Роботикс",
+      "aliases": [],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "яку роботикс yaku robotiks"
+    },
+    {
+      "vid": "VN0014",
+      "legal": "АО «Эйдос Робототехника»",
+      "form": "AO",
+      "name": "Эйдос Робототехника",
+      "aliases": [
+        "Eidos Robotics",
+        "Эйдос Робототехника"
+      ],
+      "region": "RU-TA",
+      "country": "RU",
+      "site": "https://eidos-robotics.ru",
+      "inn": "1655497610",
+      "search": "эйдос робототехника eydos robototekhnika eidos robotics"
+    },
+    {
+      "vid": "VN0015",
+      "legal": "ООО «Завод Стелкон»",
+      "form": "OO",
+      "name": "Завод Стелкон",
+      "aliases": [
+        "Стелкон",
+        "Stelkon"
+      ],
+      "region": "RU-MOS",
+      "country": "RU",
+      "site": "https://www.stelkon.ru",
+      "inn": "5034060416",
+      "search": "завод стелкон zavod stelkon"
+    },
+    {
+      "vid": "VN0016",
+      "legal": "ООО «Яндекс Роботикс»",
+      "form": "OO",
+      "name": "Яндекс Роботикс",
+      "aliases": [
+        "Yandex Robotics"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://robotics.yandex.ru",
+      "inn": "9705231081",
+      "search": "яндекс роботикс yandeks robotiks yandex robotics"
+    },
+    {
+      "vid": "VN0017",
+      "legal": "ПАО «Сбербанк»",
+      "form": "PA",
+      "name": "Сбербанк",
+      "aliases": [
+        "Сбер",
+        "Sber"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://sber.ru",
+      "inn": "7707083893",
+      "search": "сбербанк sberbank сбер sber"
+    },
+    {
+      "vid": "VN0018",
+      "legal": "ООО «Умный сервис»",
+      "form": "OO",
+      "name": "Умный сервис",
+      "aliases": [
+        "UMSERV"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://umserv.ru",
+      "inn": null,
+      "search": "умный сервис umnyy servis umserv"
+    },
+    {
+      "vid": "VN0019",
+      "legal": "НИУ ВШЭ",
+      "form": "UN",
+      "name": "НИУ ВШЭ",
+      "aliases": [
+        "НИУ ВШЭ",
+        "HSE University"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://www.hse.ru",
+      "inn": "7714030726",
+      "search": "ниу вшэ niu vshe hse university"
+    },
+    {
+      "vid": "VN0020",
+      "legal": "ООО «Промобот»",
+      "form": "OO",
+      "name": "Промобот",
+      "aliases": [
+        "Promobot",
+        "ПромоБот"
+      ],
+      "region": "RU-PER",
+      "country": "RU",
+      "site": "https://promo-bot.ru",
+      "inn": "5903113639",
+      "search": "промобот promobot"
+    },
+    {
+      "vid": "VN0021",
+      "legal": "ООО «Айдол»",
+      "form": "OO",
+      "name": "Айдол",
+      "aliases": [
+        "AIDOL"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://aidoltech.ru",
+      "inn": null,
+      "search": "айдол aydol aidol"
+    },
+    {
+      "vid": "VN0022",
+      "legal": "ООО «Робопро»",
+      "form": "OO",
+      "name": "Робопро",
+      "aliases": [
+        "DOKA Роботс",
+        "РОБОПРО",
+        "RoboPro",
+        "РобоПро",
+        "Rozum Robotics"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://doka-robots.ru",
+      "inn": "7707427456",
+      "search": "робопро robopro doka роботс robots rozum robotics"
+    },
+    {
+      "vid": "VN0023",
+      "legal": "ООО «Соло Кофе»",
+      "form": "OO",
+      "name": "Соло Кофе",
+      "aliases": [
+        "SoloCoffee",
+        "Solo Coffee"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://coffeesolo.ru",
+      "inn": null,
+      "search": "соло кофе solo kofe solocoffee coffee"
+    },
+    {
+      "vid": "VN0024",
+      "legal": "ООО «Аврора Роботикс»",
+      "form": "OO",
+      "name": "Аврора Роботикс",
+      "aliases": [
+        "Avrora Robotics",
+        "Аврора Роботикс"
+      ],
+      "region": "RU-RYA",
+      "country": "RU",
+      "site": "https://avrora-robotics.com",
+      "inn": "7723400469",
+      "search": "аврора роботикс avrora robotiks robotics"
+    },
+    {
+      "vid": "VN0025",
+      "legal": "Росатом",
+      "form": "SC",
+      "name": "Росатом",
+      "aliases": [
+        "Rosatom",
+        "Госкорпорация «Росатом»"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://rosatom.ru",
+      "inn": "7706413348",
+      "search": "росатом rosatom госкорпорация goskorporatsiya"
+    },
+    {
+      "vid": "VN0026",
+      "legal": "ООО «Дронсхаб»",
+      "form": "OO",
+      "name": "Дронсхаб",
+      "aliases": [
+        "Droneshub",
+        "Дронсхаб групп",
+        "DH:GROUP"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://droneshub.group",
+      "inn": "6658445480",
+      "search": "дронсхаб dronskhab droneshub групп grupp dh group"
+    },
+    {
+      "vid": "VN0027",
+      "legal": "ООО «Валдай Роботы»",
+      "form": "OO",
+      "name": "Валдай Роботы",
+      "aliases": [
+        "Valdai Robots"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://vald.ai",
+      "inn": "9717138305",
+      "search": "валдай роботы valday roboty valdai robots"
+    },
+    {
+      "vid": "VN0028",
+      "legal": "ООО «СМД»",
+      "form": "OO",
+      "name": "СМД",
+      "aliases": [],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "смд smd"
+    },
+    {
+      "vid": "VN0029",
+      "legal": "ООО «Прикладная Робототехника»",
+      "form": "OO",
+      "name": "Прикладная Робототехника",
+      "aliases": [
+        "Applied Robotics"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://appliedrobotics.ru",
+      "inn": null,
+      "search": "прикладная робототехника prikladnaya robototekhnika applied robotics"
+    },
+    {
+      "vid": "VN0030",
+      "legal": "ООО «Технорэд»",
+      "form": "OO",
+      "name": "Технорэд",
+      "aliases": [
+        "TECHNORED"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://technored.ru",
+      "inn": "5036173648",
+      "search": "технорэд tekhnored technored"
+    },
+    {
+      "vid": "VN0031",
+      "legal": "ООО «Битроботикс»",
+      "form": "OO",
+      "name": "Битроботикс",
+      "aliases": [
+        "Bitrobotics",
+        "BIT Robotics"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://bitrobotics.com",
+      "inn": "9723062975",
+      "search": "битроботикс bitrobotiks bitrobotics bit robotics"
+    },
+    {
+      "vid": "VN0032",
+      "legal": "АО «ОДК-СТАР»",
+      "form": "AO",
+      "name": "ОДК-СТАР",
+      "aliases": [
+        "ОДК-СТАР"
+      ],
+      "region": "RU-PER",
+      "country": "RU",
+      "site": "https://www.uecrus.com",
+      "inn": "5904100329",
+      "search": "одкстар одк стар odk star"
+    },
+    {
+      "vid": "VN0033",
+      "legal": "ООО «Арипикс Роботикс»",
+      "form": "OO",
+      "name": "Арипикс Роботикс",
+      "aliases": [
+        "Aripix Robotics"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://aripix.com",
+      "inn": "7728434172",
+      "search": "арипикс роботикс aripiks robotiks aripix robotics"
+    },
+    {
+      "vid": "VN0034",
+      "legal": "ООО «Атоммаш»",
+      "form": "OO",
+      "name": "Атоммаш",
+      "aliases": [],
+      "region": "RU-PNZ",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "атоммаш atommash"
+    },
+    {
+      "vid": "VN0035",
+      "legal": "ООО «Свеза-Лес»",
+      "form": "OO",
+      "name": "Свеза-Лес",
+      "aliases": [],
+      "region": "RU-SPE",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "свезалес свеза лес sveza les"
+    },
+    {
+      "vid": "VN0036",
+      "legal": "ПАО «Газпром Нефть»",
+      "form": "PA",
+      "name": "Газпром Нефть",
+      "aliases": [],
+      "region": "RU-SPE",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "газпром нефть gazprom neft"
+    },
+    {
+      "vid": "VN0037",
+      "legal": "ООО «Геоскан»",
+      "form": "OO",
+      "name": "Геоскан",
+      "aliases": [],
+      "region": "RU-SPE",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "геоскан geoskan"
+    },
+    {
+      "vid": "VN0038",
+      "legal": "ООО «Финко»",
+      "form": "OO",
+      "name": "Финко",
+      "aliases": [
+        "Supercam",
+        "Беспилотные системы"
+      ],
+      "region": "RU-UD",
+      "country": "RU",
+      "site": "https://supercam.aero",
+      "inn": null,
+      "search": "финко finko supercam беспилотные системы bespilotnye sistemy"
+    },
+    {
+      "vid": "VN0039",
+      "legal": "АО ГК «Икар»",
+      "form": "AO",
+      "name": "ГК Икар",
+      "aliases": [
+        "ИЦ ИКАР"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://ikarcenter.ru",
+      "inn": null,
+      "search": "гк икар gk ikar иц its"
+    },
+    {
+      "vid": "VN0040",
+      "legal": "ООО «Агробит»",
+      "form": "OO",
+      "name": "Агробит",
+      "aliases": [
+        "Agrobit"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://agrobit.ru",
+      "inn": "7726460297",
+      "search": "агробит agrobit"
+    },
+    {
+      "vid": "VN0041",
+      "legal": "ООО «Промтехника-Приволжье»",
+      "form": "OO",
+      "name": "Промтехника-Приволжье",
+      "aliases": [
+        "Промтехника"
+      ],
+      "region": "RU-NIZ",
+      "country": "RU",
+      "site": "https://promtechnika.com",
+      "inn": "5247053438",
+      "search": "промтехникаприволжье промтехника приволжье promtekhnika privolzhe"
+    },
+    {
+      "vid": "VN0042",
+      "legal": "АО «Когнитив Пилот»",
+      "form": "AO",
+      "name": "Когнитив Пилот",
+      "aliases": [
+        "Cognitive Pilot"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://cognitivepilot.com",
+      "inn": "9718193041",
+      "search": "когнитив пилот kognitiv pilot cognitive"
+    },
+    {
+      "vid": "VN0043",
+      "legal": "ООО «Завод Агромаш»",
+      "form": "OO",
+      "name": "Завод Агромаш",
+      "aliases": [
+        "АГРОМАШ"
+      ],
+      "region": "RU-CU",
+      "country": "RU",
+      "site": "https://agromh.com",
+      "inn": "2456012447",
+      "search": "завод агромаш zavod agromash"
+    },
+    {
+      "vid": "VN0044",
+      "legal": "Донской государственный технический университет (ДГТУ)",
+      "form": "UN",
+      "name": "Донской государственный технический университет (ДГТУ)",
+      "aliases": [
+        "ДГТУ",
+        "DSTU"
+      ],
+      "region": "RU-ROS",
+      "country": "RU",
+      "site": "https://donstu.ru",
+      "inn": "6165033136",
+      "search": "донской государственный технический университет дгту donskoy gosudarstvennyy tekhnicheskiy universitet dgtu dstu"
+    },
+    {
+      "vid": "VN0045",
+      "legal": "ООО «Электромотив»",
+      "form": "OO",
+      "name": "Электромотив",
+      "aliases": [
+        "Electromotiv"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": null,
+      "inn": "7751355634",
+      "search": "электромотив elektromotiv electromotiv"
+    },
+    {
+      "vid": "VN0046",
+      "legal": "Финансовый Университет",
+      "form": "UN",
+      "name": "Финансовый Университет",
+      "aliases": [],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "финансовый университет finansovyy universitet"
+    },
+    {
+      "vid": "VN0047",
+      "legal": "АО «Петербургский Тракторный Завод»",
+      "form": "AO",
+      "name": "Петербургский Тракторный Завод",
+      "aliases": [
+        "ПТЗ",
+        "Кировец"
+      ],
+      "region": "RU-SPE",
+      "country": "RU",
+      "site": null,
+      "inn": "7805059867",
+      "search": "петербургский тракторный завод peterburgskiy traktornyy zavod птз ptz кировец kirovets"
+    },
+    {
+      "vid": "VN0048",
+      "legal": "Новосибирский Государственный Университет",
+      "form": "UN",
+      "name": "Новосибирский Государственный Университет",
+      "aliases": [],
+      "region": "RU-NVS",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "новосибирский государственный университет novosibirskiy gosudarstvennyy universitet"
+    },
+    {
+      "vid": "VN0049",
+      "legal": "ФГАОУ ВО «ПНИПУ»",
+      "form": "FA",
+      "name": "ПНИПУ",
+      "aliases": [
+        "Пермский Политех",
+        "ПНИПУ"
+      ],
+      "region": "RU-PER",
+      "country": "RU",
+      "site": "https://pstu.ru",
+      "inn": null,
+      "search": "пнипу pnipu пермский политех permskiy politekh"
+    },
+    {
+      "vid": "VN0050",
+      "legal": "ООО «Аэромакс»",
+      "form": "OO",
+      "name": "Аэромакс",
+      "aliases": [
+        "Aeromax"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://www.aeromax-group.ru",
+      "inn": "7725347482",
+      "search": "аэромакс aeromaks aeromax"
+    },
+    {
+      "vid": "VN0051",
+      "legal": "ООО «Тьюбот»",
+      "form": "OO",
+      "name": "Тьюбот",
+      "aliases": [
+        "TUBOT"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://tubot.pro",
+      "inn": null,
+      "search": "тьюбот tyubot tubot"
+    },
+    {
+      "vid": "VN0052",
+      "legal": "ООО «Тарис»",
+      "form": "OO",
+      "name": "Тарис",
+      "aliases": [
+        "ТАРИС",
+        "TARIS"
+      ],
+      "region": "RU-MOS",
+      "country": "RU",
+      "site": "https://taris.ru",
+      "inn": null,
+      "search": "тарис taris"
+    },
+    {
+      "vid": "VN0053",
+      "legal": "АО «Диаконт»",
+      "form": "AO",
+      "name": "Диаконт",
+      "aliases": [
+        "Diakont"
+      ],
+      "region": "RU-SPE",
+      "country": "RU",
+      "site": "https://www.diakont.ru",
+      "inn": null,
+      "search": "диаконт diakont"
+    },
+    {
+      "vid": "VN0054",
+      "legal": "ООО «Юникон»",
+      "form": "OO",
+      "name": "Юникон",
+      "aliases": [],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "юникон yunikon"
+    },
+    {
+      "vid": "VN0055",
+      "legal": "ООО «ДСТ-УРАЛ»",
+      "form": "OO",
+      "name": "ДСТ-УРАЛ",
+      "aliases": [
+        "DST-URAL",
+        "ДСТ-Урал"
+      ],
+      "region": "RU-CHE",
+      "country": "RU",
+      "site": "https://tm10.ru",
+      "inn": null,
+      "search": "дстурал дст урал dst ural dstural"
+    },
+    {
+      "vid": "VN0056",
+      "legal": "АО «168Роботикс»",
+      "form": "AO",
+      "name": "168Роботикс",
+      "aliases": [],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "168роботикс 168robotiks"
+    },
+    {
+      "vid": "VN0057",
+      "legal": "ООО «Автономика»",
+      "form": "OO",
+      "name": "Автономика",
+      "aliases": [],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "автономика avtonomika"
+    },
+    {
+      "vid": "VN0058",
+      "legal": "ООО «Робком»",
+      "form": "OO",
+      "name": "Робком",
+      "aliases": [],
+      "region": "RU-NVS",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "робком robkom"
+    },
+    {
+      "vid": "VN0059",
+      "legal": "ООО «Виафор»",
+      "form": "OO",
+      "name": "Виафор",
+      "aliases": [],
+      "region": "RU-KDA",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "виафор viafor"
+    },
+    {
+      "vid": "VN0060",
+      "legal": "АО «НПО «Высокоточные комплексы»»",
+      "form": "AO",
+      "name": "НПО Высокоточные комплексы",
+      "aliases": [],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "нпо высокоточные комплексы npo vysokotochnye kompleksy"
+    },
+    {
+      "vid": "VN0061",
+      "legal": "АО «Астрамис»",
+      "form": "AO",
+      "name": "Астрамис",
+      "aliases": [
+        "Astramis"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "http://astramis.com",
+      "inn": null,
+      "search": "астрамис astramis"
+    },
+    {
+      "vid": "VN0062",
+      "legal": "АО «Раскат»",
+      "form": "AO",
+      "name": "Раскат",
+      "aliases": [
+        "Raskat"
+      ],
+      "region": "RU-YAR",
+      "country": "RU",
+      "site": "https://oao-raskat.ru",
+      "inn": null,
+      "search": "раскат raskat"
+    },
+    {
+      "vid": "VN0063",
+      "legal": "ООО «НПО ГКМП»",
+      "form": "OO",
+      "name": "НПО ГКМП",
+      "aliases": [
+        "ГКМП",
+        "ИРМАШ",
+        "Группа Компаний Машиностроения и Приборостроения"
+      ],
+      "region": "RU-BRY",
+      "country": "RU",
+      "site": "https://gkmp32.com",
+      "inn": null,
+      "search": "нпо гкмп npo gkmp ирмаш irmash группа компаний машиностроения и приборостроения gruppa kompaniy mashinostroeniya i priborostroeniya"
+    },
+    {
+      "vid": "VN0064",
+      "legal": "ООО «Кингпро»",
+      "form": "OO",
+      "name": "Кингпро",
+      "aliases": [
+        "KINGPRO"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://kingpro.global",
+      "inn": null,
+      "search": "кингпро kingpro"
+    },
+    {
+      "vid": "VN0065",
+      "legal": "ООО «ЭВР»",
+      "form": "OO",
+      "name": "ЭВР",
+      "aliases": [],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "эвр evr"
+    },
+    {
+      "vid": "VN0066",
+      "legal": "ФГАОУ ВО «Севастопольский Государственный Университет»",
+      "form": "FA",
+      "name": "Севастопольский Государственный Университет",
+      "aliases": [],
+      "region": "RU-SEV",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "севастопольский государственный университет sevastopolskiy gosudarstvennyy universitet"
+    },
+    {
+      "vid": "VN0067",
+      "legal": "ООО «Альбатрос»",
+      "form": "OO",
+      "name": "Альбатрос",
+      "aliases": [
+        "Albatros"
+      ],
+      "region": "RU-TA",
+      "country": "RU",
+      "site": "https://alb.aero",
+      "inn": null,
+      "search": "альбатрос albatros"
+    },
+    {
+      "vid": "VN0068",
+      "legal": "ООО «ГК Тихие Крылья»",
+      "form": "OO",
+      "name": "ГК Тихие Крылья",
+      "aliases": [
+        "Silent Wings"
+      ],
+      "region": "RU-SPE",
+      "country": "RU",
+      "site": "https://silentwings.ru",
+      "inn": null,
+      "search": "гк тихие крылья gk tikhie krylya silent wings"
+    },
+    {
+      "vid": "VN0069",
+      "legal": "ООО «АМТ»",
+      "form": "OO",
+      "name": "АМТ",
+      "aliases": [
+        "AMT"
+      ],
+      "region": "RU-YAR",
+      "country": "RU",
+      "site": "https://amt-print.com",
+      "inn": null,
+      "search": "амт amt"
+    },
+    {
+      "vid": "VN0070",
+      "legal": "ООО «Вирсайн Инновации»",
+      "form": "OO",
+      "name": "Вирсайн Инновации",
+      "aliases": [
+        "Virsign",
+        "Вирсайн"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://virsign.ru",
+      "inn": "9731086296",
+      "search": "вирсайн инновации virsayn innovatsii virsign"
+    },
+    {
+      "vid": "VN0071",
+      "legal": "ООО «КБ-интеграл»",
+      "form": "OO",
+      "name": "КБ-интеграл",
+      "aliases": [
+        "КБ-Интеграл"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://kb-integral.ru",
+      "inn": null,
+      "search": "кбинтеграл кб интеграл kb integral"
+    },
+    {
+      "vid": "VN0072",
+      "legal": "МАИ",
+      "form": "UN",
+      "name": "МАИ",
+      "aliases": [
+        "Московский авиационный институт"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://mai.ru",
+      "inn": null,
+      "search": "маи mai московский авиационный институт moskovskiy aviatsionnyy institut"
+    },
+    {
+      "vid": "VN0073",
+      "legal": "ООО «Деморобот»",
+      "form": "OO",
+      "name": "Деморобот",
+      "aliases": [
+        "AZARRUS",
+        "ДЕМОРОБОТ"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://azarrus.com",
+      "inn": null,
+      "search": "деморобот demorobot azarrus"
+    },
+    {
+      "vid": "VN0074",
+      "legal": "АНО ВО «Университет Иннополис»",
+      "form": "AN",
+      "name": "Университет Иннополис",
+      "aliases": [],
+      "region": "RU-TA",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "университет иннополис universitet innopolis"
+    },
+    {
+      "vid": "VN0075",
+      "legal": "ООО «Роспроект»",
+      "form": "OO",
+      "name": "Роспроект",
+      "aliases": [
+        "ОмДжет"
+      ],
+      "region": "RU-OMS",
+      "country": "RU",
+      "site": "https://omjet.ru",
+      "inn": null,
+      "search": "роспроект rosproekt омджет omdzhet"
+    },
+    {
+      "vid": "VN0076",
+      "legal": "ООО НПП «Авакс-Геосервис»",
+      "form": "OO",
+      "name": "НПП Авакс-Геосервис",
+      "aliases": [],
+      "region": "RU-KYA",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "аваксгеосервис нпп авакс геосервис npp avaks geoservis"
+    },
+    {
+      "vid": "VN0077",
+      "legal": "ООО «Миррико»",
+      "form": "OO",
+      "name": "Миррико",
+      "aliases": [
+        "Mirrico",
+        "ГК Миррико"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://mirrico.ru",
+      "inn": null,
+      "search": "миррико mirriko mirrico гк gk"
+    },
+    {
+      "vid": "VN0078",
+      "legal": "АНО «Техносфера»",
+      "form": "AN",
+      "name": "Техносфера",
+      "aliases": [],
+      "region": "RU-SAK",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "техносфера tekhnosfera"
+    },
+    {
+      "vid": "VN0079",
+      "legal": "ООО «Ровбилдер»",
+      "form": "OO",
+      "name": "Ровбилдер",
+      "aliases": [],
+      "region": "RU-KLU",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "ровбилдер rovbilder"
+    },
+    {
+      "vid": "VN0080",
+      "legal": "ООО «Подводная робототехника»",
+      "form": "OO",
+      "name": "Подводная робототехника",
+      "aliases": [
+        "ГНОМ",
+        "GNOM"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://gnomrov.ru",
+      "inn": null,
+      "search": "подводная робототехника podvodnaya robototekhnika гном gnom"
+    },
+    {
+      "vid": "VN0081",
+      "legal": "АО «Зала Аэро»",
+      "form": "AO",
+      "name": "Зала Аэро",
+      "aliases": [],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "зала аэро zala aero"
+    },
+    {
+      "vid": "VN0082",
+      "legal": "ООО «Лаборатория Будущего»",
+      "form": "OO",
+      "name": "Лаборатория Будущего",
+      "aliases": [
+        "CableWalker"
+      ],
+      "region": "RU-SVE",
+      "country": "RU",
+      "site": "https://cablewalker.ru",
+      "inn": "6658399868",
+      "search": "лаборатория будущего laboratoriya buduschego cablewalker"
+    },
+    {
+      "vid": "VN0083",
+      "legal": "ООО «Аэродин»",
+      "form": "OO",
+      "name": "Аэродин",
+      "aliases": [
+        "Aerodyne"
+      ],
+      "region": "RU-LEN",
+      "country": "RU",
+      "site": "https://aerodyne.tech",
+      "inn": "7810676544",
+      "search": "аэродин aerodin aerodyne"
+    },
+    {
+      "vid": "VN0084",
+      "legal": "ООО «Гумич РТК»",
+      "form": "OO",
+      "name": "Гумич РТК",
+      "aliases": [
+        "Гумич-РТК",
+        "Gumich RTK"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://gumich-rtk.ru",
+      "inn": "9726005407",
+      "search": "гумич ртк gumich rtk гумичртк"
+    },
+    {
+      "vid": "VN0085",
+      "legal": "ООО «СМП Сервис»",
+      "form": "OO",
+      "name": "СМП Сервис",
+      "aliases": [
+        "СМП-Сервис",
+        "SMP Robotics"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://www.tral.ru",
+      "inn": null,
+      "search": "смп сервис smp servis смпсервис robotics"
+    },
+    {
+      "vid": "VN0086",
+      "legal": "ООО «ЛМТ»",
+      "form": "OO",
+      "name": "ЛМТ",
+      "aliases": [
+        "Летающие Машины Тюринга"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "http://turingfm.com",
+      "inn": null,
+      "search": "лмт lmt летающие машины тюринга letayuschie mashiny tyuringa"
+    },
+    {
+      "vid": "VN0087",
+      "legal": "ООО «Клеверкоптер»",
+      "form": "OO",
+      "name": "Клеверкоптер",
+      "aliases": [],
+      "region": "RU-NIZ",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "клеверкоптер kleverkopter"
+    },
+    {
+      "vid": "VN0088",
+      "legal": "АО «НПО Андроидная Техника»",
+      "form": "AO",
+      "name": "НПО Андроидная Техника",
+      "aliases": [
+        "Android Technics",
+        "НПО АТ"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://npo-at.com",
+      "inn": "7723738378",
+      "search": "нпо андроидная техника npo androidnaya tekhnika android technics ат at"
+    },
+    {
+      "vid": "VN0089",
+      "legal": "ООО «Коруфайер»",
+      "form": "OO",
+      "name": "Коруфайер",
+      "aliases": [
+        "Korufire"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://korufire.ru",
+      "inn": null,
+      "search": "коруфайер korufayer korufire"
+    },
+    {
+      "vid": "VN0090",
+      "legal": "АО «НПП ПТ Океанос»",
+      "form": "AO",
+      "name": "НПП ПТ Океанос",
+      "aliases": [],
+      "region": "RU-SPE",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "нпп пт океанос npp pt okeanos"
+    },
+    {
+      "vid": "VN0091",
+      "legal": "ООО «Эвокарго»",
+      "form": "OO",
+      "name": "Эвокарго",
+      "aliases": [
+        "Evocargo",
+        "ЭвоКарго"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://evocargo.com",
+      "inn": "7714459603",
+      "search": "эвокарго evokargo evocargo"
+    },
+    {
+      "vid": "VN0092",
+      "legal": "ООО «Амт Н.В.»",
+      "form": "OO",
+      "name": "Амт Н.В.",
+      "aliases": [
+        "АМТ Н.В."
+      ],
+      "region": "RU-CHE",
+      "country": "RU",
+      "site": "https://www.amt-nv.ru",
+      "inn": null,
+      "search": "амт н в amt n v"
+    },
+    {
+      "vid": "VN0093",
+      "legal": "ООО «ПК ТС»",
+      "form": "OO",
+      "name": "ПК ТС",
+      "aliases": [],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "пк тс pk ts"
+    },
+    {
+      "vid": "VN0094",
+      "legal": "АО «Метровагонмаш»",
+      "form": "AO",
+      "name": "Метровагонмаш",
+      "aliases": [],
+      "region": "RU-MOS",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "метровагонмаш metrovagonmash"
+    },
+    {
+      "vid": "VN0095",
+      "legal": "ООО «Автотех»",
+      "form": "OO",
+      "name": "Автотех",
+      "aliases": [
+        "Navio"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://navio.auto",
+      "inn": "9725045830",
+      "search": "автотех avtotekh navio"
+    },
+    {
+      "vid": "VN0096",
+      "legal": "ООО «Яндекс»",
+      "form": "OO",
+      "name": "Яндекс",
+      "aliases": [
+        "Yandex"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://autonomy.yandex.ru",
+      "inn": null,
+      "search": "яндекс yandeks yandex"
+    },
+    {
+      "vid": "VN0097",
+      "legal": "АО «Концерн Телематика»",
+      "form": "AO",
+      "name": "Концерн Телематика",
+      "aliases": [
+        "Телематика"
+      ],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": "https://telematika.com",
+      "inn": null,
+      "search": "концерн телематика kontsern telematika"
+    },
+    {
+      "vid": "VN0098",
+      "legal": "АО «Нииас»",
+      "form": "AO",
+      "name": "Нииас",
+      "aliases": [],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "нииас niias"
+    },
+    {
+      "vid": "VN0099",
+      "legal": "АО «НПП «Радар ММС»»",
+      "form": "AO",
+      "name": "НПП Радар ММС",
+      "aliases": [
+        "Радар ММС"
+      ],
+      "region": "RU-SPE",
+      "country": "RU",
+      "site": "https://radar-mms.com",
+      "inn": null,
+      "search": "нпп радар ммс npp radar mms"
+    },
+    {
+      "vid": "VN0100",
+      "legal": "ЗАО «Си Проект»",
+      "form": "ZA",
+      "name": "Си Проект",
+      "aliases": [],
+      "region": "RU-SPE",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "си проект si proekt"
+    },
+    {
+      "vid": "VN0101",
+      "legal": "ООО «Бас Глори Эйр»",
+      "form": "OO",
+      "name": "Бас Глори Эйр",
+      "aliases": [],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "бас глори эйр bas glori eyr"
+    },
+    {
+      "vid": "VN0102",
+      "legal": "ООО «Интэк»",
+      "form": "OO",
+      "name": "Интэк",
+      "aliases": [],
+      "region": "RU-TOM",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "интэк intek"
+    },
+    {
+      "vid": "VN0103",
+      "legal": "ООО «КБ Атл»",
+      "form": "OO",
+      "name": "КБ Атл",
+      "aliases": [],
+      "region": "RU-MOW",
+      "country": "RU",
+      "site": null,
+      "inn": null,
+      "search": "кб атл kb atl"
+    }
+  ]
+}
