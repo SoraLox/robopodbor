@@ -1,0 +1,11 @@
+# Одинаковые переводы строк на macOS, Linux и Windows: без этого git на Windows
+# превращает LF в CRLF, и shell-скрипты и конфиги в контейнерах ломаются.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.webp binary
+*.glb binary
+*.pdf binary
+*.xlsx binary
+*.ttf binary
+*.woff2 binary
