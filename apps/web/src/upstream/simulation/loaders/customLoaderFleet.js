@@ -1,4 +1,5 @@
-import { computeGateClusters, computeRackObstacles } from "../shape/shapeGeometry.js";
+import { computeGateClusters } from "../shape/shapeGeometry.js";
+import { cellCenter, cellOfPoint, findPath, isWalkable, makeNavGrid, pathLength } from "./gridPath.js";
 import { CELL, cellAt, cellWorldOrigin } from "../shape/shapeTypes.js";
 import { createCargoFactory } from "./cargo.js";
 import { createEnergyMeter } from "../energy.js";
@@ -11,7 +12,8 @@ const PAUSE_SECONDS = 1.4; // пауза на погрузку/разгрузк�
 const FORK_LIFT_HEIGHT = 1.1;
 const ARRIVE_EPS = 0.15;
 const TURN_RATE = 6; // рад/с
-const LOADER_CLEARANCE = 1.0; // запас сверх половины стеллажа при объезде (жалоба: раньше ездили прямо сквозь них)
+// Погрузчиков на одни ворота: стоят у проёма рядом, по ширине ворот.
+export const LOADERS_PER_GATE = 3;
 
 // Фуры на воротах конструктора формы склада: заезжают/уезжают по нормали к
 // стене (та же сторона, что и проём) — упрощённо, без разворотов/полос,
@@ -37,19 +39,45 @@ function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
-function collectRackCells(shape) {
-  const cells = [];
+// Места хранения: у каждого стеллажа — клетка подъезда (проезжий сосед,
+// ближайший к воротам), погрузчик встаёт там и поворачивается к стеллажу.
+// Раньше целью был центр клетки стеллажа — погрузчик въезжал в сам стеллаж.
+function collectStorage(shape, nav, gates) {
+  const places = [];
+  const gateCells = gates.map((gate) => cellOfPoint(nav, gate.worldCenter));
+  const toGate = (gx, gz) => Math.min(...gateCells.map((c) => Math.abs(c.gx - gx) + Math.abs(c.gz - gz)));
 
   for (let gz = 0; gz < shape.gridSize; gz++) {
     for (let gx = 0; gx < shape.gridSize; gx++) {
       if (cellAt(shape, gx, gz) !== CELL.RACK) continue;
-
-      const a = cellWorldOrigin(gx, gz);
-      cells.push({ x: a.x + shape.cellSize / 2, z: a.z + shape.cellSize / 2 });
+      const sides = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+        .map(([dx, dz]) => ({ gx: gx + dx, gz: gz + dz }))
+        .filter((c) => isWalkable(nav, c.gx, c.gz))
+        .sort((a, b) => toGate(a.gx, a.gz) - toGate(b.gx, b.gz));
+      // Середина сплошного блока стеллажей — к ней не подъехать, ячейку пропускаем.
+      if (!sides.length) continue;
+      const approach = cellCenter(nav, sides[0].gx, sides[0].gz);
+      places.push({ x: approach.x, z: approach.z, face: cellCenter(nav, gx, gz) });
     }
   }
 
-  return cells;
+  if (places.length) return places;
+
+  // Стеллажи не нарисованы — напольное хранение в дальней от ворот половине пола.
+  const floor = [];
+  for (let gz = 0; gz < shape.gridSize; gz++) {
+    for (let gx = 0; gx < shape.gridSize; gx++) {
+      if (cellAt(shape, gx, gz) === CELL.FLOOR) floor.push({ gx, gz, d: toGate(gx, gz) });
+    }
+  }
+  floor.sort((a, b) => b.d - a.d);
+  return floor
+    .slice(0, Math.ceil(floor.length / 2))
+    .filter((_, i) => i % 3 === 0)
+    .map((c) => {
+      const point = cellCenter(nav, c.gx, c.gz);
+      return { x: point.x, z: point.z, face: null };
+    });
 }
 
 function nearestGateOf(point, gates) {
@@ -93,38 +121,67 @@ export function createCustomLoaderFleet({
   const speedUnitsPerSec = speedMps / Math.max(1e-6, metersPerUnit);
   const loadSlowFactor = 1 - LOAD_SLOWDOWN * Math.min(1, cargoWeightKg / Math.max(1, capacityKg));
 
-  // Стеллажи как препятствия для объезда (см. computeDetourWaypoint) — свой
-  // же назначенный стеллаж каждый погрузчик всё равно исключает по позиции
-  // цели, поэтому список общий на всех, пересчитывать на каждого не нужно.
-  const rackObstacles = computeRackObstacles(shape);
+  const nav = makeNavGrid(shape);
+  const storage = collectStorage(shape, nav, gates);
 
   const racksByGate = new Map(gates.map((gate) => [gate.id, []]));
-  for (const rack of collectRackCells(shape)) {
-    racksByGate.get(nearestGateOf(rack, gates).id).push(rack);
+  for (const place of storage) {
+    racksByGate.get(nearestGateOf(place, gates).id).push(place);
+  }
+  // Ворота, к которым ни один стеллаж не ближе остальных, не простаивают:
+  // берут ближайшие места хранения со всего склада.
+  for (const gate of gates) {
+    const own = racksByGate.get(gate.id);
+    if (own.length || !storage.length) continue;
+    const byDistance = [...storage].sort(
+      (a, b) =>
+        Math.hypot(a.x - gate.worldCenter.x, a.z - gate.worldCenter.z) - Math.hypot(b.x - gate.worldCenter.x, b.z - gate.worldCenter.z)
+    );
+    own.push(...byDistance.slice(0, Math.max(1, Math.ceil(storage.length / gates.length))));
   }
 
-  const loaderCount = Math.min(count, Math.max(1, gates.length));
+  const loaderCount = Math.min(count, Math.max(1, gates.length * LOADERS_PER_GATE));
   const loaders = gates.length ? Array.from({ length: loaderCount }, (_, i) => createLoader(i)) : [];
+
+  // Точка у ворот для погрузчика: несколько на одних воротах встают рядом по ширине
+  // проёма, чуть внутри склада, а не в одну точку.
+  function gateStopOf(gate, slot, slots) {
+    const inward = { x: -gate.normal[0], z: -gate.normal[1] };
+    const along = { x: Math.abs(gate.normal[1]), z: Math.abs(gate.normal[0]) };
+    const span = gate.worldSpan.max - gate.worldSpan.min;
+    const offset = slots > 1 ? (slot / (slots - 1) - 0.5) * span * 0.6 : 0;
+    return {
+      x: gate.worldCenter.x + along.x * offset + inward.x * nav.cellSize * 0.5,
+      z: gate.worldCenter.z + along.z * offset + inward.z * nav.cellSize * 0.5,
+    };
+  }
 
   function createLoader(index) {
     const gate = gates[index % gates.length];
+    const slot = Math.floor(index / gates.length);
+    const slots = Math.ceil((loaderCount - (index % gates.length)) / gates.length);
+    const gateStop = gateStopOf(gate, slot, slots);
     const model = robotFactory();
 
-    model.group.position.set(gate.worldCenter.x, 0, gate.worldCenter.z);
+    model.group.position.set(gateStop.x, 0, gateStop.z);
     group.add(model.group);
 
+    // Несколько погрузчиков на одних воротах начинают с разных стеллажей.
+    const myRacks = racksByGate.get(gate.id);
     return {
       model,
       gate,
+      gateStop,
       kind: gate.kind, // 'in' — выгрузка (ворота→стеллаж), иначе — загрузка (стеллаж→ворота)
-      myRacks: racksByGate.get(gate.id),
-      rackIndex: 0,
+      myRacks,
+      rackIndex: myRacks.length ? Math.floor((slot * myRacks.length) / Math.max(1, slots)) : 0,
+      path: null,
       state: "idle",
       timer: 0,
       carrying: false,
       cargoUnit: null,
       meter: createEnergyMeter(energyProfile),
-      pos: { x: gate.worldCenter.x, z: gate.worldCenter.z },
+      pos: { x: gateStop.x, z: gateStop.z },
       heading: 0,
       legTarget: null,
       legWaypoint: null,
@@ -168,62 +225,30 @@ export function createCustomLoaderFleet({
     return heading + (Math.abs(diff) <= maxTurn ? diff : Math.sign(diff) * maxTurn);
   }
 
-  // Маршрут ворота↔стеллаж — прямая линия (полноценные проезды для
-  // произвольного контура вне рамок этой версии, см. верхний комментарий),
-  // но прямая линия раньше могла пройти прямо сквозь ЧУЖОЙ стеллаж, стоящий
-  // между воротами и целью (жалоба пользователя). Разовый облёт: если прямая
-  // задевает круг чужого стеллажа — едем через одну промежуточную точку сбоку
-  // от него, а не строим полноценный путь вокруг нескольких препятствий сразу.
-  function computeDetourWaypoint(from, to, obstacles) {
-    const dx = to.x - from.x;
-    const dz = to.z - from.z;
-    const len2 = dx * dx + dz * dz;
-    if (len2 < 1e-6) return null;
-    const len = Math.sqrt(len2);
-    const nx = -dz / len;
-    const nz = dx / len;
+  let routeUnits = 0;
+  let routeLegs = 0;
 
-    let best = null;
-    let bestT = Infinity;
-
-    for (const ob of obstacles) {
-      // Стеллаж, к которому едем (или от которого едем) — не препятствие для самого себя.
-      if (Math.abs(to.x - ob.x) <= ob.halfX + 0.5 && Math.abs(to.z - ob.z) <= ob.halfZ + 0.5) continue;
-      if (Math.abs(from.x - ob.x) <= ob.halfX + 0.5 && Math.abs(from.z - ob.z) <= ob.halfZ + 0.5) continue;
-
-      const radius = Math.max(ob.halfX, ob.halfZ) + LOADER_CLEARANCE;
-      let t = ((ob.x - from.x) * dx + (ob.z - from.z) * dz) / len2;
-      t = Math.max(0.05, Math.min(0.95, t));
-      const px = from.x + dx * t;
-      const pz = from.z + dz * t;
-      const toObX = ob.x - px;
-      const toObZ = ob.z - pz;
-      const dist = Math.hypot(toObX, toObZ);
-
-      if (dist < radius && t < bestT) {
-        const sign = toObX * nx + toObZ * nz >= 0 ? 1 : -1;
-        best = { x: ob.x - nx * sign * radius, z: ob.z - nz * sign * radius };
-        bestT = t;
-      }
-    }
-
-    return best;
-  }
-
-  // Обёртка над driveToward: на новой цели один раз считает (если нужно)
-  // объездную точку и едет сперва в неё, затем — в саму цель.
-  function driveTowardWithDetour(loader, target, dt, speed, obstacles) {
+  // Едем к цели по пути A* (gridPath.js): путь строится один раз на новую цель.
+  function drivePath(loader, target, dt, speed) {
     if (loader.legTarget !== target) {
       loader.legTarget = target;
-      loader.legWaypoint = obstacles.length ? computeDetourWaypoint(loader.pos, target, obstacles) : null;
+      loader.path = findPath(nav, loader.pos, target);
+      routeUnits += pathLength(loader.pos, loader.path);
+      routeLegs += 1;
     }
 
-    if (loader.legWaypoint) {
-      if (driveToward(loader, loader.legWaypoint, dt, speed)) loader.legWaypoint = null;
-      return false;
+    while (loader.path.length) {
+      if (!driveToward(loader, loader.path[0], dt, speed)) return false;
+      loader.path.shift();
     }
 
-    return driveToward(loader, target, dt, speed);
+    // У стеллажа — повернуться к нему вилами.
+    if (target.face) {
+      const want = headingZForward(target.face.x - loader.pos.x, target.face.z - loader.pos.z);
+      loader.heading = turnToward(loader.heading, want, TURN_RATE * dt);
+      loader.model.group.rotation.y = loader.heading;
+    }
+    return true;
   }
 
   function attachCargo(loader) {
@@ -268,7 +293,7 @@ export function createCustomLoaderFleet({
       case "toRack": {
         loader.meter.consume(dt, "work");
         const target = loader.myRacks[loader.rackIndex % loader.myRacks.length];
-        if (driveTowardWithDetour(loader, target, dt, speed, rackObstacles)) {
+        if (drivePath(loader, target, dt, speed)) {
           loader.state = "atRackPickup";
           loader.timer = 0;
         }
@@ -287,7 +312,7 @@ export function createCustomLoaderFleet({
 
       case "toGateDrop":
         loader.meter.consume(dt, "work");
-        if (driveTowardWithDetour(loader, loader.gate.worldCenter, dt, speed, rackObstacles)) {
+        if (drivePath(loader, loader.gateStop, dt, speed)) {
           loader.state = "atGateDrop";
           loader.timer = 0;
         }
@@ -308,7 +333,7 @@ export function createCustomLoaderFleet({
       // --- выгрузка (GATE_IN): фура → ворота → стеллаж ---
       case "toGateEmpty":
         loader.meter.consume(dt, "work");
-        if (driveTowardWithDetour(loader, loader.gate.worldCenter, dt, speed, rackObstacles)) {
+        if (drivePath(loader, loader.gateStop, dt, speed)) {
           loader.state = "atGatePickup";
           loader.timer = 0;
         }
@@ -328,7 +353,7 @@ export function createCustomLoaderFleet({
       case "toRackDrop": {
         loader.meter.consume(dt, "work");
         const target = loader.myRacks[loader.rackIndex % loader.myRacks.length];
-        if (driveTowardWithDetour(loader, target, dt, speed, rackObstacles)) {
+        if (drivePath(loader, target, dt, speed)) {
           loader.state = "atRackDrop";
           loader.timer = 0;
         }
@@ -444,7 +469,7 @@ export function createCustomLoaderFleet({
       movedPerHour,
       receivedPerHour: hours > 0 ? Math.round(cyclesIn / hours) : 0,
       shippedPerHour: hours > 0 ? Math.round(cyclesOut / hours) : 0,
-      avgRouteM: 0,
+      avgRouteM: routeLegs ? Math.round((routeUnits / routeLegs) * metersPerUnit) : 0,
       busyLoaders: loaders.filter((l) => l.state !== "idle").length,
     };
   }

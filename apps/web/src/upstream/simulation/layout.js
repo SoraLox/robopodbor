@@ -117,7 +117,8 @@ export function computeLayout(shape, robotTypes, workZoneShare = 1) {
     vacuumZone,
     armZone,
     maxArmCount: maxArmCountOf(armWidth, workZMax - workZMin),
-    maxLoaderCount: Math.max(1, gates.length),
+    // На своей форме у ворот встают до трёх погрузчиков (customLoaderFleet.js LOADERS_PER_GATE).
+    maxLoaderCount: Math.max(1, gates.length * (custom ? 3 : 1)),
     gates,
     bounds,
   };
