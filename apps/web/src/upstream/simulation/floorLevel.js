@@ -4,6 +4,7 @@ import { CANVAS_PX, TRAIL_OPACITY } from "./constants.js";
 import { activePalette, isStudioLook } from "./studioLook.js";
 import { applyColorSpace, disposeTree } from "./sceneUtils.js";
 import { createWalls } from "./walls.js";
+import { createRacks } from "./warehouseRacks.js";
 
 // Расстояние между этажами по высоте: стены + перекрытие (оно как раз ложится
 // на верх стен нижнего этажа).
@@ -90,7 +91,7 @@ function addSideCrates(parent) {
 //
 //   decals — то, что не показываем на «прозрачных» этажах (стены, след, подписи);
 //   dispose — освобождает то, что этаж создал сам.
-export function createFloorLevel(shared, index) {
+export function createFloorLevel(shared, index, shape) {
   const group = new THREE.Group();
   group.position.y = index * FLOOR_PITCH;
 
@@ -118,18 +119,24 @@ export function createFloorLevel(shared, index) {
 
   const crates = addSideCrates(group);
 
-  const walls = createWalls();
+  const walls = createWalls(shape);
   group.add(walls.group);
+
+  const racks = createRacks(shape);
+  group.add(racks);
 
   const vacuumGroup = new THREE.Group();
   const armGroup = new THREE.Group();
   const loaderGroup = new THREE.Group();
   group.add(vacuumGroup, armGroup, loaderGroup);
 
-  return {
+  const level = {
     index,
     group,
     walls,
+    racks,
+    racksBuiltFrom: shape,
+    shape,
     trailCtx: trail.ctx,
     trailTexture: trail.texture,
     vacuumGroup,
@@ -144,12 +151,51 @@ export function createFloorLevel(shared, index) {
     loaderSystem: null,
 
     // Общие геометрии, материал пола и подписи чанков принадлежат сцене; здесь —
-    // только своё: слой следа, ящики и стены.
+    // только своё: слой следа, ящики, стены и стеллажи из конструктора формы.
     dispose() {
       trail.texture.dispose();
       trailPlane.material.dispose();
       disposeTree(crates);
       disposeTree(walls.group);
+      disposeTree(racks);
     },
   };
+
+  return level;
+}
+
+// Стены живут по этажам (у каждого своя group), а форма склада — общая на все
+// этажи и меняется реже, чем что-либо ещё, поэтому setLevelCount (sceneSetup.js)
+// не пересоздаёт этажи целиком при смене формы — только стены, через эту
+// функцию, когда shape действительно изменился (сравнение по ссылке).
+export function rebuildLevelWalls(level, shape) {
+  if (level.shape === shape) return;
+
+  const decalIndex = level.decals.indexOf(level.walls.group);
+  level.group.remove(level.walls.group);
+  disposeTree(level.walls.group);
+
+  const walls = createWalls(shape);
+  level.group.add(walls.group);
+  if (decalIndex >= 0) level.decals[decalIndex] = walls.group;
+
+  level.walls = walls;
+  level.shape = shape;
+}
+
+// Стеллажи из конструктора формы (CELL.RACK) — та же логика пересборки по
+// ссылке, что и у стен, но отдельным полем: rebuildLevelWalls уже обновляет
+// level.shape к моменту своего завершения, так что общий флаг не отличил бы
+// «стены уже пересобраны» от «стеллажи ещё нет».
+export function rebuildLevelRacks(level, shape) {
+  if (level.racksBuiltFrom === shape) return;
+
+  level.group.remove(level.racks);
+  disposeTree(level.racks);
+
+  const racks = createRacks(shape);
+  level.group.add(racks);
+
+  level.racks = racks;
+  level.racksBuiltFrom = shape;
 }

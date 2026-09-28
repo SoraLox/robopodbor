@@ -23,7 +23,7 @@ export function ScenarioBars({
   const max = Math.max(...scenarios.map((scenario) => scenario.tco), 1);
 
   return (
-    <ul className="grid gap-1">
+    <ul className="grid grid-cols-1 gap-1">
       {scenarios.map((scenario) => {
         const isRecommended = Boolean(scenario.recommended);
         const isBase = scenario.delta === 'база';

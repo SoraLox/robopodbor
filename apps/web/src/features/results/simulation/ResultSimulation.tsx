@@ -1,17 +1,20 @@
-import { Suspense, lazy, useMemo, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { useObjectParameters, useSolutions } from '@/api/queries';
 import type { Solution } from '@/api/types';
 import { useWizardStore } from '@/app/store';
 import {
+  DEFAULT_SHAPE,
   SIMULATION_ASSUMPTIONS,
   buildSimulationInput,
   simRobotTypeOf,
   type SimulationInput,
 } from './simulationInput';
+import { buildAirportInput, hasAirportScene } from './airportInput';
 
 // three.js (~300 КБ gzip) грузится отдельным чанком: KPI и графики отчёта
 // показываются сразу, сцена догружается следом.
 const WarehouseScene = lazy(() => import('@/upstream/simulation/WarehouseScene.jsx'));
+const AirportScene = lazy(() => import('@/upstream/simulation/AirportScene.jsx'));
 
 function hasWebGL(): boolean {
   try {
@@ -60,16 +63,111 @@ function SceneFallback({ fill }: { fill?: boolean }) {
   );
 }
 
+type Planned = { solutionId: string; count: number };
+
 export function ResultSimulation({
+  objectType = 'warehouse',
   immersive = false,
   planned,
 }: {
-  /** @deprecated сцена всегда складская; оставлен для совместимости вызовов */
+  /** Аэропорт — своя сцена upstream; остальные объекты — складская. */
   objectType?: string;
   immersive?: boolean;
   /** Сколько роботов заложено в расчёт экономики — сцена стартует с того же числа. */
-  planned?: { solutionId: string; count: number };
+  planned?: Planned;
 }) {
+  if (objectType === 'airport') return <AirportSimulation immersive={immersive} {...(planned ? { planned } : {})} />;
+  return <WarehouseSimulation immersive={immersive} {...(planned ? { planned } : {})} />;
+}
+
+/** Сцена аэропорта upstream: транспортировка груза и багажа между бортом и депо. */
+/**
+ * Сцена аэропорта клонирует модели сразу при построении — они должны быть
+ * загружены заранее (у upstream их прогревает main.jsx, у нас — здесь).
+ */
+function useRobotModels(): 'loading' | 'ready' | 'error' {
+  const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading');
+  useEffect(() => {
+    let alive = true;
+    import('@/upstream/simulation/robots/models.js')
+      .then(({ loadRobotModels }) => loadRobotModels())
+      .then(() => alive && setState('ready'))
+      .catch((error: unknown) => {
+        console.error('[simulation] не удалось загрузить 3D-модели', error);
+        if (alive) setState('error');
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return state;
+}
+
+function AirportSimulation({ immersive, planned }: { immersive: boolean; planned?: Planned }) {
+  const models = useRobotModels();
+  const parameters = useWizardStore((s) => s.parameters);
+  const selectedId = useWizardStore((s) => s.solutionId);
+  const { data: fields } = useObjectParameters('airport');
+  const { data: solutions } = useSolutions('airport');
+  const [webgl] = useState(hasWebGL);
+
+  const solution = solutions
+    ? selectedId
+      ? solutions.find((s) => s.id === selectedId) ?? null
+      : [...solutions].filter(hasAirportScene).sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0] ?? null
+    : null;
+  const input = useMemo(
+    () => (fields && solution && hasAirportScene(solution) ? buildAirportInput(fields, parameters, solution, planned) : null),
+    [fields, parameters, solution, planned],
+  );
+
+  if (!fields || !solutions) return <Note fill={immersive}>Готовим симуляцию…</Note>;
+  if (!solution) return <Note fill={immersive}>Не найдено решение для симуляции.</Note>;
+  if (!input) {
+    return (
+      <Note fill={immersive}>
+        {`3D-сцена аэропорта показывает транспортировку груза и багажа. Для «${solution.name}» такой сцены нет.`}
+      </Note>
+    );
+  }
+  if (!webgl) return <Note fill={immersive}>Браузер не поддерживает WebGL — 3D-симуляцию показать нельзя.</Note>;
+  if (models === 'error') return <Note fill={immersive}>Не удалось загрузить 3D-модели сцены.</Note>;
+  if (models === 'loading') return <SceneFallback fill={immersive} />;
+
+  const note = input.substitutions.length
+    ? `Нет в карточке робота, взято у демо-робота: ${input.substitutions.map((item) => `${item.field} — ${item.value}`).join(', ')}.`
+    : null;
+
+  return (
+    <div className={immersive ? 'relative h-full w-full' : 'grid gap-3'}>
+      <Suspense fallback={<SceneFallback fill={immersive} />}>
+        <AirportScene
+          key={`${solution.id}:${input.gatesCount}:${input.transportCount}`}
+          gatesCount={input.gatesCount}
+          transportCount={input.transportCount}
+          transportThroughput={input.transportThroughput}
+          groundOpsPerFlight={input.groundOpsPerFlight}
+          demand={input.demand}
+          scenarioLabel={`${solution.name} · ${solution.vendor}`}
+          immersive={immersive}
+        />
+      </Suspense>
+      {note ? (
+        <p
+          className={
+            immersive
+              ? 'pointer-events-none absolute right-3 top-3 z-10 max-w-[320px] rounded-[10px] border border-[#E5E5EA] bg-white/90 px-2.5 py-1.5 text-[11.5px] leading-snug text-[#3A4A5C]'
+              : 'text-[12.5px] text-muted-foreground'
+          }
+        >
+          {note}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function WarehouseSimulation({ immersive, planned }: { immersive: boolean; planned?: Planned }) {
   const parameters = useWizardStore((s) => s.parameters);
   const selectedId = useWizardStore((s) => s.solutionId);
   // Сцена upstream пока только складская; для аэропорта/клиники берём складской
@@ -132,7 +230,12 @@ function SimulationScene({
   const scene = (
     <Suspense fallback={<SceneFallback fill={immersive} />}>
       <WarehouseScene
+        shape={DEFAULT_SHAPE}
         robotTypes={input.robotTypes}
+        vacuumType={input.type === 'vacuum' ? input.model : undefined}
+        armType={input.type === 'arm' ? input.model : undefined}
+        loaderType={input.type === 'loader' ? input.model : undefined}
+        oversizedCargoPct={params.oversizedCargoPct}
         floorAreaM2={params.floorAreaM2}
         floorsCount={1}
         vacuumCount={counts.vacuum}

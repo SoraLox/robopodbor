@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
+  Camera,
   ChevronDown,
   ChevronUp,
   ClipboardList,
@@ -27,6 +28,7 @@ import { ScenarioBars } from './ScenarioBars';
 import { SensitivityPanel } from './SensitivityPanel';
 import { ResultSimulation } from './simulation/ResultSimulation';
 import { SIMULATION_ASSUMPTIONS } from './simulation/simulationInput';
+import { AIRPORT_ASSUMPTIONS } from './simulation/airportInput';
 import { SimPlaybackProvider, useSimPlayback } from './simulation/SimPlaybackContext';
 import type { CalculationResult } from '@/api/types';
 import { cn, fmt } from '@/lib/utils';
@@ -144,6 +146,7 @@ export function ResultsPage() {
         data={data}
         intro={intro}
         parameterGroups={parameterGroups}
+        simulationAssumptions={objectType === 'airport' ? AIRPORT_ASSUMPTIONS : SIMULATION_ASSUMPTIONS}
         previewId={previewId}
         onSelect={(id) => setPreviewId((current) => (current === id ? null : id))}
         onClosePreview={() => setPreviewId(null)}
@@ -156,6 +159,7 @@ function ReportBelowFold({
   data,
   intro,
   parameterGroups,
+  simulationAssumptions,
   previewId,
   onSelect,
   onClosePreview,
@@ -163,6 +167,7 @@ function ReportBelowFold({
   data: CalculationResult;
   intro: ObjectIntro;
   parameterGroups: ObjectParameterGroup[];
+  simulationAssumptions: readonly string[];
   previewId: string | null;
   onSelect: (id: string) => void;
   onClosePreview: () => void;
@@ -214,12 +219,12 @@ function ReportBelowFold({
     {
       id: 'assumptions',
       title: 'Допущения',
-      summary: `${data.assumptions.length + SIMULATION_ASSUMPTIONS.length} пунктов · экономика и симуляция`,
+      summary: `${data.assumptions.length + simulationAssumptions.length} пунктов · экономика и симуляция`,
       icon: ScrollText,
       content: (
         <div className="grid gap-3">
           <AssumptionBlock title="Экономика" items={data.assumptions} />
-          <AssumptionBlock title="Симуляция" items={[...SIMULATION_ASSUMPTIONS]} />
+          <AssumptionBlock title="Симуляция" items={[...simulationAssumptions]} />
           <button
             type="button"
             className="text-left text-[12.5px] font-medium text-[#2F86F0] underline-offset-4 hover:underline"
@@ -274,6 +279,7 @@ function HeroMetrics({
     toggleTopView,
     zoomBy,
     rotate,
+    snapshot,
   } = useSimPlayback();
   const [collapsed, setCollapsed] = useState(false);
 
@@ -296,7 +302,7 @@ function HeroMetrics({
     'grid size-8 flex-none place-items-center rounded-[10px] border border-foreground bg-white text-foreground';
 
   return (
-    <div className="pointer-events-auto w-full max-w-[480px]">
+    <div className="pointer-events-auto w-full max-w-[520px]">
       <div className="overflow-hidden rounded-[20px] border border-[#E5E5EA] bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
         <div
           className={cn(
@@ -373,6 +379,9 @@ function HeroMetrics({
           </button>
           <button type="button" onClick={() => rotate(1)} aria-label="Повернуть вправо" title="Вправо" className={iconBtn}>
             <RotateCw className="size-4" strokeWidth={1.75} aria-hidden />
+          </button>
+          <button type="button" onClick={snapshot} aria-label="Сохранить снимок сцены" title="Снимок сцены, PNG" className={iconBtn}>
+            <Camera className="size-4" strokeWidth={1.75} aria-hidden />
           </button>
 
           <span className="mx-0.5 h-4 w-px flex-none bg-[#E5E5EA]" aria-hidden />

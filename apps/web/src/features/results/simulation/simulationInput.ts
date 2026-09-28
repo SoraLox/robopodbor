@@ -20,16 +20,20 @@ import {
 } from '@/upstream/domain/warehouseAdapter.js';
 import { energyProfileOf } from '@/upstream/simulation/energy.js';
 import {
-  MAX_LOADER_COUNT,
   MAX_VACUUM_COUNT,
   computeLayout,
   computeVacuumZoneAreaM2,
 } from '@/upstream/simulation/layout.js';
+import { buildDefaultShape } from '@/upstream/simulation/shape/shapeTypes.js';
+
+/** Форма склада — стандартный прямоугольник upstream: своей формы в паспорте нет. */
+export const DEFAULT_SHAPE = buildDefaultShape();
 
 export type SimRobotType = 'vacuum' | 'arm' | 'loader';
 
 export const SIMULATION_ASSUMPTIONS = [
-  'Тип робота в сцене определяется по типу решения каталога: уборщики — пылесосы, манипуляторы и ячейки — роборуки, AMR, тележки и погрузчики — погрузчики.',
+  'Тип робота в сцене определяется по типу решения каталога: уборщики — пылесосы (поломоечные — моделью мойщика), манипуляторы и ячейки — роборуки, AMR и тягачи — низкой платформой-транспортировщиком, погрузчики и штабелёры — погрузчиком, системы хранения — сеткой башен с шаттлом.',
+  'Склад в сцене — стандартный прямоугольник с пятью воротами: формы склада в паспорте объекта нет.',
   'Потоки приёмки, отгрузки и отбора переведены из суточных в часовые делением на часы работы (смены × длительность смены).',
   'Путь погрузчика от ворот до места хранения — половина стороны склада, если считать его квадратным.',
   'Скорость, грузоподъёмность, производительность, время работы, время зарядки и мощность берутся из карточки робота. Чего в карточке нет — подставляется из демо-робота симуляции того же типа; такие поля перечислены у сцены.',
@@ -48,6 +52,7 @@ const TYPE_BY_SOLUTION_TYPE: Record<string, SimRobotType> = {
   manipulator: 'arm',
   cell: 'arm',
   sorter: 'arm',
+  asrs: 'loader',
   amr: 'loader',
   fmr: 'loader',
   stacker: 'loader',
@@ -60,6 +65,19 @@ export function simRobotTypeOf(solution: Solution): SimRobotType | null {
   if (solution.solutionType) return TYPE_BY_SOLUTION_TYPE[solution.solutionType] ?? null;
   const text = `${solution.name} ${solution.useCase}`;
   return TYPE_KEYWORDS.find(([, pattern]) => pattern.test(text))?.[0] ?? null;
+}
+
+/**
+ * Какую 3D-модель upstream показать для нашего решения (ключ фабрик в useSimulation.js).
+ * undefined — модель по умолчанию для флота: пылесос, процедурная рука, погрузчик.
+ */
+export function simModelOf(solution: Solution, type: SimRobotType): string | undefined {
+  const text = `${solution.name} ${solution.useCase}`;
+  if (type === 'vacuum') return /поломо|мою|мойщ|влажн/i.test(text) ? 'washer' : undefined;
+  if (type === 'arm') return /укладк|паллетиз|палетиз/i.test(text) ? 'stacker' : undefined;
+  if (solution.solutionType === 'asrs') return 'storagecube';
+  if (solution.solutionType === 'amr' || solution.solutionType === 'tug') return 'transporter';
+  return undefined;
 }
 
 /** «1 500 кг» → 1500, «1.8 м/с» → 1.8, «—» → null. */
@@ -135,6 +153,7 @@ export function toUpstreamParams(values: Record<string, string>): UpstreamParams
     requiredOutboundThroughput: num('wh_obem_otgruzki', 0) / hoursPerDay,
     requiredSortThroughput: num('wh_obem_otbora', 0) / hoursPerDay,
     skuCount: num('wh_kolichestvo_sku', 40),
+    oversizedCargoPct: withinSchema('oversizedCargoPct', num('wh_dolya_negabaritnyh_nestandartnyh_gruzov', 5)),
     cargoWeightKg: num('wh_massa_gruzovoy_edinitsy', 50),
     cargoLengthCm: withinSchema('cargoLengthCm', lengthCm),
     cargoWidthCm: withinSchema('cargoWidthCm', widthCm),
@@ -169,11 +188,17 @@ export function toUpstreamSolution(
   params: UpstreamParams,
   substitutions: SimSubstitution[] = [],
 ): UpstreamSolution {
-  const reference = CATALOG.find((item) => item.identification.type === type)!;
+  // Демо-робот той же модели (СтойкаБокс, LowCart…), иначе — базовый для флота.
+  const model = simModelOf(solution, type);
+  const reference =
+    CATALOG.find((item) => item.identification.type === model) ??
+    CATALOG.find((item) => item.identification.type === type)!;
   const demo = reference.technical;
   const substitute = <T,>(own: T | null | undefined, fallback: T, field: string, shown: string): T => {
     if (own !== null && own !== undefined) return own;
-    substitutions.push({ field, value: shown });
+    // У демо-робота этой величины тоже нет (стационарная СтойкаБокс не ездит) —
+    // подставлять нечего, и упоминать это в пометке незачем.
+    if (fallback !== null && fallback !== undefined) substitutions.push({ field, value: shown });
     return fallback;
   };
 
@@ -237,7 +262,7 @@ export function buildSimulationInput(
   const simSolution = toUpstreamSolution(solution, type, params, substitutions);
   const robotTypes = [type];
   const workZoneShare = params.workZonePct / 100;
-  const layout = computeLayout(robotTypes, workZoneShare);
+  const layout = computeLayout(DEFAULT_SHAPE, robotTypes, workZoneShare);
   const vacuumZoneAreaM2 = computeVacuumZoneAreaM2(layout, params.floorAreaM2);
   const only = (t: SimRobotType) => (type === t ? simSolution : null);
 
@@ -248,11 +273,13 @@ export function buildSimulationInput(
     armSolution: only('arm'),
     loaderSolution: only('loader'),
   });
-  const maxCount = { vacuum: MAX_VACUUM_COUNT, arm: layout.maxArmCount, loader: MAX_LOADER_COUNT }[type];
+  const maxCount = { vacuum: MAX_VACUUM_COUNT, arm: layout.maxArmCount, loader: layout.maxLoaderCount }[type];
   const rawRecommended = { vacuum: counts.vacuumCount, arm: counts.armCount, loader: counts.loaderCount }[type];
 
   return {
     type,
+    /** Ключ 3D-модели upstream для этого флота (washer, transporter, storagecube…). */
+    model: simModelOf(solution, type),
     params,
     /** Что взято из демо-каталога симуляции — показывается у сцены. */
     substitutions,

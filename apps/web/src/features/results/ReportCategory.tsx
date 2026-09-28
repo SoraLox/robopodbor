@@ -65,7 +65,7 @@ function ReportCategoryList({
   onSelect: (id: string) => void;
 }) {
   return (
-    <ul className="grid min-w-0 gap-3">
+    <ul className="grid min-w-0 grid-cols-1 gap-3">
       {sections.map((section) => {
         const Icon = section.icon;
         const active = activeId === section.id;

@@ -23,6 +23,24 @@
         "apps/api"
       ],
       "port": 4000
+    },
+    {
+      "name": "web-real-api",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--prefix",
+        "apps/web",
+        "--",
+        "--port",
+        "5180",
+        "--strictPort"
+      ],
+      "env": {
+        "VITE_ENABLE_MOCKS": "false"
+      },
+      "port": 5180
     }
   ]
 }
