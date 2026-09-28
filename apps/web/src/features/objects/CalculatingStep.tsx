@@ -64,7 +64,12 @@ export function CalculatingStep({ active, revealed }: { active: boolean; reveale
   const parameters = useWizardStore((s) => s.parameters);
   const processes = useWizardStore((s) => s.processes);
   const solutionId = useWizardStore((s) => s.solutionId);
-  const input = solutionId ? { objectType, solutionId, parameters, processes } : null;
+  const fleetIds = useWizardStore((s) => s.fleetIds);
+  // Набор роботов — только у склада: там экономика складывает флоты.
+  const solutionIds = objectType === 'warehouse' && fleetIds.length > 1 ? fleetIds : undefined;
+  const input = solutionId
+    ? { objectType, solutionId, parameters, processes, ...(solutionIds ? { solutionIds } : {}) }
+    : null;
   const query = useRunCalculation(input, active);
   const barRef = useRef<HTMLDivElement>(null);
   const succeeded = useRef(false);

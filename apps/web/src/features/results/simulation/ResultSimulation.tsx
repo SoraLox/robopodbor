@@ -1,12 +1,15 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import { calculateEconomics } from '@domain/economics';
+import type { CatalogSolution } from '@domain/catalog';
 import { useObjectParameters, useSolutions } from '@/api/queries';
-import type { Solution } from '@/api/types';
+import type { FleetGroup, Solution } from '@/api/types';
 import { useWizardStore } from '@/app/store';
 import {
   DEFAULT_SHAPE,
   SIMULATION_ASSUMPTIONS,
   buildSimulationInput,
   simRobotTypeOf,
+  type SimRobotType,
   type SimulationInput,
 } from './simulationInput';
 import { buildAirportInput, hasAirportScene } from './airportInput';
@@ -69,15 +72,18 @@ export function ResultSimulation({
   objectType = 'warehouse',
   immersive = false,
   planned,
+  fleet,
 }: {
   /** Аэропорт — своя сцена upstream; остальные объекты — складская. */
   objectType?: string;
   immersive?: boolean;
   /** Сколько роботов заложено в расчёт экономики — сцена стартует с того же числа. */
   planned?: Planned;
+  /** Парк склада из расчёта экономики: флоты, число роботов, производительность. */
+  fleet?: FleetGroup[];
 }) {
   if (objectType === 'airport') return <AirportSimulation immersive={immersive} {...(planned ? { planned } : {})} />;
-  return <WarehouseSimulation immersive={immersive} {...(planned ? { planned } : {})} />;
+  return <WarehouseSimulation immersive={immersive} {...(fleet ? { fleet } : {})} />;
 }
 
 /** Сцена аэропорта upstream: транспортировка груза и багажа между бортом и депо. */
@@ -167,88 +173,90 @@ function AirportSimulation({ immersive, planned }: { immersive: boolean; planned
   );
 }
 
-function WarehouseSimulation({ immersive, planned }: { immersive: boolean; planned?: Planned }) {
+function WarehouseSimulation({ immersive, fleet }: { immersive: boolean; fleet?: FleetGroup[] }) {
   const parameters = useWizardStore((s) => s.parameters);
   const selectedId = useWizardStore((s) => s.solutionId);
-  // Сцена upstream пока только складская; для аэропорта/клиники берём складской
-  // каталог и параметры — экономика демо общая, отдельной 3D-модели объекта нет.
+  const fleetIds = useWizardStore((s) => s.fleetIds);
   const { data: fields } = useObjectParameters('warehouse');
   const { data: solutions } = useSolutions('warehouse');
   const [webgl] = useState(hasWebGL);
 
-  const solution = solutions ? pickSolution(solutions, selectedId) : null;
-  const type = solution ? simRobotTypeOf(solution) : null;
+  // Парк — из расчёта. Старые сохранённые расчёты без fleet пересчитываются здесь
+  // той же функцией, что и на сервере (@domain/economics).
+  const groups = useMemo(() => {
+    if (fleet?.length) return fleet;
+    if (!fields || !solutions) return null;
+    const ids = fleetIds.length ? fleetIds : selectedId ? [selectedId] : [];
+    const chosen = ids.map((id) => solutions.find((s) => s.id === id)).filter((s): s is Solution => Boolean(s));
+    const set = chosen.length ? chosen : [pickSolution(solutions, null)].filter((s): s is Solution => Boolean(s));
+    if (!set.length) return [];
+    return (
+      calculateEconomics({
+        objectType: 'warehouse',
+        parameters,
+        fields,
+        solution: set[0] as unknown as CatalogSolution,
+        solutions: set as unknown as CatalogSolution[],
+      }).fleet ?? []
+    );
+  }, [fleet, fields, solutions, fleetIds, selectedId, parameters]);
 
-  const input = useMemo(() => {
-    if (!fields || !solution || !type) return null;
-    const built = buildSimulationInput(fields, parameters, solution, type);
-    // Экономика и сцена должны показывать один и тот же парк, иначе цифры спорят друг с другом.
-    if (planned && planned.solutionId === solution.id) {
-      return {
-        ...built,
-        requiredCount: planned.count,
-        recommendedCount: Math.max(1, Math.min(built.maxCount, planned.count)),
-      };
-    }
-    return built;
-  }, [fields, parameters, solution, type, planned]);
+  const input = useMemo(
+    () => (fields && groups?.length ? buildSimulationInput(fields, parameters, groups) : null),
+    [fields, parameters, groups],
+  );
 
-  if (!fields || !solutions) return <Note fill={immersive}>Готовим симуляцию…</Note>;
-  if (!solution) return <Note fill={immersive}>Не найдено решение для симуляции.</Note>;
-  if (!input) return <Note fill={immersive}>{`Для «${solution.name}» 3D-модели в симуляции нет.`}</Note>;
+  if (!fields || !groups) return <Note fill={immersive}>Готовим симуляцию…</Note>;
+  if (!input || !input.robotTypes.length) {
+    return <Note fill={immersive}>Для выбранных решений 3D-модели в симуляции нет.</Note>;
+  }
   if (!webgl) {
     return <Note fill={immersive}>Браузер не поддерживает WebGL — 3D-симуляцию показать нельзя.</Note>;
   }
 
   return (
     <SimulationScene
-      key={`${solution.id}:${JSON.stringify(input.params)}`}
+      key={`${input.robotTypes.join(',')}:${JSON.stringify(input.params)}:${groups.map((g) => `${g.solutionId}×${g.count}`).join(',')}`}
       input={input}
-      solution={solution}
       immersive={immersive}
     />
   );
 }
 
-function SimulationScene({
-  input,
-  solution,
-  immersive,
-}: {
-  input: SimulationInput;
-  solution: Solution;
-  immersive: boolean;
-}) {
-  const [count, setCount] = useState(input.recommendedCount);
-  const { params } = input;
-  const counts = {
-    vacuum: input.type === 'vacuum' ? count : 0,
-    arm: input.type === 'arm' ? count : 0,
-    loader: input.type === 'loader' ? count : 0,
-  };
+function SimulationScene({ input, immersive }: { input: SimulationInput; immersive: boolean }) {
+  const { params, fleets } = input;
+  const [counts, setCounts] = useState<Record<SimRobotType, number>>({
+    vacuum: fleets.vacuum?.recommendedCount ?? 0,
+    arm: fleets.arm?.recommendedCount ?? 0,
+    loader: fleets.loader?.recommendedCount ?? 0,
+  });
+  const setCount = (kind: SimRobotType) => (value: number) => setCounts((prev) => ({ ...prev, [kind]: value }));
+  const label = Object.values(fleets)
+    .map((f) => `${f.requiredCount} × ${f.name}`)
+    .join(' + ');
 
   const scene = (
     <Suspense fallback={<SceneFallback fill={immersive} />}>
       <WarehouseScene
         shape={DEFAULT_SHAPE}
         robotTypes={input.robotTypes}
-        vacuumType={input.type === 'vacuum' ? input.model : undefined}
-        armType={input.type === 'arm' ? input.model : undefined}
-        loaderType={input.type === 'loader' ? input.model : undefined}
+        vacuumType={fleets.vacuum?.model}
+        armType={fleets.arm?.model}
+        loaderType={fleets.loader?.model}
         oversizedCargoPct={params.oversizedCargoPct}
         floorAreaM2={params.floorAreaM2}
         floorsCount={1}
         vacuumCount={counts.vacuum}
-        vacuumProd={input.type === 'vacuum' ? input.throughput : 0}
+        vacuumProd={fleets.vacuum?.throughput ?? 0}
         armCount={counts.arm}
-        armProd={input.type === 'arm' ? input.throughput / 60 : 0}
+        armProd={(fleets.arm?.throughput ?? 0) / 60}
         loaderCount={counts.loader}
-        recommendedVacuumCount={input.recommendedCount}
-        recommendedArmCount={input.recommendedCount}
-        recommendedLoaderCount={input.recommendedCount}
-        loaderCapacityKg={input.capacityKg}
-        loaderSpeedMps={input.speedMps}
-        loaderThroughput={input.type === 'loader' ? input.throughput : 0}
+        recommendedVacuumCount={fleets.vacuum?.recommendedCount ?? 0}
+        recommendedArmCount={fleets.arm?.recommendedCount ?? 0}
+        recommendedLoaderCount={fleets.loader?.recommendedCount ?? 0}
+        loaderCapacityKg={fleets.loader?.capacityKg ?? 100}
+        loaderSpeedMps={fleets.loader?.speedMps ?? 2}
+        loaderThroughput={fleets.loader?.throughput ?? 0}
         cargoWeightKg={params.cargoWeightKg}
         cargoLengthCm={params.cargoLengthCm}
         cargoWidthCm={params.cargoWidthCm}
@@ -261,11 +269,11 @@ function SimulationScene({
         truckPayload={params.truckPayloadUnits}
         workZoneShare={input.workZoneShare}
         demand={input.demand}
-        scenarioLabel={`${solution.name} · ${solution.vendor}`}
+        scenarioLabel={label}
         energyProfiles={input.energyProfiles}
-        onManualVacuumCountChange={setCount}
-        onManualArmCountChange={setCount}
-        onManualLoaderCountChange={setCount}
+        onManualVacuumCountChange={setCount('vacuum')}
+        onManualArmCountChange={setCount('arm')}
+        onManualLoaderCountChange={setCount('loader')}
         immersive={immersive}
       />
     </Suspense>
@@ -287,11 +295,6 @@ function SimulationScene({
         <summary className="cursor-pointer font-medium text-foreground">
           Как параметры расчёта перенесены в симуляцию
         </summary>
-        {input.requiredCount > input.maxCount ? (
-          <p className="mt-2">
-            {`По расчёту нужно ${input.requiredCount} роботов, в сцене помещается не больше ${input.maxCount}.`}
-          </p>
-        ) : null}
         <SubstitutionNote input={input} />
         <ul className="mt-2 list-disc space-y-1 pl-5">
           {SIMULATION_ASSUMPTIONS.map((line) => (
@@ -303,19 +306,22 @@ function SimulationScene({
   );
 }
 
-/** Какие характеристики робота сцена взяла из демо-каталога и сколько роботов не поместилось. */
+/** Какие характеристики роботов взяты у демо-робота и сколько роботов не поместилось в сцену. */
 function SubstitutionNote({ input, floating }: { input: SimulationInput; floating?: boolean }) {
+  const fleets = Object.values(input.fleets);
+  const many = fleets.length > 1;
   const lines = [
-    ...(input.substitutions.length
-      ? [
-          `Нет в карточке робота, взято у демо-робота: ${input.substitutions
+    ...fleets
+      .filter((f) => f.substitutions.length)
+      .map(
+        (f) =>
+          `${many ? `${f.name}: н` : 'Н'}ет в карточке робота, взято у демо-робота: ${f.substitutions
             .map((item) => `${item.field} — ${item.value}`)
             .join(', ')}.`,
-        ]
-      : []),
-    ...(floating && input.requiredCount > input.maxCount
-      ? [`По расчёту нужно ${input.requiredCount} роботов, в сцене помещается ${input.maxCount}.`]
-      : []),
+      ),
+    ...fleets
+      .filter((f) => f.requiredCount > f.maxCount)
+      .map((f) => `${many ? `${f.name}: п` : 'П'}о расчёту нужно ${f.requiredCount}, в сцене помещается ${f.maxCount}.`),
   ];
   if (!lines.length) return null;
   if (!floating) return <p className="mt-2 text-foreground">{lines.join(' ')}</p>;

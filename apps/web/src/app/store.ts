@@ -11,9 +11,14 @@ interface WizardState {
   processes: string[];
   setProcesses: (ids: string[]) => void;
 
-  /** Решение каталога, выбранное для расчёта. */
+  /** Решение каталога, выбранное для расчёта (главное в наборе). */
   solutionId: string | null;
+  /** Выбирает одно решение: набор — только оно. */
   setSolutionId: (id: string) => void;
+
+  /** Набор роботов склада — по одному на флот (уборка, отбор, перемещение паллет). */
+  fleetIds: string[];
+  setFleet: (ids: string[], primary: string | null) => void;
 
   /** Загружает сохранённый проект обратно в мастер. */
   loadProject: (input: {
@@ -44,7 +49,10 @@ const wizard: StateCreator<WizardState> = (set) => ({
   setProcesses: (ids) => set({ processes: ids }),
 
   solutionId: null,
-  setSolutionId: (id) => set({ solutionId: id }),
+  setSolutionId: (id) => set({ solutionId: id, fleetIds: [id] }),
+
+  fleetIds: [],
+  setFleet: (ids, primary) => set({ fleetIds: ids, solutionId: primary }),
 
   loadProject: ({ objectType, parameters, processes }) =>
     set({
@@ -80,11 +88,12 @@ export const useWizardStore =
           name: 'wizard',
           version: 1,
           storage: createJSONStorage(() => localStorage),
-          partialize: ({ objectType, parameters, processes, solutionId, comparedIds }) => ({
+          partialize: ({ objectType, parameters, processes, solutionId, fleetIds, comparedIds }) => ({
             objectType,
             parameters,
             processes,
             solutionId,
+            fleetIds,
             comparedIds,
           }),
         }),

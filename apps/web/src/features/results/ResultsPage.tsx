@@ -125,6 +125,7 @@ export function ResultsPage() {
               objectType={objectType}
               immersive
               {...(data?.robots && data.solutionId ? { planned: { solutionId: data.solutionId, count: data.robots.count } } : {})}
+              {...(data?.fleet ? { fleet: data.fleet } : {})}
             />
           </div>
 
@@ -313,13 +314,13 @@ function HeroMetrics({
           <div className="min-h-0 overflow-hidden">
             <div
               className={cn(
-                'grid grid-cols-2 items-stretch gap-2 border-b border-[#E5E5EA] px-3 pb-3 pt-3.5',
+                'grid grid-cols-1 items-stretch gap-2 border-b border-[#E5E5EA] px-3 pb-3 pt-3.5 sm:grid-cols-2',
                 'transition-opacity duration-300 ease-out motion-reduce:transition-none',
                 collapsed ? 'opacity-0' : 'opacity-100',
               )}
             >
               {/* Слева — показатели 2×2, та же оболочка что у покупки */}
-              <div className="grid grid-cols-2 content-center gap-x-3 gap-y-3 rounded-[12px] border border-[#E5E5EA] px-2.5 py-2.5">
+              <div className="grid min-w-0 grid-cols-2 content-center gap-x-3 gap-y-3 rounded-[12px] border border-[#E5E5EA] px-2.5 py-2.5">
                 <Metric label="Площадь" value={`${area.number} ${area.unit}`.trim()} />
                 <Metric label="CAPEX" value={data.capex.value} />
                 <Metric label="ROI" value={data.roi.value} />
@@ -332,7 +333,7 @@ function HeroMetrics({
 
               {/* Справа — покупка */}
               {recommended ? (
-                <div className="relative flex min-h-0 flex-col justify-between rounded-[12px] border border-status-operation px-2.5 pb-2.5 pt-3.5">
+                <div className="relative flex min-h-0 min-w-0 flex-col justify-between rounded-[12px] border border-status-operation px-2.5 pb-2.5 pt-3.5">
                   <span className="absolute -top-2 right-2.5 rounded-full bg-status-operation-tint px-2 py-0.5 text-[11px] font-semibold leading-none text-status-operation">
                     Рекомендуем
                   </span>
@@ -344,7 +345,7 @@ function HeroMetrics({
                       {recommended.subtitle}
                     </div>
                   </div>
-                  <div className="mt-3 grid grid-cols-3 gap-2">
+                  <div className="mt-3 grid min-w-0 grid-cols-3 gap-2">
                     <Metric label="CAPEX" value={data.capex.value} />
                     <Metric label="OPEX" value={data.opexSaving.percent} tone="green" />
                     <Metric label="TCO" value={fmt(recommended.tco)} />

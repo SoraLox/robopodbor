@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { calculateEconomics } from '@domain/economics';
+import type { CatalogSolution } from '@domain/catalog';
 import type { Solution } from '@/api/types';
 import { solutions, objectParameters } from '@/mocks/fixtures';
 import { buildSimulationInput, simModelOf, simRobotTypeOf } from '@/features/results/simulation/simulationInput';
@@ -19,8 +21,12 @@ describe('3D-модели upstream для наших роботов', () => {
   });
 
   it('у стационарной системы хранения не пишем «скорость — null»', () => {
-    const input = buildSimulationInput(objectParameters.warehouse ?? [], {}, byId('AS0001'), 'loader');
-    expect(input.substitutions.map((item) => item.value).join(' ')).not.toMatch(/null|undefined/);
+    const fields = objectParameters.warehouse ?? [];
+    const solution = byId('AS0001') as unknown as CatalogSolution;
+    const fleet = calculateEconomics({ objectType: 'warehouse', parameters: {}, fields, solution }).fleet ?? [];
+    const input = buildSimulationInput(fields, {}, fleet);
+    expect(input.fleets.loader?.model).toBe('storagecube');
+    expect(input.fleets.loader!.substitutions.map((item) => item.value).join(' ')).not.toMatch(/null|undefined/);
   });
 });
 

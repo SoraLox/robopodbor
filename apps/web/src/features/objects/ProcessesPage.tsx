@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useState, type MutableRefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useParams } from 'react-router-dom';
-import { AlertTriangle, ChevronRight, type LucideIcon } from 'lucide-react';
+import { AlertTriangle, ChevronRight, X, type LucideIcon } from 'lucide-react';
+import { FLEET_LABEL, fleetKindOf } from '@domain/fleet';
 import { useSelection, useSolutions } from '@/api/queries';
 import { useWizardStore } from '@/app/store';
 import type { SelectionItem, Solution } from '@/api/types';
@@ -206,6 +207,42 @@ function GroupRow({
   );
 }
 
+/** Набор роботов склада: по одному на флот, экономика и сцена считают их вместе. */
+function FleetSummary({ items, onRemove }: { items: Solution[]; onRemove: (id: string) => void }) {
+  return (
+    <div className="mb-2 mt-3 flex-none">
+      <p className="mb-1.5 text-[12px] font-medium text-[#6E6E73]">
+        Набор роботов · {items.length}
+        {items.length === 1 ? ' — добавьте роботов других процессов, чтобы считать вместе' : ''}
+      </p>
+      <ul className="flex flex-wrap gap-1.5">
+        {items.map((solution) => {
+          const kind = fleetKindOf(solution);
+          return (
+            <li
+              key={solution.id}
+              className="flex max-w-full items-center gap-1 rounded-full border border-[#E5E5EA] bg-[#F7F7F8] py-1 pl-2.5 pr-1 text-[12px] leading-none"
+            >
+              <span className="truncate">
+                {kind ? <span className="text-[#8E8E93]">{FLEET_LABEL[kind]}: </span> : null}
+                <span className="font-medium text-foreground">{solution.name}</span>
+              </span>
+              <button
+                type="button"
+                aria-label={`Убрать ${solution.name} из набора`}
+                onClick={() => onRemove(solution.id)}
+                className="flex size-5 flex-none items-center justify-center rounded-full text-[#8E8E93] hover:bg-[#E5E5EA] hover:text-foreground"
+              >
+                <X className="size-3" strokeWidth={2.2} aria-hidden />
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 function SectionTitle({ children }: { children: string }) {
   return <h3 className="mb-2 text-[15px] font-semibold leading-tight text-foreground">{children}</h3>;
 }
@@ -229,6 +266,10 @@ export function ProcessesPage({
   const { data: selection, isLoading: selectionLoading } = useSelection(objectType, parameters);
   const isLoading = solutionsLoading || selectionLoading;
   const setSolutionId = useWizardStore((s) => s.setSolutionId);
+  const fleetIds = useWizardStore((s) => s.fleetIds);
+  const setFleet = useWizardStore((s) => s.setFleet);
+  // Склад считает набор роботов — по одному на флот; другие объекты — одного робота.
+  const isWarehouse = objectType === 'warehouse';
   const [showExcluded, setShowExcluded] = useState(false);
   // Путь выбора: процесс → подкатегория (если их несколько) → робот.
   const [groupId, setGroupId] = useState<string | null>(null);
@@ -315,6 +356,31 @@ export function ProcessesPage({
     if (active) predecodePreviewImages(rows);
   }, [active, rows]);
 
+  const byIdAll = useMemo(() => new Map(rows.map((row) => [row.id, row])), [rows]);
+  const fleetSet = isWarehouse ? fleetIds.filter((id) => byIdAll.has(id)) : [];
+  const fleetItems = fleetSet.map((id) => byIdAll.get(id)!);
+
+  // Робот того же флота заменяет прежнего; робот без флота (ПО, дроны) считается один.
+  const addToFleet = (id: string) => {
+    const solution = byIdAll.get(id);
+    const kind = solution ? fleetKindOf(solution) : null;
+    const kept = kind
+      ? fleetSet.filter((other) => {
+          const otherKind = fleetKindOf(byIdAll.get(other)!);
+          return otherKind !== null && otherKind !== kind;
+        })
+      : [];
+    setFleet([...kept, id], kept[0] ?? id);
+  };
+  const removeFromFleet = (id: string) => {
+    const rest = fleetSet.filter((other) => other !== id);
+    setFleet(rest, rest[0] ?? null);
+    if (selectedId === id) {
+      setSelectedId(null);
+      setPreviewOpen(false);
+    }
+  };
+
   const selectedSolution = rows.find((row) => row.id === selectedId) ?? null;
   const selectedItem = selection?.items.find((item) => item.solutionId === selectedId) ?? null;
 
@@ -325,11 +391,18 @@ export function ProcessesPage({
     }
     setSelectedId(id);
     setPreviewOpen(true);
+    if (isWarehouse) addToFleet(id);
   };
 
+  const canCalculate = isWarehouse ? fleetSet.length > 0 : Boolean(selectedId);
   const goCalculate = () => {
-    if (!selectedId) return;
-    setSolutionId(selectedId);
+    if (isWarehouse) {
+      if (!fleetSet.length) return;
+      setFleet(fleetSet, fleetSet[0]!);
+    } else {
+      if (!selectedId) return;
+      setSolutionId(selectedId);
+    }
     setPreviewOpen(false);
     navigate(`/calculate/${objectType}/calculating`);
   };
@@ -411,7 +484,7 @@ export function ProcessesPage({
             key={solution.id}
             solution={solution}
             item={item}
-            selected={solution.id === selectedId}
+            selected={isWarehouse ? fleetSet.includes(solution.id) : solution.id === selectedId}
             onSelect={() => openPreview(solution.id)}
           />
         ))}
@@ -441,7 +514,7 @@ export function ProcessesPage({
                   key={solution.id}
                   solution={solution}
                   item={item}
-                  selected={solution.id === selectedId}
+                  selected={isWarehouse ? fleetSet.includes(solution.id) : solution.id === selectedId}
                   onSelect={() => openPreview(solution.id)}
                 />
               ))}
@@ -479,13 +552,15 @@ export function ProcessesPage({
           </p>
         ) : null}
 
+        {isWarehouse && fleetItems.length ? <FleetSummary items={fleetItems} onRemove={removeFromFleet} /> : null}
+
         <button
           type="button"
-          disabled={!selectedId}
+          disabled={!canCalculate}
           onClick={goCalculate}
-          className="mt-auto flex h-11 w-full flex-none items-center justify-center rounded-[10px] bg-foreground text-[14px] font-semibold text-white transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:active:scale-100 disabled:bg-[#E5E5EA] disabled:text-[#8E8E93] disabled:opacity-100"
+          className="mt-auto flex h-11 w-full flex-none items-center justify-center rounded-[10px] bg-primary-bright text-[14px] font-semibold text-white transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:active:scale-100 disabled:bg-[#E5E5EA] disabled:text-[#8E8E93] disabled:opacity-100"
         >
-          Рассчитать
+          {isWarehouse && fleetSet.length > 1 ? `Рассчитать набор · ${fleetSet.length}` : 'Рассчитать'}
         </button>
       </div>
 
