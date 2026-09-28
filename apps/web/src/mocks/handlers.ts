@@ -290,16 +290,22 @@ export const handlers = [
       return HttpResponse.json({ message: 'Некорректный запрос: нужны objectType и solutionId' }, { status: 400 });
     }
     const solution = catalog.get(body.solutionId);
-    if (!solution) return HttpResponse.json({ message: 'Решение не найдено в каталоге' }, { status: 404 });
+    const solutionIds = [...new Set([body.solutionId, ...(body.solutionIds ?? [])])];
+    const set = solutionIds.map((id) => catalog.get(id));
+    if (!solution || set.some((item) => !item)) {
+      return HttpResponse.json({ message: 'Решение не найдено в каталоге' }, { status: 404 });
+    }
     const economics = calculateEconomics({
       objectType: body.objectType,
       parameters: body.parameters ?? {},
       fields: fieldsFor(body.objectType),
       solution: solution as unknown as CatalogSolution,
+      solutions: set as unknown as CatalogSolution[],
       ...(body.processes ? { processes: body.processes } : {}),
     });
     const stored = calculationStore.save({
       ...(economics as unknown as Omit<CalculationResult, 'id'>),
+      solutionIds,
       dataVersion: 'data-demo',
       modelVersion: ECONOMICS_MODEL_VERSION,
       calculatedAt: new Date().toISOString(),

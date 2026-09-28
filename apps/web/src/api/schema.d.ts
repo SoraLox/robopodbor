@@ -758,6 +758,8 @@ export interface components {
                 [key: string]: string;
             };
             processes?: string[];
+            /** @description Набор роботов — по одному на флот склада (уборка, отбор, перемещение паллет); solutionId — главный из них. */
+            solutionIds?: string[];
         };
         CalculationResult: {
             id: string;
@@ -791,6 +793,35 @@ export interface components {
                 count: number;
                 basis: string;
             };
+            /** @description Все решения набора, включая solutionId. */
+            solutionIds?: string[];
+            /** @description Парк склада по флотам — те же числа, что в 3D-симуляции. */
+            fleet?: components["schemas"]["FleetGroup"][];
+        };
+        FleetGroup: {
+            /** @enum {string} */
+            kind: "vacuum" | "arm" | "loader";
+            label: string;
+            /** @description Ключ 3D-модели сцены: washer, stacker, transporter, storagecube. */
+            model?: string;
+            solutionId: string;
+            name: string;
+            count: number;
+            /** @description Эффективная производительность одного робота на объекте. */
+            throughputPerRobot: number;
+            unit: string;
+            peakDemand: number;
+            speedMps?: number;
+            capacityKg?: number;
+            autonomyHours?: number;
+            chargeHours?: number;
+            workPowerKw: number;
+            idlePowerKw: number;
+            /** @description Чего нет в карточке и что взято у демо-робота. */
+            substitutions: {
+                field: string;
+                value: string;
+            }[];
         };
         Kpi: {
             label: string;

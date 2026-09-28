@@ -982,6 +982,10 @@ components:
         processes:
           type: array
           items: { type: string }
+        solutionIds:
+          type: array
+          description: Набор роботов — по одному на флот склада (уборка, отбор, перемещение паллет); solutionId — главный из них.
+          items: { type: string }
     CalculationResult:
       type: object
       required:
@@ -1031,6 +1035,42 @@ components:
           properties:
             count: { type: integer }
             basis: { type: string }
+        solutionIds:
+          type: array
+          description: Все решения набора, включая solutionId.
+          items: { type: string }
+        fleet:
+          type: array
+          description: Парк склада по флотам — те же числа, что в 3D-симуляции.
+          items: { $ref: '#/components/schemas/FleetGroup' }
+    FleetGroup:
+      type: object
+      required: [kind, label, solutionId, name, count, throughputPerRobot, unit, peakDemand, workPowerKw, idlePowerKw, substitutions]
+      properties:
+        kind: { type: string, enum: [vacuum, arm, loader] }
+        label: { type: string }
+        model: { type: string, description: 'Ключ 3D-модели сцены: washer, stacker, transporter, storagecube.' }
+        solutionId: { type: string }
+        name: { type: string }
+        count: { type: integer }
+        throughputPerRobot: { type: number, description: Эффективная производительность одного робота на объекте. }
+        unit: { type: string }
+        peakDemand: { type: number }
+        speedMps: { type: number }
+        capacityKg: { type: number }
+        autonomyHours: { type: number }
+        chargeHours: { type: number }
+        workPowerKw: { type: number }
+        idlePowerKw: { type: number }
+        substitutions:
+          type: array
+          description: Чего нет в карточке и что взято у демо-робота.
+          items:
+            type: object
+            required: [field, value]
+            properties:
+              field: { type: string }
+              value: { type: string }
     Kpi:
       type: object
       required: [label, value]

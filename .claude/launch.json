@@ -8,10 +8,13 @@
         "run",
         "dev",
         "--prefix",
-        "apps/web"
+        "apps/web",
+        "--",
+        "--port",
+        "5190",
+        "--strictPort"
       ],
-      "port": 5173,
-      "autoPort": true
+      "port": 5190
     },
     {
       "name": "api",

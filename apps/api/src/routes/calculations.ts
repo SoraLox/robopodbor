@@ -26,6 +26,8 @@ const requestSchema = z.object({
   solutionId: z.string().min(1).max(64),
   parameters: z.record(z.string(), z.string().max(500)).default({}),
   processes: z.array(z.string().max(40)).max(20).optional(),
+  /** Набор роботов (по одному на флот склада); solutionId — главный из них. */
+  solutionIds: z.array(z.string().min(1).max(64)).max(8).optional(),
 });
 
 // Расчёт мастера: паспорт объекта + выбранное решение → экономика (src/domain/economics.ts).
@@ -34,12 +36,14 @@ router.post("/", wrap(async (req, res) => {
   const parsed = requestSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: "Некорректный запрос: нужны objectType и solutionId" });
   const { objectType, solutionId, parameters, processes } = parsed.data;
+  const solutionIds = [...new Set([solutionId, ...(parsed.data.solutionIds ?? [])])];
 
-  const [row, fields] = await Promise.all([
-    prisma.catalogSolution.findUnique({ where: { id: solutionId } }),
+  const [rows, fields] = await Promise.all([
+    prisma.catalogSolution.findMany({ where: { id: { in: solutionIds } } }),
     loadParameterFields(objectType),
   ]);
-  if (!row) return res.status(404).json({ message: "Решение не найдено в каталоге" });
+  const row = rows.find((item) => item.id === solutionId);
+  if (!row || rows.length !== solutionIds.length) return res.status(404).json({ message: "Решение не найдено в каталоге" });
   if (fields.length === 0) return res.status(404).json({ message: "Тип объекта не найден" });
 
   const economics = calculateEconomics({
@@ -47,6 +51,7 @@ router.post("/", wrap(async (req, res) => {
     parameters,
     fields,
     solution: toSolutionDto(row),
+    solutions: solutionIds.map((id) => toSolutionDto(rows.find((item) => item.id === id)!)),
     ...(processes ? { processes } : {}),
   });
   const dataVersion = await currentDataVersion();
@@ -59,12 +64,13 @@ router.post("/", wrap(async (req, res) => {
       parameters: parameters as Prisma.InputJsonValue,
       dataVersion,
       modelVersion: ECONOMICS_MODEL_VERSION,
-      result: { ...economics, solutionId } as unknown as Prisma.InputJsonValue,
+      result: { ...economics, solutionId, solutionIds } as unknown as Prisma.InputJsonValue,
     },
   });
   res.status(201).json({
     ...economics,
     solutionId,
+    solutionIds,
     id: saved.id,
     dataVersion,
     modelVersion: ECONOMICS_MODEL_VERSION,
