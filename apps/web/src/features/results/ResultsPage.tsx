@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
+  Camera,
   ChevronDown,
   ChevronUp,
   ClipboardList,
@@ -27,6 +28,7 @@ import { ScenarioBars } from './ScenarioBars';
 import { SensitivityPanel } from './SensitivityPanel';
 import { ResultSimulation } from './simulation/ResultSimulation';
 import { SIMULATION_ASSUMPTIONS } from './simulation/simulationInput';
+import { AIRPORT_ASSUMPTIONS } from './simulation/airportInput';
 import { SimPlaybackProvider, useSimPlayback } from './simulation/SimPlaybackContext';
 import type { CalculationResult } from '@/api/types';
 import { cn, fmt } from '@/lib/utils';
@@ -144,6 +146,7 @@ export function ResultsPage() {
         data={data}
         intro={intro}
         parameterGroups={parameterGroups}
+        simulationAssumptions={objectType === 'airport' ? AIRPORT_ASSUMPTIONS : SIMULATION_ASSUMPTIONS}
         previewId={previewId}
         onSelect={(id) => setPreviewId((current) => (current === id ? null : id))}
         onClosePreview={() => setPreviewId(null)}
@@ -156,6 +159,7 @@ function ReportBelowFold({
   data,
   intro,
   parameterGroups,
+  simulationAssumptions,
   previewId,
   onSelect,
   onClosePreview,
@@ -163,6 +167,7 @@ function ReportBelowFold({
   data: CalculationResult;
   intro: ObjectIntro;
   parameterGroups: ObjectParameterGroup[];
+  simulationAssumptions: readonly string[];
   previewId: string | null;
   onSelect: (id: string) => void;
   onClosePreview: () => void;
@@ -214,12 +219,12 @@ function ReportBelowFold({
     {
       id: 'assumptions',
       title: 'Допущения',
-      summary: `${data.assumptions.length + SIMULATION_ASSUMPTIONS.length} пунктов · экономика и симуляция`,
+      summary: `${data.assumptions.length + simulationAssumptions.length} пунктов · экономика и симуляция`,
       icon: ScrollText,
       content: (
         <div className="grid gap-3">
           <AssumptionBlock title="Экономика" items={data.assumptions} />
-          <AssumptionBlock title="Симуляция" items={[...SIMULATION_ASSUMPTIONS]} />
+          <AssumptionBlock title="Симуляция" items={[...simulationAssumptions]} />
           <button
             type="button"
             className="text-left text-[12.5px] font-medium text-[#2F86F0] underline-offset-4 hover:underline"
@@ -274,6 +279,7 @@ function HeroMetrics({
     toggleTopView,
     zoomBy,
     rotate,
+    snapshot,
   } = useSimPlayback();
   const [collapsed, setCollapsed] = useState(false);
 
@@ -307,13 +313,13 @@ function HeroMetrics({
           <div className="min-h-0 overflow-hidden">
             <div
               className={cn(
-                'grid grid-cols-2 items-stretch gap-2 border-b border-[#E5E5EA] px-3 pb-3 pt-3.5',
+                'grid grid-cols-1 items-stretch gap-2 border-b border-[#E5E5EA] px-3 pb-3 pt-3.5 sm:grid-cols-2',
                 'transition-opacity duration-300 ease-out motion-reduce:transition-none',
                 collapsed ? 'opacity-0' : 'opacity-100',
               )}
             >
               {/* Слева — показатели 2×2, та же оболочка что у покупки */}
-              <div className="grid grid-cols-2 content-center gap-x-3 gap-y-3 rounded-[12px] border border-[#E5E5EA] px-2.5 py-2.5">
+              <div className="grid min-w-0 grid-cols-2 content-center gap-x-3 gap-y-3 rounded-[12px] border border-[#E5E5EA] px-2.5 py-2.5">
                 <Metric label="Площадь" value={`${area.number} ${area.unit}`.trim()} />
                 <Metric label="CAPEX" value={data.capex.value} />
                 <Metric label="ROI" value={data.roi.value} />
@@ -326,7 +332,7 @@ function HeroMetrics({
 
               {/* Справа — покупка */}
               {recommended ? (
-                <div className="relative flex min-h-0 flex-col justify-between rounded-[12px] border border-status-operation px-2.5 pb-2.5 pt-3.5">
+                <div className="relative flex min-h-0 min-w-0 flex-col justify-between rounded-[12px] border border-status-operation px-2.5 pb-2.5 pt-3.5">
                   <span className="absolute -top-2 right-2.5 rounded-full bg-status-operation-tint px-2 py-0.5 text-[11px] font-semibold leading-none text-status-operation">
                     Рекомендуем
                   </span>
@@ -338,7 +344,7 @@ function HeroMetrics({
                       {recommended.subtitle}
                     </div>
                   </div>
-                  <div className="mt-3 grid grid-cols-3 gap-2">
+                  <div className="mt-3 grid min-w-0 grid-cols-3 gap-2">
                     <Metric label="CAPEX" value={data.capex.value} />
                     <Metric label="OPEX" value={data.opexSaving.percent} tone="green" />
                     <Metric label="TCO" value={fmt(recommended.tco)} />
@@ -373,6 +379,9 @@ function HeroMetrics({
           </button>
           <button type="button" onClick={() => rotate(1)} aria-label="Повернуть вправо" title="Вправо" className={iconBtn}>
             <RotateCw className="size-4" strokeWidth={1.75} aria-hidden />
+          </button>
+          <button type="button" onClick={snapshot} aria-label="Сохранить снимок сцены" title="Снимок сцены, PNG" className={iconBtn}>
+            <Camera className="size-4" strokeWidth={1.75} aria-hidden />
           </button>
 
           <span className="mx-0.5 h-4 w-px flex-none bg-[#E5E5EA]" aria-hidden />

@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { FLOOR } from "./layout.js";
 import { ISO_ELEV, SCENE_HEIGHT_PX } from "./constants.js";
 import { applyColorSpace, disposeTree } from "./sceneUtils.js";
-import { createFloorLevel, createSharedLevelAssets, FLOOR_PITCH } from "./floorLevel.js";
+import { createFloorLevel, createSharedLevelAssets, rebuildLevelWalls, rebuildLevelRacks, FLOOR_PITCH } from "./floorLevel.js";
 import { setStudioLook, activePalette } from "./studioLook.js";
 
 const CAM_DIST = 108;
@@ -23,11 +23,17 @@ export function createWarehouseScene(mount, { fogColor = 0x77798f, mono = false 
   // Палитра сцены: studioLook включается только при mono (сейчас выкл.).
   setStudioLook(mono);
 
+  // near/far отодвинуты за пределы пола (диагональ FLOOR=100 ~141, худший
+  // случай ~ CAM_DIST+71≈179) — туман не должен подёргивать сам пол дымкой при
+  // повороте камеры. Плавное появление фур на въезде — отдельная анимация
+  // прозрачности (createMaterializeFade в truckBay.js), не завязанная на
+  // дистанцию до камеры.
   const scene = new THREE.Scene();
   if (mono) {
     scene.fog = null;
   } else {
-    scene.fog = new THREE.Fog(fogColor, 145, 245);
+    // Дальность тумана — как в upstream: на своей форме склада пол бывает шире.
+    scene.fog = new THREE.Fog(fogColor, 200, 340);
   }
 
   addLights(scene, { mono });
@@ -44,7 +50,9 @@ export function createWarehouseScene(mount, { fogColor = 0x77798f, mono = false 
 
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 500);
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+  // preserveDrawingBuffer: снимок сцены (ТЗ 3.7.4) читает canvas по клику вне
+  // цикла рендера — без этого флага буфер к тому моменту может быть уже очищен.
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance", preserveDrawingBuffer: true });
   renderer.setClearColor(0x000000, 0);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   // updateStyle=false: размеры буфера отдельно от CSS. Иначе canvas style width/height
@@ -110,7 +118,10 @@ export function createWarehouseScene(mount, { fogColor = 0x77798f, mono = false 
   };
 
   // Ровно столько этажей, сколько нужно: лишние убираем, недостающие строим.
-  const setLevelCount = (count) => {
+  // shape — форма склада (общая на все этажи); если она изменилась с прошлого
+  // вызова, у уже существующих этажей пересобираются только стены (дешевле,
+  // чем пересоздавать этаж целиком — см. rebuildLevelWalls в floorLevel.js).
+  const setLevelCount = (count, shape) => {
     while (levels.length > count) {
       const level = levels.pop();
       levelsGroup.remove(level.group);
@@ -118,9 +129,16 @@ export function createWarehouseScene(mount, { fogColor = 0x77798f, mono = false 
     }
 
     while (levels.length < count) {
-      const level = createFloorLevel(shared, levels.length);
+      const level = createFloorLevel(shared, levels.length, shape);
       levels.push(level);
       levelsGroup.add(level.group);
+    }
+
+    if (shape) {
+      for (const level of levels) {
+        rebuildLevelWalls(level, shape);
+        rebuildLevelRacks(level, shape);
+      }
     }
   };
 

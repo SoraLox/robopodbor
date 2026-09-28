@@ -1,0 +1,265 @@
+import { FLOOR } from "../floorConstants.js";
+import { CELL, cellAt, cellWorldOrigin, buildDefaultShape } from "./shapeTypes.js";
+
+// Геометрия, выводимая из нарисованной формы склада: границы, кластеры ворот,
+// сегменты стен. Работает на любой форме (не только прямоугольной) — обход
+// границ клеток, без диагоналей (пиксель-арт по квадратной сетке).
+
+const DIRECTIONS = [
+  { key: "north", dgx: 0, dgz: -1, normal: [0, -1] },
+  { key: "south", dgx: 0, dgz: 1, normal: [0, 1] },
+  { key: "west", dgx: -1, dgz: 0, normal: [-1, 0] },
+  { key: "east", dgx: 1, dgz: 0, normal: [1, 0] },
+];
+
+function isInterior(shape, gx, gz) {
+  return cellAt(shape, gx, gz) !== CELL.EMPTY;
+}
+
+// Любая из трёх «воротных» клеток — двунаправленная (пресет по умолчанию) и
+// две направленные (конструктор «своей» формы, см. shapeTypes.js). Для стен и
+// кластеризации разница в направлении не важна — важно, что здесь проём.
+function isGateCell(value) {
+  return value === CELL.GATE || value === CELL.GATE_IN || value === CELL.GATE_OUT;
+}
+
+// 'in' — «зона выгрузки» (фура привозит), 'out' — «зона загрузки» (фура
+// забирает), 'generic' — двунаправленные ворота пресета по умолчанию (или
+// старые сохранённые формы без направления — тогда ведут себя как раньше).
+function gateKindOf(value) {
+  if (value === CELL.GATE_IN) return "in";
+  if (value === CELL.GATE_OUT) return "out";
+  return "generic";
+}
+
+// Мировые границы залитых (не EMPTY) клеток. Для buildDefaultShape() это ровно
+// {xMin:-50,xMax:50,zMin:-50,zMax:50} — сегодняшний FLOOR.
+export function boundingBoxOf(shape) {
+  let minGx = Infinity;
+  let maxGx = -Infinity;
+  let minGz = Infinity;
+  let maxGz = -Infinity;
+
+  for (let gz = 0; gz < shape.gridSize; gz++) {
+    for (let gx = 0; gx < shape.gridSize; gx++) {
+      if (!isInterior(shape, gx, gz)) continue;
+      if (gx < minGx) minGx = gx;
+      if (gx > maxGx) maxGx = gx;
+      if (gz < minGz) minGz = gz;
+      if (gz > maxGz) maxGz = gz;
+    }
+  }
+
+  if (minGx === Infinity) return { xMin: -FLOOR / 2, xMax: FLOOR / 2, zMin: -FLOOR / 2, zMax: FLOOR / 2 };
+
+  const a = cellWorldOrigin(minGx, minGz);
+  const b = cellWorldOrigin(maxGx + 1, maxGz + 1);
+  return { xMin: a.x, xMax: b.x, zMin: a.z, zMax: b.z };
+}
+
+// Связные (4-связность) группы клеток GATE, каждая обязана касаться границы
+// формы (иметь хотя бы одну грань к EMPTY/за пределами сетки) — иначе это не
+// настоящие ворота, а стеллаж/пол, помеченные по ошибке, и в кластер не берутся.
+export function computeGateClusters(shape) {
+  const visited = new Uint8Array(shape.gridSize * shape.gridSize);
+  const clusters = [];
+  let nextId = 0;
+
+  for (let gz = 0; gz < shape.gridSize; gz++) {
+    for (let gx = 0; gx < shape.gridSize; gx++) {
+      const idx = gz * shape.gridSize + gx;
+      const seedValue = cellAt(shape, gx, gz);
+      if (visited[idx] || !isGateCell(seedValue)) continue;
+
+      const kind = gateKindOf(seedValue);
+      const cells = [];
+      const exposedCount = { north: 0, south: 0, west: 0, east: 0 };
+      const stack = [[gx, gz]];
+      visited[idx] = 1;
+
+      while (stack.length) {
+        const [cx, cz] = stack.pop();
+        cells.push({ gx: cx, gz: cz });
+
+        for (const { key, dgx, dgz } of DIRECTIONS) {
+          const nx = cx + dgx;
+          const nz = cz + dgz;
+
+          if (!isInterior(shape, nx, nz)) {
+            exposedCount[key]++;
+            continue;
+          }
+
+          const nIdx = nz * shape.gridSize + nx;
+          if (isGateCell(cellAt(shape, nx, nz)) && !visited[nIdx]) {
+            visited[nIdx] = 1;
+            stack.push([nx, nz]);
+          }
+        }
+      }
+
+      const boundarySide = Object.entries(exposedCount).sort((a, b) => b[1] - a[1])[0][0];
+      if (exposedCount[boundarySide] === 0) continue; // не касается границы — не настоящие ворота
+
+      const normal = DIRECTIONS.find((d) => d.key === boundarySide).normal;
+      const worldCells = cells.map(({ gx: cx, gz: cz }) => cellWorldOrigin(cx, cz));
+      const centerX = worldCells.reduce((sum, p) => sum + p.x, 0) / worldCells.length + shape.cellSize / 2;
+      const centerZ = worldCells.reduce((sum, p) => sum + p.z, 0) / worldCells.length + shape.cellSize / 2;
+
+      const tangential = boundarySide === "north" || boundarySide === "south" ? worldCells.map((p) => p.x) : worldCells.map((p) => p.z);
+
+      clusters.push({
+        id: nextId++,
+        cells,
+        kind,
+        boundarySide,
+        normal,
+        worldCenter: { x: centerX, z: centerZ },
+        worldSpan: { min: Math.min(...tangential), max: Math.max(...tangential) + shape.cellSize },
+      });
+    }
+  }
+
+  return clusters;
+}
+
+// Стеллажи (CELL.RACK), сгруппированные в прямоугольные препятствия для
+// объезда движущихся роботов на своей форме склада (жалоба пользователя:
+// пылесосы ездили прямо сквозь нарисованные стеллажи) — один прямоугольник на
+// связную группу клеток, а не на каждую клетку отдельно, чтобы объезд не
+// дёргался на стыке соседних клеток одного стеллажа. Тот же формат
+// {x, z, halfX, halfZ}, что у computeArmObstacles (obstacles.js) — подмешивается
+// в тот же список и объезжается тем же dodgeX.
+export function computeRackObstacles(shape) {
+  const visited = new Uint8Array(shape.gridSize * shape.gridSize);
+  const obstacles = [];
+
+  for (let gz = 0; gz < shape.gridSize; gz++) {
+    for (let gx = 0; gx < shape.gridSize; gx++) {
+      const idx = gz * shape.gridSize + gx;
+      if (visited[idx] || cellAt(shape, gx, gz) !== CELL.RACK) continue;
+
+      let minGx = gx;
+      let maxGx = gx;
+      let minGz = gz;
+      let maxGz = gz;
+      const stack = [[gx, gz]];
+      visited[idx] = 1;
+
+      while (stack.length) {
+        const [cx, cz] = stack.pop();
+        if (cx < minGx) minGx = cx;
+        if (cx > maxGx) maxGx = cx;
+        if (cz < minGz) minGz = cz;
+        if (cz > maxGz) maxGz = cz;
+
+        for (const { dgx, dgz } of DIRECTIONS) {
+          const nx = cx + dgx;
+          const nz = cz + dgz;
+          if (nx < 0 || nz < 0 || nx >= shape.gridSize || nz >= shape.gridSize) continue;
+
+          const nIdx = nz * shape.gridSize + nx;
+          if (!visited[nIdx] && cellAt(shape, nx, nz) === CELL.RACK) {
+            visited[nIdx] = 1;
+            stack.push([nx, nz]);
+          }
+        }
+      }
+
+      const a = cellWorldOrigin(minGx, minGz);
+      const b = cellWorldOrigin(maxGx + 1, maxGz + 1);
+      obstacles.push({
+        x: (a.x + b.x) / 2,
+        z: (a.z + b.z) / 2,
+        halfX: (b.x - a.x) / 2,
+        halfZ: (b.z - a.z) / 2,
+      });
+    }
+  }
+
+  return obstacles;
+}
+
+// Список сегментов стен вдоль границы формы: {normal:[nx,nz], hasGate, x0,x1,z0,z1}.
+// Для north/south — x0<x1 (протяжённость вдоль стены), z0===z1 (мировая линия
+// границы, до выдавливания по толщине — этим занимается walls.js). Для
+// west/east — наоборот. Готовые "куски" мержатся вдоль каждой линии границы в
+// прямые прогоны одного типа (сплошной/ворота), как сегодняшний buildNorthWall,
+// но обобщённо для любой линии и любой стороны.
+export function computeWallSegments(shape) {
+  const segments = [];
+
+  // north/south: построчный обход, прогоны вдоль gx на каждой границе-строке gz.
+  collectRuns(shape, "north", segments);
+  collectRuns(shape, "south", segments);
+  collectRuns(shape, "west", segments);
+  collectRuns(shape, "east", segments);
+
+  return segments;
+}
+
+// Собирает граничные грани для одной стороны (north/south/west/east) построчно
+// и мержит соседние клетки одного типа (ворота/сплошная) в прогоны.
+function collectRuns(shape, side, out) {
+  const { dgx, dgz, normal } = DIRECTIONS.find((d) => d.key === side);
+  const cellSize = shape.cellSize;
+  const worldOf = (index) => -FLOOR / 2 + index * cellSize;
+
+  // north/south — построчно по gz (линия — верх/низ строки), прогон вдоль gx.
+  // west/east — по столбцам gx (линия — левая/правая грань столбца), прогон вдоль gz.
+  const lineIsRow = side === "north" || side === "south";
+  const lineCount = shape.gridSize;
+  const tangentialCount = shape.gridSize;
+
+  for (let line = 0; line < lineCount; line++) {
+    let run = null; // {start, end, isGate}
+
+    for (let t = 0; t <= tangentialCount; t++) {
+      const gx = lineIsRow ? t : line;
+      const gz = lineIsRow ? line : t;
+      const isBoundary = t < tangentialCount && isInterior(shape, gx, gz) && !isInterior(shape, gx + dgx, gz + dgz);
+      const isGate = isBoundary && isGateCell(cellAt(shape, gx, gz));
+
+      if (isBoundary && run && run.isGate === isGate) {
+        run.end = t;
+        continue;
+      }
+
+      if (run) out.push(finalizeRun(run, side, normal, line, worldOf));
+      run = isBoundary ? { start: t, end: t, isGate } : null;
+    }
+  }
+}
+
+function finalizeRun(run, side, normal, line, worldOf) {
+  // Линия границы (до выдавливания толщины стены) — верх/низ строки для
+  // north/south, левая/правая грань столбца для west/east.
+  const lineWorld = worldOf(side === "north" || side === "west" ? line : line + 1);
+  const t0 = worldOf(run.start);
+  const t1 = worldOf(run.end + 1);
+
+  const isRow = side === "north" || side === "south";
+  return isRow
+    ? { normal, hasGate: run.isGate, x0: t0, x1: t1, z0: lineWorld, z1: lineWorld }
+    : { normal, hasGate: run.isGate, x0: lineWorld, x1: lineWorld, z0: t0, z1: t1 };
+}
+
+// Структурное сравнение с пресетом по умолчанию, а не флаг shape.isDefault —
+// флаг легко потерять (например, ShapeEditor.handleSave всегда ставил false,
+// даже когда черновик после «Сбросить к стандартной форме» был именно
+// стандартной формой), а это ломает погрузчики/пол молча. Сравнение по
+// клеткам не ошибается независимо от того, как получена форма.
+let cachedDefault = null;
+
+export function isDefaultShape(shape) {
+  if (!shape?.cells) return false;
+  if (!cachedDefault) cachedDefault = buildDefaultShape();
+
+  if (shape.gridSize !== cachedDefault.gridSize || shape.cells.length !== cachedDefault.cells.length) return false;
+
+  for (let i = 0; i < shape.cells.length; i++) {
+    if (shape.cells[i] !== cachedDefault.cells[i]) return false;
+  }
+
+  return true;
+}

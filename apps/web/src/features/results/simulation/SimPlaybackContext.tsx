@@ -11,10 +11,12 @@ import {
 const SPEED_MIN = 1;
 const SPEED_MAX = 128;
 
-/** Действия камеры, которые регистрирует WarehouseScene. */
+/** Действия камеры, которые регистрирует сцена (склад или аэропорт). */
 export interface SimCameraActions {
   zoomBy: (delta: number) => void;
   rotate: (direction: number) => void;
+  /** Сохранить кадр сцены в PNG (ТЗ 3.7.4). */
+  snapshot?: () => void;
 }
 
 export interface SimPlaybackValue {
@@ -31,7 +33,8 @@ export interface SimPlaybackValue {
   toggleTopView: () => void;
   zoomBy: (delta: number) => void;
   rotate: (direction: number) => void;
-  /** Сцена immersive регистрирует zoom/rotate; при размонтировании — null. */
+  snapshot: () => void;
+  /** Сцена immersive регистрирует zoom/rotate/snapshot; при размонтировании — null. */
   bindCameraActions: (actions: SimCameraActions | null) => void;
 }
 
@@ -57,6 +60,10 @@ export function SimPlaybackProvider({ children }: { children: ReactNode }) {
     cameraActionsRef.current?.rotate(direction);
   }, []);
 
+  const snapshot = useCallback(() => {
+    cameraActionsRef.current?.snapshot?.();
+  }, []);
+
   const value = useMemo<SimPlaybackValue>(
     () => ({
       running,
@@ -71,9 +78,10 @@ export function SimPlaybackProvider({ children }: { children: ReactNode }) {
       toggleTopView: () => setTopView((value) => !value),
       zoomBy,
       rotate,
+      snapshot,
       bindCameraActions,
     }),
-    [running, speed, resetKey, topView, zoomBy, rotate, bindCameraActions],
+    [running, speed, resetKey, topView, zoomBy, rotate, snapshot, bindCameraActions],
   );
 
   return <SimPlaybackContext.Provider value={value}>{children}</SimPlaybackContext.Provider>;

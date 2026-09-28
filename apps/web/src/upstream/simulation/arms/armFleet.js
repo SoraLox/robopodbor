@@ -26,7 +26,12 @@ import { activePalette } from "../studioLook.js";
 // Места рук — computeArmSlots (одна линия, а при большом числе — колонки).
 // ============================================================
 
-export function createArmFleet({ group, zone, count, beltTexture, armProd, energyProfile }) {
+// robotFactory(accentColor, beltTexture) — какую модель руки строить на каждом
+// месте; по умолчанию процедурная ArmTech-модель, но тот же автомат состояний
+// (конвейеры, захват/передача коробок, счётчик операций) подходит любой руке,
+// у которой есть {group, pivot, claw, boxes} — см. makeWeldArmRig.js для
+// альтернативы с настоящей моделью клешни.
+export function createArmFleet({ group, zone, count, beltTexture, armProd, energyProfile, robotFactory = makeArmRobot }) {
   const cycleDuration = 1 / Math.max(armProd / 60, 0.001);
   const beltRate = 1.45 * Math.max(1, armProd / 15);
 
@@ -34,7 +39,7 @@ export function createArmFleet({ group, zone, count, beltTexture, armProd, energ
 
   const accents = activePalette().armAccents;
   const arms = slots.map((slot, i) => {
-    const built = makeArmRobot(accents[i % accents.length], beltTexture);
+    const built = robotFactory(accents[i % accents.length], beltTexture);
 
     built.group.position.set(slot.x, 0, slot.z);
     built.group.scale.setScalar(MODEL_SCALE);

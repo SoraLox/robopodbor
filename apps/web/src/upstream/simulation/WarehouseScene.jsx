@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { MAX_VACUUM_COUNT, MAX_LOADER_COUNT, computeLayout } from "./layout.js";
+import { MAX_VACUUM_COUNT, computeLayout } from "./layout.js";
 import { computeFloorChunks } from "./chunkGrid.js";
 import { SCENE_HEIGHT_PX, LOAD_SLOWDOWN, VACUUM_SWATH } from "./constants.js";
 import { useSimulation } from "./useSimulation.js";
+import { downloadCanvasSnapshot } from "./sceneUtils.js";
 import { buildVerifyRows, buildLegendItems } from "./verification.js";
 import { ROBOT_TITLES, PHASE_LABELS, formatHours, formatSimTime } from "./simStats.js";
 import { Stat, RobotCountPanel, MapLegend, VerificationPanel } from "./SimPanels.jsx";
@@ -35,14 +36,18 @@ const SCENE_SHELL = {
 };
 
 export default function WarehouseScene({
+  shape,
   robotTypes,
   floorAreaM2,
   floorsCount,
   vacuumCount,
   vacuumProd,
+  vacuumType,
   armCount,
   armProd,
+  armType,
   loaderCount,
+  loaderType,
   recommendedVacuumCount,
   recommendedArmCount,
   recommendedLoaderCount,
@@ -54,6 +59,7 @@ export default function WarehouseScene({
   cargoWidthCm,
   cargoHeightCm,
   skuCount,
+  oversizedCargoPct,
   slotsPerLane,
   routeLengthM,
   cargoPerHour,
@@ -86,7 +92,7 @@ export default function WarehouseScene({
   const onToggleTopView =
     playback && immersive ? playback.toggleTopView : () => setLocalTopView((value) => !value);
 
-  const layout = useMemo(() => computeLayout(robotTypes, workZoneShare), [robotTypes, workZoneShare]);
+  const layout = useMemo(() => computeLayout(shape, robotTypes, workZoneShare), [shape, robotTypes, workZoneShare]);
   const chunkGrid = useMemo(() => computeFloorChunks(floorAreaM2), [floorAreaM2]);
   const { useVacuum, useArm, useLoader } = layout;
 
@@ -107,6 +113,7 @@ export default function WarehouseScene({
   const vacuumSpeed = useVacuum ? vacuumProd / (VACUUM_SWATH * 3600 * chunkGrid.areaPerUnit2) : 0;
 
   const { mountRef, stats, modelState, rotate } = useSimulation({
+    shape,
     layout,
     chunkGrid,
     floorsCount,
@@ -118,9 +125,12 @@ export default function WarehouseScene({
     resetKey,
     vacuumCount,
     vacuumSpeed,
+    vacuumType,
     armCount,
     armProd,
+    armType,
     loaderCount,
+    loaderType,
     energyProfiles,
     immersive,
     loader: {
@@ -131,7 +141,7 @@ export default function WarehouseScene({
       truckPayload,
       slotsPerLane,
       routeLengthM,
-      cargo: { lengthCm: cargoLengthCm, widthCm: cargoWidthCm, heightCm: cargoHeightCm, skuCount },
+      cargo: { lengthCm: cargoLengthCm, widthCm: cargoWidthCm, heightCm: cargoHeightCm, skuCount, oversizedSharePct: oversizedCargoPct },
     },
   });
 
@@ -141,7 +151,7 @@ export default function WarehouseScene({
   // Immersive: островок KPI зовёт zoom/rotate через контекст.
   useEffect(() => {
     if (!immersive || !playback) return;
-    playback.bindCameraActions({ zoomBy, rotate });
+    playback.bindCameraActions({ zoomBy, rotate, snapshot: () => downloadCanvasSnapshot(mountRef, "sklad-scena.png") });
     return () => playback.bindCameraActions(null);
   });
 
@@ -171,6 +181,7 @@ export default function WarehouseScene({
       onToggleTopView={onToggleTopView}
       onZoom={zoomBy}
       onRotate={rotate}
+      onSnapshot={() => downloadCanvasSnapshot(mountRef, "sklad-scena.png")}
     />
   );
 
@@ -247,7 +258,7 @@ export default function WarehouseScene({
           description={`Скорость ${loaderSpeedMps.toFixed(1)} м/с, грузоподъёмность ${loaderCapacityKg} кг, единица груза — ${cargoWeightKg} кг: с грузом погрузчик едет на ${fullLoadSlowdownPct}% медленнее. За каждыми воротами закреплён свой погрузчик. Фура привозит ${truckPayload} ед. и выгружает их разом.`}
           onManualChange={onManualLoaderCountChange}
           min={1}
-          max={MAX_LOADER_COUNT}
+          max={layout.maxLoaderCount}
           recommended={recommendedLoaderCount}
         />
       )}

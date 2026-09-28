@@ -16,7 +16,7 @@ export function SensitivityPanel({
   const max = Math.max(...factors.map((factor) => factor.impact), 0.01);
 
   return (
-    <ul className="grid gap-1">
+    <ul className="grid grid-cols-1 gap-1">
       {factors.map((factor, index) => {
         const Icon = factor.direction === 'up' ? ArrowUp : ArrowDown;
         const isTop = index === 0;

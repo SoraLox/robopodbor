@@ -8,6 +8,12 @@ import { PALETTE } from './constants.js';
  */
 export const STUDIO_PALETTE = {
   floor: '#ECEEF2',
+  // Конструктор формы склада (upstream): снаружи контура, стеллажи, зоны ворот.
+  exterior: '#D5DAE2',
+  rack: '#5B6472',
+  invalidGate: '#C0392B',
+  gateOut: '#2F86F0',
+  gateIn: '#8DBBF3',
   pad: '#D6E6FA',
   storage: '#3A3F4A',
   crateA: '#C9A87A',
