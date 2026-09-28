@@ -13,7 +13,7 @@ export interface NumberInputProps extends Omit<InputProps, 'type' | 'inputMode' 
 }
 
 /**
- * Числовое поле с типографской группировкой разрядов (10 000,5).
+ * Числовое поле с типографской группировкой разрядов (10 000,5).
  * В state уходит нормализованная строка без пробелов.
  */
 export const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(

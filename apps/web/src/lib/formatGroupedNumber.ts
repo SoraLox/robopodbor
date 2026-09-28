@@ -30,7 +30,7 @@ function caretAfterDigits(value: string, digitCount: number): number {
 
 /**
  * Формат числа для ввода: пробелы только в целой части.
- * «10000» → «10 000», «10000,5» / «10000.5» → «10 000,5».
+ * «10000» → «10 000», «10000,5» / «10000.5» → «10 000,5».
  * Дробная часть не группируется.
  */
 export function formatGroupedNumber(input: string): string {
@@ -62,7 +62,7 @@ export function formatGroupedNumber(input: string): string {
 
 /**
  * Канон для хранения/API: без пробелов, десятичный знак — точка.
- * «10 000,5» → «10000.5»
+ * «10 000,5» → «10000.5»
  */
 export function normalizeGroupedNumber(input: string): string {
   const formatted = formatGroupedNumber(input);
