@@ -62,10 +62,13 @@ function SceneFallback({ fill }: { fill?: boolean }) {
 
 export function ResultSimulation({
   immersive = false,
+  planned,
 }: {
   /** @deprecated сцена всегда складская; оставлен для совместимости вызовов */
   objectType?: string;
   immersive?: boolean;
+  /** Сколько роботов заложено в расчёт экономики — сцена стартует с того же числа. */
+  planned?: { solutionId: string; count: number };
 }) {
   const parameters = useWizardStore((s) => s.parameters);
   const selectedId = useWizardStore((s) => s.solutionId);
@@ -78,10 +81,19 @@ export function ResultSimulation({
   const solution = solutions ? pickSolution(solutions, selectedId) : null;
   const type = solution ? simRobotTypeOf(solution) : null;
 
-  const input = useMemo(
-    () => (fields && solution && type ? buildSimulationInput(fields, parameters, solution, type) : null),
-    [fields, parameters, solution, type],
-  );
+  const input = useMemo(() => {
+    if (!fields || !solution || !type) return null;
+    const built = buildSimulationInput(fields, parameters, solution, type);
+    // Экономика и сцена должны показывать один и тот же парк, иначе цифры спорят друг с другом.
+    if (planned && planned.solutionId === solution.id) {
+      return {
+        ...built,
+        requiredCount: planned.count,
+        recommendedCount: Math.max(1, Math.min(built.maxCount, planned.count)),
+      };
+    }
+    return built;
+  }, [fields, parameters, solution, type, planned]);
 
   if (!fields || !solutions) return <Note fill={immersive}>Готовим симуляцию…</Note>;
   if (!solution) return <Note fill={immersive}>Не найдено решение для симуляции.</Note>;
@@ -188,32 +200,27 @@ function SimulationScene({
   );
 }
 
-/** Какие характеристики робота сцена взяла из демо-каталога: в карточке их нет. */
+/** Какие характеристики робота сцена взяла из демо-каталога и сколько роботов не поместилось. */
 function SubstitutionNote({ input, floating }: { input: SimulationInput; floating?: boolean }) {
-  if (!input.substitutions.length) return null;
-  const text = `Нет в карточке робота, взято у демо-робота: ${input.substitutions
-    .map((item) => `${item.field} — ${item.value}`)
-    .join(', ')}.`;
-  if (!floating) return <p className="mt-2 text-foreground">{text}</p>;
+  const lines = [
+    ...(input.substitutions.length
+      ? [
+          `Нет в карточке робота, взято у демо-робота: ${input.substitutions
+            .map((item) => `${item.field} — ${item.value}`)
+            .join(', ')}.`,
+        ]
+      : []),
+    ...(floating && input.requiredCount > input.maxCount
+      ? [`По расчёту нужно ${input.requiredCount} роботов, в сцене помещается ${input.maxCount}.`]
+      : []),
+  ];
+  if (!lines.length) return null;
+  if (!floating) return <p className="mt-2 text-foreground">{lines.join(' ')}</p>;
   return (
-    <p className="pointer-events-none absolute right-3 top-3 z-10 max-w-[320px] rounded-[10px] border border-[#E5E5EA] bg-white/90 px-2.5 py-1.5 text-[11.5px] leading-snug text-[#3A4A5C]">
-      {text}
-    </p>
-  );
-}
-
-/** Краткая справка под hero — те же допущения, что раньше жили под сценой. */
-export function SimulationAssumptions() {
-  return (
-    <details className="rounded-xl border border-border p-4 text-[12.5px] text-muted-foreground">
-      <summary className="cursor-pointer font-medium text-foreground">
-        Как параметры расчёта перенесены в симуляцию
-      </summary>
-      <ul className="mt-2 list-disc space-y-1 pl-5">
-        {SIMULATION_ASSUMPTIONS.map((line) => (
-          <li key={line}>{line}</li>
-        ))}
-      </ul>
-    </details>
+    <div className="pointer-events-none absolute right-3 top-3 z-10 grid max-w-[320px] gap-1 rounded-[10px] border border-[#E5E5EA] bg-white/90 px-2.5 py-1.5 text-[11.5px] leading-snug text-[#3A4A5C]">
+      {lines.map((line) => (
+        <p key={line}>{line}</p>
+      ))}
+    </div>
   );
 }

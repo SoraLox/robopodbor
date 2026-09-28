@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { Route, Routes } from 'react-router-dom';
 import ResultsPage from '@/features/results/ResultsPage';
+import { runCalculation } from '@/api/queries';
 import { renderWithProviders } from '@/test/utils';
 
 describe('ResultsPage', () => {
@@ -34,5 +35,17 @@ describe('ResultsPage', () => {
 
     await user.click(screen.getByRole('button', { name: /Сравнение решений/i }));
     expect(await screen.findByRole('region', { name: /Сравнение решений/i })).toBeInTheDocument();
+  });
+
+  it('берёт горизонт и заголовок из расчёта, а не из демо-описания', async () => {
+    const result = await runCalculation({ objectType: 'warehouse', solutionId: 'FL0002', parameters: {} });
+    renderWithProviders(
+      <Routes>
+        <Route path="/calculate/:objectType/results/:calculationId" element={<ResultsPage />} />
+      </Routes>,
+      { route: `/calculate/warehouse/results/${result.id}` },
+    );
+    expect(await screen.findByText(/за 5 лет · сценарий «Покупка»/, {}, { timeout: 5000 })).toBeInTheDocument();
+    expect(screen.queryByText(/Южные Врата/)).not.toBeInTheDocument();
   });
 });
