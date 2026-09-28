@@ -1,4 +1,4 @@
-import { Suspense, lazy, useMemo, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { useObjectParameters, useSolutions } from '@/api/queries';
 import type { Solution } from '@/api/types';
 import { useWizardStore } from '@/app/store';
@@ -81,7 +81,30 @@ export function ResultSimulation({
 }
 
 /** Сцена аэропорта upstream: транспортировка груза и багажа между бортом и депо. */
+/**
+ * Сцена аэропорта клонирует модели сразу при построении — они должны быть
+ * загружены заранее (у upstream их прогревает main.jsx, у нас — здесь).
+ */
+function useRobotModels(): 'loading' | 'ready' | 'error' {
+  const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading');
+  useEffect(() => {
+    let alive = true;
+    import('@/upstream/simulation/robots/models.js')
+      .then(({ loadRobotModels }) => loadRobotModels())
+      .then(() => alive && setState('ready'))
+      .catch((error: unknown) => {
+        console.error('[simulation] не удалось загрузить 3D-модели', error);
+        if (alive) setState('error');
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return state;
+}
+
 function AirportSimulation({ immersive, planned }: { immersive: boolean; planned?: Planned }) {
+  const models = useRobotModels();
   const parameters = useWizardStore((s) => s.parameters);
   const selectedId = useWizardStore((s) => s.solutionId);
   const { data: fields } = useObjectParameters('airport');
@@ -108,6 +131,8 @@ function AirportSimulation({ immersive, planned }: { immersive: boolean; planned
     );
   }
   if (!webgl) return <Note fill={immersive}>Браузер не поддерживает WebGL — 3D-симуляцию показать нельзя.</Note>;
+  if (models === 'error') return <Note fill={immersive}>Не удалось загрузить 3D-модели сцены.</Note>;
+  if (models === 'loading') return <SceneFallback fill={immersive} />;
 
   const note = input.substitutions.length
     ? `Нет в карточке робота, взято у демо-робота: ${input.substitutions.map((item) => `${item.field} — ${item.value}`).join(', ')}.`

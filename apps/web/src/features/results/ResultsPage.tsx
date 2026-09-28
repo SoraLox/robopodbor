@@ -302,7 +302,7 @@ function HeroMetrics({
     'grid size-8 flex-none place-items-center rounded-[10px] border border-foreground bg-white text-foreground';
 
   return (
-    <div className="pointer-events-auto w-full max-w-[480px]">
+    <div className="pointer-events-auto w-full max-w-[520px]">
       <div className="overflow-hidden rounded-[20px] border border-[#E5E5EA] bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
         <div
           className={cn(
