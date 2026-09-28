@@ -7,10 +7,14 @@
   одна (surface-ink), форма у каждого появления своя: карточка с фото,
   полоса во всю ширину, карточка со свечением.
 */
-import { Link } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowUpRight, Check, ChevronDown } from 'lucide-react';
+import { calculateEconomics } from '@domain/economics';
+import type { CatalogSolution } from '@domain/catalog';
 import { SiteFooter } from '@/app/AppShell';
-import { useObjectTypes } from '@/api/queries';
+import { runCalculation, useObjectParameters, useObjectTypes, useSolutions } from '@/api/queries';
+import { useWizardStore } from '@/app/store';
 import {
   Accordion,
   AccordionContent,
@@ -263,7 +267,7 @@ function CatalogSection() {
                 </h2>
                 <p className="mt-3 max-w-[44ch] text-body text-white/70 sm:text-body-lg">
                   У склада, аэропорта и клиники разные процессы и статьи затрат. Выберите тип
-                  площадки — откроем сценарии на семь лет под ваши данные.
+                  площадки — посчитаем сценарии под ваши данные.
                 </p>
               </header>
 
@@ -324,77 +328,129 @@ function CatalogSection() {
   );
 }
 
-const SCENARIOS = [
-  {
-    label: 'Ничего не менять',
-    value: '214,0',
-    delta: null,
-    pct: 100,
-    bar: 'bg-foreground/45',
-  },
-  {
-    label: 'Купить роботов',
-    value: '134,6',
-    delta: '−79,4',
-    pct: 63,
-    bar: 'bg-primary-bright',
-  },
-  {
-    label: 'Взять в аренду',
-    value: '154,2',
-    delta: '−59,8',
-    pct: 72,
-    bar: 'bg-foreground/25',
-  },
-] as const;
+/**
+ * Пример на лендинге — настоящий расчёт той же модели, что в мастере: склад
+ * из датасета организатора и беспилотный погрузчик из каталога. Берём
+ * решение с полным набором данных, а не с лучшей окупаемостью.
+ */
+const SHOWCASE_SOLUTION = 'FL0002';
+
+const SCENARIO_LABEL: Record<string, string> = {
+  'as-is': 'Ничего не менять',
+  purchase: 'Купить роботов',
+  raas: 'Взять в аренду',
+};
+const SCENARIO_BAR: Record<string, string> = {
+  'as-is': 'bg-foreground/45',
+  purchase: 'bg-primary-bright',
+  raas: 'bg-foreground/25',
+};
+
+const money = (value: number) => value.toLocaleString('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+function useShowcase() {
+  const { data: solutions } = useSolutions('warehouse');
+  const { data: fields } = useObjectParameters('warehouse');
+  return useMemo(() => {
+    if (!solutions || !fields) return null;
+    const solution =
+      solutions.find((item) => item.id === SHOWCASE_SOLUTION) ??
+      solutions.find((item) => item.solutionType === 'fmr' || item.solutionType === 'amr');
+    if (!solution) return null;
+    const result = calculateEconomics({
+      objectType: 'warehouse',
+      parameters: {},
+      fields,
+      solution: solution as unknown as CatalogSolution,
+    });
+    return { solution, result };
+  }, [solutions, fields]);
+}
 
 function ComparisonSection() {
+  const showcase = useShowcase();
+  const navigate = useNavigate();
+  const [opening, setOpening] = useState(false);
+  const setObjectType = useWizardStore((s) => s.setObjectType);
+  const setSolutionId = useWizardStore((s) => s.setSolutionId);
+  const setParameters = useWizardStore((s) => s.setParameters);
+
+  const open = async () => {
+    if (!showcase) return;
+    setOpening(true);
+    try {
+      setObjectType('warehouse');
+      setParameters({});
+      setSolutionId(showcase.solution.id);
+      const result = await runCalculation({ objectType: 'warehouse', solutionId: showcase.solution.id, parameters: {} });
+      navigate(`/calculate/warehouse/results/${result.id}`);
+    } finally {
+      setOpening(false);
+    }
+  };
+
+  const result = showcase?.result;
+  const scenarios = result?.scenarios ?? [];
+  const max = Math.max(...scenarios.map((row) => row.tco), 1);
+  const years = result?.costGroups.find((group) => group.id === 'opex')?.title.replace(/^.*за\s/, '') ?? '';
+
   return (
     <Section>
       <Split>
         <div>
           <SectionTitle>Сравните решения</SectionTitle>
           <p className="mt-4 max-w-[38ch] text-lead text-muted-foreground">
-            Столько стоит склад на <span className="whitespace-nowrap tabular">20 000 м²</span> за
-            семь лет в каждом сценарии. Это настоящий расчёт, а не иллюстрация: каждую сумму можно
-            раскрыть построчно.
+            {showcase ? (
+              <>
+                Склад из датасета организатора и {showcase.result.robots.count} × {showcase.solution.name}:
+                затраты за {years} в каждом сценарии. Это расчёт той же модели, что в мастере, — каждую
+                сумму можно раскрыть построчно.
+              </>
+            ) : (
+              'Считаем пример на складе из датасета организатора…'
+            )}
           </p>
-          <Link to="/calculate/warehouse/results/demo" className={cn(TEXT_LINK, 'mt-6')}>
-            Открыть расчёт целиком
+          <button type="button" onClick={open} disabled={!showcase || opening} className={cn(TEXT_LINK, 'mt-6 disabled:opacity-50')}>
+            {opening ? 'Открываем расчёт…' : 'Открыть расчёт целиком'}
             <ArrowUpRight className="size-4" strokeWidth={2} aria-hidden />
-          </Link>
+          </button>
         </div>
 
         <figure className="lg:pt-2">
           <div className="grid gap-6">
-            {SCENARIOS.map((row) => (
-              <div key={row.label} className="grid gap-2.5">
+            {scenarios.map((row) => (
+              <div key={row.id} className="grid gap-2.5">
                 <div className="flex items-baseline justify-between gap-3">
-                  <span className="min-w-0 text-body text-foreground">{row.label}</span>
+                  <span className="min-w-0 text-body text-foreground">{SCENARIO_LABEL[row.id] ?? row.title}</span>
                   <span className="flex shrink-0 items-baseline gap-2.5">
-                    {row.delta ? (
-                      <span className="text-label tabular text-positive">{row.delta} млн</span>
+                    {row.delta !== 'база' ? (
+                      <span className={cn('text-label tabular', row.delta.startsWith('−') ? 'text-positive' : 'text-muted-foreground')}>
+                        {row.delta} млн
+                      </span>
                     ) : null}
                     <span className="text-h2 tabular">
-                      {row.value}
+                      {money(row.tco)}
                       <span className="ml-1 text-body text-muted-foreground">млн ₽</span>
                     </span>
                   </span>
                 </div>
                 <div className="relative h-1.5 overflow-hidden rounded-full bg-accent-tint">
                   <div
-                    className={cn('absolute inset-y-0 left-0 rounded-full', row.bar)}
-                    style={{ width: `${row.pct}%` }}
+                    className={cn('absolute inset-y-0 left-0 rounded-full', SCENARIO_BAR[row.id] ?? 'bg-foreground/25')}
+                    style={{ width: `${(row.tco / max) * 100}%` }}
                   />
                 </div>
               </div>
             ))}
           </div>
-          <figcaption className="mt-6 max-w-[62ch] text-meta text-muted-foreground">
-            Покупка окупается за <span className="tabular">3,2</span> года, на{' '}
-            <span className="tabular">0,6</span> года раньше аренды. Средний CAPEX проекта в базе
-            составляет <span className="whitespace-nowrap tabular">80 млн ₽</span>.
-          </figcaption>
+          {result ? (
+            <figcaption className="mt-6 max-w-[62ch] text-meta text-muted-foreground">
+              {result.payback.value === '—'
+                ? result.payback.note
+                : `Покупка окупается за ${result.payback.value} ${result.payback.unit ?? ''}. `}
+              CAPEX — <span className="tabular">{result.capex.value}</span> млн ₽. {result.warning}
+            </figcaption>
+          ) : null}
         </figure>
       </Split>
     </Section>

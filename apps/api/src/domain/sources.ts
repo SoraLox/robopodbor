@@ -23,13 +23,13 @@ export const SOURCE_KIND_LABEL: Record<SourceKind, string> = {
   open: "Открытые источники",
 };
 
+// Только то, на чём расчёт действительно стоит. Прайс-листов вендоров, тарифов по
+// регионам и реестра Минпромторга в расчёте нет — раньше они значились здесь зря.
 export const DEFAULT_SOURCES: DataSourceSeed[] = [
-  { title: "Каталог решений организатора (PDF)", scope: "Перечень решений и характеристики", kind: "dataset", actualAt: "ожидается", confirmed: false },
+  { title: "Каталог роботов (robots_catalog v2.0.0)", scope: "Характеристики, категории и применимость 187 роботов", kind: "dataset", actualAt: "25.09.2026", confirmed: true },
+  { title: "Каталог решений ФЦ БАС, выгрузка catalog_export_v4.csv", scope: "Цены изделий", kind: "price", actualAt: "21.09.2026", confirmed: true },
   { title: "Демо-датасеты объектов «Датасеты_хакатон.xlsx»", scope: "Паспорта склада, аэропорта и медучреждения, значения по умолчанию", kind: "dataset", actualAt: "2026", confirmed: true },
-  { title: "Файл цен БАС и БРС (catalog_export_v5)", scope: "Цены изделий с НДС, без доставки и пусконаладки", kind: "price", actualAt: "ожидается", confirmed: false },
-  { title: "Прайс-листы вендоров", scope: "Цены на технику и системы управления парком", kind: "price", actualAt: "17.09.2026", confirmed: true },
-  { title: "Тарифы электроэнергии", scope: "Стоимость кВт·ч по регионам", kind: "tariff", actualAt: "01.09.2026", confirmed: true },
-  { title: "Реестр российской промышленной продукции Минпромторга", scope: "Признак российского происхождения", kind: "registry", url: "https://gisp.gov.ru/pp719v2/pub/prod/", actualAt: "28.08.2026", confirmed: true },
-  { title: "Отраслевой бенчмарк", scope: "Стоимость смены, тариф RaaS, сервисный контракт", kind: "benchmark", actualAt: "2025 год", confirmed: false },
-  { title: "Сайты производителей и публичные спецификации", scope: "Недостающие ТТХ решений («Дополнения», п. 3.2)", kind: "open", actualAt: "09.2026", confirmed: false },
+  { title: "Материалы организатора: ТЗ и «Дополнения для участников»", scope: "Примеры решений для объектов, недостающие характеристики", kind: "dataset", actualAt: "09.2026", confirmed: true },
+  { title: "Сайты производителей и дистрибьюторов", scope: "Недостающие характеристики, сверенные со страницей модели", kind: "open", actualAt: "09.2026", confirmed: false },
+  { title: "Оценки модели экономики", scope: "Внедрение 15% и обслуживание 7% цены, RaaS 2,5% цены в месяц, электроэнергия 7 ₽/кВт·ч", kind: "benchmark", actualAt: "09.2026", confirmed: false },
 ];

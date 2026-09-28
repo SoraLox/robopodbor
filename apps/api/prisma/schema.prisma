@@ -91,6 +91,23 @@ model ProjectCalculation {
   @@index([projectId, createdAt(sort: Desc)])
 }
 
+// Расчёт из мастера (POST /calculations): открывается по ссылке /results/{id}
+// и переживает перезагрузку. Гостевой расчёт без проекта — userId пустой.
+model Calculation {
+  id           String   @id @default(cuid())
+  userId       String?
+  createdAt    DateTime @default(now())
+  objectType   String
+  solutionId   String
+  processes    String[] @default([])
+  parameters   Json
+  dataVersion  String
+  modelVersion String
+  result       Json
+
+  @@index([createdAt])
+}
+
 // Источники данных, на которые ссылаются каталог и нормативы (ТЗ 3.1.4, 3.3.4).
 model DataSource {
   id        String   @id @default(cuid())

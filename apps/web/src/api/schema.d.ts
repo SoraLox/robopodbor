@@ -81,6 +81,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/calculations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Рассчитать экономику по паспорту объекта и выбранному решению
+         * @description Считает KPI, сценарии, структуру затрат и чувствительность (src/domain/economics.ts) и сохраняет результат: его можно открыть по id через GET /calculations/{calculationId}.
+         */
+        post: operations["runCalculation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/calculations/{calculationId}": {
         parameters: {
             query?: never;
@@ -731,6 +751,14 @@ export interface components {
             confidence: components["schemas"]["DataConfidence"];
             lines: components["schemas"]["CostLine"][];
         };
+        CalculationRequest: {
+            objectType: string;
+            solutionId: string;
+            parameters?: {
+                [key: string]: string;
+            };
+            processes?: string[];
+        };
         CalculationResult: {
             id: string;
             objectTitle: string;
@@ -756,6 +784,13 @@ export interface components {
             calculatedAt?: string;
             /** @description Параметры, ранжированные по влиянию на результат. */
             sensitivity?: components["schemas"]["SensitivityFactor"][];
+            /** @description Решение каталога */
+            solutionId?: string;
+            /** @description Сколько роботов заложено в расчёт и на каком основании. */
+            robots?: {
+                count: number;
+                basis: string;
+            };
         };
         Kpi: {
             label: string;
@@ -978,6 +1013,15 @@ export interface components {
             meta: string;
             payback: string;
             status: components["schemas"]["Maturity"];
+            /** @description Тип объекта проекта. */
+            objectType?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /**
+             * Format: date-time
+             * @description Когда сохранён последний расчёт.
+             */
+            calculatedAt?: string;
         };
     };
     responses: never;
@@ -1098,6 +1142,44 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ObjectType"][];
                 };
+            };
+        };
+    };
+    runCalculation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalculationRequest"];
+            };
+        };
+        responses: {
+            /** @description Результат расчёта */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalculationResult"];
+                };
+            };
+            /** @description Некорректный запрос */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Решение или тип объекта не найдены */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

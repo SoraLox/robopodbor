@@ -17,9 +17,9 @@ export const objectTypes: ObjectType[] = [
     title: 'Склад',
     description:
       'Паллетное и мелкоштучное хранение, комплектация, внутренняя транспортировка.',
-    solutionsCount: 148,
-    solutionsCountLabel: 'решений',
-    paybackRange: '2.8–4.6',
+    solutionsCount: 0,
+    solutionsCountLabel: '',
+    paybackRange: '',
     photoCaption: 'ФОТО · AMR НА СКЛАДЕ',
   },
   {
@@ -27,9 +27,9 @@ export const objectTypes: ObjectType[] = [
     title: 'Аэропорт',
     description:
       'Обработка багажа, перронная логистика, уборка и инспекция инфраструктуры БАС.',
-    solutionsCount: 63,
-    solutionsCountLabel: 'решения',
-    paybackRange: '4.1–6.2',
+    solutionsCount: 0,
+    solutionsCountLabel: '',
+    paybackRange: '',
     photoCaption: 'ФОТО · ПЕРРОННАЯ ТЕХНИКА',
   },
   {
@@ -37,9 +37,9 @@ export const objectTypes: ObjectType[] = [
     title: 'Медучреждение',
     description:
       'Транспортировка расходников и белья, дезинфекция помещений, аптечная логистика.',
-    solutionsCount: 41,
-    solutionsCountLabel: 'решение',
-    paybackRange: '5.0–7.4',
+    solutionsCount: 0,
+    solutionsCountLabel: '',
+    paybackRange: '',
     photoCaption: 'ФОТО · РОБОТ В КЛИНИКЕ',
   },
 ];
@@ -187,29 +187,11 @@ export const demoCalculation: CalculationResult = {
  */
 export const solutions = catalogSolutions as unknown as Solution[];
 
-export const projects: Project[] = [
-  {
-    id: 'demo',
-    title: 'Склад «Южные Врата» · 20 000 м²',
-    meta: 'РАСЧЁТ №2026-0417 · 17.09.2026',
-    payback: '3.2',
-    status: 'operation',
-  },
-  {
-    id: '2026-0392',
-    title: 'Терминал багажа · Стригино',
-    meta: 'РАСЧЁТ №2026-0392 · 04.09.2026',
-    payback: '5.1',
-    status: 'piloting',
-  },
-  {
-    id: '2026-0361',
-    title: 'Областная клиническая больница',
-    meta: 'РАСЧЁТ №2026-0361 · 22.08.2026',
-    payback: '6.4',
-    status: 'rnd',
-  },
-];
+/**
+ * Проектов на старте нет: раньше здесь лежали три выдуманных проекта
+ * с окупаемостью из демо-расчёта. Проекты появляются, когда их сохраняет пользователь.
+ */
+export const projects: Project[] = [];
 
 /** Значения по умолчанию паспорта взяты из демо-датасетов организатора. */
 const DATASET_SOURCE = 'Демо-датасет организатора «Датасеты_хакатон.xlsx»';

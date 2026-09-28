@@ -1,6 +1,7 @@
 import { useEffect, useRef, type RefObject } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useCalculation } from '@/api/queries';
+import { useRunCalculation } from '@/api/queries';
+import { useWizardStore } from '@/app/store';
 
 /** Быстрый разгон к 90%: за ~1 с уже далеко, дальше кривая почти стоит. */
 const RUSH_TAU_MS = 900;
@@ -60,7 +61,11 @@ function paintProgress(bar: HTMLDivElement | null, value: number, glide: boolean
 export function CalculatingStep({ active, revealed }: { active: boolean; revealed: boolean }) {
   const navigate = useNavigate();
   const { objectType = 'warehouse' } = useParams<{ objectType: string }>();
-  const query = useCalculation('demo', active);
+  const parameters = useWizardStore((s) => s.parameters);
+  const processes = useWizardStore((s) => s.processes);
+  const solutionId = useWizardStore((s) => s.solutionId);
+  const input = solutionId ? { objectType, solutionId, parameters, processes } : null;
+  const query = useRunCalculation(input, active);
   const barRef = useRef<HTMLDivElement>(null);
   const succeeded = useRef(false);
   succeeded.current = query.isSuccess;
@@ -121,7 +126,7 @@ export function CalculatingStep({ active, revealed }: { active: boolean; reveale
     if (!active || !query.isSuccess) return;
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const go = () => navigate(`/calculate/${objectType}/results/demo`);
+    const go = () => navigate(`/calculate/${objectType}/results/${query.data.id}`);
 
     if (!revealed || reduced) {
       go();
@@ -131,7 +136,15 @@ export function CalculatingStep({ active, revealed }: { active: boolean; reveale
     paintProgress(barRef.current, 1, true);
     const hold = window.setTimeout(go, FINISH_MS + HOLD_MS);
     return () => window.clearTimeout(hold);
-  }, [active, revealed, query.isSuccess, navigate, objectType]);
+  }, [active, revealed, query.isSuccess, query.data, navigate, objectType]);
+
+  if (!solutionId) {
+    return (
+      <p role="alert" className="pt-6 text-[13px] leading-snug text-[#8E8E93]">
+        Выберите робота на шаге процессов — экономика считается для конкретного решения.
+      </p>
+    );
+  }
 
   if (query.isError) {
     return (

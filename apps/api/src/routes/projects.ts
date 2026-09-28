@@ -53,7 +53,14 @@ function formatMeta(id: string, createdAt: Date) {
   return `РАСЧЁТ №${id} · ${date}`;
 }
 
-type SummarySource = { id: string; title: string; createdAt: Date; status: string };
+type SummarySource = {
+  id: string;
+  title: string;
+  createdAt: Date;
+  status: string;
+  objectType?: string;
+  calculatedAt?: Date | null;
+};
 
 function toSummaryDto(project: SummarySource, payback: string | undefined) {
   return {
@@ -62,6 +69,9 @@ function toSummaryDto(project: SummarySource, payback: string | undefined) {
     meta: formatMeta(project.id, project.createdAt),
     payback: payback ?? "—",
     status: project.status,
+    ...(project.objectType ? { objectType: project.objectType } : {}),
+    createdAt: project.createdAt.toISOString(),
+    ...(project.calculatedAt ? { calculatedAt: project.calculatedAt.toISOString() } : {}),
   };
 }
 
@@ -168,7 +178,7 @@ router.get("/", wrap(async (req, res) => {
   const items = await prisma.project.findMany({
     where: { userId: req.user!.id },
     orderBy: { createdAt: "desc" },
-    select: { id: true, title: true, createdAt: true, status: true },
+    select: { id: true, title: true, createdAt: true, status: true, objectType: true, calculatedAt: true },
     take: query.data.limit,
     skip: query.data.offset,
   });

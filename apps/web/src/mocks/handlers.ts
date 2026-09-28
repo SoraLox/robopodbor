@@ -12,6 +12,7 @@ import { checkValue, parseCsv, parseParameterRows, templateRows, toCsv } from '@
 import { DEFAULT_SOURCES } from '@domain/sources';
 import { DEFAULT_MODEL_VERSION } from '@domain/versions';
 import { selectSolutions } from '@domain/selection';
+import { ECONOMICS_MODEL_VERSION, calculateEconomics } from '@domain/economics';
 import {
   buildCatalog,
   mergeCatalogVersion,
@@ -28,6 +29,7 @@ import {
   solutions as seedSolutions,
 } from './fixtures';
 import {
+  calculationStore,
   closeSession,
   createAccount,
   openSession,
@@ -36,7 +38,7 @@ import {
   userBySid,
   verify,
 } from './db';
-import type { ProjectInput, ProjectPatch, Solution } from '@/api/types';
+import type { CalculationRequest, CalculationResult, ProjectInput, ProjectPatch, Solution } from '@/api/types';
 import type { components } from '@/api/schema';
 
 type Schemas = components['schemas'];
@@ -162,7 +164,6 @@ function applyEdit(before: Solution | undefined, input: Partial<Solution>): Part
   return { ...(patch as Partial<Solution>), ...(fieldSources ? { fieldSources: fieldSources as Solution['fieldSources'] } : {}) };
 }
 
-const CALCULATION_DEMO_DELAY_MS = import.meta.env.MODE === 'test' ? 0 : 1200;
 
 const TOP_LEVEL_CATALOG_FILES: Record<string, keyof CatalogFiles> = {
   'index.json': 'index',
@@ -226,7 +227,15 @@ export const handlers = [
   }),
 
   // ─── Объекты ──────────────────────────────────────────────────────
-  http.get('*/api/object-types', () => HttpResponse.json(objectTypes)),
+  // Число решений — по каталогу, как на сервере; диапазона окупаемости без расчётов нет.
+  http.get('*/api/object-types', () =>
+    HttpResponse.json(
+      objectTypes.map((type) => {
+        const count = [...catalog.values()].filter((s) => s.objectTypes?.includes(type.slug)).length;
+        return { ...type, solutionsCount: count, solutionsCountLabel: `${count} решений` };
+      }),
+    ),
+  ),
 
   http.get('*/api/object-types/:slug/parameters', ({ params }) => HttpResponse.json(fieldsFor(String(params.slug)))),
 
@@ -275,12 +284,33 @@ export const handlers = [
   }),
 
   // ─── Расчёт ───────────────────────────────────────────────────────
-  http.get('*/api/calculations/:calculationId', async ({ params }) => {
-    // Прогон на бэкенде занимает до 60 секунд — мок держит паузу,
-    // чтобы UI ожидания был виден в демо. В тестах пауза только тратит время.
-    await new Promise((resolve) => setTimeout(resolve, CALCULATION_DEMO_DELAY_MS));
-    const { calculationId } = params;
-    const id = String(calculationId);
+  http.post('*/api/calculations', async ({ request }) => {
+    const body = (await request.json()) as Partial<CalculationRequest>;
+    if (!body.objectType || !body.solutionId) {
+      return HttpResponse.json({ message: 'Некорректный запрос: нужны objectType и solutionId' }, { status: 400 });
+    }
+    const solution = catalog.get(body.solutionId);
+    if (!solution) return HttpResponse.json({ message: 'Решение не найдено в каталоге' }, { status: 404 });
+    const economics = calculateEconomics({
+      objectType: body.objectType,
+      parameters: body.parameters ?? {},
+      fields: fieldsFor(body.objectType),
+      solution: solution as unknown as CatalogSolution,
+      ...(body.processes ? { processes: body.processes } : {}),
+    });
+    const stored = calculationStore.save({
+      ...(economics as unknown as Omit<CalculationResult, 'id'>),
+      dataVersion: 'data-demo',
+      modelVersion: ECONOMICS_MODEL_VERSION,
+      calculatedAt: new Date().toISOString(),
+    });
+    return HttpResponse.json(stored, { status: 201 });
+  }),
+
+  http.get('*/api/calculations/:calculationId', ({ params }) => {
+    const id = String(params.calculationId);
+    const calculation = calculationStore.get(id);
+    if (calculation) return HttpResponse.json(calculation);
     const saved = projectStore.snapshot(id) ?? projectStore.history(id)[0];
     if (saved) {
       return HttpResponse.json({
@@ -291,11 +321,13 @@ export const handlers = [
         calculatedAt: saved.createdAt,
       });
     }
+    // Демо-расчёт — только по явной ссылке /results/demo (пример на лендинге).
+    if (id !== 'demo') return HttpResponse.json({ message: 'Расчёт не найден' }, { status: 404 });
     return HttpResponse.json({
       ...demoCalculation,
       dataVersion: 'data-demo',
       modelVersion: DEFAULT_MODEL_VERSION,
-      id: typeof calculationId === 'string' ? calculationId : demoCalculation.id,
+      id,
     });
   }),
 

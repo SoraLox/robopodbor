@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
-import { api } from './client';
+import { API_BASE, api } from './client';
 import type {
+  CalculationRequest,
   CalculationResult,
   CalculationSnapshot,
   CatalogImportResult,
@@ -35,7 +36,7 @@ function invalidateCatalog(queryClient: QueryClient) {
 
 /** Скачивание файла (шаблон, выгрузка каталога): имя из Content-Disposition или запасное. */
 export async function downloadFile(path: string, fallbackName: string) {
-  const response = await globalThis.fetch(`/api${path}`, { credentials: 'include' });
+  const response = await globalThis.fetch(`${API_BASE}${path}`, { credentials: 'include' });
   if (!response.ok) throw new Error('Не удалось скачать файл');
   const blob = await response.blob();
   const disposition = response.headers.get('content-disposition') ?? '';
@@ -64,6 +65,32 @@ export function useObjectTypes() {
       const { data, error } = await api.GET('/object-types');
       if (error || !data) throw new Error('Не удалось загрузить типы объектов');
       return data;
+    },
+  });
+}
+
+/** Расчёт экономики по паспорту и выбранному решению; результат сохраняется на сервере. */
+export async function runCalculation(input: CalculationRequest): Promise<CalculationResult> {
+  const { data, error } = await api.POST('/calculations', { body: input });
+  if (error || !data) throw new Error('Не удалось посчитать экономику');
+  return data;
+}
+
+/**
+ * Расчёт шага «Считаем экономику». Ключ — сами входы: вернулись назад и
+ * снова вперёд без правок — показываем тот же результат, без повторного POST.
+ */
+export function useRunCalculation(input: CalculationRequest | null, enabled = true) {
+  const queryClient = useQueryClient();
+  return useQuery({
+    queryKey: ['calculation-run', input] as const,
+    enabled: enabled && input !== null,
+    staleTime: Infinity,
+    retry: false,
+    queryFn: async () => {
+      const result = await runCalculation(input!);
+      queryClient.setQueryData(queryKeys.calculation(result.id), result);
+      return result;
     },
   });
 }
@@ -375,9 +402,10 @@ export function useUpdateParameterField() {
   });
 }
 
-export function useChanges(entity?: ChangeLogEntry['entity']) {
+export function useChanges(entity?: ChangeLogEntry['entity'], enabled = true) {
   return useQuery({
     queryKey: ['admin', 'changes', entity ?? 'all'] as const,
+    enabled,
     queryFn: async (): Promise<ChangeLogEntry[]> => {
       const { data, error, response } = await api.GET('/admin/changes', {
         params: { query: { limit: 100, ...(entity ? { entity } : {}) } },

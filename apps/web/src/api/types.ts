@@ -13,6 +13,7 @@ export type ObjectType = S['ObjectType'];
 export type ParameterField = S['ParameterField'];
 export type ImportedParameters = S['ImportedParameters'];
 export type CalculationResult = S['CalculationResult'];
+export type CalculationRequest = S['CalculationRequest'];
 export type ScenarioBar = S['ScenarioBar'];
 export type CostGroup = S['CostGroup'];
 export type CostLine = S['CostLine'];

@@ -8,6 +8,7 @@
 | Каталог решений | `POST /api/catalog/solutions/import`, `POST`/`PUT /api/catalog/solutions` |
 | Нормативы | `PATCH /api/admin/parameters/{fieldId}` |
 | Источники данных | `POST`/`PUT /api/admin/sources` |
+| Расчёт по паспорту и решению | `POST /api/calculations` |
 | Результат внешней модели | `POST /api/projects/{id}/calculations` |
 
 Для интеграций «сервер — сервер» потребуется отдельный механизм доступа (сервисные токены вместо cookie-сессии). Это первый шаг в плане развития.

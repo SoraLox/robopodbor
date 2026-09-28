@@ -46,6 +46,13 @@ docker compose --profile tls up -d --build
 
 Caddy получает сертификат Let's Encrypt для `DOMAIN` и включает HTTP/2 и HTTP/3. Настройки — в `deploy/Caddyfile`.
 
+### Сайт на GitHub Pages с настоящим сервером
+
+По умолчанию сайт на GitHub Pages работает на встроенных моках: «база» (аккаунты, проекты, расчёты) хранится в `localStorage` браузера. Чтобы сайт работал с настоящим API:
+
+1. Поднимите стек на сервере с доменом: `docker compose --profile tls up -d --build`. В `.env` укажите `WEB_ORIGIN=https://<user>.github.io` и `CROSS_SITE_COOKIES=true`: сайт и API окажутся на разных доменах, и cookie сессии нужен `SameSite=None; Secure`.
+2. В репозитории, в Settings → Secrets and variables → Actions → Variables, задайте `API_URL=https://<DOMAIN>/api`. Следующая публикация соберёт сайт с `VITE_ENABLE_MOCKS=false` и адресом API.
+
 ## Запуск для разработки
 
 Нужен Node.js 22.

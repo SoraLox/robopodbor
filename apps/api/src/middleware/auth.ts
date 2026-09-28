@@ -39,13 +39,19 @@ export const attachSession = wrap(async (req, _res, next) => {
 });
 
 const SWEEP_INTERVAL_MS = 60 * 60 * 1000;
+const GUEST_CALCULATION_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 
-// Истёкшие сессии, к которым больше никто не обратится, иначе копились бы вечно.
+// Истёкшие сессии и старые гостевые расчёты, к которым больше никто не обратится, иначе копились бы вечно.
 export function startSessionSweeper() {
-  const sweep = () =>
+  const sweep = () => {
     prisma.session
       .deleteMany({ where: { expiresAt: { lt: new Date() } } })
       .catch((error) => console.error("[sessions] не удалось очистить истёкшие сессии", error));
+    // Гостевые расчёты мастера живут 90 дней: дольше ссылку на них никто не хранит.
+    prisma.calculation
+      .deleteMany({ where: { userId: null, createdAt: { lt: new Date(Date.now() - GUEST_CALCULATION_TTL_MS) } } })
+      .catch((error) => console.error("[calculations] не удалось очистить старые расчёты", error));
+  };
   void sweep();
   const timer = setInterval(sweep, SWEEP_INTERVAL_MS);
   timer.unref();

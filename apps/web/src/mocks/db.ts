@@ -1,18 +1,19 @@
 /**
- * Состояние мок-бэкенда: пользователи, сессии и проекты живут в памяти
- * процесса. Сессия отдаётся httpOnly-cookie, поэтому фронт про токен
- * ничего не знает и обязан ходить с `credentials: 'include'`.
+ * Состояние мок-бэкенда: пользователи, сессии, проекты и расчёты. В браузере
+ * хранится в localStorage (./persist) и переживает перезагрузку. Сессия
+ * отдаётся httpOnly-cookie, поэтому фронт про токен ничего не знает и обязан
+ * ходить с `credentials: 'include'`.
  */
 import { DEFAULT_MODEL_VERSION } from '@domain/versions';
 import type { CalculationResult, CalculationSnapshot, ProjectDetail, User } from '@/api/types';
-import { demoCalculation, projects as seedProjects } from './fixtures';
+import { loadMap, saveMap } from './persist';
 
 interface Account {
   user: User;
   password: string;
 }
 
-const accounts = new Map<string, Account>([
+const accounts = loadMap<Account>('accounts', [
   [
     'admin@robotopodbor.ru',
     {
@@ -39,37 +40,13 @@ const accounts = new Map<string, Account>([
       },
     },
   ],
-]);
+] as const);
 
-/**
- * sid → email.
- *
- * Состояние мока живёт в модуле и стирается при перезагрузке страницы,
- * а cookie у браузера остаётся — получалось, что после F5 пользователь
- * «разлогинивался». Поэтому в браузере зеркалим карту в sessionStorage.
- * Настоящему бэкенду это не нужно: у него сессии в своём хранилище.
- */
-const SESSION_KEY = 'msw:sessions';
-
-function restoreSessions(): Map<string, string> {
-  if (typeof sessionStorage === 'undefined') return new Map();
-  try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
-    return raw ? new Map(Object.entries(JSON.parse(raw) as Record<string, string>)) : new Map();
-  } catch {
-    return new Map();
-  }
-}
-
-const sessions = restoreSessions();
+/** sid → email. */
+const sessions = loadMap<string>('sessions');
 
 function persistSessions() {
-  if (typeof sessionStorage === 'undefined') return;
-  try {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(Object.fromEntries(sessions)));
-  } catch {
-    // Приватный режим или переполнение — сессия просто не переживёт F5.
-  }
+  saveMap('sessions', sessions);
 }
 
 export function createAccount(email: string, password: string, organization?: string) {
@@ -82,6 +59,7 @@ export function createAccount(email: string, password: string, organization?: st
     ...(organization ? { organization } : {}),
   };
   accounts.set(email, { user, password });
+  saveMap('accounts', accounts);
   return user;
 }
 
@@ -111,34 +89,22 @@ export function userBySid(sid: string | undefined): User | null {
 }
 
 /** Проекты пользователя вместе с входными параметрами и сценариями. */
-const projects = new Map<string, ProjectDetail>(
-  seedProjects.map((project) => [
-    project.id,
-    {
-      ...project,
-      objectType: 'warehouse',
-      parameters: {
-        area: '20000',
-        shifts: '3',
-        staff: '64',
-        flow: '1850',
-        horizon: '7',
-        region: 'Нижегородская обл.',
-      },
-      processes: ['transport', 'storage', 'picking'],
-      scenarios: demoCalculation.scenarios,
-      calculationId: project.id,
-    },
-  ]),
-);
+const projects = loadMap<ProjectDetail>('projects');
 
 interface StoredSnapshot extends CalculationSnapshot {
   result: CalculationResult;
 }
 
 /** История расчётов по проектам и быстрый поиск снимка по id для GET /calculations/:id. */
-const snapshots = new Map<string, StoredSnapshot[]>();
-const snapshotById = new Map<string, StoredSnapshot>();
+const snapshots = loadMap<StoredSnapshot[]>('snapshots');
+const snapshotById = new Map<string, StoredSnapshot>(
+  [...snapshots.values()].flat().map((snapshot) => [snapshot.id, snapshot]),
+);
+
+function persistProjects() {
+  saveMap('projects', projects);
+  saveMap('snapshots', snapshots);
+}
 
 export function summaryOf({ result, ...summary }: StoredSnapshot): CalculationSnapshot {
   void result;
@@ -148,15 +114,27 @@ export function summaryOf({ result, ...summary }: StoredSnapshot): CalculationSn
 /** В моках каталог не версионируется журналом — версия данных фиксированная. */
 const MOCK_DATA_VERSION = 'data-demo';
 
+/** После удаления size уменьшается — id берём больше максимального, а не по размеру. */
+function nextProjectId() {
+  const numbers = [...projects.keys()].map(Number).filter(Number.isFinite);
+  return String(Math.max(78459, ...numbers) + 1);
+}
+
 export const projectStore = {
   list: () => [...projects.values()],
   get: (id: string) => projects.get(id) ?? null,
-  remove: (id: string) => projects.delete(id),
+  remove(id: string) {
+    const removed = projects.delete(id);
+    snapshots.delete(id);
+    persistProjects();
+    return removed;
+  },
   update(id: string, patch: Partial<Pick<ProjectDetail, 'title' | 'status' | 'parameters' | 'processes' | 'solutionId'>>) {
     const project = projects.get(id);
     if (!project) return null;
     const next = { ...project, ...patch };
     projects.set(id, next);
+    persistProjects();
     return next;
   },
   history: (id: string) => snapshots.get(id) ?? [],
@@ -178,12 +156,14 @@ export const projectStore = {
     projects.set(id, {
       ...project,
       payback: snapshot.payback ?? project.payback,
+      scenarios: input.calculation.scenarios,
       calculationId: id,
       dataVersion: snapshot.dataVersion,
       modelVersion: snapshot.modelVersion,
       calculatedAt: snapshot.createdAt,
       ...(snapshot.solutionId ? { solutionId: snapshot.solutionId } : {}),
     });
+    persistProjects();
     return summaryOf(snapshot);
   },
   create(input: {
@@ -195,21 +175,23 @@ export const projectStore = {
     calculation?: CalculationResult;
     modelVersion?: string;
   }) {
-    const id = String(78460 + projects.size);
+    const id = nextProjectId();
     const detail: ProjectDetail = {
       id,
       title: input.title,
       meta: `РАСЧЁТ №${id} · ${new Date().toLocaleDateString('ru-RU')}`,
-      payback: '3.2',
+      payback: '—',
       status: 'piloting',
+      createdAt: new Date().toISOString(),
       objectType: input.objectType,
       parameters: input.parameters,
       processes: input.processes ?? [],
-      scenarios: demoCalculation.scenarios,
-      calculationId: 'demo',
+      scenarios: input.calculation?.scenarios ?? [],
+      calculationId: id,
       ...(input.solutionId ? { solutionId: input.solutionId } : {}),
     };
     projects.set(id, detail);
+    persistProjects();
     if (input.calculation) {
       this.saveSnapshot(id, {
         calculation: input.calculation,
@@ -221,15 +203,33 @@ export const projectStore = {
   copy(sourceId: string) {
     const source = projects.get(sourceId);
     if (!source) return null;
-    const id = String(78460 + projects.size);
+    const id = nextProjectId();
     const detail: ProjectDetail = {
       ...source,
       id,
       title: `${source.title} (копия)`,
       meta: `РАСЧЁТ №${id} · ${new Date().toLocaleDateString('ru-RU')}`,
+      createdAt: new Date().toISOString(),
       calculationId: id,
     };
     projects.set(id, detail);
+    persistProjects();
     return detail;
+  },
+};
+
+/** Расчёты мастера (POST /calculations) — открываются по id после перезагрузки. */
+const calculations = loadMap<CalculationResult>('calculations');
+
+export const calculationStore = {
+  get: (id: string) => calculations.get(id) ?? null,
+  save(result: Omit<CalculationResult, 'id'>) {
+    const id = `calc-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+    const stored = { ...result, id } as CalculationResult;
+    calculations.set(id, stored);
+    // Храним последние 50: в localStorage место ограничено.
+    for (const key of [...calculations.keys()].slice(0, Math.max(0, calculations.size - 50))) calculations.delete(key);
+    saveMap('calculations', calculations);
+    return stored;
   },
 };

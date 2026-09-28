@@ -1,98 +1,110 @@
 import { Suspense, lazy } from 'react';
 import { Link } from 'react-router-dom';
 import { useSession } from '@/api/auth';
+import { useChanges, useProjects, useSolutions } from '@/api/queries';
+import type { Maturity, Project, Solution } from '@/api/types';
 import {
   ArrowRight,
+  Bot,
   Building2,
   CalendarDays,
   CheckCircle2,
-  ChevronDown,
   ClipboardList,
-  Gauge,
   FilePlus2,
   FileSpreadsheet,
   FolderOpen,
-  RotateCcw,
-  Timer,
-  TriangleAlert,
-  Wallet,
+  Gauge,
 } from 'lucide-react';
 import { DashboardLayout } from '@/app/DashboardLayout';
-import { DonutBreakdown, StackedBars, TrendLines } from '@/shared/charts';
+import { DonutBreakdown } from '@/shared/charts';
 // Декоративная 3D-рука тянет three.js + drei (~350 КБ gzip): грузим её отдельным
 // чанком, чтобы KPI и графики дашборда не ждали WebGL.
 const RobotArmHero = lazy(() => import('@/features/auth/components/RobotArmHero'));
-import { cn } from '@/lib/utils';
-import {
-  categories,
-  categoryTrend,
-  events,
-  kpis,
-  recentCalculations,
-  regions,
-  requestFlow,
-  tasks,
-  topOrganizations,
-} from './data';
-import { EventDot, KpiTile, LegendRow, Panel, StatusPill } from './parts';
+import { EventDot, KpiTile, LegendRow, Panel, STATUS, StatusPill } from './parts';
 
-const KPI_ICONS = [ClipboardList, CheckCircle2, Gauge, Wallet];
+const OBJECTS: Array<{ id: string; label: string }> = [
+  { id: 'warehouse', label: 'Склады' },
+  { id: 'airport', label: 'Аэропорты' },
+  { id: 'clinic', label: 'Медучреждения' },
+];
 
-/** Своя иконка на каждое состояние задачи. */
-const TASK_ICONS = [ClipboardList, CheckCircle2, RotateCcw, TriangleAlert];
+const FIT_LABEL: Record<string, string> = {
+  declared: 'заявлено в каталоге',
+  example: 'пример организатора',
+  inferred: 'выведено по сценариям',
+};
 
-
-/** Затухание от акцента к светло-серому по мере убывания доли. */
 /*
   Строгая лестница по светлоте: соседние сегменты различаются не оттенком,
-  а яркостью, иначе кольцо читается как одно пятно. Последние доли были
-  светлее предыдущих — ранжирование цвета ломалось на «Прочем».
+  а яркостью, иначе кольцо читается как одно пятно.
 */
-const DONUT_COLORS = [
-  'hsl(20 91% 40%)',
-  'hsl(20 88% 55%)',
-  'hsl(28 60% 66%)',
-  'hsl(240 6% 52%)',
-  'hsl(240 6% 64%)',
-  'hsl(240 8% 76%)',
-];
+const DONUT_COLORS = ['hsl(20 91% 40%)', 'hsl(20 88% 55%)', 'hsl(28 60% 66%)', 'hsl(240 6% 64%)'];
+const donutColor = (index: number): string => DONUT_COLORS[index] ?? 'hsl(240 8% 76%)';
 
-const donutColor = (index: number): string =>
-  DONUT_COLORS[index] ?? 'hsl(240 8% 76%)';
+const paybackOf = (project: Project) => {
+  const value = Number(project.payback.replace(',', '.'));
+  return Number.isFinite(value) && project.payback.trim() !== '' ? value : null;
+};
 
-/* Только потоки за день: «в работе» — остаток, его сюда складывать нельзя. */
-const FLOW_SERIES = [
-  { key: 'done', name: 'Завершено за день' },
-  { key: 'rejected', name: 'Отклонено за день' },
-];
+const dateOf = (iso?: string) => (iso ? new Date(iso).toLocaleDateString('ru-RU') : '—');
 
-const TREND_SERIES = [
-  { key: 'warehouse', name: 'Склады' },
-  { key: 'airport', name: 'Аэропорты' },
-];
+const plural = (n: number, forms: [string, string, string]) => {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return forms[0];
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return forms[1];
+  return forms[2];
+};
+
+/** Сводка кабинета — только из проектов пользователя и каталога, без демо-цифр. */
+function summarize(projects: Project[], solutions: Solution[]) {
+  const calculated = projects.filter((project) => paybackOf(project) !== null);
+  const paybacks = calculated.map((project) => paybackOf(project)!);
+  const average = paybacks.length ? paybacks.reduce((a, b) => a + b, 0) / paybacks.length : null;
+  const inSelection = solutions.filter((solution) => solution.objectTypes?.length);
+  return {
+    total: projects.length,
+    calculated: calculated.length,
+    average,
+    inSelection: inSelection.length,
+    byObject: OBJECTS.map((object) => ({
+      ...object,
+      projects: projects.filter((project) => project.objectType === object.id).length,
+      robots: inSelection.filter((solution) => solution.objectTypes?.includes(object.id)).length,
+      fit: Object.entries(FIT_LABEL).map(([fit, label]) => ({
+        label,
+        count: inSelection.filter(
+          (solution) =>
+            solution.objectTypes?.includes(object.id) &&
+            (solution.objectFit as Record<string, string> | undefined)?.[object.id] === fit,
+        ).length,
+      })),
+    })),
+    byStatus: (Object.keys(STATUS) as Maturity[]).map((status) => ({
+      status,
+      count: projects.filter((project) => project.status === status).length,
+    })),
+  };
+}
 
 export function DashboardPage() {
-  const { data: user } = useSession();
-  const isAdmin = user?.role === 'admin';
+  const { data: projects = [], isLoading } = useProjects();
+  const { data: solutions = [] } = useSolutions();
+  const summary = summarize(projects, solutions);
+  const recent = [...projects]
+    .sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))
+    .slice(0, 8);
+  const donut = summary.byObject.filter((item) => item.projects > 0);
 
   return (
-    <DashboardLayout aside={<SideRail />}>
-      {/* Заголовок раздела и период */}
+    <DashboardLayout aside={<SideRail summary={summary} />}>
+      {/* Заголовок раздела и дата */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <h1 className="text-[20px] font-semibold tracking-[-0.01em]">Панель управления</h1>
-        <div className="ml-auto flex items-center gap-3">
-          <span className="flex items-center gap-2 meta-label">
-            <CalendarDays className="size-3.5" strokeWidth={1.7} aria-hidden />
-            15 сентября 2026
-          </span>
-          <button
-            type="button"
-            className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-[12px] hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-          >
-            Последние 15 дней
-            <ChevronDown className="size-3.5 text-meta-foreground" strokeWidth={1.7} />
-          </button>
-        </div>
+        <span className="ml-auto flex items-center gap-2 meta-label">
+          <CalendarDays className="size-3.5" strokeWidth={1.7} aria-hidden />
+          {new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
+        </span>
       </div>
 
       {/* Герой с манипулятором */}
@@ -118,12 +130,8 @@ export function DashboardPage() {
           </div>
 
           {/*
-            Манипулятор занимает бо́льшую часть героя. Подложки нет: серый
-            прямоугольник встык к белой карточке читался как недочищенный фон.
-          */}
-          {/*
-            На телефоне 3D скрыт: герой занимал полтора экрана до первой
-            цифры, а three.js грузился ради декора на мобильном трафике.
+            Манипулятор занимает бо́льшую часть героя. На телефоне 3D скрыт:
+            герой занимал полтора экрана до первой цифры.
           */}
           <div className="relative hidden h-[300px] md:block md:h-[520px] xl:h-[560px]">
             <Suspense fallback={null}>
@@ -135,252 +143,196 @@ export function DashboardPage() {
 
       {/* KPI */}
       <div className="mb-4 grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
-        {kpis.map((kpi, index) => (
-          <KpiTile
-            key={kpi.id}
-            label={kpi.label}
-            value={kpi.value}
-            {...(kpi.unit ? { unit: kpi.unit } : {})}
-            delta={kpi.delta}
-            tone={kpi.tone}
-            trend={kpi.trend}
-            icon={KPI_ICONS[index] ?? ClipboardList}
-          />
-        ))}
+        <KpiTile
+          label="Проекты"
+          value={String(summary.total)}
+          note="сохранённые расчёты"
+          icon={ClipboardList}
+        />
+        <KpiTile
+          label="С расчётом окупаемости"
+          value={String(summary.calculated)}
+          note={summary.total ? `из ${summary.total}` : 'пока нет проектов'}
+          icon={CheckCircle2}
+        />
+        <KpiTile
+          label="Средняя окупаемость"
+          value={summary.average === null ? '—' : summary.average.toFixed(1).replace('.', ',')}
+          {...(summary.average === null ? {} : { unit: 'лет' })}
+          note="по проектам с расчётом"
+          icon={Gauge}
+        />
+        <KpiTile
+          label="Роботов в подборе"
+          value={String(summary.inSelection)}
+          note={`из ${solutions.length} в каталоге`}
+          icon={Bot}
+        />
       </div>
 
-      {/* Динамика + распределение */}
-      <div className="mb-4 grid gap-4 2xl:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
-        <Panel
-          className="self-start"
-          title="Динамика расчётов"
-          meta={
-            <div className="flex flex-wrap items-center gap-4">
-              {FLOW_SERIES.map((series, index) => (
-                <span key={series.key} className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                  <span
-                    className="size-2 rounded-full"
-                    style={{ background: `hsl(var(--chart-${index + 1}))` }}
-                    aria-hidden
-                  />
-                  {series.name}
-                </span>
-              ))}
-            </div>
-          }
-        >
-          <StackedBars data={requestFlow} series={FLOW_SERIES} height={268} />
-        </Panel>
-
-        <Panel className="self-start" title="Распределение по отраслям">
-          <DonutBreakdown
-            data={categories.map((item, index) => ({
-              ...item,
-              color: donutColor(index),
-            }))}
-            total="6"
-            totalLabel="отраслей"
-            height={196}
-          />
-          <div className="mt-2">
-            {categories.map((item, index) => (
-              <LegendRow
-                key={item.name}
-                color={donutColor(index)}
-                name={item.name}
-                value={`${item.value} %`}
+      {/* Проекты по объектам + каталог для подбора */}
+      <div className="mb-4 grid gap-4 2xl:grid-cols-2">
+        <Panel className="self-start" title="Проекты по типам объектов">
+          {donut.length ? (
+            <>
+              <DonutBreakdown
+                data={donut.map((item, index) => ({ name: item.label, value: item.projects, color: donutColor(index) }))}
+                total={String(summary.total)}
+                totalLabel={plural(summary.total, ['проект', 'проекта', 'проектов'])}
+                height={196}
               />
+              <div className="mt-2">
+                {donut.map((item, index) => (
+                  <LegendRow key={item.id} color={donutColor(index)} name={item.label} value={String(item.projects)} />
+                ))}
+              </div>
+            </>
+          ) : (
+            <EmptyNote>
+              {isLoading ? 'Загружаем проекты…' : 'Проектов пока нет — сохраните расчёт, и он появится здесь.'}
+            </EmptyNote>
+          )}
+        </Panel>
+
+        <Panel className="self-start" title="Каталог для подбора" action="Каталог" actionTo="/catalog">
+          <ul className="grid gap-3">
+            {summary.byObject.map((item) => (
+              <li key={item.id} className="rounded-lg border border-hairline px-3 py-2.5">
+                <div className="flex items-baseline justify-between gap-3 text-[13px]">
+                  <span className="font-medium">{item.label}</span>
+                  <span className="tabular">
+                    {item.robots} {plural(item.robots, ['робот', 'робота', 'роботов'])}
+                  </span>
+                </div>
+                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 meta-label">
+                  {item.fit
+                    .filter((fit) => fit.count > 0)
+                    .map((fit) => (
+                      <span key={fit.label}>
+                        {fit.label}: {fit.count}
+                      </span>
+                    ))}
+                </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </Panel>
       </div>
 
-      {/* Последние расчёты */}
+      {/* Последние проекты */}
       <Panel
-        title="Последние расчёты"
+        title="Последние проекты"
         action="Все расчёты"
         actionTo="/projects"
         className="mb-4"
         bodyClassName="px-0 pb-2"
       >
-        <div
-          className="overflow-x-auto"
-          tabIndex={0}
-          role="region"
-          aria-label="Таблица последних расчётов, прокручивается по горизонтали"
-        >
-          <table className="w-full min-w-[720px] border-collapse text-[13px]">
-            <thead>
-              <tr className="border-y border-hairline bg-canvas/60">
-                <th scope="col" className="table-head px-4 py-2.5 text-left font-medium">№ расчёта</th>
-                <th scope="col" className="table-head px-4 py-2.5 text-left font-medium">Дата</th>
-                <th scope="col" className="table-head px-4 py-2.5 text-left font-medium">Организация</th>
-                <th scope="col" className="table-head px-4 py-2.5 text-left font-medium">Отрасль</th>
-                <th scope="col" className="table-head px-4 py-2.5 text-left font-medium">Статус</th>
-                <th scope="col" className="table-head px-4 py-2.5 text-right font-medium">CAPEX</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentCalculations.map((row) => (
-                <tr key={row.id} className="border-b border-hairline last:border-0 hover:bg-canvas/70">
-                  <td className="px-4 py-3">
-                    <Link
-                      to={`/calculate/warehouse/results/${row.id}`}
-                      className="inline-flex min-h-[44px] items-center tabular text-foreground hover:text-primary"
-                    >
-                      {row.id}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 tabular text-muted-foreground">{row.date}</td>
-                  <td className="px-4 py-3">{row.org}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{row.category}</td>
-                  <td className="px-4 py-3">
-                    <StatusPill status={row.status} />
-                  </td>
-                  <td className="px-4 py-3 text-right tabular">{row.capex}</td>
+        {recent.length ? (
+          <div
+            className="overflow-x-auto"
+            tabIndex={0}
+            role="region"
+            aria-label="Таблица последних проектов, прокручивается по горизонтали"
+          >
+            <table className="w-full min-w-[720px] border-collapse text-[13px]">
+              <thead>
+                <tr className="border-y border-hairline bg-canvas/60">
+                  <th scope="col" className="table-head px-4 py-2.5 text-left font-medium">Проект</th>
+                  <th scope="col" className="table-head px-4 py-2.5 text-left font-medium">Создан</th>
+                  <th scope="col" className="table-head px-4 py-2.5 text-left font-medium">Объект</th>
+                  <th scope="col" className="table-head px-4 py-2.5 text-left font-medium">Статус</th>
+                  <th scope="col" className="table-head px-4 py-2.5 text-right font-medium">Окупаемость</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {recent.map((row) => (
+                  <tr key={row.id} className="border-b border-hairline last:border-0 hover:bg-canvas/70">
+                    <td className="px-4 py-3">
+                      <Link
+                        to={`/calculate/${row.objectType ?? 'warehouse'}/results/${row.id}`}
+                        className="inline-flex min-h-[44px] items-center text-foreground hover:text-primary"
+                      >
+                        {row.title}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 tabular text-muted-foreground">{dateOf(row.createdAt)}</td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {OBJECTS.find((object) => object.id === row.objectType)?.label ?? '—'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusPill status={row.status} />
+                    </td>
+                    <td className="px-4 py-3 text-right tabular">
+                      {paybackOf(row) === null ? '—' : `${row.payback} лет`}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="px-4">
+            <EmptyNote>
+              {isLoading ? 'Загружаем проекты…' : 'Здесь появятся сохранённые расчёты.'}
+            </EmptyNote>
+          </div>
+        )}
       </Panel>
-
-      {/* Нижний ряд */}
-      <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
-        <Panel title="Топ организаций" action="Организации" actionTo="/projects" bodyClassName="px-0 pb-2">
-          <RankTable
-            label="Топ организаций"
-            head={['Наименование', 'Расчётов', 'CAPEX, млн ₽']}
-            rows={topOrganizations.map((o) => [o.name, String(o.count), o.sum])}
-          />
-        </Panel>
-
-        <Panel
-          className="self-start"
-          title="Динамика по отраслям"
-          meta={
-            <div className="flex items-center gap-4">
-              {TREND_SERIES.map((series, index) => (
-                <span key={series.key} className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                  <span
-                    className="size-2 rounded-full"
-                    style={{ background: `hsl(var(--chart-${index + 1}))` }}
-                    aria-hidden
-                  />
-                  {series.name}
-                </span>
-              ))}
-            </div>
-          }
-        >
-          <TrendLines data={categoryTrend} series={TREND_SERIES} height={208} />
-        </Panel>
-
-        <Panel
-          title="Статистика по регионам"
-          {...(isAdmin ? { action: 'Справочники', actionTo: '/admin' } : {})}
-          bodyClassName="px-0 pb-2"
-        >
-          <RankTable
-            label="Статистика по регионам"
-            head={['Регион', 'Расчётов', 'CAPEX, млрд ₽']}
-            rows={regions.map((r) => [r.name, String(r.count), r.sum])}
-          />
-        </Panel>
-      </div>
     </DashboardLayout>
   );
 }
 
-function RankTable({
-  head,
-  rows,
-  label,
-}: {
-  head: string[];
-  rows: string[][];
-  label: string;
-}) {
+function EmptyNote({ children }: { children: string }) {
   return (
-    <div className="overflow-x-auto" tabIndex={0} role="region" aria-label={label}>
-      <table className="w-full border-collapse text-[13px]">
-        <thead>
-          <tr className="border-y border-hairline bg-canvas/60">
-            {head.map((title, index) => (
-              <th
-                key={title}
-                scope="col"
-                className={cn(
-                  'table-head px-4 py-2.5 font-medium',
-                  index === 0 ? 'text-left' : 'text-right',
-                )}
-              >
-                {title}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((cells) => (
-            <tr key={cells.join('|')} className="border-b border-hairline last:border-0">
-              {cells.map((cell, index) => (
-                <td
-                  key={cell + String(index)}
-                  className={cn(
-                    'px-4 py-2.5',
-                    index === 0 ? 'text-left' : 'text-right tabular',
-                    index === 0 ? '' : 'text-muted-foreground',
-                  )}
-                >
-                  {cell}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <p className="rounded-lg border border-dashed border-hairline px-4 py-6 text-center text-[12.5px] text-muted-foreground">
+      {children}
+    </p>
   );
 }
 
-function SideRail() {
+function SideRail({ summary }: { summary: ReturnType<typeof summarize> }) {
   const { data: user } = useSession();
   const isAdmin = user?.role === 'admin';
+  const { data: changes = [] } = useChanges(undefined, isAdmin);
 
   return (
     <>
-      <Panel title="Последние события" {...(isAdmin ? { action: 'Журнал', actionTo: '/admin' } : {})}>
-        <ol className="space-y-3.5">
-          {events.map((event) => (
-            <li key={event.time} className="flex gap-3 text-[12px]">
-              <span className="w-[38px] flex-none tabular text-meta-foreground">{event.time}</span>
-              <EventDot tone={event.tone} />
-              <span className="min-w-0">
-                <span className="block font-medium leading-snug">{event.title}</span>
-                <span className="mt-0.5 block text-meta-foreground">{event.note}</span>
-              </span>
-            </li>
-          ))}
-        </ol>
-      </Panel>
+      {isAdmin ? (
+        <Panel title="Последние изменения" action="Журнал" actionTo="/admin">
+          {changes.length ? (
+            <ol className="space-y-3.5">
+              {changes.slice(0, 6).map((change) => (
+                <li key={change.id} className="flex gap-3 text-[12px]">
+                  <span className="w-[62px] flex-none tabular text-meta-foreground">
+                    {new Date(change.createdAt).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })}
+                  </span>
+                  <EventDot tone={change.action === 'delete' ? 'danger' : change.action === 'create' ? 'operation' : 'confirmed'} />
+                  <span className="min-w-0">
+                    <span className="block font-medium leading-snug">{change.summary}</span>
+                    {change.userEmail ? <span className="mt-0.5 block text-meta-foreground">{change.userEmail}</span> : null}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <EmptyNote>Справочники ещё не правили.</EmptyNote>
+          )}
+        </Panel>
+      ) : null}
 
-      <Panel title="Мои задачи" action="Все задачи" actionTo="/projects">
+      <Panel title="Проекты по статусам" action="Все расчёты" actionTo="/projects">
         <ul className="space-y-1">
-          {tasks.map((task, index) => {
-            const Icon = TASK_ICONS[index] ?? Timer;
-            return (
-            <li key={task.label}>
+          {summary.byStatus.map((item) => (
+            <li key={item.status}>
               <Link
                 to="/projects"
                 className="flex min-h-[44px] items-center gap-3 rounded-lg px-2 py-2 text-[12px] transition-colors hover:bg-canvas"
               >
-                <Icon className="size-4 flex-none text-meta-foreground" strokeWidth={1.7} aria-hidden />
-                <span className="truncate">{task.label}</span>
-                <span className="ml-auto tabular font-medium">{task.count}</span>
+                <span className="truncate">{STATUS[item.status].label}</span>
+                <span className="ml-auto tabular font-medium">{item.count}</span>
               </Link>
             </li>
-            );
-          })}
+          ))}
         </ul>
       </Panel>
 

@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowDownRight, ArrowRight, ArrowUpRight } from 'lucide-react';
-import { MiniTrend } from '@/shared/charts';
+import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { CalcStatus } from './data';
+import type { Maturity } from '@/api/types';
 
 /** Карточка панели с заголовком и необязательной ссылкой справа. */
 export function Panel({
@@ -46,26 +45,20 @@ export function Panel({
   );
 }
 
-/** KPI-плитка: число, изменение к прошлому месяцу и спарклайн. */
+/** KPI-плитка: число и пояснение, откуда оно. */
 export function KpiTile({
   label,
   value,
   unit,
-  delta,
-  tone,
-  trend,
+  note,
   icon: Icon,
 }: {
   label: string;
   value: string;
   unit?: string;
-  delta: string;
-  tone: 'up' | 'down';
-  trend: number[];
+  note: string;
   icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
 }) {
-  const DeltaIcon = tone === 'up' ? ArrowUpRight : ArrowDownRight;
-
   return (
     <div className="panel p-4">
       <div className="flex items-center gap-2.5">
@@ -74,48 +67,24 @@ export function KpiTile({
         </span>
         <span className="text-[12px] text-muted-foreground">{label}</span>
       </div>
-
-      <div className="mt-4 flex flex-wrap items-end justify-between gap-x-3 gap-y-2">
-        <div className="min-w-0">
-          <div className="flex items-baseline gap-1.5 whitespace-nowrap">
-            <span className="text-[26px] font-semibold leading-none tabular">{value}</span>
-            {unit ? <span className="text-[12px] text-muted-foreground">{unit}</span> : null}
-          </div>
-          <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-            <DeltaIcon
-              className={cn(
-                'size-3.5 flex-none',
-                tone === 'up' ? 'text-status-operation' : 'text-muted-foreground',
-              )}
-              strokeWidth={1.7}
-              aria-hidden
-            />
-            <span
-              className={cn(
-                'text-[12px] font-medium tabular',
-                tone === 'up' ? 'text-status-operation' : 'text-muted-foreground',
-              )}
-            >
-              {delta}
-            </span>
-            <span className="meta-label">к прошлому месяцу</span>
-          </div>
-        </div>
-        <MiniTrend data={trend} tone={tone} />
+      <div className="mt-4 flex items-baseline gap-1.5 whitespace-nowrap">
+        <span className="text-[26px] font-semibold leading-none tabular">{value}</span>
+        {unit ? <span className="text-[12px] text-muted-foreground">{unit}</span> : null}
       </div>
+      <div className="mt-2 meta-label">{note}</div>
     </div>
   );
 }
 
-const STATUS: Record<CalcStatus, { label: string; className: string }> = {
-  active: { label: 'В работе', className: 'bg-status-piloting-tint text-status-piloting' },
-  done: { label: 'Рассчитан', className: 'bg-status-confirmed-tint text-status-confirmed' },
-  approved: { label: 'Одобрен', className: 'bg-status-operation-tint text-status-operation' },
-  rejected: { label: 'Отклонён', className: 'bg-status-danger-tint text-status-danger' },
+/** Те же подписи статусов, что в «Моих расчётах». */
+export const STATUS: Record<Maturity, { label: string; className: string }> = {
+  operation: { label: 'Защищён', className: 'bg-status-operation-tint text-status-operation' },
+  piloting: { label: 'На согласовании', className: 'bg-status-piloting-tint text-status-piloting' },
+  rnd: { label: 'Черновик', className: 'bg-status-rnd-tint text-status-rnd' },
 };
 
 /** Статус-пилюля: мягкая подложка и насыщенный текст. */
-export function StatusPill({ status }: { status: CalcStatus }) {
+export function StatusPill({ status }: { status: Maturity }) {
   const item = STATUS[status];
   return (
     <span

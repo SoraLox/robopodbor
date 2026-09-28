@@ -1,4 +1,5 @@
-import { create } from 'zustand';
+import { create, type StateCreator } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import { exposeForPerf } from '@/lib/perf/frameProfiler';
 
 interface WizardState {
@@ -32,7 +33,7 @@ interface WizardState {
   resetCompared: () => void;
 }
 
-export const useWizardStore = create<WizardState>((set) => ({
+const wizard: StateCreator<WizardState> = (set) => ({
   objectType: null,
   setObjectType: (slug) => set({ objectType: slug }),
 
@@ -64,6 +65,29 @@ export const useWizardStore = create<WizardState>((set) => ({
       comparedIds: state.comparedIds.includes(id) ? state.comparedIds : [...state.comparedIds, id],
     })),
   resetCompared: () => set({ comparedIds: [] }),
-}));
+});
+
+/**
+ * Мастер переживает перезагрузку: без этого F5 на отчёте сбрасывал паспорт
+ * и выбранного робота, и сцена строилась по значениям по умолчанию.
+ * В тестах не сохраняем — каждый тест начинает с чистого мастера.
+ */
+export const useWizardStore =
+  import.meta.env.MODE === 'test'
+    ? create<WizardState>()(wizard)
+    : create<WizardState>()(
+        persist(wizard, {
+          name: 'wizard',
+          version: 1,
+          storage: createJSONStorage(() => localStorage),
+          partialize: ({ objectType, parameters, processes, solutionId, comparedIds }) => ({
+            objectType,
+            parameters,
+            processes,
+            solutionId,
+            comparedIds,
+          }),
+        }),
+      );
 
 exposeForPerf('wizard', useWizardStore);
