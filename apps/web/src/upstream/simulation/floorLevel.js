@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { FLOOR, MARGIN, WALL_HEIGHT } from "./layout.js";
-import { CANVAS_PX, PALETTE, TRAIL_OPACITY } from "./constants.js";
+import { CANVAS_PX, TRAIL_OPACITY } from "./constants.js";
+import { activePalette, isStudioLook } from "./studioLook.js";
 import { applyColorSpace, disposeTree } from "./sceneUtils.js";
 import { createWalls } from "./walls.js";
 
@@ -25,9 +26,9 @@ export function createSharedLevelAssets() {
     floorTexture,
     floorMaterial: new THREE.MeshStandardMaterial({
       map: floorTexture,
-      flatShading: true,
-      roughness: 0.68,
-      metalness: 0.04,
+      roughness: isStudioLook() ? 0.78 : 0.68,
+      metalness: 0.02,
+      flatShading: !isStudioLook(),
     }),
     slabGeometry: new THREE.BoxGeometry(FLOOR, SLAB_THICKNESS, FLOOR),
     trailGeometry: new THREE.PlaneGeometry(FLOOR, FLOOR),
@@ -52,7 +53,8 @@ function addSideCrates(parent) {
   const group = new THREE.Group();
   parent.add(group);
 
-  const crateColors = [PALETTE.crateA, PALETTE.crateB, PALETTE.crateC];
+  const palette = activePalette();
+  const crateColors = [palette.crateA, palette.crateB, palette.crateC];
 
   [-1, 1].forEach((side) => {
     for (let i = 0; i < 5; i++) {
@@ -60,9 +62,9 @@ function addSideCrates(parent) {
 
       const material = new THREE.MeshStandardMaterial({
         color: crateColors[i % crateColors.length],
-        flatShading: true,
-        roughness: 0.6,
+        roughness: isStudioLook() ? 0.7 : 0.6,
         metalness: 0.0,
+        flatShading: !isStudioLook(),
       });
 
       const crate = new THREE.Mesh(new THREE.BoxGeometry(MARGIN - 3, h, 6), material);

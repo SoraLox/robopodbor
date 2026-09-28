@@ -157,6 +157,9 @@ model CatalogSolution {
   throughput            Float?
   throughputUnit        String?
   autonomyHours         Float?
+  chargeHours           Float?
+  batteryKwh            Float?
+  powerKw               Float?
   positioningAccuracyMm Float?
   navigation            String?
   operatingConditions   String?

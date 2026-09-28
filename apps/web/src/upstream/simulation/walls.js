@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { FLOOR, WALL_HEIGHT, WALL_THICKNESS, GATE_XS, GATE_WIDTH, GATE_HEIGHT } from "./layout.js";
-import { PALETTE } from "./constants.js";
+import { activePalette } from "./studioLook.js";
 
 // Прозрачность стен, обращённых к камере: почти невидимы, но контур читается.
 const NEAR_WALL_OPACITY = 0.06;
@@ -88,14 +88,15 @@ function buildSolidWall(group, material, side) {
 export function createWalls() {
   const group = new THREE.Group();
   const walls = [];
+  const palette = activePalette();
 
   for (const [name, { normal }] of Object.entries(SIDES)) {
-    const material = makeMaterial(PALETTE.wall);
+    const material = makeMaterial(palette.wall);
     const materials = [material];
     const wallGroup = new THREE.Group();
 
     if (name === "north") {
-      const trimMaterial = makeMaterial(PALETTE.wallTrim);
+      const trimMaterial = makeMaterial(palette.wallTrim);
       materials.push(trimMaterial);
       buildNorthWall(wallGroup, material, trimMaterial);
     } else {

@@ -184,31 +184,33 @@ export function LoginPage() {
   const hintClass = 'flex h-5 items-center gap-1 text-[11px] leading-none';
 
   return (
-    <div className="fixed inset-x-0 bottom-0 top-14 flex overflow-hidden overscroll-none bg-white">
-      {/* Левая колонка: absolute inset даёт равную белую рамку со всех сторон */}
-      <div className="relative hidden min-h-0 w-1/2 lg:block">
-        <div className="hero-panel absolute inset-3 flex flex-col justify-between overflow-hidden rounded-[28px] p-10 xl:inset-4 xl:p-12">
-          <div className="hero-grain" aria-hidden />
+    <div className="fixed inset-x-0 bottom-0 top-14 overflow-hidden overscroll-none bg-white">
+      {/* Та же сетка, что у SiteHeader: gutters px-5/sm:px-8 + max-w-site */}
+      <div className="flex h-full px-5 sm:px-8">
+        <div className="mx-auto flex h-full w-full max-w-site min-h-0 gap-3 py-3 xl:gap-4 xl:py-4">
+          <div className="relative hidden min-h-0 w-1/2 shrink-0 lg:block">
+            <div className="hero-panel flex h-full min-h-0 flex-col justify-between overflow-hidden rounded-[28px] p-10 xl:p-12">
+              <div className="hero-grain" aria-hidden />
 
-          <div className="relative z-10 flex w-fit items-center rounded-full border border-white/15 bg-white/10 px-4 py-1.5 backdrop-blur-sm">
-            <span className="text-[12px] font-medium text-white">252 решения в базе</span>
+              <div className="relative z-10 flex w-fit items-center rounded-full border border-white/15 bg-white/10 px-4 py-1.5 backdrop-blur-sm">
+                <span className="text-[12px] font-medium text-white">252 решения в базе</span>
+              </div>
+
+              <div className="relative z-10 grid max-w-[420px] gap-3 pb-2">
+                <h1 className="font-heading text-[1.75rem] font-semibold leading-[1.15] tracking-[-0.02em] text-white xl:text-[2rem]">
+                  Расчёт окупаемости,
+                  <br />всегда под рукой
+                </h1>
+                <p className="max-w-[36ch] text-[14px] leading-relaxed text-white/55">
+                  РОБОПОДБОР хранит ваши объекты, расчёты и сравнения решений в одном месте —
+                  без повторного ввода данных.
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div className="relative z-10 grid max-w-[420px] gap-3 pb-2">
-            <h1 className="font-heading text-[1.75rem] font-semibold leading-[1.15] tracking-[-0.02em] text-white xl:text-[2rem]">
-              Расчёт окупаемости,
-              <br />всегда под рукой
-            </h1>
-            <p className="max-w-[36ch] text-[14px] leading-relaxed text-white/55">
-              РОБОПОДБОР хранит ваши объекты, расчёты и сравнения решений в одном месте —
-              без повторного ввода данных.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="relative flex min-h-0 w-full flex-col overflow-hidden bg-white px-6 py-5 sm:px-12 lg:w-1/2 lg:px-14">
-          <div ref={demoRef} className="absolute right-2 top-2 z-20">
+          <div className="relative flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-white lg:pl-6 xl:pl-10">
+          <div ref={demoRef} className="absolute right-0 top-0 z-20">
             <button
               type="button"
               onClick={() => setDemoOpen((value) => !value)}
@@ -492,6 +494,8 @@ export function LoginPage() {
               РОБОПОДБОР.
             </p>
           ) : null}
+          </div>
+        </div>
       </div>
     </div>
   );

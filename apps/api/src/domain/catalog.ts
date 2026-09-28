@@ -36,6 +36,12 @@ export interface CatalogSolution {
   throughput?: number;
   throughputUnit?: string;
   autonomyHours?: number;
+  /** Время полной зарядки, ч. */
+  chargeHours?: number;
+  /** Запас энергии батареи, кВт·ч (или ёмкость × напряжение). */
+  batteryKwh?: number;
+  /** Потребляемая мощность при работе, кВт. */
+  powerKw?: number;
   positioningAccuracyMm?: number;
   navigation?: string;
   operatingConditions?: string;
@@ -223,6 +229,8 @@ export const OBJECT_PROCESSES: Record<string, Array<{ id: string; label: string 
     { id: "cargo", label: "Грузовой терминал" },
     { id: "inspection", label: "Осмотр и мониторинг" },
     { id: "cleaning", label: "Уборка терминала" },
+    { id: "passengers", label: "Обслуживание пассажиров" },
+    { id: "fire", label: "Пожарная безопасность" },
   ],
   clinic: [
     { id: "delivery", label: "Доставка медикаментов и анализов" },

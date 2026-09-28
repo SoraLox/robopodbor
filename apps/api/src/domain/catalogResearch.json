@@ -1,0 +1,2090 @@
+{
+ "note": "Найдено через Perplexity 28.09.2026 и автоматически сверено со страницей-источником: значение принято, только если оно стоит на странице этой модели рядом с названием характеристики. Непрошедшие — в списке ручной проверки. Часть значений (origin: manual) найдена и сверена вручную 28.09.2026: значение взято со страницы модели, цитата сохранена. Часть значений (origin: manual) найдена и сверена вручную 28.09.2026: значение взято со страницы модели, цитата сохранена. Часть значений (origin: manual) найдена и сверена вручную 28.09.2026: значение взято со страницы модели, цитата сохранена.",
+ "values": [
+  {
+   "id": "AM0001",
+   "field": "acquisitionModels",
+   "value": [
+    "purchase"
+   ],
+   "source": {
+    "kind": "vendor",
+    "title": "ronavi-robotics.ru",
+    "url": "https://ronavi-robotics.ru/catalogue/h1500",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Купить автономного мобильного робота Ronavi H1500»"
+  },
+  {
+   "id": "AV0002",
+   "field": "acquisitionModels",
+   "value": [
+    "purchase"
+   ],
+   "source": {
+    "kind": "vendor",
+    "title": "evocargo.com",
+    "url": "https://evocargo.com/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Грузовики Evocargo N1, управляемые искусственным интеллектом, работают 7 дней в неделю»"
+  },
+  {
+   "id": "FC0002",
+   "field": "acquisitionModels",
+   "value": [
+    "purchase"
+   ],
+   "source": {
+    "kind": "reseller",
+    "title": "kiit.ru",
+    "url": "https://www.kiit.ru/product/rossiyskiy-robot-uborshchik-r2b-mark-2-se/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Купить российский робот-уборщик R2B MARK 2 SE»"
+  },
+  {
+   "id": "AM0004",
+   "field": "infrastructure.charging",
+   "value": "автостыковка с док-станцией",
+   "source": {
+    "kind": "vendor",
+    "title": "ronavi-robotics.ru",
+    "url": "https://ronavi-robotics.ru/catalogue/sd",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Автоматическая док-станция»"
+  },
+  {
+   "id": "AM0004",
+   "field": "acquisitionModels",
+   "value": [
+    "purchase"
+   ],
+   "source": {
+    "kind": "vendor",
+    "title": "ronavi-robotics.ru",
+    "url": "https://ronavi-robotics.ru/catalogue/sd",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Купить»"
+  },
+  {
+   "id": "FL0001",
+   "field": "infrastructure.charging",
+   "value": "полная зарядка 120 мин",
+   "source": {
+    "kind": "reseller",
+    "title": "tnvst.ru",
+    "url": "https://tnvst.ru/catalog/fmr-roboty/avtonomnyy-mobilnyy-robot-dikom-dmr-carrier-p/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Время зарядки 2 часа»"
+  },
+  {
+   "id": "FL0001",
+   "field": "infrastructure.charging",
+   "value": "автостыковка с док-станцией",
+   "source": {
+    "kind": "reseller",
+    "title": "tnvst.ru",
+    "url": "https://tnvst.ru/catalog/fmr-roboty/avtonomnyy-mobilnyy-robot-dikom-dmr-carrier-p/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Автоматическая зарядка»"
+  },
+  {
+   "id": "FL0001",
+   "field": "acquisitionModels",
+   "value": [
+    "purchase"
+   ],
+   "source": {
+    "kind": "reseller",
+    "title": "tnvst.ru",
+    "url": "https://tnvst.ru/catalog/fmr-roboty/avtonomnyy-mobilnyy-robot-dikom-dmr-carrier-p/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Купить»"
+  },
+  {
+   "id": "FL0001",
+   "field": "positioningAccuracyMm",
+   "value": 10.0,
+   "source": {
+    "kind": "reseller",
+    "title": "tnvst.ru",
+    "url": "https://tnvst.ru/catalog/fmr-roboty/avtonomnyy-mobilnyy-robot-dikom-dmr-carrier-p/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Точность позиционирования 10 мм»"
+  },
+  {
+   "id": "AM0002",
+   "field": "infrastructure.charging",
+   "value": "автостыковка с док-станцией",
+   "source": {
+    "kind": "vendor",
+    "title": "ronavi-robotics.ru",
+    "url": "https://ronavi-robotics.ru/catalogue/sr",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Автоматическая док-станция»"
+  },
+  {
+   "id": "AM0002",
+   "field": "minTempC",
+   "value": 5.0,
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/mobilnye-roboty/sortirovochnyy-logisticheskiy-amr-robot-ronavi-sr/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Рабочая температура +5 - +30»"
+  },
+  {
+   "id": "AM0002",
+   "field": "maxTempC",
+   "value": 30.0,
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/mobilnye-roboty/sortirovochnyy-logisticheskiy-amr-robot-ronavi-sr/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Рабочая температура +5 - +30»"
+  },
+  {
+   "id": "AM0002",
+   "field": "operatingConditions",
+   "value": "+5…+30 °C",
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/mobilnye-roboty/sortirovochnyy-logisticheskiy-amr-robot-ronavi-sr/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Рабочая температура +5 - +30»"
+  },
+  {
+   "id": "AM0002",
+   "field": "acquisitionModels",
+   "value": [
+    "purchase"
+   ],
+   "source": {
+    "kind": "vendor",
+    "title": "ronavi-robotics.ru",
+    "url": "https://ronavi-robotics.ru/catalogue/sr",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Купить»"
+  },
+  {
+   "id": "AM0002",
+   "field": "positioningAccuracyMm",
+   "value": 3.0,
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/mobilnye-roboty/sortirovochnyy-logisticheskiy-amr-robot-ronavi-sr/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Точность позиционирования ±3 мм»"
+  },
+  {
+   "id": "AM0003",
+   "field": "infrastructure.charging",
+   "value": "полная зарядка 80 мин",
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/mobilnye-roboty/logisticheskiy-amr-robot-ronavi-h2000/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Время заряда батареи 1,3 часа»"
+  },
+  {
+   "id": "AM0003",
+   "field": "infrastructure.charging",
+   "value": "автостыковка с док-станцией",
+   "source": {
+    "kind": "vendor",
+    "title": "ronavi-robotics.ru",
+    "url": "https://ronavi-robotics.ru/catalogue/h2000",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Автоматическая док-станция»"
+  },
+  {
+   "id": "AM0003",
+   "field": "minTempC",
+   "value": 5.0,
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/mobilnye-roboty/logisticheskiy-amr-robot-ronavi-h2000/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Рабочая температура +5 - +30»"
+  },
+  {
+   "id": "AM0003",
+   "field": "maxTempC",
+   "value": 30.0,
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/mobilnye-roboty/logisticheskiy-amr-robot-ronavi-h2000/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Рабочая температура +5 - +30»"
+  },
+  {
+   "id": "AM0003",
+   "field": "operatingConditions",
+   "value": "+5…+30 °C",
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/mobilnye-roboty/logisticheskiy-amr-robot-ronavi-h2000/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Рабочая температура +5 - +30»"
+  },
+  {
+   "id": "AM0003",
+   "field": "infrastructure.integration",
+   "value": "Интеграция: WMS, MES",
+   "source": {
+    "kind": "vendor",
+    "title": "ronavi-robotics.ru",
+    "url": "https://ronavi-robotics.ru/catalogue/h2000",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Интеграции с системами объекта: WMS, MES»"
+  },
+  {
+   "id": "AM0003",
+   "field": "positioningAccuracyMm",
+   "value": 3.0,
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/mobilnye-roboty/logisticheskiy-amr-robot-ronavi-h2000/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Точность позиционирования ±3 мм»"
+  },
+  {
+   "id": "AM0007",
+   "field": "weightKg",
+   "value": 25.0,
+   "source": {
+    "kind": "vendor",
+    "title": "xn--l1aeahg.xn--p1ai",
+    "url": "https://xn--l1aeahg.xn--p1ai/amr-100/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Масса 25 кг»"
+  },
+  {
+   "id": "AM0007",
+   "field": "infrastructure.charging",
+   "value": "автостыковка, вручную",
+   "source": {
+    "kind": "vendor",
+    "title": "xn--l1aeahg.xn--p1ai",
+    "url": "https://xn--l1aeahg.xn--p1ai/amr-100/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Автоматическая док-станция / ручная зарядка»"
+  },
+  {
+   "id": "AM0007",
+   "field": "minTempC",
+   "value": 5.0,
+   "source": {
+    "kind": "vendor",
+    "title": "xn--l1aeahg.xn--p1ai",
+    "url": "https://xn--l1aeahg.xn--p1ai/amr-100/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Рабочая температура: от +5°C до +40°C»"
+  },
+  {
+   "id": "AM0007",
+   "field": "maxTempC",
+   "value": 40.0,
+   "source": {
+    "kind": "vendor",
+    "title": "xn--l1aeahg.xn--p1ai",
+    "url": "https://xn--l1aeahg.xn--p1ai/amr-100/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Рабочая температура: от +5°C до +40°C»"
+  },
+  {
+   "id": "AM0007",
+   "field": "operatingConditions",
+   "value": "+5…+40 °C",
+   "source": {
+    "kind": "vendor",
+    "title": "xn--l1aeahg.xn--p1ai",
+    "url": "https://xn--l1aeahg.xn--p1ai/amr-100/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Рабочая температура: от +5°C до +40°C»"
+  },
+  {
+   "id": "AM0007",
+   "field": "operatingConditions",
+   "value": "IP54 (опция)",
+   "source": {
+    "kind": "vendor",
+    "title": "xn--l1aeahg.xn--p1ai",
+    "url": "https://xn--l1aeahg.xn--p1ai/amr-100/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Защита от пыли и влаги (по желанию – IP54 и выше)»"
+  },
+  {
+   "id": "AM0007",
+   "field": "positioningAccuracyMm",
+   "value": 10.0,
+   "source": {
+    "kind": "vendor",
+    "title": "xn--l1aeahg.xn--p1ai",
+    "url": "https://xn--l1aeahg.xn--p1ai/amr-100/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Точность позиционирования ±10 мм»"
+  },
+  {
+   "id": "AM0008",
+   "field": "weightKg",
+   "value": 150.0,
+   "source": {
+    "kind": "vendor",
+    "title": "xn--l1aeahg.xn--p1ai",
+    "url": "https://xn--l1aeahg.xn--p1ai/amr-800/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Масса 150 кг»"
+  },
+  {
+   "id": "AM0008",
+   "field": "infrastructure.charging",
+   "value": "автостыковка, вручную",
+   "source": {
+    "kind": "vendor",
+    "title": "xn--l1aeahg.xn--p1ai",
+    "url": "https://xn--l1aeahg.xn--p1ai/amr-800/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Автоматическая док-станция / ручная зарядка»"
+  },
+  {
+   "id": "AM0008",
+   "field": "minTempC",
+   "value": 5.0,
+   "source": {
+    "kind": "vendor",
+    "title": "xn--l1aeahg.xn--p1ai",
+    "url": "https://xn--l1aeahg.xn--p1ai/amr-800/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Рабочая температура: от +5°C до +40°C»"
+  },
+  {
+   "id": "AM0008",
+   "field": "maxTempC",
+   "value": 40.0,
+   "source": {
+    "kind": "vendor",
+    "title": "xn--l1aeahg.xn--p1ai",
+    "url": "https://xn--l1aeahg.xn--p1ai/amr-800/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Рабочая температура: от +5°C до +40°C»"
+  },
+  {
+   "id": "AM0008",
+   "field": "operatingConditions",
+   "value": "+5…+40 °C",
+   "source": {
+    "kind": "vendor",
+    "title": "xn--l1aeahg.xn--p1ai",
+    "url": "https://xn--l1aeahg.xn--p1ai/amr-800/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Рабочая температура: от +5°C до +40°C»"
+  },
+  {
+   "id": "AM0008",
+   "field": "operatingConditions",
+   "value": "IP54 (опция)",
+   "source": {
+    "kind": "vendor",
+    "title": "xn--l1aeahg.xn--p1ai",
+    "url": "https://xn--l1aeahg.xn--p1ai/amr-800/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Защита от пыли и влаги (по желанию – IP54 и выше)»"
+  },
+  {
+   "id": "AM0008",
+   "field": "positioningAccuracyMm",
+   "value": 10.0,
+   "source": {
+    "kind": "vendor",
+    "title": "xn--l1aeahg.xn--p1ai",
+    "url": "https://xn--l1aeahg.xn--p1ai/amr-800/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Точность позиционирования ±10 мм»"
+  },
+  {
+   "id": "AM0008",
+   "field": "dimensions",
+   "value": "940×640×230 мм",
+   "source": {
+    "kind": "vendor",
+    "title": "xn--l1aeahg.xn--p1ai",
+    "url": "https://xn--l1aeahg.xn--p1ai/amr-800/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Габаритные размеры 940 × 640 × 230 мм»"
+  },
+  {
+   "id": "AM0013",
+   "field": "country",
+   "value": "Россия",
+   "source": {
+    "kind": "vendor",
+    "title": "robocv.ru",
+    "url": "https://robocv.ru/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«ООО Робосиви, Россия»"
+  },
+  {
+   "id": "AS0001",
+   "field": "minTempC",
+   "value": -20.0,
+   "source": {
+    "kind": "vendor",
+    "title": "arobosys.ru",
+    "url": "https://arobosys.ru/mines",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Рабочая температура -20°C до 40°C»"
+  },
+  {
+   "id": "AS0001",
+   "field": "maxTempC",
+   "value": 40.0,
+   "source": {
+    "kind": "vendor",
+    "title": "arobosys.ru",
+    "url": "https://arobosys.ru/mines",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Рабочая температура -20°C до 40°C»"
+  },
+  {
+   "id": "AS0001",
+   "field": "operatingConditions",
+   "value": "-20…+40 °C",
+   "source": {
+    "kind": "vendor",
+    "title": "arobosys.ru",
+    "url": "https://arobosys.ru/mines",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Рабочая температура -20°C до 40°C»"
+  },
+  {
+   "id": "AS0001",
+   "field": "acquisitionModels",
+   "value": [
+    "purchase"
+   ],
+   "source": {
+    "kind": "vendor",
+    "title": "arobosys.ru",
+    "url": "https://arobosys.ru/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Купить»"
+  },
+  {
+   "id": "AS0001",
+   "field": "lifespanYears",
+   "value": 25.0,
+   "source": {
+    "kind": "vendor",
+    "title": "arobosys.ru",
+    "url": "https://arobosys.ru/mines",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Срок службы 25 лет»"
+  },
+  {
+   "id": "FC0005",
+   "field": "speed",
+   "value": "0.9 м/с",
+   "source": {
+    "kind": "vendor",
+    "title": "waybotrobotics.com",
+    "url": "https://waybotrobotics.com/models/600",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Скорость уборки 1000–2300 м²/час»"
+  },
+  {
+   "id": "FC0005",
+   "field": "navigation",
+   "value": "LiDAR 3D 360°, HD-камера",
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/roboty-uborshchiki/robot-uborshchik-promyshlennyy-waybot-cleanbotics-600/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Тип навигации LiDAR 3D 360°, НD-камера, LiDAR»"
+  },
+  {
+   "id": "FC0005",
+   "field": "minAisleWidthM",
+   "value": 0.75,
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/roboty-uborshchiki/robot-uborshchik-promyshlennyy-waybot-cleanbotics-600/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Минимальная ширина проезда, мм 750»"
+  },
+  {
+   "id": "FC0005",
+   "field": "noiseDb",
+   "value": 75.0,
+   "source": {
+    "kind": "reseller",
+    "title": "1robomarket.ru",
+    "url": "https://1robomarket.ru/robots/cleanbotics-600",
+    "date": "28.09.2026"
+   },
+   "confirmed": false,
+   "quote": "«Уровень шума <75дБ»",
+   "note": "на сайте — «менее75 дБ»"
+  },
+  {
+   "id": "FC0005",
+   "field": "country",
+   "value": "Россия",
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/roboty-uborshchiki/robot-uborshchik-promyshlennyy-waybot-cleanbotics-600/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Страна производства Россия»"
+  },
+  {
+   "id": "FL0002",
+   "field": "operatingConditions",
+   "value": "IP20",
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/mobilnye-roboty/mobilnye-roboty-avtomakon/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Тип защиты IP IP20»"
+  },
+  {
+   "id": "FL0002",
+   "field": "acquisitionModels",
+   "value": [
+    "purchase"
+   ],
+   "source": {
+    "kind": "vendor",
+    "title": "automacon.ru",
+    "url": "https://automacon.ru/agv/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Купить»"
+  },
+  {
+   "id": "FL0003",
+   "field": "country",
+   "value": "Россия",
+   "source": {
+    "kind": "vendor",
+    "title": "robocv.ru",
+    "url": "https://robocv.ru/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«ООО Робосиви, Россия»"
+  },
+  {
+   "id": "IN0001",
+   "field": "speed",
+   "value": "0.8 м/с",
+   "source": {
+    "kind": "media",
+    "title": "journal.reindustry-expo.ru",
+    "url": "https://journal.reindustry-expo.ru/yandex-robotics-inventarizaciya-dlya-sta-cargo/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Скорость около 0,8 м/с»"
+  },
+  {
+   "id": "IN0001",
+   "field": "throughput",
+   "value": 30000.0,
+   "source": {
+    "kind": "vendor",
+    "title": "robotics.yandex.ru",
+    "url": "https://robotics.yandex.ru/robotizatsiya-sklada",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«До 30 000 палето-мест в час»"
+  },
+  {
+   "id": "IN0001",
+   "field": "throughputUnit",
+   "value": "ячеек/ч",
+   "source": {
+    "kind": "vendor",
+    "title": "robotics.yandex.ru",
+    "url": "https://robotics.yandex.ru/robotizatsiya-sklada",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«До 30 000 палето-мест в час»"
+  },
+  {
+   "id": "IN0002",
+   "field": "infrastructure.charging",
+   "value": "полная зарядка 120 мин",
+   "source": {
+    "kind": "vendor",
+    "title": "automacon.ru",
+    "url": "https://www.automacon.ru/inventarizator/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Время зарядки 2 часа»"
+  },
+  {
+   "id": "UG0002",
+   "field": "speed",
+   "value": "5.56 м/с",
+   "source": {
+    "kind": "vendor",
+    "title": "vvpgroup.com",
+    "url": "https://vvpgroup.com/robotics/droneshub/cargo-unit",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Максимальная скорость 20 км/ч»"
+  },
+  {
+   "id": "UG0002",
+   "field": "infrastructure.charging",
+   "value": "полная зарядка 360 мин",
+   "source": {
+    "kind": "vendor",
+    "title": "vvpgroup.com",
+    "url": "https://vvpgroup.com/robotics/droneshub/cargo-unit",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Время полной зарядки 6 часов»"
+  },
+  {
+   "id": "UG0002",
+   "field": "navigation",
+   "value": "GPS, ГЛОНАСС",
+   "source": {
+    "kind": "vendor",
+    "title": "vvpgroup.com",
+    "url": "https://vvpgroup.com/robotics/droneshub/cargo-unit",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Системы навигации 4G, LTE, WiFi, GPS, ГЛОНАСС»"
+  },
+  {
+   "id": "UG0002",
+   "field": "infrastructure.connectivity",
+   "value": "4G, LTE, WiFi",
+   "source": {
+    "kind": "vendor",
+    "title": "vvpgroup.com",
+    "url": "https://vvpgroup.com/robotics/droneshub/cargo-unit",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«4G, LTE, WiFi»"
+  },
+  {
+   "id": "UG0002",
+   "field": "acquisitionModels",
+   "value": [
+    "purchase"
+   ],
+   "source": {
+    "kind": "vendor",
+    "title": "vvpgroup.com",
+    "url": "https://vvpgroup.com/robotics/droneshub/cargo-unit",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Купить»"
+  },
+  {
+   "id": "UG0002",
+   "field": "dimensions",
+   "value": "1300×1000×600 мм",
+   "source": {
+    "kind": "vendor",
+    "title": "vvpgroup.com",
+    "url": "https://vvpgroup.com/robotics/droneshub/cargo-unit",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Габариты ДхШхВ 1300×1000×600»"
+  },
+  {
+   "id": "AM0005",
+   "field": "infrastructure.charging",
+   "value": "автостыковка",
+   "source": {
+    "kind": "vendor",
+    "title": "ronavi-robotics.ru",
+    "url": "https://ronavi-robotics.ru/catalogue/m",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Автоматическая док-станция»"
+  },
+  {
+   "id": "AM0005",
+   "field": "infrastructure.integration",
+   "value": "Интеграция: WMS",
+   "source": {
+    "kind": "vendor",
+    "title": "ronavi-robotics.ru",
+    "url": "https://ronavi-robotics.ru/catalogue/m",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Интеграция с WMS»"
+  },
+  {
+   "id": "AM0005",
+   "field": "acquisitionModels",
+   "value": [
+    "purchase"
+   ],
+   "source": {
+    "kind": "vendor",
+    "title": "ronavi-robotics.ru",
+    "url": "https://ronavi-robotics.ru/catalogue/m",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Купить»"
+  },
+  {
+   "id": "AM0005",
+   "field": "positioningAccuracyMm",
+   "value": 20.0,
+   "source": {
+    "kind": "vendor",
+    "title": "ronavi-robotics.ru",
+    "url": "https://ronavi-robotics.ru/catalogue/m",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Точность стыковки ±20 мм»"
+  },
+  {
+   "id": "AM0009",
+   "field": "weightKg",
+   "value": 185.0,
+   "source": {
+    "kind": "vendor",
+    "title": "xn--l1aeahg.xn--p1ai",
+    "url": "https://xn--l1aeahg.xn--p1ai/amr-1500/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Масса 185 кг»"
+  },
+  {
+   "id": "AM0009",
+   "field": "infrastructure.charging",
+   "value": "автостыковка, вручную",
+   "source": {
+    "kind": "vendor",
+    "title": "xn--l1aeahg.xn--p1ai",
+    "url": "https://xn--l1aeahg.xn--p1ai/amr-1500/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Автоматическая док-станция / ручная зарядка»"
+  },
+  {
+   "id": "AM0009",
+   "field": "navigation",
+   "value": "QR-метки, SLAM",
+   "source": {
+    "kind": "vendor",
+    "title": "xn--l1aeahg.xn--p1ai",
+    "url": "https://xn--l1aeahg.xn--p1ai/amr-1500/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«QR-метки, SLAM»"
+  },
+  {
+   "id": "AM0009",
+   "field": "minTempC",
+   "value": 5.0,
+   "source": {
+    "kind": "vendor",
+    "title": "xn--l1aeahg.xn--p1ai",
+    "url": "https://xn--l1aeahg.xn--p1ai/amr-1500/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Рабочая температура от +5°C до +40°C»"
+  },
+  {
+   "id": "AM0009",
+   "field": "maxTempC",
+   "value": 40.0,
+   "source": {
+    "kind": "vendor",
+    "title": "xn--l1aeahg.xn--p1ai",
+    "url": "https://xn--l1aeahg.xn--p1ai/amr-1500/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Рабочая температура от +5°C до +40°C»"
+  },
+  {
+   "id": "AM0009",
+   "field": "operatingConditions",
+   "value": "+5…+40 °C",
+   "source": {
+    "kind": "vendor",
+    "title": "xn--l1aeahg.xn--p1ai",
+    "url": "https://xn--l1aeahg.xn--p1ai/amr-1500/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Рабочая температура от +5°C до +40°C»"
+  },
+  {
+   "id": "AM0009",
+   "field": "operatingConditions",
+   "value": "IP54 (опция)",
+   "source": {
+    "kind": "vendor",
+    "title": "xn--l1aeahg.xn--p1ai",
+    "url": "https://xn--l1aeahg.xn--p1ai/amr-1500/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Защита от пыли и влаги (по желанию – IP54 и выше)»"
+  },
+  {
+   "id": "AM0009",
+   "field": "positioningAccuracyMm",
+   "value": 10.0,
+   "source": {
+    "kind": "vendor",
+    "title": "xn--l1aeahg.xn--p1ai",
+    "url": "https://xn--l1aeahg.xn--p1ai/amr-1500/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Точность позиционирования ±10 мм»"
+  },
+  {
+   "id": "AM0009",
+   "field": "dimensions",
+   "value": "1080×640×230 мм",
+   "source": {
+    "kind": "vendor",
+    "title": "xn--l1aeahg.xn--p1ai",
+    "url": "https://xn--l1aeahg.xn--p1ai/amr-1500/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Габаритные размеры 1080×640×230 мм»"
+  },
+  {
+   "id": "AM0010",
+   "field": "infrastructure.service",
+   "value": "гарантия 12 мес",
+   "source": {
+    "kind": "reseller",
+    "title": "kiit.ru",
+    "url": "https://www.kiit.ru/product/avtonomnyy-mobilnyy-robot-amr-dikom-dmr-1200/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Гарантия 12 месяцев»"
+  },
+  {
+   "id": "AM0011",
+   "field": "infrastructure.service",
+   "value": "гарантия 12 мес",
+   "source": {
+    "kind": "reseller",
+    "title": "kiit.ru",
+    "url": "https://www.kiit.ru/product/avtonomnyy-mobilnyy-robot-amr-dikom-dmr-600/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Гарантия 12 месяцев»"
+  },
+  {
+   "id": "AM0012",
+   "field": "country",
+   "value": "Россия",
+   "source": {
+    "kind": "vendor",
+    "title": "semargl.pro",
+    "url": "https://semargl.pro/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«ООО Семаргл, Россия»"
+  },
+  {
+   "id": "FC0006",
+   "field": "weightKg",
+   "value": 130.0,
+   "source": {
+    "kind": "vendor",
+    "title": "yacuai.com",
+    "url": "https://yacuai.com/ru/unit/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Вес 130 кг»"
+  },
+  {
+   "id": "FC0006",
+   "field": "speed",
+   "value": "0.9 м/с",
+   "source": {
+    "kind": "vendor",
+    "title": "yacuai.com",
+    "url": "https://yacuai.com/ru/blog/butovo-moll/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Скорость 0,9 м/с»"
+  },
+  {
+   "id": "FC0006",
+   "field": "infrastructure.charging",
+   "value": "автостыковка",
+   "source": {
+    "kind": "vendor",
+    "title": "yacuai.com",
+    "url": "https://yacuai.com/ru/unit/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Автоматическая зарядка»"
+  },
+  {
+   "id": "FC0006",
+   "field": "throughput",
+   "value": 1842.0,
+   "source": {
+    "kind": "vendor",
+    "title": "yacuai.com",
+    "url": "https://yacuai.com/ru/blog/butovo-moll/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Производительность 1 842 м²/час»"
+  },
+  {
+   "id": "FC0006",
+   "field": "throughputUnit",
+   "value": "м²/ч",
+   "source": {
+    "kind": "vendor",
+    "title": "yacuai.com",
+    "url": "https://yacuai.com/ru/blog/butovo-moll/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Производительность 1 842 м²/час»"
+  },
+  {
+   "id": "FC0006",
+   "field": "country",
+   "value": "Россия",
+   "source": {
+    "kind": "vendor",
+    "title": "yacuai.com",
+    "url": "https://yacuai.com/ru/unit/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«YaCuAi, Россия»"
+  },
+  {
+   "id": "FC0006",
+   "field": "dimensions",
+   "value": "900×560×800 мм",
+   "source": {
+    "kind": "vendor",
+    "title": "yacuai.com",
+    "url": "https://yacuai.com/ru/unit/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Габариты 900×560×800 мм»"
+  },
+  {
+   "id": "FL0001",
+   "field": "chargeHours",
+   "value": 2.0,
+   "source": {
+    "kind": "reseller",
+    "title": "tnvst.ru",
+    "url": "https://tnvst.ru/catalog/fmr-roboty/avtonomnyy-mobilnyy-robot-dikom-dmr-carrier-p/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Время зарядки 2 часа»"
+  },
+  {
+   "id": "AM0003",
+   "field": "chargeHours",
+   "value": 1.33,
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/mobilnye-roboty/logisticheskiy-amr-robot-ronavi-h2000/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Время заряда батареи 1,3 часа»"
+  },
+  {
+   "id": "IN0002",
+   "field": "chargeHours",
+   "value": 2.0,
+   "source": {
+    "kind": "vendor",
+    "title": "automacon.ru",
+    "url": "https://www.automacon.ru/inventarizator/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Время зарядки 2 часа»"
+  },
+  {
+   "id": "UG0002",
+   "field": "chargeHours",
+   "value": 6.0,
+   "source": {
+    "kind": "vendor",
+    "title": "vvpgroup.com",
+    "url": "https://vvpgroup.com/robotics/droneshub/cargo-unit",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "«Время полной зарядки 6 часов»"
+  },
+  {
+   "id": "AM0011",
+   "field": "dimensions",
+   "value": "960×650×250 мм",
+   "source": {
+    "kind": "reseller",
+    "title": "kiit.ru",
+    "url": "https://www.kiit.ru/product/avtonomnyy-mobilnyy-robot-amr-dikom-dmr-600/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Габариты (Д×Ш×В) 960×650×250 мм",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0011",
+   "field": "speed",
+   "value": "2 м/с",
+   "source": {
+    "kind": "reseller",
+    "title": "kiit.ru",
+    "url": "https://www.kiit.ru/product/avtonomnyy-mobilnyy-robot-amr-dikom-dmr-600/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Скорость До 2,0 м/с",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0011",
+   "field": "infrastructure.charging",
+   "value": "зарядка 10–80% за 2 ч",
+   "source": {
+    "kind": "reseller",
+    "title": "kiit.ru",
+    "url": "https://www.kiit.ru/product/avtonomnyy-mobilnyy-robot-amr-dikom-dmr-600/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Зарядка (10–80%) ≤2 ч",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0011",
+   "field": "infrastructure.service",
+   "value": "гарантия 12 мес",
+   "source": {
+    "kind": "reseller",
+    "title": "kiit.ru",
+    "url": "https://www.kiit.ru/product/avtonomnyy-mobilnyy-robot-amr-dikom-dmr-600/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "гарантия 12 месяцев",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0011",
+   "field": "price",
+   "value": "3.75",
+   "source": {
+    "kind": "reseller",
+    "title": "kiit.ru",
+    "url": "https://www.kiit.ru/product/avtonomnyy-mobilnyy-robot-amr-dikom-dmr-600/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Цена от Цена указана с учетом НДС 3 750 000 ₽",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0010",
+   "field": "speed",
+   "value": "2 м/с",
+   "source": {
+    "kind": "reseller",
+    "title": "kiit.ru",
+    "url": "https://www.kiit.ru/product/avtonomnyy-mobilnyy-robot-amr-dikom-dmr-1200/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Скорость — 2 м/с",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0010",
+   "field": "infrastructure.charging",
+   "value": "зарядка 10–80% за 2 ч",
+   "source": {
+    "kind": "reseller",
+    "title": "kiit.ru",
+    "url": "https://www.kiit.ru/product/avtonomnyy-mobilnyy-robot-amr-dikom-dmr-1200/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Зарядка (10-80%) — 2 часа",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0015",
+   "field": "autonomyHours",
+   "value": 8,
+   "source": {
+    "kind": "reseller",
+    "title": "kiit.ru",
+    "url": "https://www.kiit.ru/product/avtonomnyy-mobilnyy-robot-dikom-dmr-300-carrier-b/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Автономность: 8 часов",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0015",
+   "field": "speed",
+   "value": "1.5 м/с",
+   "source": {
+    "kind": "reseller",
+    "title": "kiit.ru",
+    "url": "https://www.kiit.ru/product/avtonomnyy-mobilnyy-robot-dikom-dmr-300-carrier-b/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Максимальная скорость: 1,5 м/с",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0015",
+   "field": "navigation",
+   "value": "лидарный SLAM",
+   "source": {
+    "kind": "reseller",
+    "title": "kiit.ru",
+    "url": "https://www.kiit.ru/product/avtonomnyy-mobilnyy-robot-dikom-dmr-300-carrier-b/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Робот оснащен передовой SLAM-навигацией",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0016",
+   "field": "positioningAccuracyMm",
+   "value": 1,
+   "source": {
+    "kind": "reseller",
+    "title": "kiit.ru",
+    "url": "https://www.kiit.ru/product/samokhodnaya-transportnaya-platforma-agv-dikom-dmp/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Точность позиционирования : ±1 мм",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0016",
+   "field": "navigation",
+   "value": "лидары безопасности и 3D-лидары",
+   "source": {
+    "kind": "reseller",
+    "title": "kiit.ru",
+    "url": "https://www.kiit.ru/product/samokhodnaya-transportnaya-platforma-agv-dikom-dmp/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Система навигации и безопасности : лидары безопасности и 3D лидары",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0013",
+   "field": "dimensions",
+   "value": "1600×800×2200 мм",
+   "source": {
+    "kind": "vendor",
+    "title": "robocv.ru",
+    "url": "https://robocv.ru/robot-tyagach",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Габариты, м (Д*Ш*В): 1,6 * 0,8 * 2,2",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0013",
+   "field": "weightKg",
+   "value": 1220,
+   "source": {
+    "kind": "vendor",
+    "title": "robocv.ru",
+    "url": "https://robocv.ru/robot-tyagach",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Масса, кг: 1220",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0013",
+   "field": "payloadKg",
+   "value": 5000,
+   "source": {
+    "kind": "vendor",
+    "title": "robocv.ru",
+    "url": "https://robocv.ru/robot-tyagach",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Грузоподъемность, кг: до 5000",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0013",
+   "field": "payload",
+   "value": "до 5 000 кг",
+   "source": {
+    "kind": "vendor",
+    "title": "robocv.ru",
+    "url": "https://robocv.ru/robot-tyagach",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Грузоподъемность, кг: до 5000",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0013",
+   "field": "positioningAccuracyMm",
+   "value": 50,
+   "source": {
+    "kind": "vendor",
+    "title": "robocv.ru",
+    "url": "https://robocv.ru/robot-tyagach",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Точность навигации, см: 5",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0013",
+   "field": "infrastructure.charging",
+   "value": "замена или подзарядка АКБ",
+   "source": {
+    "kind": "vendor",
+    "title": "robocv.ru",
+    "url": "https://robocv.ru/robot-tyagach",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Способ заряда АКБ: замена / подзарядка",
+   "origin": "manual"
+  },
+  {
+   "id": "FL0003",
+   "field": "dimensions",
+   "value": "2100×1100×3000 мм",
+   "source": {
+    "kind": "vendor",
+    "title": "robocv.ru",
+    "url": "https://robocv.ru/robot-shtabelyor",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Габариты, м (Д*Ш*В): 2,1 * 1,1 * 3",
+   "origin": "manual"
+  },
+  {
+   "id": "FL0003",
+   "field": "weightKg",
+   "value": 1200,
+   "source": {
+    "kind": "vendor",
+    "title": "robocv.ru",
+    "url": "https://robocv.ru/robot-shtabelyor",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Масса, кг: 1200",
+   "origin": "manual"
+  },
+  {
+   "id": "FL0003",
+   "field": "positioningAccuracyMm",
+   "value": 30,
+   "source": {
+    "kind": "vendor",
+    "title": "robocv.ru",
+    "url": "https://robocv.ru/robot-shtabelyor",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Точность навигации, см: 3",
+   "origin": "manual"
+  },
+  {
+   "id": "FL0003",
+   "field": "infrastructure.charging",
+   "value": "замена или подзарядка АКБ",
+   "source": {
+    "kind": "vendor",
+    "title": "robocv.ru",
+    "url": "https://robocv.ru/robot-shtabelyor",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Способ заряда АКБ: замена / подзарядка",
+   "origin": "manual"
+  },
+  {
+   "id": "SC0003",
+   "field": "dimensions",
+   "value": "1440×780×1750 мм",
+   "source": {
+    "kind": "vendor",
+    "title": "smprobotics.ru",
+    "url": "https://www.smprobotics.ru/ohrannyy-robot-tral-patrul-t5-3",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Габаритные размеры ; 1440 х 780 х 1750 мм",
+   "origin": "manual",
+   "note": "модель T5.3"
+  },
+  {
+   "id": "SC0003",
+   "field": "weightKg",
+   "value": 125,
+   "source": {
+    "kind": "vendor",
+    "title": "smprobotics.ru",
+    "url": "https://www.smprobotics.ru/ohrannyy-robot-tral-patrul-t5-3",
+    "date": "28.09.2026"
+   },
+   "confirmed": false,
+   "quote": "Вес робота (без аккумуляторов);125 кг",
+   "origin": "manual",
+   "note": "без аккумуляторов, модель T5.3"
+  },
+  {
+   "id": "SC0003",
+   "field": "operatingConditions",
+   "value": "IP65",
+   "source": {
+    "kind": "vendor",
+    "title": "smprobotics.ru",
+    "url": "https://www.smprobotics.ru/ohrannyy-robot-tral-patrul-t5-3",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Уровень защищенности; IP65",
+   "origin": "manual",
+   "note": "модель T5.3"
+  },
+  {
+   "id": "SC0003",
+   "field": "minTempC",
+   "value": -25,
+   "source": {
+    "kind": "vendor",
+    "title": "smprobotics.ru",
+    "url": "https://www.smprobotics.ru/ohrannyy-robot-tral-patrul-t5-3",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Диапазон рабочих температур; -25°C ... +50°C",
+   "origin": "manual",
+   "note": "модель T5.3"
+  },
+  {
+   "id": "SC0003",
+   "field": "maxTempC",
+   "value": 50,
+   "source": {
+    "kind": "vendor",
+    "title": "smprobotics.ru",
+    "url": "https://www.smprobotics.ru/ohrannyy-robot-tral-patrul-t5-3",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Диапазон рабочих температур; -25°C ... +50°C",
+   "origin": "manual",
+   "note": "модель T5.3"
+  },
+  {
+   "id": "SC0003",
+   "field": "infrastructure.connectivity",
+   "value": "3G/4G, Wi-Fi",
+   "source": {
+    "kind": "vendor",
+    "title": "smprobotics.ru",
+    "url": "https://www.smprobotics.ru/ohrannyy-robot-tral-patrul-t5-3",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Беспроводная связь ; 3G/4G, Wi-Fi, ISM диапазон",
+   "origin": "manual"
+  },
+  {
+   "id": "SC0003",
+   "field": "speed",
+   "value": "1.7 м/с",
+   "source": {
+    "kind": "vendor",
+    "title": "smprobotics.ru",
+    "url": "https://www.smprobotics.ru/ohrannyy-robot-tral-patrul-t5-3",
+    "date": "28.09.2026"
+   },
+   "confirmed": false,
+   "quote": "Типовая скорость автономного движения; 4 - 6 км/ч",
+   "origin": "manual",
+   "note": "типовая скорость 4–6 км/ч"
+  },
+  {
+   "id": "AS0001",
+   "field": "infrastructure.integration",
+   "value": "Интеграция: 1С, WMS (API)",
+   "source": {
+    "kind": "media",
+    "title": "vc.ru",
+    "url": "https://vc.ru/tech/3067844-avtomatizatsiya-skladov-s-sistemoy-smartcube",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Интеграция с 1С и сторонними WMS выполняется через API",
+   "origin": "manual"
+  },
+  {
+   "id": "FC0004",
+   "field": "navigation",
+   "value": "LiDAR + 3D-камеры",
+   "source": {
+    "kind": "reseller",
+    "title": "robowin.ru",
+    "url": "https://robowin.ru/servisnye-roboty/waybot-cleanbotics-400-pro-robot-uborshhik/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "очень точная навигация на базе LiDAR + 3D-камер",
+   "origin": "manual"
+  },
+  {
+   "id": "FC0004",
+   "field": "throughput",
+   "value": 2500,
+   "source": {
+    "kind": "reseller",
+    "title": "robowin.ru",
+    "url": "https://robowin.ru/servisnye-roboty/waybot-cleanbotics-400-pro-robot-uborshhik/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "производительность до 2500 м² в час",
+   "origin": "manual"
+  },
+  {
+   "id": "FC0004",
+   "field": "throughputUnit",
+   "value": "м²/ч",
+   "source": {
+    "kind": "reseller",
+    "title": "robowin.ru",
+    "url": "https://robowin.ru/servisnye-roboty/waybot-cleanbotics-400-pro-robot-uborshhik/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "производительность до 2500 м² в час",
+   "origin": "manual"
+  },
+  {
+   "id": "FC0004",
+   "field": "noiseDb",
+   "value": 65,
+   "source": {
+    "kind": "reseller",
+    "title": "robowin.ru",
+    "url": "https://robowin.ru/servisnye-roboty/waybot-cleanbotics-400-pro-robot-uborshhik/",
+    "date": "28.09.2026"
+   },
+   "confirmed": false,
+   "quote": "Низкий уровень шума (менее 65 дБ)",
+   "origin": "manual",
+   "note": "на странице — «менее 65 дБ»"
+  },
+  {
+   "id": "FC0001",
+   "field": "autonomyHours",
+   "value": 10,
+   "source": {
+    "kind": "vendor",
+    "title": "robo.ooo",
+    "url": "https://robo.ooo/rubi_s",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Работа 10 ч | Время зарядки 3,5 ч",
+   "origin": "manual",
+   "note": "страница модели РУБИ-С"
+  },
+  {
+   "id": "FC0001",
+   "field": "infrastructure.charging",
+   "value": "полная зарядка 3,5 ч",
+   "source": {
+    "kind": "vendor",
+    "title": "robo.ooo",
+    "url": "https://robo.ooo/rubi_s",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Время зарядки 3,5 ч",
+   "origin": "manual",
+   "note": "страница модели РУБИ-С"
+  },
+  {
+   "id": "FC0001",
+   "field": "navigation",
+   "value": "LiDAR + техническое зрение",
+   "source": {
+    "kind": "vendor",
+    "title": "robo.ooo",
+    "url": "https://robo.ooo/rubi_s",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Навигация LiDAR + vision",
+   "origin": "manual",
+   "note": "страница модели РУБИ-С"
+  },
+  {
+   "id": "UA0030",
+   "field": "payloadKg",
+   "value": 15,
+   "source": {
+    "kind": "reseller",
+    "title": "налетай.рф",
+    "url": "https://xn--80aaorhk2b.xn--p1ai/product/tfm_15_8e",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Полезная нагрузка до 15 кг.",
+   "origin": "manual"
+  },
+  {
+   "id": "UA0042",
+   "field": "autonomyHours",
+   "value": 2,
+   "source": {
+    "kind": "reseller",
+    "title": "налетай.рф",
+    "url": "https://xn--80aaorhk2b.xn--p1ai/product/sigma_mini",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "miniSIGMA находится в воздухе до 2 ч",
+   "origin": "manual"
+  },
+  {
+   "id": "UA0005",
+   "field": "autonomyHours",
+   "value": 10,
+   "source": {
+    "kind": "reseller",
+    "title": "налетай.рф",
+    "url": "https://xn--80aaorhk2b.xn--p1ai/product/geoscan_701",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "за счет высокой скорости и времени полета до 10 часов",
+   "origin": "manual"
+  },
+  {
+   "id": "DL0002",
+   "field": "elevatorIntegration",
+   "value": true,
+   "source": {
+    "kind": "media",
+    "title": "comnews.ru",
+    "url": "https://www.comnews.ru/digital-economy/content/240352/2025-07-24/2025-w30/1012/rf-poyavilsya-robot-kotoryy-zamenit-kurerov-dostavke-do-dveri",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "взаимодействует с инфраструктурой дома в автоматическом режиме, что позволяет ему беспрепятственно использовать лифты",
+   "origin": "manual"
+  },
+  {
+   "id": "EX0001",
+   "field": "infrastructure.connectivity",
+   "value": "Wi-Fi, 4G, LoRa",
+   "source": {
+    "kind": "vendor",
+    "title": "pudurobotics.com",
+    "url": "https://www.pudurobotics.com/en/products/pudubot2",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Support Type-C/4G/LoRa/Wi-Fi connection",
+   "origin": "manual"
+  },
+  {
+   "id": "FC0002",
+   "field": "infrastructure.charging",
+   "value": "полная зарядка 2 ч",
+   "source": {
+    "kind": "vendor",
+    "title": "r2b.company",
+    "url": "https://r2b.company/mark2se",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "2 часа Время полной зарядки",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0001",
+   "field": "chargeHours",
+   "value": 1.3,
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/mobilnye-roboty/logisticheskiy-amr-robot-ronavi-h1500/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Время заряда батареи, час. | 1,3",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0001",
+   "field": "speed",
+   "value": "1.3 м/с",
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/mobilnye-roboty/logisticheskiy-amr-robot-ronavi-h1500/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Максимальная скорость движения, м/c | 1,3",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0001",
+   "field": "minAisleWidthM",
+   "value": 0.79,
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/mobilnye-roboty/logisticheskiy-amr-robot-ronavi-h1500/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Минимальная ширина проезда, мм | 790",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0005",
+   "field": "chargeHours",
+   "value": 1,
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/mobilnye-roboty/logisticheskiy-amr-robot-ronavi-m/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Время заряда батареи, час. | 1",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0005",
+   "field": "minAisleWidthM",
+   "value": 0.8,
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/mobilnye-roboty/logisticheskiy-amr-robot-ronavi-m/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Минимальная ширина проезда, мм | 800",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0004",
+   "field": "chargeHours",
+   "value": 1.5,
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/mobilnye-roboty/sortirovochnyy-logisticheskiy-amr-robot-ronavi-sd-s-otkidnoy-kryshkoy/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Время заряда батареи, час. | 1,5",
+   "origin": "manual",
+   "note": "исполнение SD с откидной крышкой"
+  },
+  {
+   "id": "AM0002",
+   "field": "chargeHours",
+   "value": 1.5,
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/mobilnye-roboty/sortirovochnyy-logisticheskiy-amr-robot-ronavi-sr/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Время заряда батареи, час. 1,5",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0002",
+   "field": "minAisleWidthM",
+   "value": 0.7,
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/mobilnye-roboty/sortirovochnyy-logisticheskiy-amr-robot-ronavi-sr/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Минимальная ширина проезда, мм 700",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0003",
+   "field": "minAisleWidthM",
+   "value": 1.19,
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/mobilnye-roboty/logisticheskiy-amr-robot-ronavi-h2000/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Минимальная ширина проезда, мм 1190",
+   "origin": "manual"
+  },
+  {
+   "id": "FL0002",
+   "field": "chargeHours",
+   "value": 2,
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/mobilnye-roboty/transportnyy-robot-dlya-peremeshcheniya-pallet-automacon-ak-2000-2/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Время заряда батареи, час. | 2",
+   "origin": "manual"
+  },
+  {
+   "id": "FL0002",
+   "field": "batteryKwh",
+   "value": 5.4,
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/mobilnye-roboty/transportnyy-robot-dlya-peremeshcheniya-pallet-automacon-ak-2000-2/",
+    "date": "28.09.2026"
+   },
+   "confirmed": false,
+   "quote": "Ёмкость батареи, мА·ч | 225000 … Подключение, В | 24",
+   "origin": "manual",
+   "note": "расчёт: 225 А·ч × 24 В"
+  },
+  {
+   "id": "FL0002",
+   "field": "minAisleWidthM",
+   "value": 2.4,
+   "source": {
+    "kind": "reseller",
+    "title": "robob2b.ru",
+    "url": "https://robob2b.ru/catalog/mobilnye-roboty/transportnyy-robot-dlya-peremeshcheniya-pallet-automacon-ak-2000-2/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Минимальная ширина проезда, мм | 2400",
+   "origin": "manual"
+  },
+  {
+   "id": "FC0006",
+   "field": "autonomyHours",
+   "value": 5,
+   "source": {
+    "kind": "media",
+    "title": "yacuai.com",
+    "url": "https://yacuai.com/ru/unit/",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Батарея 5 часов непрерывной работы от аккумулятора (АКБ)",
+   "origin": "manual"
+  },
+  {
+   "id": "AM0011",
+   "field": "chargeHours",
+   "value": 2.0,
+   "source": {
+    "kind": "reseller",
+    "title": "kiit.ru",
+    "url": "https://www.kiit.ru/product/avtonomnyy-mobilnyy-robot-amr-dikom-dmr-600/",
+    "date": "28.09.2026"
+   },
+   "confirmed": false,
+   "quote": "Зарядка (10–80%) ≤2 ч",
+   "origin": "manual",
+   "note": "на странице — зарядка с 10 до 80%"
+  },
+  {
+   "id": "AM0010",
+   "field": "chargeHours",
+   "value": 2.0,
+   "source": {
+    "kind": "reseller",
+    "title": "kiit.ru",
+    "url": "https://www.kiit.ru/product/avtonomnyy-mobilnyy-robot-amr-dikom-dmr-1200/",
+    "date": "28.09.2026"
+   },
+   "confirmed": false,
+   "quote": "Зарядка (10-80%) — 2 часа",
+   "origin": "manual",
+   "note": "на странице — зарядка с 10 до 80%"
+  },
+  {
+   "id": "FC0001",
+   "field": "chargeHours",
+   "value": 3.5,
+   "source": {
+    "kind": "vendor",
+    "title": "robo.ooo",
+    "url": "https://robo.ooo/rubi_s",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "Время зарядки 3,5 ч",
+   "origin": "manual",
+   "note": "страница модели РУБИ-С"
+  },
+  {
+   "id": "FC0002",
+   "field": "chargeHours",
+   "value": 2.0,
+   "source": {
+    "kind": "vendor",
+    "title": "r2b.company",
+    "url": "https://r2b.company/mark2se",
+    "date": "28.09.2026"
+   },
+   "confirmed": true,
+   "quote": "2 часа Время полной зарядки",
+   "origin": "manual"
+  }
+ ],
+ "unmapped": [
+  {
+   "id": "EX0001",
+   "characteristic": "число и объём отсеков",
+   "value": "3 полки, до 40 кг",
+   "unit": "—",
+   "url": "https://nexum-autonomous.com/ru/catalog/pudubot2"
+  },
+  {
+   "id": "IN0001",
+   "characteristic": "точность распознавания",
+   "value": "96",
+   "unit": "%",
+   "url": "https://journal.reindustry-expo.ru/yandex-robotics-inventarizaciya-dlya-sta-cargo/"
+  },
+  {
+   "id": "IN0001",
+   "characteristic": "макс. высота сканирования",
+   "value": "12 500",
+   "unit": "мм",
+   "url": "https://robotics.yandex.ru/robotizatsiya-sklada"
+  },
+  {
+   "id": "UG0002",
+   "characteristic": "запас хода",
+   "value": "40",
+   "unit": "км",
+   "url": "https://vvpgroup.com/robotics/droneshub/cargo-unit"
+  },
+  {
+   "id": "FC0006",
+   "characteristic": "бак чистой воды",
+   "value": "50",
+   "unit": "л",
+   "url": "https://yacuai.com/ru/unit/"
+  },
+  {
+   "id": "FC0006",
+   "characteristic": "бак грязной воды",
+   "value": "50",
+   "unit": "л",
+   "url": "https://yacuai.com/ru/unit/"
+  },
+  {
+   "id": "FC0006",
+   "characteristic": "макс. площадь за заряд",
+   "value": "7200",
+   "unit": "м²",
+   "url": "https://yacuai.com/ru/unit/"
+  },
+  {
+   "id": "AM0013",
+   "characteristic": "мин. ширина дороги для максимальной скорости",
+   "value": "2900",
+   "unit": "мм",
+   "url": "https://robocv.ru/robot-tyagach"
+  },
+  {
+   "id": "FL0003",
+   "characteristic": "мин. ширина дороги для максимальной скорости",
+   "value": "1900",
+   "unit": "мм",
+   "url": "https://robocv.ru/robot-shtabelyor"
+  }
+ ]
+}

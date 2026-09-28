@@ -34,7 +34,16 @@ export type CatalogCard = {
   dims?: { l_mm: number | null; w_mm: number | null; h_mm: number | null; mass_kg: number | null };
   move?: { spd_max_mps: number | null; spd_mps: Range; pass_min_mm: number | null };
   load?: { payload_kg: number | null };
-  power?: { run_min: Range; chg: Flags };
+  power?: {
+    run_min: Range;
+    chg: Flags;
+    chg_min?: number | null;
+    energy_kwh?: number | null;
+    cap_ah?: number | null;
+    volt_v?: number | null;
+    cons_kw?: number | null;
+    motor_w?: number | null;
+  };
   nav?: { method: Flags; pos_acc_mm: number | null };
   conn?: Flags;
   soft?: { integ: Flags };
@@ -66,6 +75,21 @@ export interface CatalogSupplements {
   robots: CatalogSolution[];
 }
 
+/**
+ * Характеристики из открытых источников (catalogResearch.json): каждое значение со
+ * своей ссылкой; принято, только если сверено со страницей-источником.
+ */
+export interface CatalogResearch {
+  values: Array<{
+    id: string;
+    field: string;
+    value: unknown;
+    source: FieldSource;
+    confirmed: boolean;
+    note?: string;
+  }>;
+}
+
 export interface CatalogBuild {
   solutions: CatalogSolution[];
   version: { schema: string; updated: string };
@@ -73,8 +97,10 @@ export interface CatalogBuild {
   fit: Record<string, Record<ObjectFit, number>>;
   /** Какие пустые поля каталога заполнили дополнения организатора. */
   filled: string[];
-  /** Расхождения каталога с организатором: не перезаписаны, решает ответственный за каталог. */
+  /** Расхождения каталога с организатором и открытыми источниками: не перезаписаны. */
   conflicts: string[];
+  /** Какие пустые поля заполнили открытые источники. */
+  researched: string[];
 }
 
 export const CATALOG_SCHEMA_MAJOR = "2";
@@ -89,8 +115,72 @@ export const FIT_RULES: Record<string, { site: string; scen: string[]; categorie
 };
 const NEAR_SITES = new Set(["WH", "PR", "TH", "RT", "OF", "LB", "HO", "MD", "AP"]);
 
-// Точечные решения по роботам поверх правил: null — не подходит объекту.
-const FIT_OVERRIDES: Record<string, Partial<Record<string, ObjectFit | null>>> = {};
+/**
+ * Точечные решения по роботам поверх правил (разбор 28.09.2026): в каталоге объект
+ * не указан, а правило по сценариям робота не цепляет. null — не подходит объекту;
+ * process — процесс объекта, если сценарий каталога его не даёт.
+ */
+type FitOverride = { fit: ObjectFit; process?: string } | null;
+const inferred = (process?: string): FitOverride => ({ fit: "inferred", ...(process ? { process } : {}) });
+const FIT_OVERRIDES: Record<string, Partial<Record<string, FitOverride>>> = {
+  // AMR цеховой логистики — тот же класс, что складские тележки («Дополнения» п. 8.2: склады и цеха).
+  AM0015: { warehouse: inferred() },
+  AM0016: { warehouse: inferred() },
+  AM0017: { warehouse: inferred() },
+  AM0018: { warehouse: inferred() },
+  AM0019: { warehouse: inferred() },
+  // Небольшие AMR — доставка внутри клиники; тягач — тележки с бельём и питанием.
+  AM0002: { clinic: inferred("delivery") },
+  AM0007: { clinic: inferred("delivery") },
+  AM0013: { clinic: inferred("linen") },
+  // Манипуляторы со сценарием «сортировка грузов» — сортировка и паллетирование на складе.
+  IM0001: { warehouse: inferred() },
+  IM0002: { warehouse: inferred() },
+  // Охранный робот мониторинга — периметр склада и аэропорта.
+  SC0001: { warehouse: inferred(), airport: inferred() },
+  // Уличные уборщики — территория, перрон, парковки аэропорта; БРО 2.1 — ещё и промтерритория склада.
+  SS0001: { warehouse: inferred(), airport: inferred() },
+  SS0002: { airport: inferred() },
+  SS0003: { airport: inferred() },
+  SS0004: { airport: inferred() }, // «Саранча» — косилка: лётное поле
+  SS0005: { airport: inferred() },
+  SS0006: { airport: inferred() },
+  // БАС мониторинга: инспекция инфраструктуры аэропорта (описание объекта у организатора) и охрана периметра склада.
+  UA0021: { warehouse: inferred(), airport: inferred() },
+  UA0041: { warehouse: inferred(), airport: inferred() },
+  UA0042: { warehouse: inferred(), airport: inferred() },
+  UA0043: { warehouse: inferred(), airport: inferred() },
+  UA0005: { airport: inferred("inspection") }, // мониторинг дорожного покрытия — ВПП и рулёжки
+  // БАС доставки биоматериалов — между корпусами клиники.
+  UA0030: { clinic: inferred() },
+  UA0031: { clinic: inferred() },
+  // Решение пользователя 28.09.2026 по спорным случаям.
+  HU0002: { airport: inferred("passengers") }, // Promobot — консультант в терминале
+  FB0001: { airport: inferred("passengers") }, // робо-кафе в терминале
+  AV0005: { airport: inferred("passengers") }, // беспилотный автобус между терминалами
+  ER0001: { airport: inferred("fire") }, // лафетный ствол — перрон и ангары
+  DL0001: { clinic: inferred("delivery") }, // курьер между корпусами больничного городка
+};
+
+/** Складские AMR и погрузчики подходят и грузовому терминалу аэропорта — так их приводит организатор. */
+const AIRPORT_CARGO_CATEGORIES = new Set(["AM", "FL"]);
+
+function fitOf(item: IndexItem) {
+  const fit = objectFit(item);
+  const processes = new Map<string, string>();
+  if (fit.warehouse && !fit.airport && AIRPORT_CARGO_CATEGORIES.has(item.cat)) {
+    fit.airport = "inferred";
+    processes.set("airport", "cargo");
+  }
+  for (const [objectType, value] of Object.entries(FIT_OVERRIDES[item.id] ?? {})) {
+    if (value === null) delete fit[objectType];
+    else if (value) {
+      if (fit[objectType] !== "declared") fit[objectType] = value.fit;
+      if (value.process) processes.set(objectType, value.process);
+    }
+  }
+  return { fit, processes };
+}
 
 function objectFit(item: IndexItem) {
   const fit: Record<string, ObjectFit> = {};
@@ -102,10 +192,6 @@ function objectFit(item: IndexItem) {
       (item.site.length === 0 || item.site.some((s) => NEAR_SITES.has(s)))
     )
       fit[objectType] = "inferred";
-  }
-  for (const [objectType, value] of Object.entries(FIT_OVERRIDES[item.id] ?? {})) {
-    if (value === null) delete fit[objectType];
-    else if (value) fit[objectType] = value;
   }
   return fit;
 }
@@ -162,6 +248,9 @@ const PATHS_BY_FIELD: Record<string, string[]> = {
   speed: ["move.spd_max_mps", "move.spd_mps"],
   throughput: ["amr.thr_ph", "fork.thr_pal_ph", "stor.thr_ph", "clean.prod_m2h", "task.prod_m2h", "cell.thr_ph", "inv.rate_loc_ph"],
   autonomyHours: ["power.run_min"],
+  chargeHours: ["power.chg_min"],
+  batteryKwh: ["power.energy_kwh", "power.cap_ah", "power.volt_v"],
+  powerKw: ["power.cons_kw", "power.motor_w"],
   positioningAccuracyMm: ["nav.pos_acc_mm"],
   navigation: ["nav.method"],
   operatingConditions: ["env.t_op_c", "env.hum_max_pct", "env.ip_s", "env.ip_w", "env.io"],
@@ -222,6 +311,7 @@ export function buildCatalog(
   files: CatalogFiles,
   supplements: CatalogSupplements,
   photosOf: (id: string) => string[] = () => [],
+  research: CatalogResearch = { values: [] },
 ): CatalogBuild {
   const problems = checkCatalogFiles(files);
   if (problems.length) throw new Error(problems.join("; "));
@@ -344,7 +434,7 @@ export function buildCatalog(
     const elevator = card.soft?.integ?.el;
     const acquisition = [...new Set(on(card.econ?.acq).map((code) => ACQ[code]).filter((m): m is AcquisitionModel => !!m))];
 
-    const fit = objectFit(item);
+    const { fit, processes: forcedProcesses } = fitOf(item);
     // Процессы общие для всех объектов решения; интерфейс показывает только процессы
     // выбранного объекта (OBJECT_PROCESSES), поэтому пересечения id не мешают.
     const processes = new Set<string>();
@@ -355,6 +445,8 @@ export function buildCatalog(
       }
       const process = PROCESS_BY_CATEGORY[objectType]?.[item.cat];
       if (process) processes.add(process);
+      const forced = forcedProcesses.get(objectType);
+      if (forced) processes.add(forced);
     }
 
     const scenarios = item.scen.map((s) => ru("scen", s));
@@ -382,6 +474,15 @@ export function buildCatalog(
       dimensions,
       ...throughputOf(card),
       autonomyHours: runMin !== undefined ? round(runMin / 60, 1) : undefined,
+      chargeHours: num(card.power?.chg_min) !== undefined ? round(card.power!.chg_min! / 60, 2) : undefined,
+      // Запас энергии: из паспорта, иначе ёмкость × напряжение.
+      batteryKwh:
+        num(card.power?.energy_kwh) ??
+        (num(card.power?.cap_ah) !== undefined && num(card.power?.volt_v) !== undefined
+          ? round((card.power!.cap_ah! * card.power!.volt_v!) / 1000, 2)
+          : undefined),
+      powerKw:
+        num(card.power?.cons_kw) ?? (num(card.power?.motor_w) !== undefined ? round(card.power!.motor_w! / 1000, 2) : undefined),
       positioningAccuracyMm: num(card.nav?.pos_acc_mm),
       navigation: list("navm", card.nav?.method).join(", ") || undefined,
       operatingConditions: conditionsOf(card),
@@ -510,6 +611,56 @@ export function buildCatalog(
     if (!solution.processes?.includes(example.process)) solution.processes = [...(solution.processes ?? []), example.process];
   }
 
+  // ─── Открытые источники ───────────────────────────────────────────────────
+  // Заполняют пустые поля; описательный текст дописывают; страну, взятую нами по
+  // производителю, заменяют. Непустое значение каталога не трогают — расхождение в отчёт.
+  const RESEARCH_MERGE = new Set(["operatingConditions", "infrastructure.charging", "infrastructure.service"]);
+  const researchedBy = new Map<string, string[]>();
+  for (const entry of research.values) {
+    const solution = byId.get(entry.id);
+    if (!solution) {
+      conflicts.push(`${entry.id}: значение из открытых источников, но такого робота нет в этой версии каталога`);
+      continue;
+    }
+    const current = fieldValue(solution, entry.field);
+    const provenance = solution.fieldSources?.[entry.field];
+    const teamGuess = provenance?.sources.every((source) => source.kind === "team") ?? false;
+    const record = solution as unknown as Record<string, unknown>;
+    let applied = false;
+    if (!isFilledValue(current) || teamGuess) {
+      setPath(record, entry.field, entry.value);
+      (solution.fieldSources ??= {})[entry.field] = {
+        confirmed: entry.confirmed,
+        sources: [entry.source],
+        ...(entry.note ? { note: entry.note } : {}),
+      };
+      applied = true;
+    } else if (RESEARCH_MERGE.has(entry.field) && typeof current === "string") {
+      const addition = String(entry.value);
+      if (!current.toLowerCase().includes(addition.toLowerCase())) {
+        setPath(record, entry.field, `${current}, ${addition}`);
+        const merged = solution.fieldSources?.[entry.field];
+        (solution.fieldSources ??= {})[entry.field] = merged
+          ? { ...merged, sources: [...merged.sources, entry.source] }
+          : { confirmed: entry.confirmed, sources: [entry.source] };
+        applied = true;
+      }
+    } else if (JSON.stringify(current) !== JSON.stringify(entry.value)) {
+      conflicts.push(
+        `${entry.id} ${solution.name}: ${entry.field} — в каталоге ${JSON.stringify(current)}, в открытых источниках ${JSON.stringify(entry.value)} (${entry.source.url ?? entry.source.title})`,
+      );
+    }
+    if (applied) researchedBy.set(entry.id, [...(researchedBy.get(entry.id) ?? []), entry.field]);
+  }
+  for (const [id, fields] of researchedBy) {
+    const solution = byId.get(id)!;
+    // Допущение «страна по производителю» снято, если страну нашли в источниках.
+    if (fields.includes("country")) {
+      solution.unconfirmedFields = (solution.unconfirmedFields ?? []).filter((line) => !line.startsWith("Страна происхождения"));
+    }
+    if (!solution.source?.includes("открытые источники")) solution.source = `${solution.source}; открытые источники`;
+  }
+
   const fitCounts: CatalogBuild["fit"] = {};
   for (const objectType of Object.keys(FIT_RULES)) {
     const count = (basis: ObjectFit) => solutions.filter((s) => s.objectFit?.[objectType] === basis).length;
@@ -522,6 +673,7 @@ export function buildCatalog(
     fit: fitCounts,
     filled,
     conflicts,
+    researched: [...researchedBy].map(([id, fields]) => `${id}: ${[...new Set(fields)].join(", ")}`),
   };
 }
 

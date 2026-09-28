@@ -15,9 +15,12 @@ export interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   return (
     <div className="min-h-screen">
-      <div className="mx-auto grid max-w-site gap-[18px] px-[18px]">
-        <div className="min-w-0">{children}</div>
-        <SiteFooter />
+      {/* Та же сетка, что у SiteHeader / лендинга: gutters px-5/sm:px-8 + max-w-site */}
+      <div className="px-5 sm:px-8">
+        <div className="mx-auto grid max-w-site gap-[18px]">
+          <div className="min-w-0">{children}</div>
+          <SiteFooter />
+        </div>
       </div>
     </div>
   );
@@ -44,13 +47,13 @@ const FOOTER_COLUMNS = [
 ];
 
 /**
- * Общий подвал: белая скруглённая карточка + водяной знак бренда снизу.
+ * Общий подвал: белая скруглённая карточка.
  * Бренд слева, колонки ссылок справа, юридическая строка под разделителем.
  */
 export function SiteFooter() {
   return (
-    <footer className="relative overflow-hidden pb-[4.75rem] sm:pb-[5.25rem] md:pb-24">
-      <div className="relative z-10 rounded-xl border border-hairline bg-background px-6 py-10 shadow-soft sm:px-10 sm:py-12 md:px-12">
+    <footer>
+      <div className="rounded-xl border border-hairline bg-background px-6 py-10 shadow-soft sm:px-10 sm:py-12 md:px-12">
         <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between lg:gap-20">
           <div className="max-w-[20rem] shrink-0">
             <BrandLink />
@@ -90,16 +93,6 @@ export function SiteFooter() {
             Политика конфиденциальности
           </Link>
         </div>
-      </div>
-
-      {/* Водяной знак: видна только верхняя половина букв под карточкой */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 z-0 flex justify-center overflow-hidden leading-none"
-      >
-        <span className="translate-y-[46%] select-none whitespace-nowrap text-[clamp(5.5rem,15.5vw,9.25rem)] font-bold leading-none tracking-[-0.05em] text-border">
-          РОБОПОДБОР
-        </span>
       </div>
     </footer>
   );

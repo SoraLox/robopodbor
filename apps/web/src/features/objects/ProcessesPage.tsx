@@ -9,7 +9,7 @@ import { getFitTone } from '@/features/catalog/fitTone';
 import { predecodePreviewImages } from '@/features/objects/previewImages';
 import { groupByProcess, robotsCount, type RobotGroup } from '@/features/objects/processGroups';
 import { SolutionPreviewCard } from '@/features/objects/SolutionPreviewCard';
-import { useWizardCompanion } from '@/features/objects/wizardCompanion';
+import { useWizardCompanion, useWizardEnter } from '@/features/objects/wizardCompanion';
 import {
   wizardCardHeightPx,
   WIZARD_COMPANION_ID,
@@ -48,11 +48,7 @@ function CategoryRail({
 }) {
   const [height, setHeight] = useState(wizardCardHeightPx);
   const { setRailOpen } = useWizardCompanion();
-
-  useLayoutEffect(() => {
-    setRailOpen(open);
-    return () => setRailOpen(false);
-  }, [open, setRailOpen]);
+  const entered = useWizardEnter(open, setRailOpen);
 
   useLayoutEffect(() => {
     const sync = () => setHeight(wizardCardHeightPx());
@@ -70,13 +66,15 @@ function CategoryRail({
           boxShadow: WIZARD_COMPANION_SHADOW,
           width: WIZARD_WIDTH_RAIL,
           height,
-          opacity: open ? 1 : 0,
-          transform: open ? 'translateX(0)' : 'translateX(-20px)',
+          opacity: entered ? 1 : 0,
+          transform: entered ? 'translate3d(0,0,0)' : 'translate3d(24px,0,0)',
           transition: `transform ${WIZARD_PREVIEW_MS}ms ${WIZARD_PREVIEW_EASE}, opacity ${WIZARD_PREVIEW_MS}ms ${WIZARD_PREVIEW_EASE}`,
-          willChange: 'transform, opacity',
         }}
       >
-        <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-1 py-3 [scrollbar-width:thin]">
+        <nav
+          className="category-rail-scroll flex min-h-0 flex-1 flex-col items-center gap-1.5 overflow-y-auto p-2"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
           {groups.map((entry) => {
             const Icon = entry.icon;
             const active = entry.id === activeId;
@@ -89,9 +87,10 @@ function CategoryRail({
                 aria-current={active ? 'true' : undefined}
                 onClick={() => onSelect(entry.id)}
                 className={cn(
-                  'flex size-[56px] flex-none flex-col items-center justify-center rounded-[12px] border transition-colors duration-150',
+                  // 48 + padding 8×2 = 64 — ровно по ширине рейки, без перекоса.
+                  'flex size-12 flex-none items-center justify-center rounded-[10px] border transition-colors duration-150',
                   active
-                    ? 'border-primary-bright bg-[#F2F2F2] text-foreground'
+                    ? 'border-primary-bright bg-primary-bright/[0.08] text-primary-bright'
                     : 'border-transparent text-[#8E8E93] hover:bg-[#F2F2F2] hover:text-foreground',
                 )}
               >
@@ -453,11 +452,21 @@ export function ProcessesPage({
     </>
   );
 
+  const contentKey = isLoading
+    ? 'loading'
+    : !group
+      ? 'root'
+      : hasSubgroups && !subgroup
+        ? `${group.id}:subs`
+        : `${group.id}:${subgroup?.id ?? 'robots'}`;
+
   return (
     <>
       <div className="flex min-h-0 flex-1 flex-col">
         <div className="-mx-1 min-h-0 flex-1 overflow-y-auto overscroll-contain px-1 [scrollbar-width:thin]">
-          {listBody}
+          <div key={contentKey} className="wizard-drill-enter">
+            {listBody}
+          </div>
         </div>
 
         {selectedItem?.status === 'excluded' ? (

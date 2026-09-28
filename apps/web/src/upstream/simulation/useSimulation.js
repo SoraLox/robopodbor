@@ -71,6 +71,7 @@ export function useSimulation(cfg) {
     loaderCount,
     energyProfiles,
     loader,
+    immersive = false,
   } = cfg;
 
   const mountRef = useRef(null);
@@ -102,7 +103,10 @@ export function useSimulation(cfg) {
     const mount = mountRef.current;
     if (!mount) return;
 
-    const created = createWarehouseScene(mount);
+    const created = createWarehouseScene(mount, {
+      fogColor: 0x77798f,
+      mono: false,
+    });
 
     Object.assign(st, created, {
       clock: new THREE.Timer(),

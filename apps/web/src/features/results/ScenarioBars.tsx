@@ -11,7 +11,7 @@ const ICON: Record<string, ComponentType<{ className?: string; strokeWidth?: num
 
 /**
  * Сравнение: одна шкала на всех — длиннее полоса = дороже.
- * Рекомендуемый вариант — рамка + бейдж, без лишних карточек.
+ * Рекомендуемый вариант — синий акцент (рамка, бейдж, полоса).
  */
 export function ScenarioBars({
   scenarios,
@@ -37,7 +37,7 @@ export function ScenarioBars({
             className={cn(
               'rounded-[12px] border px-2.5 py-2.5 transition-colors duration-100',
               isRecommended
-                ? 'border-foreground bg-white'
+                ? 'border-[#2F86F0]/60 bg-[#F5F9FF]'
                 : 'border-transparent hover:border-[#E5E5EA] hover:bg-[#FAFAFA]',
             )}
           >
@@ -45,7 +45,7 @@ export function ScenarioBars({
               <span
                 className={cn(
                   'mt-0.5 grid size-7 flex-none place-items-center rounded-[8px]',
-                  isRecommended ? 'bg-foreground text-white' : 'bg-[#F2F2F2] text-foreground',
+                  isRecommended ? 'bg-[#2F86F0] text-white' : 'bg-[#F2F2F2] text-foreground',
                 )}
                 aria-hidden
               >
@@ -56,7 +56,7 @@ export function ScenarioBars({
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="text-[13.5px] font-semibold text-foreground">{scenario.title}</span>
                   {isRecommended ? (
-                    <span className="inline-flex items-center gap-1 rounded-[6px] bg-[#F2F2F2] px-1.5 py-0.5 text-[10.5px] font-semibold text-[#8E8E93]">
+                    <span className="inline-flex items-center gap-1 rounded-[6px] bg-[#2F86F0]/12 px-1.5 py-0.5 text-[10.5px] font-semibold text-[#2F86F0]">
                       <CircleCheck className="size-3" strokeWidth={2.25} aria-hidden />
                       Рекомендуем
                     </span>
@@ -72,22 +72,22 @@ export function ScenarioBars({
                     <div
                       className={cn(
                         'h-full rounded-full',
-                        isRecommended ? 'bg-foreground' : 'bg-[#C7C7CC]',
+                        isRecommended ? 'bg-[#2F86F0]' : 'bg-[#C7C7CC]',
                       )}
                       style={{ width: `${(scenario.tco / max) * 100}%` }}
                     />
                   </div>
                   <div className="shrink-0 text-right">
-                    <div
-                      className={cn(
-                        'text-[15px] font-semibold tabular-nums leading-none',
-                        isRecommended ? 'text-foreground' : 'text-foreground',
-                      )}
-                    >
+                    <div className="text-[15px] font-semibold tabular-nums leading-none text-foreground">
                       {fmt(scenario.tco)}
                       <span className="ml-1 text-[11.5px] font-medium text-[#8E8E93]">млн ₽</span>
                     </div>
-                    <div className="mt-0.5 text-[11px] text-[#8E8E93]">
+                    <div
+                      className={cn(
+                        'mt-0.5 text-[11px]',
+                        isRecommended && !isBase ? 'font-medium text-[#2F86F0]' : 'text-[#8E8E93]',
+                      )}
+                    >
                       {isBase ? 'точка отсчёта' : `экономия ${scenario.delta.replace('−', '')}`}
                     </div>
                   </div>

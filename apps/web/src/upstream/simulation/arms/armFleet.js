@@ -1,6 +1,5 @@
 import {
   MODEL_SCALE,
-  PALETTE,
   ARM_PICKUP_Z,
   ARM_BELT_X,
   ARM_BELT_START_Z,
@@ -16,6 +15,7 @@ import { computeArmObstacles } from "../obstacles.js";
 import { makeArmRobot } from "../robots/armRobot.js";
 import { createEnergyMeter } from "../energy.js";
 import { computeArmSlots } from "../layout.js";
+import { activePalette } from "../studioLook.js";
 
 // ============================================================
 // Роборуки: стационарные, перекладывают коробки с входного конвейера на
@@ -32,8 +32,9 @@ export function createArmFleet({ group, zone, count, beltTexture, armProd, energ
 
   const slots = computeArmSlots(zone, count);
 
+  const accents = activePalette().armAccents;
   const arms = slots.map((slot, i) => {
-    const built = makeArmRobot(PALETTE.armAccents[i % PALETTE.armAccents.length], beltTexture);
+    const built = makeArmRobot(accents[i % accents.length], beltTexture);
 
     built.group.position.set(slot.x, 0, slot.z);
     built.group.scale.setScalar(MODEL_SCALE);

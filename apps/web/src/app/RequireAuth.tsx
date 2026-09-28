@@ -19,7 +19,7 @@ export function RequireAuth({ children, role }: RequireAuthProps) {
 
   if (isPending) {
     return (
-      <div className="grid min-h-screen place-items-center bg-canvas">
+      <div className="grid min-h-screen place-items-center bg-white">
         <span className="text-[13px] text-muted-foreground">Проверяем доступ…</span>
       </div>
     );

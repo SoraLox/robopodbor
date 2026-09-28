@@ -11,33 +11,17 @@ import { Select } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import type { Maturity, Solution } from '@/api/types';
 import { CatalogPreview, catalogPanelClass } from './CatalogPreview';
-import { categorize } from './solutionCategory';
+import { matchesSearch } from './catalogSearch';
+import { RobotCard, RobotCardSkeleton } from './RobotCard';
 import {
   buildFilterTree,
   isSameSelection,
   matchesTreeSelection,
   toSelection,
+  WHOLE_CATALOG,
   type FilterTreeNode,
   type TreeSelection,
 } from './catalogFilterTree';
-
-const MATURITY_LABEL: Record<Maturity, string> = {
-  operation: 'В эксплуатации',
-  piloting: 'Пилот',
-  rnd: 'НИОКР',
-};
-
-const MATURITY_DOT: Record<Maturity, string> = {
-  operation: 'bg-status-operation',
-  piloting: 'bg-status-piloting',
-  rnd: 'bg-status-rnd',
-};
-
-const MATURITY_TEXT: Record<Maturity, string> = {
-  operation: 'text-status-operation',
-  piloting: 'text-status-piloting',
-  rnd: 'text-status-rnd',
-};
 
 const ALL_MATURITY: Maturity[] = ['operation', 'piloting', 'rnd'];
 
@@ -65,22 +49,6 @@ type Availability = NonNullable<Solution['availability']>;
 type OriginFilter = 'all' | 'ru' | 'foreign';
 type DataFilter = 'all' | 'confirmed' | 'needs-review';
 type SortValue = (typeof SORT_OPTIONS)[number]['value'];
-
-function matchesQuery(solution: Solution, query: string): boolean {
-  const haystack = [
-    solution.name,
-    solution.vendor,
-    solution.useCase,
-    categorize(solution).label,
-    solution.navigation,
-    solution.country,
-    ...(solution.limitations ?? []),
-  ]
-    .filter(Boolean)
-    .join(' ')
-    .toLocaleLowerCase('ru');
-  return haystack.includes(query);
-}
 
 function parsePrice(value: string): number {
   const num = Number(value.replace(',', '.'));
@@ -195,12 +163,15 @@ function CatalogFilterTree({
   selection: TreeSelection | null;
   onSelect: (next: TreeSelection | null) => void;
 }) {
-  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(tree.map((node) => node.id)));
+  // Объекты раскрыты сразу; «весь каталог» — 29 категорий — свёрнут, чтобы не растягивать колонку.
+  const openByDefault = (nodes: FilterTreeNode[]) =>
+    nodes.filter((node) => node.id !== WHOLE_CATALOG).map((node) => node.id);
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(openByDefault(tree)));
 
   useEffect(() => {
     setExpanded((prev) => {
       const next = new Set(prev);
-      for (const node of tree) next.add(node.id);
+      for (const id of openByDefault(tree)) next.add(id);
       return next;
     });
   }, [tree]);
@@ -307,138 +278,6 @@ function DetailBlock({ title, children }: { title: string; children: ReactNode }
   );
 }
 
-function SolutionRow({
-  solution,
-  selected,
-  previewed,
-  onOpenPreview,
-  onToggleCompare,
-}: {
-  solution: Solution;
-  selected: boolean;
-  previewed: boolean;
-  onOpenPreview: () => void;
-  onToggleCompare: () => void;
-}) {
-  const category = categorize(solution);
-
-  return (
-    <article
-      role="button"
-      tabIndex={0}
-      onClick={onOpenPreview}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          onOpenPreview();
-        }
-      }}
-      className={cn(
-        'cursor-pointer border-b border-[#E5E5EA] px-4 py-3.5 transition-colors last:border-b-0 sm:px-4',
-        previewed ? 'bg-[#F2F2F2]' : selected ? 'bg-[#FAFAFA]' : 'hover:bg-[#FAFAFA]',
-      )}
-      aria-pressed={previewed}
-    >
-      <div className="flex gap-3">
-        <Checkbox
-          checked={selected}
-          onCheckedChange={onToggleCompare}
-          onClick={(event) => event.stopPropagation()}
-          className="mt-1 size-[18px] shrink-0"
-          aria-label={
-            selected ? `Убрать ${solution.name} из сравнения` : `Добавить ${solution.name} в сравнение`
-          }
-        />
-
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                <span className="text-[10.5px] font-medium uppercase tracking-[0.06em] text-meta-foreground">
-                  {solution.vendor}
-                </span>
-                <span className="text-[11px] text-meta-foreground">· {category.label}</span>
-              </div>
-              <h3 className="mt-0.5 font-heading text-[16px] font-semibold leading-snug tracking-h2 text-foreground sm:text-[17px]">
-                {solution.name}
-              </h3>
-              <p className="mt-0.5 line-clamp-1 text-[13px] leading-snug text-muted-foreground">
-                {solution.useCase}
-              </p>
-            </div>
-
-            <div className="shrink-0 text-right">
-              <div className="font-heading text-[20px] font-semibold tabular leading-none tracking-h2 text-foreground sm:text-[22px]">
-                {solution.price}
-                <span className="ml-1 text-[12px] font-medium text-muted-foreground">млн ₽</span>
-              </div>
-              <span
-                className={cn(
-                  'mt-1.5 inline-flex items-center justify-end gap-1.5 text-[12px] font-medium',
-                  MATURITY_TEXT[solution.maturity],
-                )}
-              >
-                <span className={cn('size-1.5 rounded-full', MATURITY_DOT[solution.maturity])} aria-hidden />
-                {MATURITY_LABEL[solution.maturity]}
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-muted-foreground">
-            <span>
-              <span className="font-medium tabular text-foreground">{solution.payload}</span>
-              <span className="ml-1">груз</span>
-            </span>
-            <span className="text-border" aria-hidden>
-              |
-            </span>
-            <span>
-              <span className="font-medium tabular text-foreground">{solution.speed}</span>
-              <span className="ml-1">скорость</span>
-            </span>
-            <span className="text-border" aria-hidden>
-              |
-            </span>
-            <span
-              className={cn(
-                'font-medium',
-                solution.confidence === 'confirmed' ? 'text-status-confirmed' : 'text-status-piloting',
-              )}
-            >
-              {solution.confidence === 'confirmed' ? 'Подтверждено' : 'Требует проверки'}
-            </span>
-            {solution.completeness !== undefined ? (
-              <>
-                <span className="text-border" aria-hidden>
-                  |
-                </span>
-                <span>
-                  <span className="font-medium tabular text-foreground">{solution.completeness}%</span>
-                  <span className="ml-1">полнота</span>
-                </span>
-              </>
-            ) : null}
-          </div>
-        </div>
-      </div>
-    </article>
-  );
-}
-
-function SolutionRowSkeleton() {
-  return (
-    <div className="flex gap-3 border-b border-hairline px-4 py-4 last:border-b-0 sm:px-5">
-      <div className="mt-1 size-[18px] animate-pulse rounded bg-muted" />
-      <div className="min-w-0 flex-1 space-y-2.5">
-        <div className="h-3 w-1/4 animate-pulse rounded bg-muted" />
-        <div className="h-5 w-1/2 animate-pulse rounded bg-muted" />
-        <div className="h-3 w-2/3 animate-pulse rounded bg-muted" />
-        <div className="mt-2 h-8 w-full max-w-md animate-pulse rounded bg-muted" />
-      </div>
-    </div>
-  );
-}
-
 export function CatalogPage() {
   const { data: solutions, isLoading } = useSolutions();
   const { comparedIds, toggleCompared } = useWizardStore();
@@ -495,14 +334,17 @@ export function CatalogPage() {
 
   const activeFilterCount = (treeSelection ? 1 : 0) + detailedFilterCount;
 
-  const normalizedQuery = query.trim().toLocaleLowerCase('ru');
+  // Фильтр показываем, только если в каталоге есть что различать: иначе любой
+  // выбор либо ничего не меняет, либо прячет весь каталог.
+  const hasAvailability = rows.some((solution) => solution.availability);
+  const confidenceVaries = new Set(rows.map((solution) => solution.confidence)).size > 1;
 
   const filteredRows = useMemo(() => {
     const min = priceMin ? parsePrice(priceMin) : undefined;
     const max = priceMax ? parsePrice(priceMax) : undefined;
 
     return rows.filter((solution) => {
-      if (normalizedQuery && !matchesQuery(solution, normalizedQuery)) return false;
+      if (!matchesSearch(solution, query)) return false;
       if (!matchesTreeSelection(solution, treeSelection)) return false;
       if (!activeMaturity.has(solution.maturity)) return false;
       if (activeAvailability.size > 0 && !(solution.availability && activeAvailability.has(solution.availability))) {
@@ -518,7 +360,7 @@ export function CatalogPage() {
     });
   }, [
     rows,
-    normalizedQuery,
+    query,
     treeSelection,
     activeMaturity,
     activeAvailability,
@@ -585,18 +427,20 @@ export function CatalogPage() {
           </div>
         </DetailBlock>
 
-        <DetailBlock title="Доступность">
-          <div className="grid gap-0.5">
-            {AVAILABILITY_OPTIONS.map((item) => (
-              <FilterCheck
-                key={item.id}
-                label={item.label}
-                checked={activeAvailability.has(item.id)}
-                onChange={() => toggleAvailability(item.id)}
-              />
-            ))}
-          </div>
-        </DetailBlock>
+        {hasAvailability ? (
+          <DetailBlock title="Доступность">
+            <div className="grid gap-0.5">
+              {AVAILABILITY_OPTIONS.map((item) => (
+                <FilterCheck
+                  key={item.id}
+                  label={item.label}
+                  checked={activeAvailability.has(item.id)}
+                  onChange={() => toggleAvailability(item.id)}
+                />
+              ))}
+            </div>
+          </DetailBlock>
+        ) : null}
 
         <DetailBlock title="Страна происхождения">
           <Select
@@ -612,19 +456,21 @@ export function CatalogPage() {
           />
         </DetailBlock>
 
-        <DetailBlock title="Данные">
-          <Select
-            aria-label="Подтверждённость данных"
-            value={dataFilter}
-            onChange={(event) => setDataFilter(event.target.value as DataFilter)}
-            options={[
-              { value: 'all', label: 'Все' },
-              { value: 'confirmed', label: 'Подтверждены' },
-              { value: 'needs-review', label: 'Требуют проверки' },
-            ]}
-            className="h-9 rounded-[12px] text-[13px]"
-          />
-        </DetailBlock>
+        {confidenceVaries ? (
+          <DetailBlock title="Данные">
+            <Select
+              aria-label="Подтверждённость данных"
+              value={dataFilter}
+              onChange={(event) => setDataFilter(event.target.value as DataFilter)}
+              options={[
+                { value: 'all', label: 'Все' },
+                { value: 'confirmed', label: 'Подтверждены' },
+                { value: 'needs-review', label: 'Требуют проверки' },
+              ]}
+              className="h-9 rounded-[12px] text-[13px]"
+            />
+          </DetailBlock>
+        ) : null}
 
         <DetailBlock title="Цена, млн ₽">
           <div className="flex items-center gap-2">
@@ -665,14 +511,14 @@ export function CatalogPage() {
     <AppShell>
       <h1 className="sr-only">Каталог решений</h1>
       <div className={cn('mt-5', comparedIds.length > 0 && 'pb-20')}>
-        <div className="grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)_auto] lg:gap-5 xl:grid-cols-[260px_minmax(0,1fr)_auto]">
+        <div className="grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-5 xl:grid-cols-[260px_minmax(0,1fr)]">
           <aside className="hidden lg:block">
             <div className={cn(catalogPanelClass, 'sticky top-[4.5rem] px-3 py-1')}>{filters}</div>
           </aside>
 
           <div className="min-w-0">
             <div className={cn(catalogPanelClass, 'overflow-hidden')}>
-              <div className="flex flex-col gap-3 border-b border-[#E5E5EA] px-4 py-3 sm:flex-row sm:items-center sm:gap-3 sm:px-4">
+              <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:gap-3 sm:px-4">
                 <label className="flex min-w-0 flex-1 items-center gap-3">
                   <Search className="size-[17px] flex-none text-muted-foreground" strokeWidth={2} aria-hidden />
                   <input
@@ -722,48 +568,50 @@ export function CatalogPage() {
                   />
                 </div>
               </div>
+            </div>
 
-              {!isLoading ? (
-                <div className="border-b border-[#E5E5EA] bg-[#FAFAFA] px-4 py-2 text-[12.5px] text-muted-foreground sm:hidden">
-                  {sortedRows.length} из {rows.length}
-                </div>
-              ) : null}
+            {!isLoading ? (
+              <div className="mt-3 text-[12.5px] text-muted-foreground sm:hidden">
+                {sortedRows.length} из {rows.length}
+              </div>
+            ) : null}
 
-              {isLoading ? (
-                <>
-                  {[0, 1, 2, 3, 4].map((key) => (
-                    <SolutionRowSkeleton key={key} />
-                  ))}
-                </>
-              ) : rows.length === 0 ? (
-                <div className="px-5 py-16 text-center">
-                  <h2 className="font-heading text-[17px] font-semibold">Пока нет решений</h2>
-                  <p className="mx-auto mt-2 max-w-[38ch] text-[13.5px] text-muted-foreground">
-                    Для выбранных фильтров в каталоге пока нет позиций.
-                  </p>
-                </div>
-              ) : sortedRows.length === 0 ? (
-                <div className="flex flex-col items-center gap-3 px-5 py-16 text-center">
-                  <h2 className="font-heading text-[17px] font-semibold">
-                    {query ? `Ничего не нашлось по запросу «${query}»` : 'Ничего не подходит под фильтры'}
-                  </h2>
-                  <p className="max-w-[38ch] text-[13.5px] text-muted-foreground">
-                    Ослабьте фильтры или сбросьте их.
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setQuery('');
-                      resetFilters();
-                    }}
-                  >
-                    Сбросить всё
-                  </Button>
-                </div>
-              ) : (
-                sortedRows.map((solution) => (
-                  <SolutionRow
+            {isLoading ? (
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {[0, 1, 2, 3, 4, 5].map((key) => (
+                  <RobotCardSkeleton key={key} />
+                ))}
+              </div>
+            ) : rows.length === 0 ? (
+              <div className={cn(catalogPanelClass, 'mt-4 px-5 py-16 text-center')}>
+                <h2 className="font-heading text-[17px] font-semibold">Пока нет решений</h2>
+                <p className="mx-auto mt-2 max-w-[38ch] text-[13.5px] text-muted-foreground">
+                  Для выбранных фильтров в каталоге пока нет позиций.
+                </p>
+              </div>
+            ) : sortedRows.length === 0 ? (
+              <div className={cn(catalogPanelClass, 'mt-4 flex flex-col items-center gap-3 px-5 py-16 text-center')}>
+                <h2 className="font-heading text-[17px] font-semibold">
+                  {query ? `Ничего не нашлось по запросу «${query}»` : 'Ничего не подходит под фильтры'}
+                </h2>
+                <p className="max-w-[38ch] text-[13.5px] text-muted-foreground">
+                  Ослабьте фильтры или сбросьте их.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setQuery('');
+                    resetFilters();
+                  }}
+                >
+                  Сбросить всё
+                </Button>
+              </div>
+            ) : (
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {sortedRows.map((solution) => (
+                  <RobotCard
                     key={solution.id}
                     solution={solution}
                     selected={comparedIds.includes(solution.id)}
@@ -771,46 +619,22 @@ export function CatalogPage() {
                     onOpenPreview={() => openPreview(solution.id)}
                     onToggleCompare={() => toggleCompared(solution.id)}
                   />
-                ))
-              )}
-            </div>
-          </div>
-
-          <div className="hidden min-w-0 lg:block">
-            <CatalogPreview
-              solution={previewSolution}
-              open={Boolean(previewId)}
-              compared={previewId ? comparedIds.includes(previewId) : false}
-              onClose={() => setPreviewId(null)}
-              onToggleCompare={() => {
-                if (previewId) toggleCompared(previewId);
-              }}
-            />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="lg:hidden">
-        <div
-          className={cn(
-            'fixed bottom-3 right-3 top-[calc(3.5rem+0.75rem)] z-40 w-[min(100vw-1.5rem,360px)] transition-[transform,opacity] duration-[420ms] ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none',
-            previewId
-              ? 'translate-x-0 opacity-100'
-              : 'pointer-events-none translate-x-[calc(100%+0.75rem)] opacity-0',
-          )}
-        >
-          <CatalogPreview
-            solution={previewSolution}
-            open={Boolean(previewId)}
-            compared={previewId ? comparedIds.includes(previewId) : false}
-            onClose={() => setPreviewId(null)}
-            onToggleCompare={() => {
-              if (previewId) toggleCompared(previewId);
-            }}
-            embedded
-          />
-        </div>
-      </div>
+      <CatalogPreview
+        solution={previewSolution}
+        open={Boolean(previewId)}
+        compared={previewId ? comparedIds.includes(previewId) : false}
+        onClose={() => setPreviewId(null)}
+        onToggleCompare={() => {
+          if (previewId) toggleCompared(previewId);
+        }}
+      />
 
       {mobileFiltersOpen ? (
         <div className="fixed inset-0 z-50 lg:hidden">
@@ -848,7 +672,7 @@ export function CatalogPage() {
       ) : null}
 
       {comparedIds.length > 0 ? (
-        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-[18px] pb-[18px]">
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-5 pb-5 sm:px-8">
           <div className={cn(catalogPanelClass, 'pointer-events-auto flex items-center gap-4 px-5 py-3')}>
             <span className="text-[13.5px] font-medium">
               К сравнению: <span className="tabular">{comparedIds.length}</span>

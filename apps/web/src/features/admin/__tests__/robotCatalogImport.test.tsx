@@ -8,9 +8,11 @@ import {
   checkCatalogFiles,
   mergeCatalogVersion,
   type CatalogFiles,
+  type CatalogResearch,
   type CatalogSupplements,
 } from '@domain/robotCatalog';
 import supplements from '@domain/catalogSupplements.json';
+import research from '@domain/catalogResearch.json';
 import built from '@domain/catalogSolutions.json';
 import { RobotCatalogReport } from '@/features/admin/RobotCatalogImport';
 
@@ -26,7 +28,8 @@ const files: CatalogFiles = {
   data: Object.fromEntries(categories.items.map((c) => [c.file, read(c.file)])),
 };
 const photos = new Map((built as unknown as CatalogSolution[]).map((s) => [s.id, s.photos ?? []]));
-const build = () => buildCatalog(files, supplements as unknown as CatalogSupplements, (id) => photos.get(id) ?? []);
+const build = () =>
+  buildCatalog(files, supplements as unknown as CatalogSupplements, (id) => photos.get(id) ?? [], research as unknown as CatalogResearch);
 
 describe('новая версия каталога роботов', () => {
   it('папка каталога собирается в тот же каталог, что лежит в приложении', () => {

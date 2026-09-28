@@ -40,8 +40,46 @@ export default defineConfig(({ command }) => ({
   },
   test: {
     globals: true,
-    environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
-    css: true,
+    // Половина ядер: jsdom-файлы тяжёлые, при 7 процессах на 8 ядрах они душили
+    // друг друга — общий прогон был и медленнее, и с таймаутами (замер 27.09.2026).
+    maxWorkers: '50%',
+    // lucide-react — 3,5 тыс. модулей иконок: без предсборки каждый тестовый файл
+    // тратил на их импорт ~0,5 с. Собранные в один модуль грузятся за ~40 мс.
+    // web — для jsdom (проект dom), ssr — для Node (проект unit).
+    deps: {
+      optimizer: {
+        web: { enabled: true, include: ['lucide-react'] },
+        ssr: { enabled: true, include: ['lucide-react'] },
+      },
+    },
+    /*
+      Чистая логика (*.test.ts) идёт в Node без jsdom и без MSW-сервера из
+      setup.ts: каждому файлу это стоило ~1 с запуска, а под общей нагрузкой —
+      в разы больше. Компоненты (*.test.tsx) — в jsdom с моками API.
+    */
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'unit',
+          environment: 'node',
+          include: ['src/**/*.test.ts'],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'dom',
+          environment: 'jsdom',
+          include: ['src/**/*.test.tsx'],
+          setupFiles: ['./src/test/setup.ts'],
+          css: true,
+          // Тест мастера — рендер с MSW и событиями ввода: поодиночке 0,7–2 с, на
+          // нагруженной машине в 3–4 раза дольше. 15 с — запас, а не маскировка:
+          // зависание всё равно упадёт.
+          testTimeout: 15_000,
+        },
+      },
+    ],
   },
 }));

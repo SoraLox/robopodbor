@@ -337,7 +337,7 @@ const SCENARIOS = [
     value: '134,6',
     delta: '−79,4',
     pct: 63,
-    bar: 'bg-primary',
+    bar: 'bg-primary-bright',
   },
   {
     label: 'Взять в аренду',

@@ -10,7 +10,7 @@
  */
 import { MOBILE_TYPES, completenessOf, missingFields, type CatalogSolution } from "./catalog.js";
 
-export const SELECTION_RULES_VERSION = "selection-2026.09c";
+export const SELECTION_RULES_VERSION = "selection-2026.09d";
 
 export type SelectionStatus = "recommended" | "needs-review" | "excluded";
 
@@ -85,7 +85,8 @@ function loadRequirement(objectType: string, type: string | undefined, processes
       return { fieldId: "wh_massa_shtuchnoy_edinitsy", label: "масса штучной единицы" };
     }
   }
-  if (objectType === "airport" && ["sorter", "amr", "tug"].includes(t)) {
+  // Багаж возят роботы багажа и перрона; для грузового терминала массы груза в паспорте нет.
+  if (objectType === "airport" && ["sorter", "amr", "tug"].includes(t) && (processes.includes("baggage") || processes.includes("ramp"))) {
     return { fieldId: "ap_massa_edinitsy_bagazha", label: "масса единицы багажа" };
   }
   // Тележку с питанием возят только роботы процесса «белье и питание»; для

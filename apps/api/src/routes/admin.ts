@@ -9,8 +9,9 @@ import { checkValue } from "../domain/parameters.js";
 import { SOURCE_KIND_LABEL, type SourceKind } from "../domain/sources.js";
 import { toFieldDto } from "./catalog.js";
 import { applyCatalogVersion } from "../catalogSync.js";
-import { buildCatalog, type CatalogFiles, type CatalogSupplements } from "../domain/robotCatalog.js";
+import { buildCatalog, type CatalogFiles, type CatalogResearch, type CatalogSupplements } from "../domain/robotCatalog.js";
 import supplementsJson from "../domain/catalogSupplements.json" with { type: "json" };
+import researchJson from "../domain/catalogResearch.json" with { type: "json" };
 
 const router = Router();
 
@@ -204,7 +205,12 @@ router.post(
     );
     let build;
     try {
-      build = buildCatalog(files as CatalogFiles, supplementsJson as unknown as CatalogSupplements, (id) => photos.get(id) ?? []);
+      build = buildCatalog(
+        files as CatalogFiles,
+        supplementsJson as unknown as CatalogSupplements,
+        (id) => photos.get(id) ?? [],
+        researchJson as unknown as CatalogResearch,
+      );
     } catch (error) {
       return res.status(422).json({ message: error instanceof Error ? error.message : "Каталог не собирается" });
     }

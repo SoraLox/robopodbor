@@ -1038,6 +1038,9 @@ components:
         throughput: { type: number, description: Производительность в единицах throughputUnit. }
         throughputUnit: { type: string }
         autonomyHours: { type: number, description: 'Автономность, ч. Для стационарных систем 24 — работа от сети.' }
+        chargeHours: { type: number, description: 'Время полной зарядки, ч.' }
+        batteryKwh: { type: number, description: 'Запас энергии батареи, кВт·ч.' }
+        powerKw: { type: number, description: 'Потребляемая мощность при работе, кВт.' }
         positioningAccuracyMm: { type: number, description: 'Точность позиционирования, мм.' }
         navigation: { type: string, description: Тип навигации. }
         operatingConditions: { type: string, description: Допустимые условия эксплуатации. }

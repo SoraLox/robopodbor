@@ -1,8 +1,9 @@
 import * as THREE from "three";
 import { FLOOR } from "./layout.js";
-import { PALETTE, ISO_ELEV, SCENE_HEIGHT_PX } from "./constants.js";
+import { ISO_ELEV, SCENE_HEIGHT_PX } from "./constants.js";
 import { applyColorSpace, disposeTree } from "./sceneUtils.js";
 import { createFloorLevel, createSharedLevelAssets, FLOOR_PITCH } from "./floorLevel.js";
+import { setStudioLook, activePalette } from "./studioLook.js";
 
 const CAM_DIST = 108;
 const FOCUS_EASE = 0.12;
@@ -14,21 +15,28 @@ const GHOST_OPACITY = 0.17;
 // Единоразовая сборка сцены: свет, основание, камера, рендерер и то, что общее
 // для всех этажей. Сами этажи (createFloorLevel) добавляются и убираются по
 // мере надобности через setLevelCount.
-export function createWarehouseScene(mount) {
+export function createWarehouseScene(mount, { fogColor = 0x77798f, mono = false } = {}) {
   // Высота берётся из контейнера (immersive hero) с запасным SCENE_HEIGHT_PX.
   const sceneHeight = () => Math.max(1, mount.clientHeight || SCENE_HEIGHT_PX);
   const width = Math.max(1, mount.clientWidth);
 
-  const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0x77798f, 145, 245);
+  // Палитра сцены: studioLook включается только при mono (сейчас выкл.).
+  setStudioLook(mono);
 
-  addLights(scene);
+  const scene = new THREE.Scene();
+  if (mono) {
+    scene.fog = null;
+  } else {
+    scene.fog = new THREE.Fog(fogColor, 145, 245);
+  }
+
+  addLights(scene, { mono });
 
   const shared = createSharedLevelAssets();
   const beltTexture = createBeltTexture();
 
   const staticGroup = new THREE.Group(); // основание — не участвует в «прозрачном» проходе
-  addBase(staticGroup);
+  addBase(staticGroup, { mono });
   scene.add(staticGroup);
 
   const levelsGroup = new THREE.Group();
@@ -47,7 +55,7 @@ export function createWarehouseScene(mount) {
   renderer.domElement.style.display = "block";
   applyColorSpace(renderer, true);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.92;
+  renderer.toneMappingExposure = mono ? 1.02 : 0.92;
   renderer.shadowMap.enabled = true;
   // THREE.PCFSoftShadowMap был убран в этой версии three.js (рендерер тихо
   // подменял его на жёсткий PCFShadowMap и заодно игнорировал keyLight.shadow.radius
@@ -177,6 +185,7 @@ export function createWarehouseScene(mount) {
     window.removeEventListener("resize", onResize);
     cancelAnimationFrame(raf);
     setLevelCount(0);
+    setStudioLook(false);
     renderer.dispose();
     ghostMaterial.dispose();
     beltTexture.dispose();
@@ -210,7 +219,36 @@ export function createWarehouseScene(mount) {
   };
 }
 
-function addLights(scene) {
+function addLights(scene, { mono = false } = {}) {
+  if (mono) {
+    // High-key, но с тёмным «полом» в hemisphere — мягкий AO и читаемые тени.
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x8B919C, 1.15));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.28));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2.85);
+    keyLight.position.set(42, 110, 28);
+    keyLight.castShadow = true;
+    keyLight.shadow.camera.left = -85;
+    keyLight.shadow.camera.right = 85;
+    keyLight.shadow.camera.top = 85;
+    keyLight.shadow.camera.bottom = -85;
+    keyLight.shadow.camera.near = 1;
+    keyLight.shadow.camera.far = 260;
+    keyLight.shadow.mapSize.width = 2048;
+    keyLight.shadow.mapSize.height = 2048;
+    keyLight.shadow.bias = -0.00015;
+    keyLight.shadow.normalBias = 0.04;
+    keyLight.shadow.radius = 6;
+    keyLight.shadow.intensity = 0.85;
+    scene.add(keyLight);
+    const fillLight = new THREE.DirectionalLight(0xdce6f5, 0.38);
+    fillLight.position.set(-50, 40, -35);
+    scene.add(fillLight);
+    const rimLight = new THREE.DirectionalLight(0x2f86f0, 0.22);
+    rimLight.position.set(-20, 28, 60);
+    scene.add(rimLight);
+    return;
+  }
+
   const hemisphereLight = new THREE.HemisphereLight(0xe9e3ff, 0x35384e, 3);
   scene.add(hemisphereLight);
 
@@ -243,10 +281,15 @@ function addLights(scene) {
 }
 
 // Тёмное основание под самым нижним этажом.
-function addBase(group) {
+function addBase(group, { mono = false } = {}) {
   const floorBase = new THREE.Mesh(
     new THREE.BoxGeometry(FLOOR + 6, 6, FLOOR + 6),
-    new THREE.MeshStandardMaterial({ color: 0x27293b, flatShading: true, roughness: 0.92, metalness: 0.0 })
+    new THREE.MeshStandardMaterial({
+      color: mono ? 0xd5d9e0 : 0x27293b,
+      roughness: mono ? 0.88 : 0.92,
+      metalness: 0.0,
+      flatShading: !mono,
+    })
   );
   floorBase.position.y = -5.35;
   floorBase.receiveShadow = true;
@@ -258,10 +301,11 @@ function createBeltTexture() {
   beltCanvas.width = 128;
   beltCanvas.height = 32;
 
+  const palette = activePalette();
   const bctx = beltCanvas.getContext("2d");
-  bctx.fillStyle = PALETTE.belt;
+  bctx.fillStyle = palette.belt;
   bctx.fillRect(0, 0, 128, 32);
-  bctx.fillStyle = PALETTE.beltStripe;
+  bctx.fillStyle = palette.beltStripe;
 
   for (let i = -32; i < 128; i += 24) {
     bctx.beginPath();

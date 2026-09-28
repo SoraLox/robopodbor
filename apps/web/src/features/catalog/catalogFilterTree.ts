@@ -26,9 +26,17 @@ const PROCESS_FILTER_LABEL: Record<string, string> = {
   disinfection: 'Дезинфекция',
   laboratory: 'Лаборатория',
   care: 'Медицинская помощь',
+  passengers: 'Пассажиры',
+  fire: 'Пожарная безопасность',
 };
 
 export type FilterTreeLevel = 'object' | 'process' | 'category';
+
+/**
+ * Ветка «весь каталог»: категории без привязки к объекту. Через неё видны и
+ * роботы вне склада, аэропорта и клиники (БАС, суда, агро — больше половины каталога).
+ */
+export const WHOLE_CATALOG = '*';
 
 export type TreeSelection = {
   objectType: string;
@@ -79,7 +87,7 @@ export function isSameSelection(a: TreeSelection | null, b: TreeSelection | null
 export function matchesTreeSelection(solution: Solution, selection: TreeSelection | null): boolean {
   if (!selection) return true;
   const types = solution.objectTypes ?? [];
-  if (!types.includes(selection.objectType)) return false;
+  if (selection.objectType !== WHOLE_CATALOG && !types.includes(selection.objectType)) return false;
   if (selection.process) {
     const processes = solution.processes ?? [];
     if (!processes.includes(selection.process)) return false;
@@ -148,6 +156,34 @@ export function buildFilterTree(solutions: Solution[]): FilterTreeNode[] {
       objectType,
       count: inObject.length,
       children: processNodes,
+    });
+  }
+
+  const byCategory = new Map<string, { label: string; count: number }>();
+  for (const solution of solutions) {
+    const { id, label } = categoryOf(solution);
+    const bucket = byCategory.get(id) ?? { label, count: 0 };
+    bucket.count += 1;
+    byCategory.set(id, bucket);
+  }
+  if (byCategory.size > 0) {
+    roots.push({
+      id: WHOLE_CATALOG,
+      label: 'Весь каталог по категориям',
+      level: 'object',
+      objectType: WHOLE_CATALOG,
+      count: solutions.length,
+      children: [...byCategory.entries()]
+        .sort((a, b) => a[1].label.localeCompare(b[1].label, 'ru'))
+        .map(([id, bucket]) => ({
+          id: `${WHOLE_CATALOG}/${id}`,
+          label: bucket.label,
+          level: 'category' as const,
+          objectType: WHOLE_CATALOG,
+          category: id,
+          count: bucket.count,
+          children: [],
+        })),
     });
   }
 

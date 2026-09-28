@@ -1,5 +1,6 @@
 import { FLOOR, GATE_XS, computeArmSlots } from "./layout.js";
-import { CANVAS_PX, PALETTE } from "./constants.js";
+import { CANVAS_PX } from "./constants.js";
+import { activePalette, isStudioLook } from "./studioLook.js";
 import { toPx, rectToPx } from "./canvasCoords.js";
 import {
   AISLE_ZS,
@@ -26,7 +27,7 @@ function strokeRect(ctx, rect) {
 
 // Площадки роборук — круглые, по одной под каждой роборукой.
 function drawArmPads(ctx, armZone, armCount) {
-  ctx.fillStyle = PALETTE.pad;
+  ctx.fillStyle = activePalette().pad;
 
   for (const slot of computeArmSlots(armZone, armCount)) {
     const center = toPx(slot.x, slot.z);
@@ -39,8 +40,8 @@ function drawArmPads(ctx, armZone, armCount) {
 
 // Сетка чанков: границы чанков — тонкие линии по всему полу, без подписей размеров.
 function drawChunkGrid(ctx, grid) {
-  ctx.strokeStyle = "rgba(255,255,255,0.16)";
-  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = isStudioLook() ? "rgba(90,100,120,0.28)" : "rgba(255,255,255,0.16)";
+  ctx.lineWidth = isStudioLook() ? 1.5 : 1.5;
 
   const step = CANVAS_PX / grid.perSide;
 
@@ -64,12 +65,13 @@ function drawChunkGrid(ctx, grid) {
 function drawLoaderFloor(ctx, slotsPerLane) {
   const { docks, storageLanes } = createStorage({ slotsPerLane });
   const lastAisleZ = AISLE_ZS[AISLE_ZS.length - 1];
+  const studio = isStudioLook();
 
-  ctx.fillStyle = "rgba(255,255,255,0.05)";
+  ctx.fillStyle = studio ? "rgba(55,60,72,0.08)" : "rgba(255,255,255,0.05)";
   for (const z of AISLE_ZS) fillRect(ctx, rectToPx(-FLOOR / 2 + 1, FLOOR / 2 - 1, z - AISLE_HALF_WIDTH, z + AISLE_HALF_WIDTH));
 
   // Границы полос ворот: за каждыми воротами закреплены свои погрузчики.
-  ctx.strokeStyle = "rgba(255,255,255,0.22)";
+  ctx.strokeStyle = studio ? "rgba(55,60,72,0.35)" : "rgba(255,255,255,0.22)";
   ctx.lineWidth = 1.5;
   ctx.setLineDash([3, 5]);
   for (let i = 0; i < GATE_XS.length - 1; i++) {
@@ -85,7 +87,7 @@ function drawLoaderFloor(ctx, slotsPerLane) {
   for (const x of ROAD_XS) fillRect(ctx, rectToPx(x - AISLE_HALF_WIDTH, x + AISLE_HALF_WIDTH, AISLE_ZS[0], lastAisleZ));
 
   // Осевая разметка проездов.
-  ctx.strokeStyle = "rgba(229,161,63,0.22)";
+  ctx.strokeStyle = studio ? "rgba(47,134,240,0.35)" : "rgba(229,161,63,0.22)";
   ctx.lineWidth = 1;
   ctx.setLineDash([6, 6]);
   for (const z of AISLE_ZS) {
@@ -98,8 +100,8 @@ function drawLoaderFloor(ctx, slotsPerLane) {
   ctx.setLineDash([]);
 
   // Площадки у ворот.
-  ctx.fillStyle = "rgba(229,161,63,0.2)";
-  ctx.strokeStyle = PALETTE.dockPad;
+  ctx.fillStyle = studio ? "rgba(47,134,240,0.14)" : "rgba(229,161,63,0.2)";
+  ctx.strokeStyle = activePalette().dockPad;
   ctx.lineWidth = 2;
   ctx.setLineDash([9, 6]);
 
@@ -114,7 +116,7 @@ function drawLoaderFloor(ctx, slotsPerLane) {
   ctx.setLineDash([]);
 
   // Полосы хранения.
-  ctx.strokeStyle = "rgba(255,255,255,0.14)";
+  ctx.strokeStyle = studio ? "rgba(55,60,72,0.3)" : "rgba(255,255,255,0.14)";
   ctx.lineWidth = 1;
 
   for (const lane of storageLanes) {
@@ -123,7 +125,7 @@ function drawLoaderFloor(ctx, slotsPerLane) {
   }
 
   // Стоянки погрузчиков.
-  ctx.strokeStyle = "rgba(255,255,255,0.28)";
+  ctx.strokeStyle = studio ? "rgba(47,134,240,0.4)" : "rgba(255,255,255,0.28)";
   GATE_XS.forEach((_, index) => {
     const x = bayXOf(index);
     strokeRect(ctx, rectToPx(x - 2, x + 2, BAY_Z - 3, BAY_Z + 3));
@@ -132,8 +134,8 @@ function drawLoaderFloor(ctx, slotsPerLane) {
 
 // Площадки зарядных станций пылесосов — зелёные, по одной на робота.
 function drawChargingStations(ctx, vacuumCount) {
-  ctx.fillStyle = "rgba(79,155,144,0.28)";
-  ctx.strokeStyle = "#4F9B90";
+  ctx.fillStyle = isStudioLook() ? "rgba(47,134,240,0.16)" : "rgba(79,155,144,0.28)";
+  ctx.strokeStyle = isStudioLook() ? "#2F86F0" : "#4F9B90";
   ctx.lineWidth = 2;
 
   for (const { x, z } of chargingStationPositions(vacuumCount)) {
@@ -146,16 +148,17 @@ function drawChargingStations(ctx, vacuumCount) {
 // Зона разгрузки у ворот, недоступная роботам: штриховка с подписью.
 function drawRestrictedZone(ctx, zone) {
   const rect = rectToPx(-FLOOR / 2, FLOOR / 2, zone.zMin, zone.zMax);
+  const studio = isStudioLook();
 
   ctx.save();
   ctx.beginPath();
   ctx.rect(rect.x0, rect.z0, rect.x1 - rect.x0, rect.z1 - rect.z0);
   ctx.clip();
 
-  ctx.fillStyle = "rgba(20,20,35,0.35)";
+  ctx.fillStyle = studio ? "rgba(47,134,240,0.08)" : "rgba(20,20,35,0.35)";
   ctx.fillRect(rect.x0, rect.z0, rect.x1 - rect.x0, rect.z1 - rect.z0);
 
-  ctx.strokeStyle = "rgba(229,161,63,0.35)";
+  ctx.strokeStyle = studio ? "rgba(47,134,240,0.28)" : "rgba(229,161,63,0.35)";
   ctx.lineWidth = 2;
 
   for (let x = rect.x0 - (rect.z1 - rect.z0); x < rect.x1; x += 16) {
@@ -181,8 +184,9 @@ function drawRestrictedZone(ctx, zone) {
 // чанков + проезды и склад (если есть погрузчики). Покрытие пылесосов на нём не
 // рисуется — оно видно только по следу.
 export function drawFloorBase(ctx, { layout, armCount, vacuumCount, chunkGrid, slotsPerLane }) {
+  const palette = activePalette();
   ctx.clearRect(0, 0, CANVAS_PX, CANVAS_PX);
-  ctx.fillStyle = PALETTE.floor;
+  ctx.fillStyle = palette.floor;
   ctx.fillRect(0, 0, CANVAS_PX, CANVAS_PX);
 
   if (layout.restrictedZone) drawRestrictedZone(ctx, layout.restrictedZone);
@@ -192,7 +196,7 @@ export function drawFloorBase(ctx, { layout, armCount, vacuumCount, chunkGrid, s
 
   drawChunkGrid(ctx, chunkGrid);
 
-  ctx.strokeStyle = "rgba(255,255,255,0.13)";
+  ctx.strokeStyle = isStudioLook() ? "rgba(90,100,120,0.22)" : "rgba(255,255,255,0.13)";
   ctx.lineWidth = 3;
   ctx.strokeRect(1.5, 1.5, CANVAS_PX - 3, CANVAS_PX - 3);
 }

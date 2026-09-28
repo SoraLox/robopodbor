@@ -3,7 +3,7 @@ import type { Solution } from '@/api/types';
 /**
  * Превью фото робота из каталога (scripts/build-robot-previews.sh) — первое из его фото.
  * Кадры до 800 px шириной: полноразмерные исходники декодируются заметно дольше.
- * Нет фото — undefined: блок фото в карточке тогда не показываем.
+ * Нет фото — undefined: в карточке показываем плейсхолдер категории.
  */
 export function robotPhoto(solution: Solution): string | undefined {
   const file = solution.photos?.[0];

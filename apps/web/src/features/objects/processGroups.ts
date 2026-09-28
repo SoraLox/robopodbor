@@ -1,6 +1,7 @@
 import {
   Bot,
   Brush,
+  Flame,
   FlaskConical,
   Forklift,
   Hand,
@@ -13,6 +14,7 @@ import {
   ShieldPlus,
   Shuffle,
   Truck,
+  Users,
   Warehouse,
   type LucideIcon,
 } from 'lucide-react';
@@ -39,6 +41,8 @@ const PROCESS_VIEW: Record<string, { title: string; icon: LucideIcon }> = {
   disinfection: { title: 'Дезинфекция', icon: ShieldPlus },
   laboratory: { title: 'Лабораторные роботы', icon: FlaskConical },
   care: { title: 'Медицинские и реабилитационные', icon: HeartPulse },
+  passengers: { title: 'Сервис для пассажиров', icon: Users },
+  fire: { title: 'Пожарные роботы', icon: Flame },
 };
 
 const OTHER_ID = 'other';

@@ -812,6 +812,12 @@ export interface components {
             throughputUnit?: string;
             /** @description Автономность, ч. Для стационарных систем 24 — работа от сети. */
             autonomyHours?: number;
+            /** @description Время полной зарядки, ч. */
+            chargeHours?: number;
+            /** @description Запас энергии батареи, кВт·ч. */
+            batteryKwh?: number;
+            /** @description Потребляемая мощность при работе, кВт. */
+            powerKw?: number;
             /** @description Точность позиционирования, мм. */
             positioningAccuracyMm?: number;
             /** @description Тип навигации. */

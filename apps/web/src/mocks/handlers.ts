@@ -16,9 +16,11 @@ import {
   buildCatalog,
   mergeCatalogVersion,
   type CatalogFiles,
+  type CatalogResearch,
   type CatalogSupplements,
 } from '@domain/robotCatalog';
 import supplementsJson from '@domain/catalogSupplements.json';
+import researchJson from '@domain/catalogResearch.json';
 import {
   demoCalculation,
   objectParameters,
@@ -160,6 +162,8 @@ function applyEdit(before: Solution | undefined, input: Partial<Solution>): Part
   return { ...(patch as Partial<Solution>), ...(fieldSources ? { fieldSources: fieldSources as Solution['fieldSources'] } : {}) };
 }
 
+const CALCULATION_DEMO_DELAY_MS = import.meta.env.MODE === 'test' ? 0 : 1200;
+
 const TOP_LEVEL_CATALOG_FILES: Record<string, keyof CatalogFiles> = {
   'index.json': 'index',
   'categories.json': 'categories',
@@ -273,8 +277,8 @@ export const handlers = [
   // ─── Расчёт ───────────────────────────────────────────────────────
   http.get('*/api/calculations/:calculationId', async ({ params }) => {
     // Прогон на бэкенде занимает до 60 секунд — мок держит паузу,
-    // чтобы UI ожидания был виден в демо.
-    await new Promise((resolve) => setTimeout(resolve, 1200));
+    // чтобы UI ожидания был виден в демо. В тестах пауза только тратит время.
+    await new Promise((resolve) => setTimeout(resolve, CALCULATION_DEMO_DELAY_MS));
     const { calculationId } = params;
     const id = String(calculationId);
     const saved = projectStore.snapshot(id) ?? projectStore.history(id)[0];
@@ -363,7 +367,12 @@ export const handlers = [
     let build;
     try {
       const files = await catalogFilesOf((await request.formData()).getAll('files'));
-      build = buildCatalog(files as CatalogFiles, supplementsJson as unknown as CatalogSupplements, (id) => catalog.get(id)?.photos ?? []);
+      build = buildCatalog(
+        files as CatalogFiles,
+        supplementsJson as unknown as CatalogSupplements,
+        (id) => catalog.get(id)?.photos ?? [],
+        researchJson as unknown as CatalogResearch,
+      );
     } catch (error) {
       return HttpResponse.json({ message: error instanceof Error ? error.message : 'Каталог не собирается' }, { status: 422 });
     }

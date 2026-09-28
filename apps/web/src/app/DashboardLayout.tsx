@@ -40,7 +40,7 @@ export function DashboardLayout({ children, aside }: DashboardLayoutProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-canvas">
+    <div className="min-h-screen bg-white">
       <div className="flex min-h-screen items-start">
         <div className="hidden p-4 lg:block xl:p-5">
           <Sidebar />

@@ -9,7 +9,7 @@ export function ObjectParametersList({ groups }: { groups: ObjectParameterGroup[
     <div className="grid gap-3">
       {groups.map((group) => (
         <div key={group.title}>
-          <div className="px-1 text-[11.5px] font-medium text-[#8E8E93]">{group.title}</div>
+          <div className="px-1 text-[11.5px] font-medium text-[#5B8FCE]">{group.title}</div>
           <dl className="mt-1">
             {group.items.map((item) => (
               <div

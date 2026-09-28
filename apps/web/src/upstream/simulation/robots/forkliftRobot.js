@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { createGlbModel, normalizeModel } from "./glbModel.js";
 import { FORKLIFT_MODEL_SCALE } from "../constants.js";
+import { applyStudioRobotMaterials } from "../studioLook.js";
 
 // Модель погрузчика лежит в public/models/forklift.glb. Вилы в ней — отдельный
 // узел (их поднимаем/опускаем), смотрят вперёд по +Z модели. Имя узла вил в
@@ -54,7 +55,7 @@ export const forkliftModel = createGlbModel("forklift.glb", prepareForklift);
 //   carry — точка на вилах, к которой крепится груз: ездит вместе с вилами.
 // setForkLift(h) — поднять вилы на h единиц сцены над полом.
 export function makeForkliftRobot() {
-  const model = forkliftModel.clone();
+  const model = applyStudioRobotMaterials(forkliftModel.clone());
   const fork = findFork(model);
   const measure = forkliftModel.getTemplate().userData.forkMeasure;
   const forkBaseY = fork.position.y;

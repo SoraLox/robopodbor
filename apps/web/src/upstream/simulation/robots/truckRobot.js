@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { createGlbModel } from "./glbModel.js";
 import { TRUCK_MODEL_SCALE } from "../constants.js";
+import { applyStudioRobotMaterials, isStudioLook } from "../studioLook.js";
 
 // Модель фуры лежит в public/models/truck.glb: кабина смотрит в +Z модели,
 // задняя стенка с двумя дверями (узлы "Cube002" / "Cube003" — three.js убирает точки из имён) — в −Z.
@@ -49,7 +50,7 @@ export const truckModel = createGlbModel("truck.glb", prepareTruck);
 // курс кабины). setDoors(0..1) — открыть/закрыть задние двери;
 // bedY и length — в единицах сцены.
 export function makeTruck() {
-  const model = truckModel.clone();
+  const model = applyStudioRobotMaterials(truckModel.clone());
   const measure = truckModel.getTemplate().userData.measure;
   const doors = DOOR_NODE_NAMES.map((name) => model.getObjectByName(name)).filter(Boolean);
 
@@ -69,7 +70,10 @@ export function makeTruck() {
   // Тёмный проём открытого кузова: закрывает заднюю стенку, пока двери открыты.
   const opening = new THREE.Mesh(
     new THREE.PlaneGeometry(4.5, 4.4),
-    new THREE.MeshBasicMaterial({ color: 0x16172a, toneMapped: false })
+    new THREE.MeshBasicMaterial({
+      color: isStudioLook() ? 0xb8c0cc : 0x16172a,
+      toneMapped: false,
+    })
   );
   const doorFrame = hinges[0]?.pivot;
   opening.position.set(0, doorFrame?.position.y ?? 3.6, (doorFrame?.position.z ?? -18.4) - 0.2);

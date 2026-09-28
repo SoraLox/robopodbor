@@ -19,13 +19,14 @@ export function ObjectSelectPage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="grid min-h-0 gap-2 overflow-y-auto overscroll-contain [scrollbar-width:thin]" role="radiogroup" aria-label="Тип объекта">
+      <div className="grid min-h-0 gap-2 overflow-y-auto overscroll-contain pt-2 [scrollbar-width:thin]" role="radiogroup" aria-label="Тип объекта">
         {isLoading
           ? [0, 1, 2].map((key) => (
               <div key={key} className="h-[52px] animate-pulse rounded-[12px] bg-[#F2F2F2]" />
             ))
           : types?.map((type) => {
               const isSelected = type.slug === objectType;
+              const isRecommended = type.slug === 'warehouse' && !isSelected;
               const Icon = TYPE_ICONS[type.slug] ?? Warehouse;
               const blurb = TYPE_BLURB[type.slug] ?? type.description;
 
@@ -37,12 +38,20 @@ export function ObjectSelectPage() {
                   aria-checked={isSelected}
                   onClick={() => setObjectType(type.slug)}
                   className={cn(
-                    'flex w-full min-w-0 items-center gap-3 rounded-[12px] border bg-white px-3 py-2.5 text-left transition-colors duration-100',
+                    'relative flex w-full min-w-0 items-center gap-3 rounded-[12px] border bg-white px-3 py-2.5 text-left transition-colors duration-100',
                     isSelected
                       ? 'border-primary-bright'
-                      : 'border-[#E5E5EA] hover:border-[#C7C7CC]',
+                      : isRecommended
+                        ? 'border-status-operation'
+                        : 'border-[#E5E5EA] hover:border-[#C7C7CC]',
                   )}
                 >
+                  {isRecommended ? (
+                    <span className="absolute -top-2 right-3 rounded-full bg-status-operation-tint px-2 py-0.5 text-[10px] font-semibold leading-none text-status-operation">
+                      Рекомендуем
+                    </span>
+                  ) : null}
+
                   <span
                     className={cn(
                       'flex size-9 flex-none items-center justify-center transition-colors duration-100',

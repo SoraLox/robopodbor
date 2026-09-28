@@ -8,7 +8,8 @@ import {
 } from '@/components/ui/accordion';
 import { cn, fmt } from '@/lib/utils';
 
-const GROUP_COLOR = ['bg-foreground', 'bg-[#8E8E93]', 'bg-[#C7C7CC]'];
+const GROUP_COLOR = ['bg-[#2F86F0]', 'bg-[#8E8E93]', 'bg-[#C7C7CC]'];
+const GROUP_DOT = ['bg-[#2F86F0]', 'bg-[#8E8E93]', 'bg-[#C7C7CC]'];
 
 export type CostZone = 'vacuum' | 'arm' | 'all';
 
@@ -49,11 +50,18 @@ export function CostBreakdown({
         {groups.map((group, index) => (
           <div key={group.id} className="flex items-center gap-1.5 text-[12px]">
             <span
-              className={cn('size-2 rounded-full', GROUP_COLOR[index % GROUP_COLOR.length])}
+              className={cn('size-2 rounded-full', GROUP_DOT[index % GROUP_DOT.length])}
               aria-hidden
             />
             <span className="text-[#8E8E93]">{group.title}</span>
-            <span className="font-semibold tabular-nums text-foreground">{group.share}%</span>
+            <span
+              className={cn(
+                'font-semibold tabular-nums',
+                index === 0 ? 'text-[#2F86F0]' : 'text-foreground',
+              )}
+            >
+              {group.share}%
+            </span>
           </div>
         ))}
       </div>
@@ -116,9 +124,9 @@ export function CostBreakdown({
         ))}
       </Accordion>
 
-      <div className="mt-2 flex items-baseline justify-between rounded-[12px] bg-[#F2F2F2] px-2.5 py-2.5">
-        <span className="text-[12.5px] font-medium text-[#8E8E93]">Итого за 7 лет</span>
-        <span className="text-[16px] font-semibold tabular-nums text-foreground">
+      <div className="mt-2 flex items-baseline justify-between rounded-[12px] bg-[#F5F9FF] px-2.5 py-2.5">
+        <span className="text-[12.5px] font-medium text-[#5B8FCE]">Итого за 7 лет</span>
+        <span className="text-[16px] font-semibold tabular-nums text-[#2F86F0]">
           {fmt(total)} млн ₽
         </span>
       </div>

@@ -4,9 +4,10 @@ import type { Maturity, SelectionItem, Solution } from '@/api/types';
 import { categorize } from '@/features/catalog/solutionCategory';
 import { getFitTone } from '@/features/catalog/fitTone';
 import { robotPhoto } from '@/features/objects/previewImages';
-import { useWizardCompanion } from '@/features/objects/wizardCompanion';
+import { useWizardCompanion, useWizardEnter } from '@/features/objects/wizardCompanion';
 import {
   wizardCardHeightPx,
+  WIZARD_COMPANION_SHADOW,
   WIZARD_PREVIEW_EASE,
   WIZARD_PREVIEW_MS,
   WIZARD_WIDTH_PREVIEW,
@@ -47,11 +48,7 @@ export function SolutionPreviewCard({
   const category = solution ? categorize(solution) : null;
   const photo = solution ? robotPhoto(solution) : undefined;
   const { setCompanionOpen } = useWizardCompanion();
-
-  useEffect(() => {
-    setCompanionOpen(open);
-    return () => setCompanionOpen(false);
-  }, [open, setCompanionOpen]);
+  const entered = useWizardEnter(open, setCompanionOpen);
 
   useLayoutEffect(() => {
     const sync = () => setHeight(wizardCardHeightPx());
@@ -62,12 +59,18 @@ export function SolutionPreviewCard({
 
   useEffect(() => {
     if (!open) return;
-    closeRef.current?.focus();
+    // Фокус после анимации и без scroll — иначе в конце выезда дёргается вьюпорт.
+    const focusTimer = window.setTimeout(() => {
+      closeRef.current?.focus({ preventScroll: true });
+    }, PREVIEW_MS);
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      window.clearTimeout(focusTimer);
+      window.removeEventListener('keydown', onKey);
+    };
   }, [open, onClose]);
 
   return (
@@ -78,12 +81,12 @@ export function SolutionPreviewCard({
         aria-labelledby={titleId}
         className="relative flex max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[20px] bg-white motion-reduce:!transition-none"
         style={{
-          boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
+          boxShadow: WIZARD_COMPANION_SHADOW,
           width: WIZARD_WIDTH_PREVIEW,
           height,
-          opacity: open ? 1 : 0,
-          transform: open ? 'translateX(0)' : 'translateX(28px)',
-          transition: `transform ${PREVIEW_MS}ms ${PREVIEW_EASE}, opacity ${Math.round(PREVIEW_MS * 0.75)}ms ${PREVIEW_EASE}`,
+          opacity: entered ? 1 : 0,
+          transform: entered ? 'translate3d(0,0,0)' : 'translate3d(40px,0,0)',
+          transition: `transform ${PREVIEW_MS}ms ${PREVIEW_EASE}, opacity ${PREVIEW_MS}ms ${PREVIEW_EASE}`,
         }}
       >
         {solution ? (

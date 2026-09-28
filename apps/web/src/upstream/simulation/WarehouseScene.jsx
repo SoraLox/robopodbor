@@ -30,7 +30,7 @@ const zoomMaxFor = (floors) => 70 + 14 * (floors - 1);
 const ZOOM_MIN = 22;
 
 const SCENE_SHELL = {
-  background: "linear-gradient(160deg, #CBB8E8 0%, #E3B7C9 35%, #F3CDAE 65%, #FBE6C9 100%)",
+  background: "linear-gradient(165deg, #E8F2FC 0%, #F3F8FD 45%, #FAFCFF 75%, #FFFFFF 100%)",
   fontFamily: "'Baloo 2', ui-rounded, 'Segoe UI Rounded', sans-serif",
 };
 
@@ -122,6 +122,7 @@ export default function WarehouseScene({
     armProd,
     loaderCount,
     energyProfiles,
+    immersive,
     loader: {
       capacityKg: loaderCapacityKg,
       cargoWeightKg,
@@ -263,11 +264,11 @@ export default function WarehouseScene({
     />
   );
 
-  // Immersive hero: белый фон + синее свечение снизу (как на логине, light-версия).
+  // Immersive hero: канвас на весь контейнер. Внешний вид сцены — как в обычном режиме.
   // Управление — в левом KPI-блоке ResultsPage.
   if (immersive) {
     return (
-      <div className="hero-glow-light relative h-full w-full overflow-hidden">
+      <div className="relative h-full w-full overflow-hidden" style={SCENE_SHELL}>
         <div ref={mountRef} className="absolute inset-0 z-[1] overflow-hidden" />
 
         {modelState === "error" && (

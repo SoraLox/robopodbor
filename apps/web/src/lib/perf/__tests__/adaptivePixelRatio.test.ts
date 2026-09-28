@@ -24,7 +24,8 @@ const feed = (quality: ReturnType<typeof createAdaptivePixelRatio>, intervalMs: 
 const warmUp = (quality: ReturnType<typeof createAdaptivePixelRatio>) => feed(quality, 16.7, 180);
 
 describe('adaptivePixelRatio', () => {
-  beforeEach(() => vi.stubGlobal('devicePixelRatio', 2));
+  // Модуль читает только window.devicePixelRatio — тест идёт в Node, jsdom ему не нужен.
+  beforeEach(() => vi.stubGlobal('window', { devicePixelRatio: 2 }));
   afterEach(() => vi.unstubAllGlobals());
 
   it('стартует с DPR устройства, ограниченного maxRatio', () => {

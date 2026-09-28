@@ -17,11 +17,15 @@ export const WIZARD_WIDTH_PREVIEW = 440;
 /** Узкая «менюшка» категорий слева от списка. */
 export const WIZARD_WIDTH_RAIL = 64;
 const COMPANION_GAP_PX = 12;
-/** Компактная тень спутников — без широкого ореола, как у основной карточки. */
-export const WIZARD_COMPANION_SHADOW = '0 2px 8px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)';
-/** Тот же easing, что у разъезда карточки — чуть дольше, чтобы выезд превью читался мягче. */
-export const WIZARD_PREVIEW_MS = WIZARD_EXPAND_MS + 80;
-export const WIZARD_PREVIEW_EASE = EXPAND_EASE;
+/** Мягкая тень спутников — как у основной карточки, с заметным blur. */
+export const WIZARD_COMPANION_SHADOW =
+  '0 0 0 1px rgba(0,0,0,0.04), 0 8px 28px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)';
+/**
+ * Выезд меню / превью / сдвиг к центру — медленный ease-out без overshoot
+ * (overshoot + scale давали рывок на старте).
+ */
+export const WIZARD_PREVIEW_MS = 920;
+export const WIZARD_PREVIEW_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
 const WIDTH_SELECT = WIZARD_WIDTH_SELECT;
 const WIDTH_FORM = WIZARD_WIDTH_FORM;
@@ -81,7 +85,8 @@ const CONTENT_PAD_X_PX = 28;
 const CARD_SHADOW =
   '0 0 0 1px rgba(0,0,0,0.04), 0 -8px 28px rgba(0,0,0,0.08), 0 10px 28px rgba(0,0,0,0.11)';
 const SHADOW_CLIP_Y = 64;
-const SHADOW_CLIP_X = 14;
+/** Достаточно, чтобы боковой blur (~28px) не обрезался в жёсткую полоску. */
+const SHADOW_CLIP_X = 36;
 const FLIP_TRANSITION = `transform ${EXPAND_MS}ms ${EXPAND_EASE}`;
 
 /**
@@ -268,10 +273,12 @@ export function WizardCard({
   const previewSpan = WIZARD_WIDTH_PREVIEW + COMPANION_GAP_PX;
   const railSpan = WIZARD_WIDTH_RAIL + COMPANION_GAP_PX;
   const pad = 2 * 16;
-  // Рейка узкая — не сдвигаем группу под неё (двойной motion с width/translate давал рывок).
   const previewSideBySide = viewportWidth - pad >= width + previewSpan + (railOpen ? railSpan : 0);
   const railSideBySide = viewportWidth - pad >= width + railSpan;
-  const groupShift = companionOpen && previewSideBySide ? -previewSpan / 2 : 0;
+  // Центр всей композиции (рейка | карточка | превью), не только основной карточки.
+  const leftSpan = railOpen && railSideBySide ? railSpan : 0;
+  const rightSpan = companionOpen && previewSideBySide ? previewSpan : 0;
+  const groupShift = (leftSpan - rightSpan) / 2;
 
   return (
     <WizardCompanionContext.Provider value={companion}>
@@ -280,7 +287,7 @@ export function WizardCard({
         <div
           className="relative flex max-w-full motion-reduce:!transition-none"
           style={{
-            transform: groupShift ? `translateX(${groupShift}px)` : undefined,
+            transform: `translate3d(${groupShift}px,0,0)`,
             transition: `transform ${WIZARD_PREVIEW_MS}ms ${WIZARD_PREVIEW_EASE}`,
           }}
         >

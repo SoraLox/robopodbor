@@ -37,7 +37,7 @@ function Note({ children, fill }: { children: string; fill?: boolean }) {
     <div
       className={
         fill
-          ? 'grid h-full min-h-[240px] place-items-center bg-[#E8D5E8] p-8 text-center text-[13.5px] text-[#3F4159]'
+          ? 'grid h-full min-h-[240px] place-items-center bg-[#F3F8FD] p-8 text-center text-[13.5px] text-[#3A4A5C]'
           : 'grid min-h-[240px] place-items-center rounded-xl border border-border p-8 text-center text-[13.5px] text-muted-foreground'
       }
     >
@@ -51,7 +51,7 @@ function SceneFallback({ fill }: { fill?: boolean }) {
     <div
       className={
         fill
-          ? 'grid h-full place-items-center bg-[#E8D5E8] text-[13.5px] text-[#3F4159]'
+          ? 'grid h-full place-items-center bg-[#F3F8FD] text-[13.5px] text-[#3A4A5C]'
           : 'grid min-h-[320px] place-items-center rounded-2xl border border-border text-[13.5px] text-muted-foreground'
       }
     >
