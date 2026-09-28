@@ -16,14 +16,12 @@ import {
   SlidersHorizontal,
   TriangleAlert,
 } from 'lucide-react';
-import { useCalculation } from '@/api/queries';
+import { useCalculation, useObjectParameters } from '@/api/queries';
+import { useWizardStore } from '@/app/store';
 import { Button } from '@/components/ui/button';
 import { CostBreakdown } from './CostBreakdown';
 import { ObjectParametersList } from './ObjectParametersList';
-import {
-  OBJECT_PARAMETERS,
-  type ObjectParameterGroup,
-} from './objectParameters';
+import { parameterGroups as buildParameterGroups, type ObjectParameterGroup } from './objectParameters';
 import { ReportSections, type ReportSection } from './ReportCategory';
 import { ScenarioBars } from './ScenarioBars';
 import { SensitivityPanel } from './SensitivityPanel';
@@ -41,22 +39,16 @@ interface ObjectIntro {
   meta: string;
 }
 
-const DEFAULT_INTRO: ObjectIntro = {
-  title: 'Склад «Южные Врата» · 20 000 м²',
-  meta: 'Расчёт №2026-0417 · 2 смены · 100 отборщиков · горизонт 5 лет · обновлено 17.09.2026',
-};
+/** Заголовок отчёта — из самого расчёта: объект, площадь, решение, смены, горизонт. */
+function introOf(data: CalculationResult | undefined): ObjectIntro {
+  return { title: data?.objectTitle ?? '', meta: data?.meta ?? '' };
+}
 
-const OBJECT_INTRO: Record<string, ObjectIntro> = {
-  warehouse: DEFAULT_INTRO,
-  airport: {
-    title: 'Аэропорт «Соколиная Гора» · 85 000 м²',
-    meta: 'Расчёт №2026-0418 · 2 терминала · 320 сотрудников рампы · горизонт 7 лет · обновлено 17.09.2026',
-  },
-  clinic: {
-    title: 'Многопрофильная больница №14 · 45 000 м²',
-    meta: 'Расчёт №2026-0419 · 650 коек · 65 санитаров · горизонт 7 лет · обновлено 17.09.2026',
-  },
-};
+/** «5 лет» — горизонт расчёта из группы OPEX («OPEX — расходы за 5 лет»). */
+function horizonOf(data: CalculationResult): string {
+  const opex = data.costGroups.find((group) => group.id === 'opex')?.title ?? '';
+  return opex.match(/за\s(.+)$/)?.[1] ?? 'горизонт расчёта';
+}
 
 export function ResultsPage() {
   const navigate = useNavigate();
@@ -65,8 +57,10 @@ export function ResultsPage() {
     calculationId: string;
   }>();
   const { data, isLoading, isError } = useCalculation(calculationId);
-  const intro = OBJECT_INTRO[objectType] ?? DEFAULT_INTRO;
-  const parameterGroups = OBJECT_PARAMETERS[objectType] ?? OBJECT_PARAMETERS.warehouse ?? [];
+  const intro = introOf(data);
+  const { data: fields } = useObjectParameters(objectType);
+  const entered = useWizardStore((s) => s.parameters);
+  const parameterGroups = fields ? buildParameterGroups(fields, entered) : [];
   const [exporting, setExporting] = useState<'pdf' | 'xlsx' | null>(null);
   const [previewId, setPreviewId] = useState<string | null>(null);
 
@@ -125,7 +119,11 @@ export function ResultsPage() {
       >
         <SimPlaybackProvider>
           <div className="absolute inset-0 z-0">
-            <ResultSimulation objectType={objectType} immersive />
+            <ResultSimulation
+              objectType={objectType}
+              immersive
+              {...(data?.robots && data.solutionId ? { planned: { solutionId: data.solutionId, count: data.robots.count } } : {})}
+            />
           </div>
 
           <div className="pointer-events-none absolute inset-0 z-20 px-5 sm:px-8">
@@ -180,7 +178,7 @@ function ReportBelowFold({
     {
       id: 'costs',
       title: 'Структура затрат',
-      summary: `${fmt(data.totalTco)} млн ₽ за 7 лет · сценарий «Покупка»`,
+      summary: `${fmt(data.totalTco)} млн ₽ за ${horizonOf(data)} · сценарий «Покупка»`,
       icon: ListTree,
       content: <CostBreakdown groups={data.costGroups} total={data.totalTco} />,
     },
@@ -539,7 +537,7 @@ function Metric({
 
 function compareSummary(data: CalculationResult): string {
   const recommended = data.scenarios.find((scenario) => scenario.recommended);
-  if (!recommended) return `${data.scenarios.length} варианта · TCO за 7 лет`;
+  if (!recommended) return `${data.scenarios.length} варианта · TCO за ${horizonOf(data)}`;
   return `${recommended.title} · ${fmt(recommended.tco)} млн ₽`;
 }
 
