@@ -64,6 +64,9 @@ jobs:
 
       - name: Prisma generate + validate
         working-directory: apps/api
+        # Проверке схемы нужен адрес базы, но подключения не будет — хватит заглушки.
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
         run: npx prisma generate && npx prisma validate
 
       - name: Typecheck + build

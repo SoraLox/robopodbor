@@ -27,7 +27,7 @@ describe('formatGroupedNumber', () => {
   });
 
   it('preserves caret by digit count', () => {
-    // "100|00" → "10 000" caret after 3 digits → after "10 0"
+    // "100|00" → "10 000" caret after 3 digits → after "10 0"
     const { value, caret } = formatGroupedNumberAtCaret('10000', 3);
     expect(value).toBe('10\u202f000');
     expect(value.slice(0, caret).replace(/\D/g, '').length).toBe(3);
