@@ -13,6 +13,9 @@ import {
 } from './simulationInput';
 import { buildAirportInput, hasAirportScene } from './airportInput';
 
+/** Столько башен СтойкаБокса помещает сцена (upstream loaders/storageCubeFleet.js MAX_TOWERS). */
+const MAX_TOWERS = 64;
+
 // three.js (~300 КБ gzip) грузится отдельным чанком: KPI и графики отчёта
 // показываются сразу, сцена догружается следом.
 const WarehouseScene = lazy(() => import('@/upstream/simulation/WarehouseScene.jsx'));
@@ -257,6 +260,7 @@ function SimulationScene({ input, immersive }: { input: SimulationInput; immersi
         loaderCapacityKg={fleets.loader?.capacityKg ?? 100}
         loaderSpeedMps={fleets.loader?.speedMps ?? 2}
         loaderThroughput={fleets.loader?.throughput ?? 0}
+        storageTowers={fleets.loader?.storageTowers}
         cargoWeightKg={params.cargoWeightKg}
         cargoLengthCm={params.cargoLengthCm}
         cargoWidthCm={params.cargoWidthCm}
@@ -319,6 +323,9 @@ function SubstitutionNote({ input, floating }: { input: SimulationInput; floatin
             .map((item) => `${item.field} — ${item.value}`)
             .join(', ')}.`,
       ),
+    ...fleets
+      .filter((f) => (f.storageTowers ?? 0) > MAX_TOWERS)
+      .map((f) => `Сетка ${f.name}: в сцене ${MAX_TOWERS} башен из ${f.storageTowers!.toLocaleString('ru-RU')} по расчёту ёмкости.`),
     ...fleets
       .filter((f) => f.requiredCount > f.maxCount)
       .map((f) => `${many ? `${f.name}: п` : 'П'}о расчёту нужно ${f.requiredCount}, в сцене помещается ${f.maxCount}.`),

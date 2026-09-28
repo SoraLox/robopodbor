@@ -1062,6 +1062,9 @@ components:
         chargeHours: { type: number }
         workPowerKw: { type: number }
         idlePowerKw: { type: number }
+        storageTowers:
+          type: integer
+          description: 'СтойкаБокс: башен в сетке — ёмкость хранения; роботы (count) — шаттлы.'
         substitutions:
           type: array
           description: Чего нет в карточке и что взято у демо-робота.

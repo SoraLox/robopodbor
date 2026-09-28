@@ -289,9 +289,10 @@ export function useSimulation(cfg) {
           level.loaderSystem = createStorageCubeFleet({
             group: level.loaderGroup,
             gates: layout.gates,
+            area: layout.free,
             count: loaderCount,
+            towerCount: loader.storageTowers,
             energyProfile: energyProfiles.loader,
-            throughputPerHour: loader.cargoPerHour / floorsCount,
           });
         } else if (isDefaultShape(shape)) {
           level.loaderSystem = createLoaderSystem({

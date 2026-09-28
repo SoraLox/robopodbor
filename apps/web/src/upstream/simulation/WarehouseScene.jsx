@@ -54,6 +54,7 @@ export default function WarehouseScene({
   loaderCapacityKg,
   loaderSpeedMps,
   loaderThroughput,
+  storageTowers,
   cargoWeightKg,
   cargoLengthCm,
   cargoWidthCm,
@@ -141,6 +142,7 @@ export default function WarehouseScene({
       truckPayload,
       slotsPerLane,
       routeLengthM,
+      storageTowers,
       cargo: { lengthCm: cargoLengthCm, widthCm: cargoWidthCm, heightCm: cargoHeightCm, skuCount, oversizedSharePct: oversizedCargoPct },
     },
   });

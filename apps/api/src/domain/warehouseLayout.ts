@@ -53,6 +53,11 @@ export interface RackStorage {
   pallets: number;
 }
 
+/** Ярусов хранения по высоте потолка: паллета с зазором над ней. */
+export function storageLevels(ceilingM: number, palletHeightM: number): number {
+  return Math.max(1, Math.floor(ceilingM / (palletHeightM + RACK_LEVEL_GAP_M)));
+}
+
 /**
  * Ёмкость нарисованных стеллажей: площадь стеллажей × паллет на м² ×
  * ярусы по высоте потолка. null — стеллажи не нарисованы.
@@ -71,6 +76,6 @@ export function rackStorageOf(
   const rackAreaM2 = (input.areaM2 * racks) / inside;
   const perLevelPerM2 =
     1 / ((input.palletLengthM + RACK_CLEARANCE_M) * (input.palletWidthM + RACK_CLEARANCE_M));
-  const levels = Math.max(1, Math.floor(input.ceilingM / (input.palletHeightM + RACK_LEVEL_GAP_M)));
+  const levels = storageLevels(input.ceilingM, input.palletHeightM);
   return { rackAreaM2, levels, perLevelPerM2, pallets: Math.floor(rackAreaM2 * perLevelPerM2 * levels) };
 }

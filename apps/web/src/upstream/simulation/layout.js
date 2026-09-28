@@ -121,6 +121,8 @@ export function computeLayout(shape, robotTypes, workZoneShare = 1) {
     maxLoaderCount: Math.max(1, gates.length * (custom ? 3 : 1)),
     gates,
     bounds,
+    /** Свободный пол для стационарного оборудования: весь контур у пресета, наибольший прямоугольник пола у своей формы. */
+    free,
   };
 }
 

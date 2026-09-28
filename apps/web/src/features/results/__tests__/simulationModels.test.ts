@@ -46,3 +46,19 @@ describe('сцена аэропорта', () => {
     expect(input.demand.transport).toBe(32 * 18);
   });
 });
+
+describe('СтойкаБокс: шаттлы — роботы, башни — ёмкость', () => {
+  it('шаттлов столько, сколько в расчёте, башни — от паллетомест паспорта', () => {
+    const fields = objectParameters.warehouse ?? [];
+    const solution = byId('AS0004') as unknown as CatalogSolution;
+    const result = calculateEconomics({ objectType: 'warehouse', parameters: {}, fields, solution });
+    const cube = result.fleet![0]!;
+    expect(cube.model).toBe('storagecube');
+    // 20 000 паллетомест / 5 ярусов (10 м / (1,6 + 0,2) м).
+    expect(cube.storageTowers).toBe(4000);
+    expect(result.assumptions.some((line) => line.includes('шаттлы над сеткой башен'))).toBe(true);
+    const input = buildSimulationInput(fields, {}, result.fleet!);
+    expect(input.fleets.loader!.requiredCount).toBe(cube.count);
+    expect(input.fleets.loader!.storageTowers).toBe(4000);
+  });
+});

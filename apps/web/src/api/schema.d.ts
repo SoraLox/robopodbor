@@ -817,6 +817,8 @@ export interface components {
             chargeHours?: number;
             workPowerKw: number;
             idlePowerKw: number;
+            /** @description СтойкаБокс: башен в сетке — ёмкость хранения; роботы (count) — шаттлы. */
+            storageTowers?: number;
             /** @description Чего нет в карточке и что взято у демо-робота. */
             substitutions: {
                 field: string;

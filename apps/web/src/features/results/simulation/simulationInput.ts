@@ -130,6 +130,8 @@ export interface SimFleet {
   maxCount: number;
   /** Стартовое число в сцене: расчётное, но не больше maxCount. */
   recommendedCount: number;
+  /** СтойкаБокс: башен в сетке (ёмкость); count — шаттлы. */
+  storageTowers: number | undefined;
   /** Эффективная производительность одного робота: м²/ч, строк/ч, паллет/ч. */
   throughput: number;
   capacityKg: number;
@@ -169,7 +171,8 @@ export function buildSimulationInput(
 
   const fleets: Partial<Record<SimRobotType, SimFleet>> = {};
   for (const group of groups) {
-    const maxCount = maxOf[group.kind];
+    // Шаттлы СтойкаБокса ездят по сетке, а не через ворота — предел свой.
+    const maxCount = group.model === 'storagecube' ? 16 : maxOf[group.kind];
     fleets[group.kind] = {
       kind: group.kind,
       name: group.name,
@@ -177,6 +180,7 @@ export function buildSimulationInput(
       requiredCount: group.count,
       maxCount,
       recommendedCount: Math.max(1, Math.min(maxCount, group.count)),
+      storageTowers: group.storageTowers,
       throughput: group.throughputPerRobot,
       capacityKg: group.capacityKg ?? 100,
       speedMps: group.speedMps ?? 2,

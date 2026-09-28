@@ -8,7 +8,7 @@
  */
 import { OBJECT_LABEL, type CatalogSolution } from "./catalog.js";
 import type { FleetKind, Substitution } from "./fleet.js";
-import { decodeLayoutCells, rackStorageOf } from "./warehouseLayout.js";
+import { decodeLayoutCells, rackStorageOf, storageLevels } from "./warehouseLayout.js";
 import {
   DEMAND_UNIT,
   FLEET_LABEL,
@@ -60,6 +60,8 @@ export interface FleetOutput {
   workPowerKw: number;
   idlePowerKw: number;
   substitutions: Substitution[];
+  /** СтойкаБокс: башен в сетке — ёмкость хранения (роботы — шаттлы, count). */
+  storageTowers?: number;
 }
 
 export interface CalculationOutput {
@@ -941,6 +943,11 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
     );
   }
 
+  // СтойкаБокс: роботы — шаттлы (их считает поток), сетка башен — ёмкость хранения.
+  const cubeLevels = storageLevels(num("wh_vysota_potolkov_zone_hraneniya", 10), num("wh_pallet_height", 1600) / 1000);
+  const cubeTowers = palletSlots ? Math.ceil(palletSlots / cubeLevels) : undefined;
+  const cube = groups.find((g) => g.robot.model === "storagecube");
+
   const count = groups.reduce((sum, g) => sum + g.count, 0);
   const fleetLine = (g: (typeof groups)[number]) =>
     `${FLEET_LABEL[g.kind]}: ${g.count} × ${g.robot.solution.name} — пик ${fmt(g.peakDemand)} ${DEMAND_UNIT[g.kind]}, на робота ${fmt(g.throughputPerRobot)} ${DEMAND_UNIT[g.kind]}`;
@@ -965,6 +972,13 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
               ? ` Стеллажи ${fmt(storage.rackAreaM2)} м² × ${storage.levels} ярусов (потолок / высота паллеты с зазором) × ${fmt(storage.perLevelPerM2)} паллет на м² ≈ ${Math.round(storage.pallets).toLocaleString("ru-RU")} паллетомест.`
               : ""
           }`,
+        ]
+      : []),
+    ...(cube
+      ? [
+          `${cube.robot.solution.name}: роботы — шаттлы над сеткой башен, их ${cube.count} по потоку; сетка — ёмкость хранения${
+            cubeTowers ? `: ${cubeTowers.toLocaleString("ru-RU")} башен по ${cubeLevels} ярусов на ${palletSlots.toLocaleString("ru-RU")} паллетомест паспорта` : ""
+          }. Цена карточки — модуль «шаттл + участок сетки»: отдельной цены сетки в каталоге нет.`,
         ]
       : []),
     ...(groups.some((g) => g.kind === "vacuum")
@@ -1137,6 +1151,7 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
     workPowerKw: g.robot.workPowerKw,
     idlePowerKw: g.robot.idlePowerKw,
     substitutions: g.robot.substitutions,
+    ...(g.robot.model === "storagecube" && cubeTowers ? { storageTowers: cubeTowers } : {}),
   }));
 
   return {
