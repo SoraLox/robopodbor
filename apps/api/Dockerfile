@@ -35,7 +35,7 @@ COPY --from=build /app/apps/api/prisma/seed-data/demo-calculation.json ./prisma/
 
 USER node
 EXPOSE 4000
-HEALTHCHECK --interval=30s --timeout=3s CMD wget -qO- http://localhost:4000/api/health >/dev/null || exit 1
+HEALTHCHECK --interval=30s --timeout=3s CMD wget -qO- http://127.0.0.1:4000/api/health >/dev/null || exit 1
 
 # exec-форма: node — PID 1 и сам получает SIGTERM от docker stop (см. shutdown в index.ts).
 CMD ["node", "dist/index.js"]
