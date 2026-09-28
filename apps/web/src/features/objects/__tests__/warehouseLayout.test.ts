@@ -59,3 +59,21 @@ describe('планировка склада', () => {
     expect(layout.vacuumZone!.dockZ).toBeLessThanOrEqual(free.zMax);
   });
 });
+
+describe('ёмкость стеллажей', () => {
+  it('площадь стеллажей × паллет на м² × ярусы по высоте потолка', async () => {
+    const { rackStorage } = await import('@/features/objects/layout/warehouseLayout');
+    const storage = rackStorage(lShape(), {
+      wh_obschaya_ploschad_sklada: '20000',
+      wh_vysota_potolkov_zone_hraneniya: '10',
+      wh_pallet_length: '1200',
+      wh_pallet_width: '800',
+      wh_pallet_height: '1600',
+    })!;
+    // 10 м / (1,6 м паллета + 0,2 м зазор) = 5 ярусов; 1 / (1,3 × 0,9) ≈ 0,85 паллет на м².
+    expect(storage.levels).toBe(5);
+    expect(storage.perLevelPerM2).toBeCloseTo(1 / 1.17, 3);
+    expect(storage.pallets).toBe(Math.floor(storage.rackAreaM2 * storage.perLevelPerM2 * 5));
+    expect(rackStorage(buildDefaultShape() as Shape, {})).toBeNull();
+  });
+});

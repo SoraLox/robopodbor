@@ -8,6 +8,7 @@
  */
 import { OBJECT_LABEL, type CatalogSolution } from "./catalog.js";
 import type { FleetKind, Substitution } from "./fleet.js";
+import { decodeLayoutCells, rackStorageOf } from "./warehouseLayout.js";
 import {
   DEMAND_UNIT,
   FLEET_LABEL,
@@ -921,6 +922,25 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
     gaps.push(`CAPEX ${fmt(mln(purchase.capex))} млн ₽ больше бюджета ${fmt(params.budgetMln)} млн ₽ из паспорта`);
   }
 
+  // Планировка из конструктора: ёмкость нарисованных стеллажей против паспорта.
+  const layout = decodeLayoutCells(values.wh_layout);
+  const num = (id: string, fallback: number) => numberOf(values[id]) ?? fallback;
+  const storage = layout
+    ? rackStorageOf(layout, {
+        areaM2: params.floorAreaM2,
+        ceilingM: num("wh_vysota_potolkov_zone_hraneniya", 10),
+        palletLengthM: num("wh_pallet_length", 1200) / 1000,
+        palletWidthM: num("wh_pallet_width", 800) / 1000,
+        palletHeightM: num("wh_pallet_height", 1600) / 1000,
+      })
+    : null;
+  const palletSlots = num("wh_kolichestvo_palletomest", 0);
+  if (storage && palletSlots && storage.pallets < palletSlots * 0.9) {
+    gaps.push(
+      `стеллажи на планировке вмещают ≈ ${Math.round(storage.pallets).toLocaleString("ru-RU")} из ${palletSlots.toLocaleString("ru-RU")} паллетомест паспорта`,
+    );
+  }
+
   const count = groups.reduce((sum, g) => sum + g.count, 0);
   const fleetLine = (g: (typeof groups)[number]) =>
     `${FLEET_LABEL[g.kind]}: ${g.count} × ${g.robot.solution.name} — пик ${fmt(g.peakDemand)} ${DEMAND_UNIT[g.kind]}, на робота ${fmt(g.throughputPerRobot)} ${DEMAND_UNIT[g.kind]}`;
@@ -937,6 +957,15 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
       : []),
     ...(groups.some((g) => g.kind === "loader" && g.robot.mobile)
       ? [`Цикл погрузчика: маршрут ${params.routeLengthM} м туда порожним и обратно с грузом ${params.cargoWeightKg} кг (с грузом медленнее) + ${WAREHOUSE_NORMS.loaderHandlingSeconds} с на вилы.`]
+      : []),
+    ...(layout
+      ? [
+          `Планировка из конструктора: путь погрузчика ${params.routeLengthM} м — средний путь по проездам от ближайших ворот до стеллажа.${
+            storage
+              ? ` Стеллажи ${fmt(storage.rackAreaM2)} м² × ${storage.levels} ярусов (потолок / высота паллеты с зазором) × ${fmt(storage.perLevelPerM2)} паллет на м² ≈ ${Math.round(storage.pallets).toLocaleString("ru-RU")} паллетомест.`
+              : ""
+          }`,
+        ]
       : []),
     ...(groups.some((g) => g.kind === "vacuum")
       ? [`Уборка: активная зона ${fmt(params.activeAreaM2)} м² за одну смену ${params.hoursPerShift} ч.`]

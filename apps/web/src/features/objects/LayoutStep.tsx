@@ -7,6 +7,8 @@ import { computeGateClusters } from '@/upstream/simulation/shape/shapeGeometry.j
 import {
   DEFAULT_LAYOUT,
   areaOf,
+  palletSlotsOf,
+  rackStorage,
   decodeShape,
   encodeShape,
   isGate,
@@ -35,7 +37,7 @@ const TOOLS = [
   { id: 'in', label: 'Выгрузка', hint: 'Фура → склад', cell: CELL.GATE_IN },
   { id: 'out', label: 'Загрузка', hint: 'Склад → фура', cell: CELL.GATE_OUT },
   { id: 'rack', label: 'Стеллаж', hint: 'Место хранения', cell: CELL.RACK },
-  { id: 'erase', label: 'Ластик', hint: 'Снять метку или пол', cell: null },
+  { id: 'erase', label: 'Ластик', hint: 'Метку или пол', cell: null },
 ] as const;
 
 type ToolId = (typeof TOOLS)[number]['id'];
@@ -132,6 +134,8 @@ export function LayoutStep({ active }: { active: boolean }) {
   }, [draft, version]);
 
   const metrics = useMemo(() => layoutMetrics(draft, areaM2), [draft, version, areaM2]); // eslint-disable-line react-hooks/exhaustive-deps
+  const storage = useMemo(() => rackStorage(draft, parameters), [draft, version, parameters]); // eslint-disable-line react-hooks/exhaustive-deps
+  const passportSlots = palletSlotsOf(parameters);
   const stray = useMemo(() => strayGateCells(draft).size, [draft, version]); // eslint-disable-line react-hooks/exhaustive-deps
   const isDefault = useMemo(() => encodeShape(draft) === DEFAULT_LAYOUT, [draft, version]); // eslint-disable-line react-hooks/exhaustive-deps
   const canContinue = metrics.footprintCells > 0 && metrics.gates > 0;
@@ -226,14 +230,12 @@ export function LayoutStep({ active }: { active: boolean }) {
           />
         </div>
 
-        <div className="flex w-[300px] flex-none flex-col gap-4 overflow-y-auto">
+        <div className="flex w-[300px] flex-none flex-col gap-3 overflow-y-auto">
           <p className="text-[12.5px] leading-snug text-[#6E6E73]">
-            Нарисуйте контур склада и расставьте ворота и стеллажи. Контур — это вся площадь из паспорта (
-            {nf.format(areaM2)} м²). В ворота выгрузки фуры привозят товар, роботы везут его к ближайшему стеллажу; из
-            ворот загрузки товар увозят.
+            Контур — вся площадь склада из паспорта, {nf.format(areaM2)} м². Ворота ставьте на край контура.
           </p>
 
-          <div role="radiogroup" aria-label="Инструмент" className="grid gap-1.5">
+          <div role="radiogroup" aria-label="Инструмент" className="grid grid-cols-2 gap-1.5">
             {TOOLS.map((item) => (
               <button
                 key={item.id}
@@ -242,7 +244,7 @@ export function LayoutStep({ active }: { active: boolean }) {
                 aria-checked={tool === item.id}
                 onClick={() => setTool(item.id)}
                 className={cn(
-                  'flex items-center gap-2.5 rounded-[10px] border px-3 py-2 text-left transition-colors duration-100',
+                  'flex items-center gap-2 rounded-[10px] border px-2.5 py-1.5 text-left transition-colors duration-100',
                   tool === item.id ? 'border-foreground' : 'border-[#E5E5EA] hover:border-[#C7C7CC]',
                 )}
               >
@@ -252,8 +254,8 @@ export function LayoutStep({ active }: { active: boolean }) {
                   style={{ background: item.cell === null ? '#FFFFFF' : COLOR[item.cell] }}
                 />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[13.5px] font-semibold leading-tight text-foreground">{item.label}</span>
-                  <span className="block text-[11.5px] leading-snug text-[#8E8E93]">{item.hint}</span>
+                  <span className="block text-[13px] font-semibold leading-tight text-foreground">{item.label}</span>
+                  <span className="block truncate text-[11px] leading-snug text-[#8E8E93]">{item.hint}</span>
                 </span>
               </button>
             ))}
@@ -266,14 +268,17 @@ export function LayoutStep({ active }: { active: boolean }) {
             </dd>
             <dt className="text-[#8E8E93]">Ворота</dt>
             <dd className="text-right tabular-nums text-foreground">
-              {metrics.gates}
               {metrics.gatesIn || metrics.gatesOut
-                ? ` (выгрузка ${metrics.gatesIn}, загрузка ${metrics.gatesOut})`
-                : ' двусторонних'}
+                ? `${metrics.gates}: выгр. ${metrics.gatesIn} · загр. ${metrics.gatesOut}`
+                : `${metrics.gates} двусторонних`}
             </dd>
             <dt className="text-[#8E8E93]">Стеллажи</dt>
             <dd className="text-right tabular-nums text-foreground">
-              {metrics.rackCells ? `${nf.format(Math.round(metrics.rackCells * metrics.cellMeters ** 2))} м²` : 'по типу хранения'}
+              {storage ? `${nf.format(Math.round(storage.rackAreaM2))} м² · ${storage.levels} ярусов` : 'не нарисованы'}
+            </dd>
+            <dt className="text-[#8E8E93]">Паллетомест</dt>
+            <dd className="text-right tabular-nums text-foreground">
+              {storage ? `≈ ${nf.format(storage.pallets)} из ${nf.format(passportSlots)}` : `${nf.format(passportSlots)} по паспорту`}
             </dd>
             <dt className="text-[#8E8E93]">Путь до хранения</dt>
             <dd className="text-right tabular-nums text-foreground">~{metrics.routeLengthM} м</dd>
@@ -283,6 +288,13 @@ export function LayoutStep({ active }: { active: boolean }) {
             <p role="alert" className="flex gap-1.5 text-[12px] leading-snug text-status-danger">
               <AlertTriangle className="mt-px size-3.5 flex-none" strokeWidth={2} aria-hidden />
               Нужен контур и хотя бы одни ворота на его краю.
+            </p>
+          ) : null}
+          {storage && storage.pallets < passportSlots * 0.9 ? (
+            <p className="flex gap-1.5 text-[12px] leading-snug text-status-piloting">
+              <AlertTriangle className="mt-px size-3.5 flex-none" strokeWidth={2} aria-hidden />
+              Стеллажи вмещают {Math.round((storage.pallets / passportSlots) * 100)}% паллетомест из паспорта — добавьте
+              стеллажей или уточните паспорт.
             </p>
           ) : null}
           {stray ? (

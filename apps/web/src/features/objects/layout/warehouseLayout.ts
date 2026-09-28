@@ -8,6 +8,7 @@
  */
 import { CELL, GRID_SIZE, buildDefaultShape, makeEmptyShape } from '@/upstream/simulation/shape/shapeTypes.js';
 import { computeGateClusters } from '@/upstream/simulation/shape/shapeGeometry.js';
+import { decodeLayoutCells, encodeLayoutCells, rackStorageOf, type RackStorage } from '@domain/warehouseLayout';
 
 export interface Shape {
   gridSize: number;
@@ -15,46 +16,17 @@ export interface Shape {
   cells: Uint8Array;
 }
 
-const LETTER_OF: Record<number, string> = {
-  [CELL.EMPTY]: 'E',
-  [CELL.FLOOR]: 'F',
-  [CELL.GATE]: 'G',
-  [CELL.RACK]: 'R',
-  [CELL.GATE_IN]: 'I',
-  [CELL.GATE_OUT]: 'O',
-};
-const VALUE_OF: Record<string, number> = Object.fromEntries(
-  Object.entries(LETTER_OF).map(([value, letter]) => [letter, Number(value)]),
-);
-
-/** «25:F1G3F2…» — размер сетки и серии клеток (буква + сколько подряд). */
+/** «25:F1G3F2…» — размер сетки и серии клеток (кодек общий с расчётом, @domain/warehouseLayout). */
 export function encodeShape(shape: Shape): string {
-  let out = `${shape.gridSize}:`;
-  let run = 0;
-  for (let i = 0; i < shape.cells.length; i += 1) {
-    run += 1;
-    if (shape.cells[i + 1] !== shape.cells[i] || i === shape.cells.length - 1) {
-      out += `${LETTER_OF[shape.cells[i]!] ?? 'E'}${run}`;
-      run = 0;
-    }
-  }
-  return out;
+  return encodeLayoutCells(shape.gridSize, shape.cells);
 }
 
 export function decodeShape(text: string | null | undefined): Shape | null {
-  const match = text?.match(/^(\d+):((?:[EFGRIO]\d+)+)$/);
-  if (!match) return null;
-  const gridSize = Number(match[1]);
-  if (gridSize !== GRID_SIZE) return null;
-  const shape = makeEmptyShape(gridSize) as Shape;
-  let index = 0;
-  for (const [, letter, count] of match[2]!.matchAll(/([EFGRIO])(\d+)/g)) {
-    const value = VALUE_OF[letter!]!;
-    const end = Math.min(shape.cells.length, index + Number(count));
-    shape.cells.fill(value, index, end);
-    index = end;
-  }
-  return index === shape.cells.length ? shape : null;
+  const decoded = decodeLayoutCells(text);
+  if (!decoded || decoded.gridSize !== GRID_SIZE) return null;
+  const shape = makeEmptyShape(GRID_SIZE) as Shape;
+  shape.cells.set(decoded.cells);
+  return shape;
 }
 
 export const DEFAULT_LAYOUT = encodeShape(buildDefaultShape() as Shape);
@@ -131,8 +103,28 @@ export function layoutParameters(layout: string | null, areaM2: number): Record<
   };
 }
 
+const numberOf = (text: string | undefined, fallback: number) => {
+  const value = Number(String(text ?? '').replace(/\s/g, '').replace(',', '.'));
+  return value > 0 ? value : fallback;
+};
+
 /** «Общая площадь склада» из паспорта, м². */
 export function areaOf(parameters: Record<string, string>): number {
-  const value = Number(String(parameters.wh_obschaya_ploschad_sklada ?? '').replace(/\s/g, '').replace(',', '.'));
-  return value > 0 ? value : 20000;
+  return numberOf(parameters.wh_obschaya_ploschad_sklada, 20000);
+}
+
+/** Ёмкость нарисованных стеллажей по паспорту: высота потолка и габарит паллеты. */
+export function rackStorage(shape: Shape, parameters: Record<string, string>): RackStorage | null {
+  return rackStorageOf(shape, {
+    areaM2: areaOf(parameters),
+    ceilingM: numberOf(parameters.wh_vysota_potolkov_zone_hraneniya, 10),
+    palletLengthM: numberOf(parameters.wh_pallet_length, 1200) / 1000,
+    palletWidthM: numberOf(parameters.wh_pallet_width, 800) / 1000,
+    palletHeightM: numberOf(parameters.wh_pallet_height, 1600) / 1000,
+  });
+}
+
+/** «Количество паллетомест» из паспорта. */
+export function palletSlotsOf(parameters: Record<string, string>): number {
+  return numberOf(parameters.wh_kolichestvo_palletomest, 20000);
 }

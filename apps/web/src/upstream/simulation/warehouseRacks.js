@@ -8,7 +8,11 @@ import { CELL, cellAt, cellWorldOrigin } from "./shape/shapeTypes.js";
 // на части полок, а не цветной квадрат.
 const RACK_INSET = 0.3;
 const POST_SIZE = 0.22;
-const TIERS = 3;
+// Ярусов по умолчанию; своё число — shape.rackTiers (из высоты потолка и паллеты,
+// см. features/objects/layout/warehouseLayout.ts rackStorage), не выше стен.
+const DEFAULT_TIERS = 3;
+const MAX_TIERS = 5;
+let TIERS = DEFAULT_TIERS;
 const TIER_HEIGHT = 1.9;
 const SHELF_THICKNESS = 0.12;
 
@@ -63,6 +67,7 @@ function buildRackUnit(size, seed, materials, geometries) {
 export function createRacks(shape) {
   const group = new THREE.Group();
   if (!shape) return group;
+  TIERS = Math.max(1, Math.min(MAX_TIERS, Math.round(shape.rackTiers ?? DEFAULT_TIERS)));
 
   const materials = buildMaterials();
   const half = shape.cellSize / 2 - RACK_INSET;

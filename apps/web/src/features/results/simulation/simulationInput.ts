@@ -12,7 +12,7 @@ import { fleetKindOf, fleetModelOf, leadingNumber, type FleetKind } from '@domai
 import { OBJECT_TYPES, defaultParamsFor, selectOption } from '@/upstream/domain/objectTypes.js';
 import { MAX_VACUUM_COUNT, computeLayout } from '@/upstream/simulation/layout.js';
 import { buildDefaultShape } from '@/upstream/simulation/shape/shapeTypes.js';
-import { decodeShape, layoutMetrics } from '@/features/objects/layout/warehouseLayout';
+import { decodeShape, layoutMetrics, rackStorage } from '@/features/objects/layout/warehouseLayout';
 
 /** Форма склада — стандартный прямоугольник upstream: своей формы в паспорте нет. */
 export const DEFAULT_SHAPE = buildDefaultShape();
@@ -150,6 +150,8 @@ export function buildSimulationInput(
   };
   const params = toUpstreamParams(merged);
   const custom = decodeShape(layout);
+  // Ярусы стеллажей в 3D — те же, что в расчёте ёмкости (потолок / высота паллеты).
+  if (custom) (custom as { rackTiers?: number }).rackTiers = rackStorage(custom, merged)?.levels;
   const shape = custom ?? DEFAULT_SHAPE;
   if (custom) {
     // Контур — вся площадь склада: сцена масштабирует по площади всей сетки.
