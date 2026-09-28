@@ -29,4 +29,6 @@ COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
 COPY apps/web/nginx/ /etc/nginx/snippets/
 COPY --from=build /app/apps/web/dist /usr/share/nginx/html
 EXPOSE 80
-HEALTHCHECK --interval=30s --timeout=3s CMD wget -qO- http://localhost/ >/dev/null || exit 1
+# 127.0.0.1, а не localhost: в alpine localhost — это ::1, а nginx слушает только IPv4,
+# и контейнер навсегда оставался unhealthy при рабочем сайте.
+HEALTHCHECK --interval=30s --timeout=3s CMD wget -qO- http://127.0.0.1/ >/dev/null || exit 1
