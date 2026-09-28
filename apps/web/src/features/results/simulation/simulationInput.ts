@@ -32,7 +32,7 @@ export const SIMULATION_ASSUMPTIONS = [
   'Тип робота в сцене определяется по типу решения каталога: уборщики — пылесосы, манипуляторы и ячейки — роборуки, AMR, тележки и погрузчики — погрузчики.',
   'Потоки приёмки, отгрузки и отбора переведены из суточных в часовые делением на часы работы (смены × длительность смены).',
   'Путь погрузчика от ворот до места хранения — половина стороны склада, если считать его квадратным.',
-  'Энергопрофиль (время на зарядке, мощность) взят из демо-каталога симуляции для того же типа робота: в нашем каталоге этих данных нет.',
+  'Скорость, грузоподъёмность, производительность, время работы, время зарядки и мощность берутся из карточки робота. Чего в карточке нет — подставляется из демо-робота симуляции того же типа; такие поля перечислены у сцены.',
   'Фура в сцене вмещает не больше 18 паллет (предел модели ворот), реальная еврофура — 33.',
 ];
 
@@ -153,21 +153,63 @@ type UpstreamSolution = Omit<CatalogItem, 'technical'> & {
   };
 };
 
-/** Наше решение в формате каталога upstream: паспорт — наш, энергопрофиль — демо того же типа. */
+/** Поле паспорта робота, которое симуляция берёт из демо-каталога, потому что в карточке его нет. */
+export interface SimSubstitution {
+  field: string;
+  value: string;
+}
+
+/**
+ * Наше решение в формате каталога upstream: паспорт — из карточки; чего в ней нет —
+ * от демо-робота того же типа, с отметкой в substitutions.
+ */
 export function toUpstreamSolution(
   solution: Solution,
   type: SimRobotType,
   params: UpstreamParams,
+  substitutions: SimSubstitution[] = [],
 ): UpstreamSolution {
   const reference = CATALOG.find((item) => item.identification.type === type)!;
-  const speed = parseLeadingNumber(solution.speed) ?? reference.technical.speed;
-  const capacityKg = parseLeadingNumber(solution.payload) ?? reference.technical.capacityKg;
-  const technical = { ...reference.technical, speed, capacityKg };
+  const demo = reference.technical;
+  const substitute = <T,>(own: T | null | undefined, fallback: T, field: string, shown: string): T => {
+    if (own !== null && own !== undefined) return own;
+    substitutions.push({ field, value: shown });
+    return fallback;
+  };
 
-  if (type === 'vacuum' && reference.technical.speed && speed) {
-    technical.throughput = (reference.technical.throughput * speed) / reference.technical.speed;
+  const speed = substitute(parseLeadingNumber(solution.speed), demo.speed, 'скорость', `${demo.speed} м/с`);
+  const capacityKg =
+    type === 'loader'
+      ? substitute(parseLeadingNumber(solution.payload), demo.capacityKg, 'грузоподъёмность', `${demo.capacityKg} кг`)
+      : parseLeadingNumber(solution.payload) ?? demo.capacityKg;
+  const autonomyHours = substitute(solution.autonomyHours, demo.autonomyHours, 'время работы', `${demo.autonomyHours} ч`);
+  const chargeHours = substitute(solution.chargeHours, demo.energy.chargeHours, 'время зарядки', `${demo.energy.chargeHours} ч`);
+  const ownPower =
+    solution.powerKw ??
+    (solution.batteryKwh && solution.autonomyHours ? solution.batteryKwh / solution.autonomyHours : undefined);
+  const workPowerKw = substitute(ownPower, demo.energy.workPowerKw, 'мощность', `${demo.energy.workPowerKw} кВт`);
+  // Простой — та же доля от рабочей мощности, что у демо-робота.
+  const idlePowerKw = (demo.energy.idlePowerKw / demo.energy.workPowerKw) * workPowerKw;
+
+  const technical = {
+    ...demo,
+    speed,
+    capacityKg,
+    autonomyHours,
+    energy: { ...demo.energy, workPowerKw, idlePowerKw, chargeHours },
+  };
+
+  if (type === 'vacuum') {
+    const ownArea = solution.throughput && /м²|м2/i.test(solution.throughputUnit ?? '') ? solution.throughput : null;
+    const scaled = demo.speed && speed ? (demo.throughput * speed) / demo.speed : demo.throughput;
+    technical.throughput = substitute(ownArea, scaled, 'производительность уборки', `${Math.round(scaled)} м²/ч`);
   } else if (type === 'arm') {
-    technical.throughput = solution.throughput ?? hourlyRateFrom(solution.useCase) ?? reference.technical.throughput;
+    technical.throughput = substitute(
+      solution.throughput ?? hourlyRateFrom(solution.useCase),
+      demo.throughput,
+      'производительность',
+      `${demo.throughput} ${demo.throughputUnit}`,
+    );
   } else if (type === 'loader') {
     technical.throughput = 3600 / loaderCycleSeconds({ technical }, params);
   }
@@ -191,7 +233,8 @@ export function buildSimulationInput(
     ...values,
   };
   const params = toUpstreamParams(merged);
-  const simSolution = toUpstreamSolution(solution, type, params);
+  const substitutions: SimSubstitution[] = [];
+  const simSolution = toUpstreamSolution(solution, type, params, substitutions);
   const robotTypes = [type];
   const workZoneShare = params.workZonePct / 100;
   const layout = computeLayout(robotTypes, workZoneShare);
@@ -211,6 +254,8 @@ export function buildSimulationInput(
   return {
     type,
     params,
+    /** Что взято из демо-каталога симуляции — показывается у сцены. */
+    substitutions,
     robotTypes,
     workZoneShare,
     maxCount,

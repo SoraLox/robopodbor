@@ -285,7 +285,7 @@ router.get("/object-types", wrap(async (_req, res) => {
         photoCaption: item.photoCaption ?? "",
         paybackRange: item.paybackRange ?? "",
         solutionsCount,
-        solutionsCountLabel: item.solutionsCountLabel ?? `${solutionsCount} решений`,
+        solutionsCountLabel: `${solutionsCount} решений`,
       };
     });
   });

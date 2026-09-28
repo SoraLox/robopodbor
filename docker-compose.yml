@@ -67,6 +67,7 @@ services:
     environment:
       DATABASE_URL: postgresql://robopodbor:${POSTGRES_PASSWORD:-robopodbor}@db:5432/robopodbor
       WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:8080}
+      CROSS_SITE_COOKIES: ${CROSS_SITE_COOKIES:-false}
       NODE_ENV: production
       # nginx — один прокси; с Caddy перед ним (профиль tls) — два.
       TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:-1}

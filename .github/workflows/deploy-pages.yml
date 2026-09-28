@@ -89,6 +89,10 @@ jobs:
         working-directory: apps/web
         env:
           GH_PAGES: "true"
+          # Задан адрес сервера (Settings → Variables → API_URL) — сайт ходит в настоящий
+          # API; не задан — работает на встроенных моках, как раньше.
+          VITE_API_URL: ${{ vars.API_URL }}
+          VITE_ENABLE_MOCKS: ${{ vars.API_URL && 'false' || 'true' }}
         run: npm run build
 
       - uses: actions/configure-pages@v5

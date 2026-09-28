@@ -157,7 +157,12 @@ function SimulationScene({
   );
 
   if (immersive) {
-    return <div className="h-full w-full">{scene}</div>;
+    return (
+      <div className="relative h-full w-full">
+        {scene}
+        <SubstitutionNote input={input} floating />
+      </div>
+    );
   }
 
   return (
@@ -172,6 +177,7 @@ function SimulationScene({
             {`По расчёту нужно ${input.requiredCount} роботов, в сцене помещается не больше ${input.maxCount}.`}
           </p>
         ) : null}
+        <SubstitutionNote input={input} />
         <ul className="mt-2 list-disc space-y-1 pl-5">
           {SIMULATION_ASSUMPTIONS.map((line) => (
             <li key={line}>{line}</li>
@@ -179,6 +185,20 @@ function SimulationScene({
         </ul>
       </details>
     </div>
+  );
+}
+
+/** Какие характеристики робота сцена взяла из демо-каталога: в карточке их нет. */
+function SubstitutionNote({ input, floating }: { input: SimulationInput; floating?: boolean }) {
+  if (!input.substitutions.length) return null;
+  const text = `Нет в карточке робота, взято у демо-робота: ${input.substitutions
+    .map((item) => `${item.field} — ${item.value}`)
+    .join(', ')}.`;
+  if (!floating) return <p className="mt-2 text-foreground">{text}</p>;
+  return (
+    <p className="pointer-events-none absolute right-3 top-3 z-10 max-w-[320px] rounded-[10px] border border-[#E5E5EA] bg-white/90 px-2.5 py-1.5 text-[11.5px] leading-snug text-[#3A4A5C]">
+      {text}
+    </p>
   );
 }
 

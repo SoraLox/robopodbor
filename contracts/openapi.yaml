@@ -90,6 +90,28 @@ paths:
               schema:
                 type: array
                 items: { $ref: '#/components/schemas/ObjectType' }
+  /calculations:
+    post:
+      operationId: runCalculation
+      summary: Рассчитать экономику по паспорту объекта и выбранному решению
+      description: >
+        Считает KPI, сценарии, структуру затрат и чувствительность
+        (src/domain/economics.ts) и сохраняет результат: его можно открыть
+        по id через GET /calculations/{calculationId}.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CalculationRequest' }
+      responses:
+        '201':
+          description: Результат расчёта
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CalculationResult' }
+        '400': { description: Некорректный запрос }
+        '404': { description: Решение или тип объекта не найдены }
   /calculations/{calculationId}:
     get:
       operationId: getCalculation
@@ -948,6 +970,18 @@ components:
         lines:
           type: array
           items: { $ref: '#/components/schemas/CostLine' }
+    CalculationRequest:
+      type: object
+      required: [objectType, solutionId]
+      properties:
+        objectType: { type: string }
+        solutionId: { type: string }
+        parameters:
+          type: object
+          additionalProperties: { type: string }
+        processes:
+          type: array
+          items: { type: string }
     CalculationResult:
       type: object
       required:
@@ -989,6 +1023,14 @@ components:
           type: array
           description: Параметры, ранжированные по влиянию на результат.
           items: { $ref: '#/components/schemas/SensitivityFactor' }
+        solutionId: { type: string, description: Решение каталога, для которого сделан расчёт. }
+        robots:
+          type: object
+          description: Сколько роботов заложено в расчёт и на каком основании.
+          required: [count, basis]
+          properties:
+            count: { type: integer }
+            basis: { type: string }
     Kpi:
       type: object
       required: [label, value]
@@ -1233,3 +1275,6 @@ components:
         meta: { type: string }
         payback: { type: string }
         status: { $ref: '#/components/schemas/Maturity' }
+        objectType: { type: string, description: Тип объекта проекта. }
+        createdAt: { type: string, format: date-time }
+        calculatedAt: { type: string, format: date-time, description: Когда сохранён последний расчёт. }

@@ -19,8 +19,8 @@ type ObjectTypeJson = {
   slug: string;
   title: string;
   description: string;
-  solutionsCount: number;
-  solutionsCountLabel: string;
+  solutionsCount?: number;
+  solutionsCountLabel?: string;
   paybackRange: string;
   photoCaption: string;
 };

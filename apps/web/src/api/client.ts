@@ -17,8 +17,14 @@ const origin =
  * после импорта модулей, а openapi-fetch иначе запомнил бы исходную ссылку
  * и мимо моков ушёл бы реальный сетевой запрос.
  */
+/**
+ * VITE_API_URL — адрес API на другом домене (сайт на GitHub Pages + сервер
+ * отдельно). Без него API на том же origin, как в docker compose.
+ */
+export const API_BASE = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') || `${origin}/api`;
+
 export const api = createClient<paths>({
-  baseUrl: `${origin}/api`,
+  baseUrl: API_BASE,
   // Сессия живёт в httpOnly-cookie: без include её не отправит браузер,
   // а читать её из JS нельзя и не нужно.
   credentials: 'include',

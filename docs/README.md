@@ -15,7 +15,7 @@ docker compose up --build
 | Пользователь | krylov@volga-logistic.ru | volga123 |
 | Администратор | admin@robotopodbor.ru | admin123 |
 
-Гостю вход не нужен: каталог и демонстрационный расчёт доступны сразу.
+Гостю вход не нужен: каталог и расчёт доступны сразу. Сайт на GitHub Pages работает без сервера, на встроенных моках, с теми же учётными записями.
 
 ## Состав документации
 
@@ -32,5 +32,7 @@ docker compose up --build
 | 6.8 Внешние библиотеки и источники данных | [09-dependencies.md](09-dependencies.md) |
 | 6.9 Ограничения и план развития | [10-limitations.md](10-limitations.md) |
 | 3.8.3 Возможные интеграции | [11-integrations.md](11-integrations.md) |
+
+Пример выгруженного отчёта (ТЗ 8.2.7) — [`examples/primer-otcheta-sklad.pdf`](examples/primer-otcheta-sklad.pdf) и [`.xlsx`](examples/primer-otcheta-sklad.xlsx): склад из датасета организатора, погрузчик АК-2000-2.
 
 Спецификация API — [`contracts/openapi.yaml`](../contracts/openapi.yaml) (OpenAPI 3.1).

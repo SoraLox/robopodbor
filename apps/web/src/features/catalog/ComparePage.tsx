@@ -57,7 +57,7 @@ export function ComparePage() {
             <Link to="/catalog">Вернуться в каталог</Link>
           </Button>
           <Button asChild>
-            <Link to="/calculate/warehouse/results/demo">
+            <Link to="/calculate/warehouse">
               Добавить в расчёт
               <ArrowUpRight className="size-3.5" strokeWidth={2.5} />
             </Link>

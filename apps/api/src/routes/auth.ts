@@ -9,6 +9,9 @@ const router = Router();
 
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 дней
 const isProd = process.env.NODE_ENV === "production";
+// Сайт и API на разных доменах (GitHub Pages + сервер): браузер отправит cookie
+// в кросс-сайтовом запросе только с SameSite=None; Secure.
+const crossSite = process.env.CROSS_SITE_COOKIES === "true";
 
 const credentialsSchema = z.object({
   email: z.string().email(),
@@ -33,8 +36,8 @@ async function openSession(res: import("express").Response, userId: string) {
   });
   res.cookie(SESSION_COOKIE, session.id, {
     httpOnly: true,
-    sameSite: "lax",
-    secure: isProd,
+    sameSite: crossSite ? "none" : "lax",
+    secure: isProd || crossSite,
     path: "/",
     maxAge: SESSION_TTL_MS,
   });
@@ -74,7 +77,7 @@ router.post("/login", wrap(async (req, res) => {
 router.post("/logout", wrap(async (req, res) => {
   const sid = req.cookies?.[SESSION_COOKIE];
   if (sid) await prisma.session.deleteMany({ where: { id: sid } });
-  res.clearCookie(SESSION_COOKIE, { path: "/" });
+  res.clearCookie(SESSION_COOKIE, { path: "/", ...(crossSite ? { sameSite: "none" as const, secure: true } : {}) });
   res.status(204).end();
 }));
 

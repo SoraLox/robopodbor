@@ -19,6 +19,7 @@ import {
   useProjects,
   useSolutions,
   useUpdateProject,
+  runCalculation,
 } from '@/api/queries';
 import { api } from '@/api/client';
 import { useWizardStore } from '@/app/store';
@@ -639,9 +640,10 @@ export function ProjectsPage() {
     try {
       // Снимок результата сохраняется вместе с проектом: повторное открытие
       // покажет тот же расчёт, даже если каталог или нормативы изменятся.
-      const { data: calculation } = await api.GET('/calculations/{calculationId}', {
-        params: { path: { calculationId: 'demo' } },
-      });
+      // Без выбранного робота считать нечего — черновик сохраняется без результата.
+      const calculation = solutionId
+        ? await runCalculation({ objectType, solutionId, parameters, processes })
+        : undefined;
       const detail = await createProject.mutateAsync({
         title: `Черновик · ${new Date().toLocaleDateString('ru-RU')}`,
         objectType,
