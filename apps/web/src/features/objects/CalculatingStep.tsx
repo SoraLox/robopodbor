@@ -2,6 +2,7 @@ import { useEffect, useRef, type RefObject } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useRunCalculation } from '@/api/queries';
 import { useWizardStore } from '@/app/store';
+import { areaOf, layoutParameters } from '@/features/objects/layout/warehouseLayout';
 
 /** Быстрый разгон к 90%: за ~1 с уже далеко, дальше кривая почти стоит. */
 const RUSH_TAU_MS = 900;
@@ -65,10 +66,16 @@ export function CalculatingStep({ active, revealed }: { active: boolean; reveale
   const processes = useWizardStore((s) => s.processes);
   const solutionId = useWizardStore((s) => s.solutionId);
   const fleetIds = useWizardStore((s) => s.fleetIds);
+  const layout = useWizardStore((s) => s.layout);
   // Набор роботов — только у склада: там экономика складывает флоты.
   const solutionIds = objectType === 'warehouse' && fleetIds.length > 1 ? fleetIds : undefined;
+  // Планировка склада идёт в расчёт параметрами: форма и путь погрузчика по ней.
+  const withLayout =
+    objectType === 'warehouse'
+      ? { ...parameters, ...layoutParameters(layout, areaOf(parameters)) }
+      : parameters;
   const input = solutionId
-    ? { objectType, solutionId, parameters, processes, ...(solutionIds ? { solutionIds } : {}) }
+    ? { objectType, solutionId, parameters: withLayout, processes, ...(solutionIds ? { solutionIds } : {}) }
     : null;
   const query = useRunCalculation(input, active);
   const barRef = useRef<HTMLDivElement>(null);

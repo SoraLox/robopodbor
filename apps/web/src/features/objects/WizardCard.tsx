@@ -3,6 +3,8 @@ import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { WizardCompanionContext } from '@/features/objects/wizardCompanion';
 import { WIZARD_STEPS } from '@/features/objects/wizardSteps';
+
+type WizardStep = (typeof WIZARD_STEPS)[number];
 import { cn } from '@/lib/utils';
 
 /** Sync with ObjectWizardLayout fade→width→reveal staging. */
@@ -215,8 +217,10 @@ export function WizardCard({
   expanded = false,
   title,
   subtitle,
+  steps = WIZARD_STEPS,
 }: {
   activeStep: number;
+  steps?: WizardStep[];
   onBack?: () => void;
   children: ReactNode;
   className?: string;
@@ -291,16 +295,23 @@ export function WizardCard({
             transition: `transform ${WIZARD_PREVIEW_MS}ms ${WIZARD_PREVIEW_EASE}`,
           }}
         >
-        {/* Рейка слева: слот всегда полной ширины, выезд — transform на самой карточке */}
-        <div
-          id={WIZARD_RAIL_ID}
-          className={cn(
-            'absolute inset-y-0 z-10 flex items-stretch',
-            railOpen ? 'pointer-events-auto' : 'pointer-events-none',
-            railSideBySide ? 'right-full' : 'left-1/2 -translate-x-1/2',
-          )}
-          style={railSideBySide ? { marginRight: COMPANION_GAP_PX } : undefined}
-        />
+        {/*
+          Рейка слева: слот всегда полной ширины, выезд — transform на самой карточке.
+          На узком экране ей негде встать сбоку, а по центру она перекрывает узкую
+          64px-колонкой середину карточки (включая кнопку «Рассчитать») — на мобильном
+          её не показываем, «Назад» уже даёт выйти к списку категорий.
+        */}
+        {railSideBySide ? (
+          <div
+            id={WIZARD_RAIL_ID}
+            className={cn(
+              'absolute inset-y-0 z-10 flex items-stretch',
+              railOpen ? 'pointer-events-auto' : 'pointer-events-none',
+              'right-full',
+            )}
+            style={{ marginRight: COMPANION_GAP_PX }}
+          />
+        ) : null}
 
         <div
           ref={cardRef}
@@ -324,11 +335,11 @@ export function WizardCard({
               className="flex items-center gap-1"
               role="progressbar"
               aria-valuemin={1}
-              aria-valuemax={WIZARD_STEPS.length}
+              aria-valuemax={steps.length}
               aria-valuenow={activeStep + 1}
-              aria-label={`Шаг ${activeStep + 1} из ${WIZARD_STEPS.length}`}
+              aria-label={`Шаг ${activeStep + 1} из ${steps.length}`}
             >
-              {WIZARD_STEPS.map((step, index) => (
+              {steps.map((step, index) => (
                 <span
                   key={step.id}
                   className={cn(

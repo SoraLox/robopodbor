@@ -5,7 +5,6 @@ import { useObjectParameters, useSolutions } from '@/api/queries';
 import type { FleetGroup, Solution } from '@/api/types';
 import { useWizardStore } from '@/app/store';
 import {
-  DEFAULT_SHAPE,
   SIMULATION_ASSUMPTIONS,
   buildSimulationInput,
   simRobotTypeOf,
@@ -177,6 +176,7 @@ function WarehouseSimulation({ immersive, fleet }: { immersive: boolean; fleet?:
   const parameters = useWizardStore((s) => s.parameters);
   const selectedId = useWizardStore((s) => s.solutionId);
   const fleetIds = useWizardStore((s) => s.fleetIds);
+  const layout = useWizardStore((s) => s.layout);
   const { data: fields } = useObjectParameters('warehouse');
   const { data: solutions } = useSolutions('warehouse');
   const [webgl] = useState(hasWebGL);
@@ -202,8 +202,8 @@ function WarehouseSimulation({ immersive, fleet }: { immersive: boolean; fleet?:
   }, [fleet, fields, solutions, fleetIds, selectedId, parameters]);
 
   const input = useMemo(
-    () => (fields && groups?.length ? buildSimulationInput(fields, parameters, groups) : null),
-    [fields, parameters, groups],
+    () => (fields && groups?.length ? buildSimulationInput(fields, parameters, groups, layout) : null),
+    [fields, parameters, groups, layout],
   );
 
   if (!fields || !groups) return <Note fill={immersive}>Готовим симуляцию…</Note>;
@@ -216,7 +216,7 @@ function WarehouseSimulation({ immersive, fleet }: { immersive: boolean; fleet?:
 
   return (
     <SimulationScene
-      key={`${input.robotTypes.join(',')}:${JSON.stringify(input.params)}:${groups.map((g) => `${g.solutionId}×${g.count}`).join(',')}`}
+      key={`${layout ?? 'default'}:${input.robotTypes.join(',')}:${JSON.stringify(input.params)}:${groups.map((g) => `${g.solutionId}×${g.count}`).join(',')}`}
       input={input}
       immersive={immersive}
     />
@@ -238,7 +238,7 @@ function SimulationScene({ input, immersive }: { input: SimulationInput; immersi
   const scene = (
     <Suspense fallback={<SceneFallback fill={immersive} />}>
       <WarehouseScene
-        shape={DEFAULT_SHAPE}
+        shape={input.shape}
         robotTypes={input.robotTypes}
         vacuumType={fleets.vacuum?.model}
         armType={fleets.arm?.model}

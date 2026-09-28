@@ -138,7 +138,7 @@ export function ObjectFormPage({ showTitleImport = true }: { showTitleImport?: b
     }
 
     setParameters(values);
-    navigate(`/calculate/${objectType}/processes`);
+    navigate(`/calculate/${objectType}/${objectType === 'warehouse' ? 'layout' : 'processes'}`);
   };
 
   const onFile = async (file: File | undefined) => {
@@ -260,7 +260,7 @@ export function ObjectFormPage({ showTitleImport = true }: { showTitleImport?: b
             ))}
           </div>
         ) : (
-          <div className="grid gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {groupBySection(fields).map(([section, sectionFields]) => {
               const atDefaults = sectionIsDefault(sectionFields);
               return (
@@ -285,7 +285,7 @@ export function ObjectFormPage({ showTitleImport = true }: { showTitleImport?: b
                     <RotateCcw className="size-3.5" strokeWidth={2} />
                   </button>
                 </div>
-                <div className="grid grid-cols-3 gap-x-3 gap-y-3 [&_.grid]:gap-1.5">
+                <div className="grid grid-cols-1 gap-x-3 gap-y-3 sm:grid-cols-2 lg:grid-cols-3 [&_.grid]:gap-1.5">
                   {sectionFields.map((field) => {
                     const error = errors[field.id];
                     const hint = fieldHint(field);

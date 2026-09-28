@@ -16,6 +16,10 @@ interface WizardState {
   /** Выбирает одно решение: набор — только оно. */
   setSolutionId: (id: string) => void;
 
+  /** Планировка склада из конструктора (warehouseLayout.encodeShape); null — стандартный прямоугольник. */
+  layout: string | null;
+  setLayout: (layout: string | null) => void;
+
   /** Набор роботов склада — по одному на флот (уборка, отбор, перемещение паллет). */
   fleetIds: string[];
   setFleet: (ids: string[], primary: string | null) => void;
@@ -50,6 +54,9 @@ const wizard: StateCreator<WizardState> = (set) => ({
 
   solutionId: null,
   setSolutionId: (id) => set({ solutionId: id, fleetIds: [id] }),
+
+  layout: null,
+  setLayout: (layout) => set({ layout }),
 
   fleetIds: [],
   setFleet: (ids, primary) => set({ fleetIds: ids, solutionId: primary }),
@@ -88,8 +95,9 @@ export const useWizardStore =
           name: 'wizard',
           version: 1,
           storage: createJSONStorage(() => localStorage),
-          partialize: ({ objectType, parameters, processes, solutionId, fleetIds, comparedIds }) => ({
+          partialize: ({ objectType, parameters, processes, solutionId, fleetIds, layout, comparedIds }) => ({
             objectType,
+            layout,
             parameters,
             processes,
             solutionId,

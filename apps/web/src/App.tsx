@@ -41,6 +41,7 @@ export function App() {
         <Route path="/calculate/:objectType" element={<ObjectWizardLayout />}>
           <Route index element={null} />
           <Route path="form" element={null} />
+          <Route path="layout" element={null} />
           <Route path="processes" element={null} />
           <Route path="calculating" element={null} />
         </Route>

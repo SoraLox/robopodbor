@@ -7,7 +7,7 @@
 // часть этой канвы, см. shape/). Сколько это метров — решает площадь
 // помещения (см. chunkGrid.js), здесь только относительная раскладка.
 
-import { boundingBoxOf, computeGateClusters } from "./shape/shapeGeometry.js";
+import { boundingBoxOf, computeGateClusters, isDefaultShape, largestFloorRect } from "./shape/shapeGeometry.js";
 import { FLOOR } from "./floorConstants.js";
 
 export { FLOOR };
@@ -64,23 +64,32 @@ export function computeLayout(shape, robotTypes, workZoneShare = 1) {
   // самое, что раньше давали константы LANE_MIN_X/LANE_MAX_X/Z_MIN/Z_MAX —
   // отступы (MARGIN, +3, −8) те же, просто считаются от границ формы.
   const bounds = boundingBoxOf(shape);
-  const laneMinX = bounds.xMin + MARGIN;
-  const laneMaxX = bounds.xMax - MARGIN;
-  const zMin = bounds.zMin + 3;
+  // На своей форме зоны — внутри наибольшего свободного прямоугольника пола, а не
+  // габаритов: у Г-образного склада габарит захватывает место за стенами.
+  const custom = !isDefaultShape(shape);
+  const free = custom ? largestFloorRect(shape) ?? bounds : bounds;
+  const inset = custom ? Math.min(MARGIN, (free.xMax - free.xMin) * 0.1) : MARGIN;
+  const laneMinX = free.xMin + inset;
+  const laneMaxX = free.xMax - inset;
+  const zMin = free.zMin + 3;
   // Южнее zMax — полоса зарядных станций пылесосов, в зону уборки она не входит.
-  const zMax = bounds.zMax - 8;
+  // На своей форме полосу занимаем, только если пылесосы есть.
+  const zMax = free.zMax - (custom && !useVacuum ? 3 : 8);
+  // Южный край полосы станций: у пресета — южная стена (z = 50).
+  const dockZ = free.zMax;
 
   const usableWidth = laneMaxX - laneMinX;
   // Роботам доступна южная часть пола; у северной стены (у ворот) — зона разгрузки,
   // куда пылесосы и роборуки не заходят.
-  const share = Math.min(1, Math.max(0.3, workZoneShare));
+  // На своей форме рабочую зону задаёт сам рисунок, доля из паспорта не нужна.
+  const share = custom ? 1 : Math.min(1, Math.max(0.3, workZoneShare));
   const workZMin = zMax - (zMax - zMin) * share;
   const workZMax = zMax;
 
   // Пылесосы мобильны и убирают весь рабочий пол, включая зону роборук — зоны
   // описывают, где стоит стационарное оборудование, а не делят пол физически.
   const vacuumZone = useVacuum
-    ? { xMin: laneMinX, width: usableWidth, zMin: workZMin, zMax: workZMax }
+    ? { xMin: laneMinX, width: usableWidth, zMin: workZMin, zMax: workZMax, dockZ }
     : null;
 
   // Роборуки стационарны — у них своя полоса с конвейерами: правые 45% пола,
@@ -96,7 +105,7 @@ export function computeLayout(shape, robotTypes, workZoneShare = 1) {
     : null;
 
   // Зона разгрузки у ворот, недоступная роботам (рисуется штриховкой).
-  const restrictedZone = workZMin > zMin + 0.01 && !useLoader ? { zMin: bounds.zMin, zMax: workZMin } : null;
+  const restrictedZone = workZMin > zMin + 0.01 && !useLoader && !custom ? { zMin: bounds.zMin, zMax: workZMin } : null;
 
   const gates = computeGateClusters(shape);
 

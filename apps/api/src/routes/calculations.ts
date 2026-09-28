@@ -24,7 +24,7 @@ const demoCalculation = JSON.parse(
 const requestSchema = z.object({
   objectType: z.string().min(1).max(40),
   solutionId: z.string().min(1).max(64),
-  parameters: z.record(z.string(), z.string().max(500)).default({}),
+  parameters: z.record(z.string(), z.string().max(2000)).default({}),
   processes: z.array(z.string().max(40)).max(20).optional(),
   /** Набор роботов (по одному на флот склада); solutionId — главный из них. */
   solutionIds: z.array(z.string().min(1).max(64)).max(8).optional(),

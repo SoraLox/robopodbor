@@ -12,6 +12,7 @@ import { fleetKindOf, fleetModelOf, leadingNumber, type FleetKind } from '@domai
 import { OBJECT_TYPES, defaultParamsFor, selectOption } from '@/upstream/domain/objectTypes.js';
 import { MAX_VACUUM_COUNT, computeLayout } from '@/upstream/simulation/layout.js';
 import { buildDefaultShape } from '@/upstream/simulation/shape/shapeTypes.js';
+import { decodeShape, layoutMetrics } from '@/features/objects/layout/warehouseLayout';
 
 /** Форма склада — стандартный прямоугольник upstream: своей формы в паспорте нет. */
 export const DEFAULT_SHAPE = buildDefaultShape();
@@ -21,9 +22,9 @@ export type SimRobotType = FleetKind;
 export const SIMULATION_ASSUMPTIONS = [
   'Тип робота в сцене определяется по типу решения каталога: уборщики — пылесосы (поломоечные — моделью мойщика), манипуляторы и ячейки — роборуки, AMR и тягачи — низкой платформой-транспортировщиком, погрузчики и штабелёры — погрузчиком, системы хранения — сеткой башен с шаттлом.',
   'Число роботов, их производительность и пиковый спрос сцена берёт из расчёта экономики — тех же чисел, что в отчёте.',
-  'Склад в сцене — стандартный прямоугольник с пятью воротами: формы склада в паспорте объекта нет.',
+  'Склад в сцене — планировка из шага «Планировка»: нарисованный контур равен площади склада из паспорта; без своей планировки — стандартный прямоугольник с пятью воротами.',
   'Потоки приёмки, отгрузки и отбора переведены из суточных в часовые делением на часы работы (смены × длительность смены).',
-  'Путь погрузчика от ворот до места хранения — половина стороны склада, если считать его квадратным.',
+  'Путь погрузчика от ворот до места хранения — средний путь по планировке от ближайших ворот до стеллажа; без своей планировки — половина стороны квадратного склада.',
   'Скорость, грузоподъёмность, производительность, время работы, время зарядки и мощность берутся из карточки робота. Чего в карточке нет — подставляется из демо-робота того же типа, и в расчёте, и в сцене; такие поля перечислены у сцены.',
   'Фура в сцене вмещает не больше 18 паллет (предел модели ворот), реальная еврофура — 33.',
 ];
@@ -136,19 +137,33 @@ export interface SimFleet {
   substitutions: FleetGroup['substitutions'];
 }
 
-export function buildSimulationInput(fields: ParameterField[], values: Record<string, string>, fleet: FleetGroup[]) {
+export function buildSimulationInput(
+  fields: ParameterField[],
+  values: Record<string, string>,
+  fleet: FleetGroup[],
+  /** Планировка из конструктора; нет — стандартный прямоугольник. */
+  layout?: string | null,
+) {
   const merged = {
     ...Object.fromEntries(fields.map((field) => [field.id, field.defaultValue ?? ''])),
     ...values,
   };
   const params = toUpstreamParams(merged);
+  const custom = decodeShape(layout);
+  const shape = custom ?? DEFAULT_SHAPE;
+  if (custom) {
+    // Контур — вся площадь склада: сцена масштабирует по площади всей сетки.
+    const metrics = layoutMetrics(custom, params.floorAreaM2);
+    params.floorAreaM2 = metrics.sceneAreaM2;
+    params.routeLengthM = metrics.routeLengthM;
+  }
   const groups = fleet.filter((group): group is FleetGroup & { kind: SimRobotType } =>
     ['vacuum', 'arm', 'loader'].includes(group.kind),
   );
   const robotTypes = groups.map((group) => group.kind);
   const workZoneShare = params.workZonePct / 100;
-  const layout = computeLayout(DEFAULT_SHAPE, robotTypes, workZoneShare);
-  const maxOf = { vacuum: MAX_VACUUM_COUNT, arm: layout.maxArmCount, loader: layout.maxLoaderCount };
+  const sceneLayout = computeLayout(shape, robotTypes, workZoneShare);
+  const maxOf = { vacuum: MAX_VACUUM_COUNT, arm: sceneLayout.maxArmCount, loader: sceneLayout.maxLoaderCount };
 
   const fleets: Partial<Record<SimRobotType, SimFleet>> = {};
   for (const group of groups) {
@@ -178,6 +193,7 @@ export function buildSimulationInput(fields: ParameterField[], values: Record<st
   };
 
   return {
+    shape,
     params,
     robotTypes,
     workZoneShare,

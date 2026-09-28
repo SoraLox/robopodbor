@@ -263,3 +263,38 @@ export function isDefaultShape(shape) {
 
   return true;
 }
+
+// Наибольший прямоугольник из клеток обычного пола (без стеллажей и ворот) —
+// место для стационарного оборудования и зоны уборки на своей форме склада.
+// Раньше зоны роборук и пылесосов считались по габаритам формы (boundingBoxOf)
+// и на невыпуклом контуре (Г-образный склад) уезжали за стены. Классический
+// «максимальный прямоугольник в гистограмме» по строкам сетки.
+export function largestFloorRect(shape) {
+  const n = shape.gridSize;
+  const heights = new Array(n).fill(0);
+  let best = null;
+
+  for (let gz = 0; gz < n; gz++) {
+    for (let gx = 0; gx < n; gx++) heights[gx] = cellAt(shape, gx, gz) === CELL.FLOOR ? heights[gx] + 1 : 0;
+
+    const stack = [];
+    for (let gx = 0; gx <= n; gx++) {
+      const h = gx < n ? heights[gx] : 0;
+      while (stack.length && heights[stack[stack.length - 1]] >= h) {
+        const top = stack.pop();
+        const height = heights[top];
+        const left = stack.length ? stack[stack.length - 1] + 1 : 0;
+        const width = gx - left;
+        if (height > 0 && (!best || width * height > best.area)) {
+          best = { area: width * height, gx0: left, gx1: gx - 1, gz0: gz - height + 1, gz1: gz };
+        }
+      }
+      stack.push(gx);
+    }
+  }
+
+  if (!best) return null;
+  const a = cellWorldOrigin(best.gx0, best.gz0);
+  const b = cellWorldOrigin(best.gx1 + 1, best.gz1 + 1);
+  return { xMin: a.x, xMax: b.x, zMin: a.z, zMax: b.z };
+}
