@@ -9,6 +9,7 @@
 
 import { boundingBoxOf, computeGateClusters, isDefaultShape, largestFloorRect } from "./shape/shapeGeometry.js";
 import { FLOOR } from "./floorConstants.js";
+import { cellOfPoint, isWalkable, makeNavGrid } from "./loaders/gridPath.js";
 
 export { FLOOR };
 export const MARGIN = 10;
@@ -31,7 +32,7 @@ const ARM_ROW_PITCH_MIN = 21.4; // длина конвейера роборук�
 const ARM_COLUMN_PITCH_MIN = 14; // ширина роборуки с конвейерами + проезд пылесоса между колонками
 export const MAX_ARM_COUNT = 16;
 
-export const ROBOT_TYPES = ["vacuum", "arm", "loader"];
+export const ROBOT_TYPES = ["vacuum", "arm", "loader", "sorter", "conveyor"];
 
 // Что можно выбрать на первом экране: одна симуляция — один тип робота, плюс
 // демонстрационная связка «пылесосы + роборуки».
@@ -59,6 +60,8 @@ export function computeLayout(shape, robotTypes, workZoneShare = 1) {
   const useVacuum = robotTypes.includes("vacuum");
   const useArm = robotTypes.includes("arm");
   const useLoader = robotTypes.includes("loader");
+  const useSorter = robotTypes.includes("sorter");
+  const useConveyor = robotTypes.includes("conveyor");
 
   // Для пресета по умолчанию bounds — ровно {-50..50, -50..50}, то есть то же
   // самое, что раньше давали константы LANE_MIN_X/LANE_MAX_X/Z_MIN/Z_MAX —
@@ -92,20 +95,28 @@ export function computeLayout(shape, robotTypes, workZoneShare = 1) {
     ? { xMin: laneMinX, width: usableWidth, zMin: workZMin, zMax: workZMax, dockZ }
     : null;
 
-  // Роборуки стационарны — у них своя полоса с конвейерами: правые 45% пола,
-  // если рядом работают пылесосы, иначе весь пол.
-  const armWidth = useVacuum ? usableWidth * 0.45 : usableWidth;
+  // Стационарное оборудование (роборуки, сортировочная система) — своя полоса:
+  // правые 45% пола, если рядом работают пылесосы, иначе весь пол. Роборуки и
+  // сортер вместе делят её пополам: сортер — западная половина.
+  const stationWidth = useVacuum ? usableWidth * 0.45 : usableWidth;
+  const stationXMin = useVacuum ? laneMinX + usableWidth * 0.55 : laneMinX;
+  const shared = useArm && useSorter;
+  const armWidth = shared ? stationWidth / 2 : stationWidth;
   const armZone = useArm
     ? {
-        xMin: useVacuum ? laneMinX + usableWidth * 0.55 : laneMinX,
+        xMin: shared ? stationXMin + stationWidth / 2 : stationXMin,
         width: armWidth,
         zMin: workZMin,
         zMax: workZMax,
       }
     : null;
+  const sorterZone = useSorter
+    ? { xMin: stationXMin, width: shared ? stationWidth / 2 : stationWidth, zMin: workZMin, zMax: workZMax }
+    : null;
 
   // Зона разгрузки у ворот, недоступная роботам (рисуется штриховкой).
-  const restrictedZone = workZMin > zMin + 0.01 && !useLoader && !custom ? { zMin: bounds.zMin, zMax: workZMin } : null;
+  const restrictedZone =
+    workZMin > zMin + 0.01 && !useLoader && !useConveyor && !custom ? { zMin: bounds.zMin, zMax: workZMin } : null;
 
   const gates = computeGateClusters(shape);
 
@@ -113,9 +124,12 @@ export function computeLayout(shape, robotTypes, workZoneShare = 1) {
     useVacuum,
     useArm,
     useLoader,
+    useSorter,
+    useConveyor,
     restrictedZone,
     vacuumZone,
     armZone,
+    sorterZone,
     maxArmCount: maxArmCountOf(armWidth, workZMax - workZMin),
     // На своей форме у ворот встают до трёх погрузчиков (customLoaderFleet.js LOADERS_PER_GATE).
     maxLoaderCount: Math.max(1, gates.length * (custom ? 3 : 1)),
@@ -167,4 +181,42 @@ export function computeVacuumZoneAreaM2(layout, floorAreaM2) {
   if (!zone) return 0;
 
   return Math.round((floorAreaM2 * zone.width * (zone.zMax - zone.zMin)) / (FLOOR * FLOOR));
+}
+
+// Конвейерные линии: от ворот вглубь склада, рядом с проёмом (не в нём — там
+// работают погрузчики и фуры). Линия тянется по проезжему полу до нужной длины,
+// стеллажа или зоны стационарного оборудования. На одни ворота — до трёх линий.
+export function computeConveyorLines(layout, shape, count, lengthUnits) {
+  const gates = layout.gates;
+  if (!gates.length || count <= 0) return [];
+  const nav = makeNavGrid(shape);
+  const blocked = [layout.armZone, layout.sorterZone].filter(Boolean);
+  const inStation = (p) => blocked.some((z) => p.x >= z.xMin - 2 && p.x <= z.xMin + z.width + 2 && p.z >= z.zMin - 2 && p.z <= z.zMax + 2);
+  const walkable = (p) => {
+    const cell = cellOfPoint(nav, p);
+    return isWalkable(nav, cell.gx, cell.gz) && Math.abs(p.x) < FLOOR / 2 - 1 && Math.abs(p.z) < FLOOR / 2 - 1;
+  };
+
+  const lines = [];
+  for (let i = 0; i < Math.min(count, gates.length * 3); i++) {
+    const gate = gates[i % gates.length];
+    const slot = Math.floor(i / gates.length);
+    const inward = { x: -gate.normal[0], z: -gate.normal[1] };
+    const along = { x: Math.abs(inward.z), z: Math.abs(inward.x) };
+    const halfSpan = (gate.worldSpan.max - gate.worldSpan.min) / 2;
+    const offset = halfSpan + 2.5 + slot * 3.5;
+    const start = {
+      x: gate.worldCenter.x + along.x * offset + inward.x * 3,
+      z: gate.worldCenter.z + along.z * offset + inward.z * 3,
+    };
+    if (!walkable(start)) continue;
+    let d = 0;
+    while (d < lengthUnits) {
+      const next = { x: start.x + inward.x * (d + 1), z: start.z + inward.z * (d + 1) };
+      if (!walkable(next) || inStation(next)) break;
+      d += 1;
+    }
+    if (d >= 6) lines.push({ start, end: { x: start.x + inward.x * d, z: start.z + inward.z * d } });
+  }
+  return lines;
 }

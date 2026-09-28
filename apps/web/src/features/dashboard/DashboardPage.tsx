@@ -195,7 +195,7 @@ export function DashboardPage() {
         </Panel>
 
         <Panel className="self-start" title="Каталог для подбора" action="Каталог" actionTo="/catalog">
-          <ul className="grid gap-3">
+          <ul className="grid grid-cols-1 gap-3">
             {summary.byObject.map((item) => (
               <li key={item.id} className="rounded-lg border border-hairline px-3 py-2.5">
                 <div className="flex items-baseline justify-between gap-3 text-[13px]">

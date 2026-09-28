@@ -1047,7 +1047,7 @@ components:
       type: object
       required: [kind, label, solutionId, name, count, throughputPerRobot, unit, peakDemand, workPowerKw, idlePowerKw, substitutions]
       properties:
-        kind: { type: string, enum: [vacuum, arm, loader] }
+        kind: { type: string, enum: [vacuum, arm, loader, sorter, conveyor] }
         label: { type: string }
         model: { type: string, description: 'Ключ 3D-модели сцены: washer, stacker, transporter, storagecube.' }
         solutionId: { type: string }

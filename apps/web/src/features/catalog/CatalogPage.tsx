@@ -524,7 +524,7 @@ export function CatalogPage() {
                   <input
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Найти по названию, вендору или задаче"
+                    placeholder="Название, вендор или задача"
                     className="w-full min-w-0 border-0 bg-transparent p-0 text-[14px] text-foreground placeholder:text-muted-foreground focus-visible:outline-none"
                     aria-label="Поиск по каталогу"
                   />

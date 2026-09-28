@@ -800,7 +800,7 @@ export interface components {
         };
         FleetGroup: {
             /** @enum {string} */
-            kind: "vacuum" | "arm" | "loader";
+            kind: "vacuum" | "arm" | "loader" | "sorter" | "conveyor";
             label: string;
             /** @description Ключ 3D-модели сцены: washer, stacker, transporter, storagecube. */
             model?: string;

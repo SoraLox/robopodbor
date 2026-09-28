@@ -7,15 +7,20 @@
  */
 import type { CatalogSolution } from "./catalog.js";
 
-/** Флот сцены и группа расчёта: уборка, отбор/сортировка, перемещение паллет. */
-export type FleetKind = "vacuum" | "arm" | "loader";
+/**
+ * Флот сцены и группа расчёта: уборка, отбор роборуками, перемещение паллет,
+ * статическая сортировка (кросс-белт, тилт-трей) и конвейерные линии.
+ */
+export type FleetKind = "vacuum" | "arm" | "loader" | "sorter" | "conveyor";
 
-export const FLEET_KINDS: FleetKind[] = ["vacuum", "arm", "loader"];
+export const FLEET_KINDS: FleetKind[] = ["vacuum", "arm", "loader", "sorter", "conveyor"];
 
 export const FLEET_LABEL: Record<FleetKind, string> = {
   vacuum: "Уборка",
   arm: "Отбор и сортировка",
   loader: "Перемещение и хранение паллет",
+  sorter: "Сортировочная система",
+  conveyor: "Конвейерные линии",
 };
 
 /** Процессы мастера, которые закрывает флот. */
@@ -23,6 +28,8 @@ export const FLEET_PROCESSES: Record<FleetKind, string[]> = {
   vacuum: ["cleaning"],
   arm: ["picking", "sorting"],
   loader: ["transport", "receiving", "storage"],
+  sorter: ["sorting"],
+  conveyor: ["transport", "receiving"],
 };
 
 const KIND_BY_SOLUTION_TYPE: Record<string, FleetKind> = {
@@ -30,7 +37,8 @@ const KIND_BY_SOLUTION_TYPE: Record<string, FleetKind> = {
   disinfection: "vacuum",
   manipulator: "arm",
   cell: "arm",
-  sorter: "arm",
+  sorter: "sorter",
+  conveyor: "conveyor",
   asrs: "loader",
   amr: "loader",
   fmr: "loader",
@@ -41,6 +49,8 @@ const KIND_BY_SOLUTION_TYPE: Record<string, FleetKind> = {
 
 const KIND_KEYWORDS: ReadonlyArray<readonly [FleetKind, RegExp]> = [
   ["vacuum", /уборк|клининг|мойк|дезинфекц/i],
+  ["conveyor", /конвейер|транспортёр|рольганг/i],
+  ["sorter", /сортер|сортировочн\S* (систем|лини)|кросс-?бел|тилт-?трей|cross-?belt|tilt-?tray/i],
   ["arm", /манипулятор|сортир|сортер|пикинг/i],
   ["loader", /паллет|штабел|погрузчик|agv|буксир|тележ|транспорт/i],
 ];
@@ -92,8 +102,21 @@ const DEMO: Record<string, DemoRobot> = {
   storagecube: { name: "СтойкаБокс SB-400", throughput: 90, throughputUnit: "ед./ч", speed: null, capacityKg: null, autonomyHours: null, chargeHours: null, workPowerKw: 1.4, idlePowerKw: 0.15 },
 };
 
-export function demoRobotOf(kind: FleetKind, model: string | undefined): DemoRobot {
-  return (model ? DEMO[model] : undefined) ?? DEMO[kind]!;
+/** Демо-робота Егора нет (сортер, конвейер): пробелы карточки не закрываются ничем. */
+const NO_DEMO = {
+  name: "",
+  throughput: null,
+  throughputUnit: "",
+  speed: null,
+  capacityKg: null,
+  autonomyHours: null,
+  chargeHours: null,
+  workPowerKw: null,
+  idlePowerKw: null,
+} as const;
+
+export function demoRobotOf(kind: FleetKind, model: string | undefined) {
+  return (model ? DEMO[model] : undefined) ?? DEMO[kind] ?? NO_DEMO;
 }
 
 /** «1 500 кг» → 1500, «1.8 м/с» → 1.8, «—» → null. */
@@ -112,6 +135,8 @@ const UNIT_OF_KIND: Record<FleetKind, RegExp> = {
   vacuum: /м²|м2/i,
   arm: /строк|операц|оп\/|заказ|шт|посыл|цикл/i,
   loader: /паллет|поддон|ед|операц|цикл|рейс/i,
+  sorter: /шт|посыл|отправл|ед|предмет|item|pcs/i,
+  conveyor: /паллет|поддон|короб|тар|ед|шт/i,
 };
 
 export interface Substitution {
@@ -150,7 +175,7 @@ export function fleetRobotOf(solution: CatalogSolution, kind: FleetKind): FleetR
   };
 
   const ownSpeed = leadingNumber(solution.speed);
-  const stationary = kind === "arm" || model === "storagecube";
+  const stationary = kind === "arm" || kind === "sorter" || kind === "conveyor" || model === "storagecube";
   const speed = stationary ? ownSpeed : take(ownSpeed, demo.speed, "скорость", `${demo.speed} м/с`);
   const capacityKg =
     kind === "loader" && !stationary
@@ -171,9 +196,10 @@ export function fleetRobotOf(solution: CatalogSolution, kind: FleetKind): FleetR
   const ownPower =
     solution.powerKw ??
     (solution.batteryKwh && solution.autonomyHours ? solution.batteryKwh / solution.autonomyHours : null);
-  const workPowerKw = take(ownPower, demo.workPowerKw, "мощность", `${demo.workPowerKw} кВт`)!;
-  // Простой — та же доля от рабочей мощности, что у демо-робота.
-  const idlePowerKw = (demo.idlePowerKw / demo.workPowerKw) * workPowerKw;
+  const workPowerKw = take(ownPower, demo.workPowerKw, "мощность", `${demo.workPowerKw} кВт`) ?? 0;
+  // Простой — та же доля от рабочей мощности, что у демо-робота; без демо — 10%.
+  const idleShare = demo.workPowerKw && demo.idlePowerKw !== null ? demo.idlePowerKw / demo.workPowerKw : 0.1;
+  const idlePowerKw = idleShare * workPowerKw;
 
   return {
     kind,

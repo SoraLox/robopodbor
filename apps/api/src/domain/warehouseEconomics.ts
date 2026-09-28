@@ -55,6 +55,9 @@ export interface WarehouseParams {
   loadPerHour: number;
   outboundPerHour: number;
   sortPerHour: number;
+  /** Отбор в штуках, шт/ч, и штук на строку — для сортировочных систем. */
+  itemsPerHour: number;
+  itemsPerLine: number;
   piecePickSharePct: number;
   fastSkuSharePct: number;
   oversizedCargoPct: number;
@@ -96,6 +99,8 @@ export function warehouseParamsOf(values: Params): WarehouseParams {
     loadPerHour: num("wh_obem_priemki", 0) / hoursPerDay,
     outboundPerHour: num("wh_obem_otgruzki", 0) / hoursPerDay,
     sortPerHour: num("wh_obem_otbora", 0) / hoursPerDay,
+    itemsPerHour: num("wh_obem_otbora_2", 0) / hoursPerDay,
+    itemsPerLine: num("wh_obem_otbora", 0) > 0 ? Math.max(1, num("wh_obem_otbora_2", 0) / num("wh_obem_otbora", 1)) : 1,
     piecePickSharePct: num("wh_dolya_melkoshtuchnogo_otbora", 0),
     fastSkuSharePct: num("wh_dolya_sku_bystrym_oborotom", 0),
     oversizedCargoPct: num("wh_dolya_negabaritnyh_nestandartnyh_gruzov", 0),
@@ -160,14 +165,24 @@ export function effectiveThroughput(robot: FleetRobot, p: WarehouseParams): numb
   return robot.nominalThroughput ?? 0;
 }
 
-/** Пиковый спрос флота: м²/ч уборки, строк/ч отбора, паллет/ч приёмки и отгрузки. */
+/**
+ * Пиковый спрос флота: м²/ч уборки, строк/ч отбора, штук/ч сортировки,
+ * паллет/ч приёмки и отгрузки (погрузчики и конвейерные линии везут один поток).
+ */
 export function peakDemandOf(kind: FleetKind, p: WarehouseParams): number {
   if (kind === "vacuum") return p.activeAreaM2 / p.hoursPerShift;
   if (kind === "arm") return p.sortPerHour * p.peakLoadFactor;
+  if (kind === "sorter") return p.itemsPerHour * p.peakLoadFactor;
   return (p.loadPerHour + p.outboundPerHour) * p.peakLoadFactor;
 }
 
-export const DEMAND_UNIT: Record<FleetKind, string> = { vacuum: "м²/ч", arm: "строк/ч", loader: "паллет/ч" };
+export const DEMAND_UNIT: Record<FleetKind, string> = {
+  vacuum: "м²/ч",
+  arm: "строк/ч",
+  loader: "паллет/ч",
+  sorter: "шт/ч",
+  conveyor: "паллет/ч",
+};
 
 export function requiredRobotCount(peakDemand: number, throughputPerRobot: number): number {
   if (throughputPerRobot <= 0) return 0;
@@ -285,19 +300,35 @@ function laborOf(p: WarehouseParams, groups: FleetGroup[]): Labor {
   const forkliftCapacity = perShift(p.forkliftOperatorCount) * manualForkliftRate(p);
 
   const fleetOf = (kind: FleetKind) => groups.find((g) => g.kind === kind);
-  const capacityFraction = (kind: FleetKind, roleCapacity: number) => {
+  // Роль замещают несколько флотов вместе: отборщиков — роборуки и сортер (его
+  // штуки переводим в строки), операторов погрузчиков — погрузчики и конвейеры.
+  const throughputOf = (kind: FleetKind, perUnit = 1) => {
     const group = fleetOf(kind);
-    const total = group ? group.count * group.throughputPerRobot : 0;
-    if (total <= 0) return null;
+    return group ? (group.count * group.throughputPerRobot) / perUnit : 0;
+  };
+  // Флота нет — null (роль не затронута); флот есть, а производительность не
+  // известна — 0: замещать работу, которую парк не успевает, нечем.
+  const capacityFraction = (present: boolean, total: number, roleCapacity: number) => {
+    if (!present) return null;
+    if (total <= 0) return 0;
     return roleCapacity > 0 ? Math.min(1, total / roleCapacity) : 1;
   };
-  const armCapacityFraction = capacityFraction("arm", pickerCapacity);
-  const loaderCapacityFraction = capacityFraction("loader", forkliftCapacity);
+  const armCapacityFraction = capacityFraction(
+    Boolean(fleetOf("arm") || fleetOf("sorter")),
+    throughputOf("arm") + throughputOf("sorter", p.itemsPerLine),
+    pickerCapacity,
+  );
+  const loaderCapacityFraction = capacityFraction(
+    Boolean(fleetOf("loader") || fleetOf("conveyor")),
+    throughputOf("loader") + throughputOf("conveyor"),
+    forkliftCapacity,
+  );
   const pickerFraction = Math.min(oversizedCeiling, armCapacityFraction ?? 1);
   const forkliftFraction = Math.min(oversizedCeiling, loaderCapacityFraction ?? 1);
 
-  const savings =
-    (fleetOf("arm") ? pickerCost * pickerFraction : 0) + (fleetOf("loader") ? forkliftCost * forkliftFraction : 0);
+  const replacesPickers = Boolean(fleetOf("arm") || fleetOf("sorter"));
+  const replacesForklifts = Boolean(fleetOf("loader") || fleetOf("conveyor"));
+  const savings = (replacesPickers ? pickerCost * pickerFraction : 0) + (replacesForklifts ? forkliftCost * forkliftFraction : 0);
   // Базовый ФОТ — обе роли, как у Егора; незамещённая часть входит в TCO сценариев
   // роботизации как оставшийся ФОТ, поэтому сравнение с «Как есть» честное.
   const baseline = pickerCost + forkliftCost;
@@ -429,8 +460,12 @@ function roleLine(role: string, fraction: number, capacityFraction: number | nul
 export function laborAssumption(model: WarehouseModel): string {
   const { labor, groups } = model;
   const lines: string[] = [];
-  if (groups.some((g) => g.kind === "arm")) lines.push(roleLine("Отборщики", labor.pickerFraction, labor.armCapacityFraction));
-  if (groups.some((g) => g.kind === "loader")) lines.push(roleLine("Операторы погрузчиков", labor.forkliftFraction, labor.loaderCapacityFraction));
+  if (groups.some((g) => g.kind === "arm" || g.kind === "sorter")) {
+    lines.push(roleLine("Отборщики", labor.pickerFraction, labor.armCapacityFraction));
+  }
+  if (groups.some((g) => g.kind === "loader" || g.kind === "conveyor")) {
+    lines.push(roleLine("Операторы погрузчиков", labor.forkliftFraction, labor.loaderCapacityFraction));
+  }
   if (!lines.length) {
     return "Уборщиков в паспорте склада нет — экономия труда для уборки не считается, только её собственные затраты.";
   }

@@ -908,6 +908,9 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
   const priceKnown = groups.length > 0 && groups.every((g) => g.costs.priceKnown);
   if (!priceKnown) gaps.push("цена робота");
   if (labor.baseline === 0) gaps.push("численность и з/п отборщиков и операторов погрузчиков");
+  for (const g of groups.filter((item) => item.throughputPerRobot <= 0)) {
+    gaps.push(`производительность «${g.robot.solution.name}» не указана — заложена 1 система, экономия по ней не считается`);
+  }
   const substituted = fleetSubstitutions(groups);
   if (substituted.length) {
     gaps.push(

@@ -156,6 +156,7 @@ export const SOLUTION_TYPES: Record<string, string> = {
   tug: "Робот-тягач",
   asrs: "Умная система хранения (AS/RS)",
   sorter: "Сортировочная система",
+  conveyor: "Конвейерная система",
   manipulator: "Манипулятор / пикинг",
   cleaner: "Робот-уборщик",
   uav: "БАС / беспилотник",

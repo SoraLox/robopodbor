@@ -11,6 +11,7 @@ import type { FleetGroup, ParameterField, Solution } from '@/api/types';
 import { fleetKindOf, fleetModelOf, leadingNumber, type FleetKind } from '@domain/fleet';
 import { OBJECT_TYPES, defaultParamsFor, selectOption } from '@/upstream/domain/objectTypes.js';
 import { MAX_VACUUM_COUNT, computeLayout } from '@/upstream/simulation/layout.js';
+import { maxSorterCount } from '@/upstream/simulation/sorters/sorterFleet.js';
 import { buildDefaultShape } from '@/upstream/simulation/shape/shapeTypes.js';
 import { decodeShape, layoutMetrics, rackStorage } from '@/features/objects/layout/warehouseLayout';
 
@@ -20,7 +21,7 @@ export const DEFAULT_SHAPE = buildDefaultShape();
 export type SimRobotType = FleetKind;
 
 export const SIMULATION_ASSUMPTIONS = [
-  'Тип робота в сцене определяется по типу решения каталога: уборщики — пылесосы (поломоечные — моделью мойщика), манипуляторы и ячейки — роборуки, AMR и тягачи — низкой платформой-транспортировщиком, погрузчики и штабелёры — погрузчиком, системы хранения — сеткой башен с шаттлом.',
+  'Тип робота в сцене определяется по типу решения каталога: уборщики — пылесосы (поломоечные — моделью мойщика), манипуляторы и ячейки — роборуки, AMR и тягачи — низкой платформой-транспортировщиком, погрузчики и штабелёры — погрузчиком, системы хранения — сеткой башен с шаттлами, сортировочные системы — петлёй с каретками, конвейеры — линиями от ворот вглубь склада.',
   'Число роботов, их производительность и пиковый спрос сцена берёт из расчёта экономики — тех же чисел, что в отчёте.',
   'Склад в сцене — планировка из шага «Планировка»: нарисованный контур равен площади склада из паспорта; без своей планировки — стандартный прямоугольник с пятью воротами.',
   'Потоки приёмки, отгрузки и отбора переведены из суточных в часовые делением на часы работы (смены × длительность смены).',
@@ -161,13 +162,18 @@ export function buildSimulationInput(
     params.floorAreaM2 = metrics.sceneAreaM2;
     params.routeLengthM = metrics.routeLengthM;
   }
-  const groups = fleet.filter((group): group is FleetGroup & { kind: SimRobotType } =>
-    ['vacuum', 'arm', 'loader'].includes(group.kind),
-  );
+  const groups = fleet as Array<FleetGroup & { kind: SimRobotType }>;
   const robotTypes = groups.map((group) => group.kind);
   const workZoneShare = params.workZonePct / 100;
   const sceneLayout = computeLayout(shape, robotTypes, workZoneShare);
-  const maxOf = { vacuum: MAX_VACUUM_COUNT, arm: sceneLayout.maxArmCount, loader: sceneLayout.maxLoaderCount };
+  const maxOf: Record<SimRobotType, number> = {
+    vacuum: MAX_VACUUM_COUNT,
+    arm: sceneLayout.maxArmCount,
+    loader: sceneLayout.maxLoaderCount,
+    sorter: sceneLayout.sorterZone ? maxSorterCount(sceneLayout.sorterZone) : 1,
+    // Линии тянутся от ворот — до трёх на ворота.
+    conveyor: Math.max(1, sceneLayout.gates.length * 3),
+  };
 
   const fleets: Partial<Record<SimRobotType, SimFleet>> = {};
   for (const group of groups) {
@@ -205,8 +211,20 @@ export function buildSimulationInput(
     workZoneShare,
     fleets,
     slotsPerLane: selectOption('warehouse', 'storageType', params.storageType)?.slotsPerLane ?? 1,
-    demand: { vacuum: demandOf('vacuum'), arm: demandOf('arm'), loader: demandOf('loader') },
-    energyProfiles: { vacuum: energyOf('vacuum'), arm: energyOf('arm'), loader: energyOf('loader') },
+    demand: {
+      vacuum: demandOf('vacuum'),
+      arm: demandOf('arm'),
+      loader: demandOf('loader'),
+      sorter: demandOf('sorter'),
+      conveyor: demandOf('conveyor'),
+    },
+    energyProfiles: {
+      vacuum: energyOf('vacuum'),
+      arm: energyOf('arm'),
+      loader: energyOf('loader'),
+      sorter: energyOf('sorter'),
+      conveyor: energyOf('conveyor'),
+    },
   };
 }
 

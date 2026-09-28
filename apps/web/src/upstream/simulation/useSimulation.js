@@ -13,6 +13,9 @@ import { makeWeldArmRig } from "./robots/weldArmRobot.js";
 import { createLoaderSystem } from "./loaders/loaderSystem.js";
 import { createCustomLoaderFleet } from "./loaders/customLoaderFleet.js";
 import { createStorageCubeFleet } from "./loaders/storageCubeFleet.js";
+import { createSorterFleet } from "./sorters/sorterFleet.js";
+import { createConveyorFleet } from "./conveyors/conveyorFleet.js";
+import { computeConveyorLines } from "./layout.js";
 import { makeForkliftRobot } from "./robots/forkliftRobot.js";
 import { makeTransporterRobot } from "./robots/transporterRobot.js";
 import { createWarehouseScene } from "./sceneSetup.js";
@@ -67,9 +70,13 @@ function disposeFleets(level) {
   level.armFleet?.dispose();
   level.vacuumFleet?.dispose();
   level.loaderSystem?.dispose();
+  level.sorterFleet?.dispose();
+  level.conveyorFleet?.dispose();
   level.armFleet = null;
   level.vacuumFleet = null;
   level.loaderSystem = null;
+  level.sorterFleet = null;
+  level.conveyorFleet = null;
 }
 
 // cfg — всё, что нужно сцене (см. WarehouseScene): состав роботов, площадь, счётчики,
@@ -95,6 +102,10 @@ export function useSimulation(cfg) {
     armType,
     loaderCount,
     loaderType,
+    sorterCount = 0,
+    sorterThroughput = 0,
+    conveyorCount = 0,
+    conveyorThroughput = 0,
     energyProfiles,
     loader,
     immersive = false,
@@ -258,6 +269,30 @@ export function useSimulation(cfg) {
         }
       }
 
+      // Сортировочная система и конвейерные линии — стационарные, строятся сразу.
+      if (layout.useSorter && sorterCount > 0 && index === 0) {
+        level.sorterFleet = createSorterFleet({
+          group: level.armGroup,
+          zone: layout.sorterZone,
+          count: sorterCount,
+          throughputPerHour: sorterThroughput,
+          metersPerUnit: chunkGrid.metersPerUnit,
+          beltTexture: st.beltTexture,
+          energyProfile: energyProfiles.sorter ?? energyProfiles.arm,
+        });
+      }
+      if (layout.useConveyor && conveyorCount > 0 && index === 0) {
+        const lengthUnits = (loader.routeLengthM ?? 60) / Math.max(1e-6, chunkGrid.metersPerUnit);
+        level.conveyorFleet = createConveyorFleet({
+          group: level.armGroup,
+          lines: computeConveyorLines(layout, shape, conveyorCount, lengthUnits),
+          throughputPerHour: conveyorThroughput,
+          metersPerUnit: chunkGrid.metersPerUnit,
+          beltTexture: st.beltTexture,
+          energyProfile: energyProfiles.conveyor ?? energyProfiles.arm,
+        });
+      }
+
       if (useVacuum && vacuumCount > 0 && modelState === "ready") {
         // Стеллажи своей формы склада — такое же препятствие для пылесосов,
         // как и роборуки (жалоба: раньше пылесосы ездили прямо сквозь них).
@@ -270,7 +305,12 @@ export function useSimulation(cfg) {
           count: vacuumCount,
           cleaningSpeed: vacuumSpeed,
           energyProfile: energyProfiles.vacuum,
-          obstacles: [...(level.armFleet?.obstacles ?? []), ...rackObstacles],
+          obstacles: [
+            ...(level.armFleet?.obstacles ?? []),
+            ...(level.sorterFleet?.obstacles ?? []),
+            ...(level.conveyorFleet?.obstacles ?? []),
+            ...rackObstacles,
+          ],
           trail: { ctx: level.trailCtx, texture: level.trailTexture },
           grid: level.grid,
           robotFactory: vacuumFactoryOf(vacuumType),
@@ -347,6 +387,10 @@ export function useSimulation(cfg) {
     armType,
     loaderCount,
     loaderType,
+    sorterCount,
+    sorterThroughput,
+    conveyorCount,
+    conveyorThroughput,
     energyProfiles,
     loader.capacityKg,
     loader.speedMps,
@@ -383,6 +427,8 @@ export function useSimulation(cfg) {
           level.vacuumFleet?.step(dt);
           level.armFleet?.step(dt);
           level.loaderSystem?.step(dt);
+          level.sorterFleet?.step(dt);
+          level.conveyorFleet?.step(dt);
         }
 
         executed++;

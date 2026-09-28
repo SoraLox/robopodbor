@@ -149,6 +149,8 @@ export function createFloorLevel(shared, index, shape) {
     vacuumFleet: null,
     armFleet: null,
     loaderSystem: null,
+    sorterFleet: null,
+    conveyorFleet: null,
 
     // Общие геометрии, материал пола и подписи чанков принадлежат сцене; здесь —
     // только своё: слой следа, ящики, стены и стеллажи из конструктора формы.

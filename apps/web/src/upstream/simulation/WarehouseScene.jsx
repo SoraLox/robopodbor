@@ -55,6 +55,10 @@ export default function WarehouseScene({
   loaderSpeedMps,
   loaderThroughput,
   storageTowers,
+  sorterCount = 0,
+  sorterThroughput = 0,
+  conveyorCount = 0,
+  conveyorThroughput = 0,
   cargoWeightKg,
   cargoLengthCm,
   cargoWidthCm,
@@ -132,6 +136,10 @@ export default function WarehouseScene({
     armType,
     loaderCount,
     loaderType,
+    sorterCount,
+    sorterThroughput,
+    conveyorCount,
+    conveyorThroughput,
     energyProfiles,
     immersive,
     loader: {
@@ -170,7 +178,13 @@ export default function WarehouseScene({
   const verifyRows = buildVerifyRows({
     layout,
     demand,
-    fleet: { vacuum: vacuumCount * vacuumProd * chargeDuty, arm: armOpsPerHour, loader: loaderCount * loaderThroughput },
+    fleet: {
+      vacuum: vacuumCount * vacuumProd * chargeDuty,
+      arm: armOpsPerHour,
+      loader: loaderCount * loaderThroughput,
+      sorter: sorterCount * sorterThroughput,
+      conveyor: conveyorCount * conveyorThroughput,
+    },
     stats,
     areaPerUnit2: chunkGrid.areaPerUnit2,
     inflowPerFloor: { inbound: cargoPerHour / floorsCount, outbound: outboundPerHour / floorsCount },
@@ -200,6 +214,8 @@ export default function WarehouseScene({
       {useVacuum && <Stat label="На зарядке" value={`${vacuumStats.charging}/${vacuumCount}`} />}
       {useArm && <Stat label="Обработано, шт" value={stats.opsDone} />}
       {useArm && <Stat label="Темп рук" value={`${armOpsPerHour.toFixed(0)} оп/ч`} />}
+      {layout.useSorter && <Stat label="Отсортировано, шт" value={stats.sorterItems} />}
+      {layout.useConveyor && <Stat label="По конвейеру, ед." value={stats.conveyorUnits} />}
       {useLoader && <Stat label="Склад" value={PHASE_LABELS[loaderStats.phase]} />}
       {useLoader && <Stat label="Заполнено" value={`${loaderStats.fillPercent}%`} />}
       {useLoader && <Stat label="На складе, кг" value={loaderStats.storedKg} />}

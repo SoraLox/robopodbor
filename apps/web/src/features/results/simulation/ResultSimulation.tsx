@@ -232,6 +232,8 @@ function SimulationScene({ input, immersive }: { input: SimulationInput; immersi
     vacuum: fleets.vacuum?.recommendedCount ?? 0,
     arm: fleets.arm?.recommendedCount ?? 0,
     loader: fleets.loader?.recommendedCount ?? 0,
+    sorter: fleets.sorter?.recommendedCount ?? 0,
+    conveyor: fleets.conveyor?.recommendedCount ?? 0,
   });
   const setCount = (kind: SimRobotType) => (value: number) => setCounts((prev) => ({ ...prev, [kind]: value }));
   const label = Object.values(fleets)
@@ -261,6 +263,10 @@ function SimulationScene({ input, immersive }: { input: SimulationInput; immersi
         loaderSpeedMps={fleets.loader?.speedMps ?? 2}
         loaderThroughput={fleets.loader?.throughput ?? 0}
         storageTowers={fleets.loader?.storageTowers}
+        sorterCount={counts.sorter}
+        sorterThroughput={fleets.sorter?.throughput ?? 0}
+        conveyorCount={counts.conveyor}
+        conveyorThroughput={fleets.conveyor?.throughput ?? 0}
         cargoWeightKg={params.cargoWeightKg}
         cargoLengthCm={params.cargoLengthCm}
         cargoWidthCm={params.cargoWidthCm}

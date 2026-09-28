@@ -29,6 +29,10 @@ export const EMPTY_STATS = {
   energyKwh: 0,
   vacuum: EMPTY_VACUUM_STATS,
   loader: EMPTY_LOADER_STATS,
+  sorterItems: 0,
+  conveyorUnits: 0,
+  conveyorLines: 0,
+  sorterSystems: 0,
 };
 
 // Одинаковы ли два набора показателей (по полям, вложенные — тоже): если да, состояние
@@ -57,7 +61,9 @@ export function readStats(levels, floorIndex, zoneCells, simSeconds) {
   const level = levels[floorIndex] ?? levels[0];
   if (!level) return EMPTY_STATS;
 
-  const meters = levels.flatMap((l) => [l.vacuumFleet, l.armFleet, l.loaderSystem].flatMap((fleet) => fleet?.meters ?? []));
+  const meters = levels.flatMap((l) =>
+    [l.vacuumFleet, l.armFleet, l.loaderSystem, l.sorterFleet, l.conveyorFleet].flatMap((fleet) => fleet?.meters ?? [])
+  );
 
   return {
     coverage: level.vacuumFleet ? coveragePercent(level.grid, zoneCells) : 0,
@@ -66,10 +72,20 @@ export function readStats(levels, floorIndex, zoneCells, simSeconds) {
     energyKwh: meters.reduce((sum, meter) => sum + meter.gridKwh, 0),
     vacuum: level.vacuumFleet ? level.vacuumFleet.getStats() : EMPTY_VACUUM_STATS,
     loader: level.loaderSystem ? level.loaderSystem.getStats() : EMPTY_LOADER_STATS,
+    sorterItems: level.sorterFleet ? level.sorterFleet.getItemsDone() : 0,
+    sorterSystems: level.sorterFleet ? level.sorterFleet.systemsShown : 0,
+    conveyorUnits: level.conveyorFleet ? level.conveyorFleet.getUnitsMoved() : 0,
+    conveyorLines: level.conveyorFleet ? level.conveyorFleet.meters.length : 0,
   };
 }
 
-export const ROBOT_TITLES = { vacuum: "пылесосы", arm: "роборуки", loader: "погрузчики" };
+export const ROBOT_TITLES = {
+  vacuum: "пылесосы",
+  arm: "роборуки",
+  loader: "погрузчики",
+  sorter: "сортировочная система",
+  conveyor: "конвейерные линии",
+};
 export const PHASE_LABELS = {
   loading: "Приёмка груза",
   unloading: "Отгрузка груза",
