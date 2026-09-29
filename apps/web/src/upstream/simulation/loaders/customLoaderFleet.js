@@ -201,6 +201,7 @@ export function createCustomLoaderFleet({
       kind: direction ?? (gate.kind === "generic" ? (index % 2 === 0 ? "in" : "out") : gate.kind),
       // У конца конвейера груз ждать не надо: его подаёт/забирает лента.
       viaConveyor: Boolean(handoff),
+      handoff: handoff ?? null,
       myRacks,
       rackIndex: myRacks.length ? Math.floor((slot * myRacks.length) / Math.max(1, slots)) : 0,
       path: null,
@@ -351,7 +352,8 @@ export function createCustomLoaderFleet({
         if (!loader.viaConveyor && (!loader.gate.truck || loader.gate.truck.state !== "docked")) break; // ждём фуру
 
         loader.timer += dt;
-        if (loader.timer >= PAUSE_SECONDS) {
+        // У ленты отгрузки паллету ставят, только когда в начале ленты есть место.
+        if (loader.timer >= PAUSE_SECONDS && (!loader.handoff?.put || loader.handoff.put())) {
           detachCargo(loader);
           if (loader.gate.truck) loader.gate.truck.exchanged++;
           cyclesOut++;
@@ -373,7 +375,8 @@ export function createCustomLoaderFleet({
         if (!loader.viaConveyor && (!loader.gate.truck || loader.gate.truck.state !== "docked")) break; // ждём фуру
 
         loader.timer += dt;
-        if (loader.timer >= PAUSE_SECONDS) {
+        // С ленты приёмки забирают ту паллету, что доехала до конца, — нет её, ждём.
+        if (loader.timer >= PAUSE_SECONDS && (!loader.handoff?.take || loader.handoff.take())) {
           attachCargo(loader);
           if (loader.gate.truck) loader.gate.truck.exchanged++;
           loader.state = "toRackDrop";

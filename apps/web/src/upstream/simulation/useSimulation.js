@@ -311,8 +311,22 @@ export function useSimulation(cfg) {
                 energyProfile: link.conveyor.energyProfile,
               }),
             });
-            handoffs = {};
-            for (const line of lines) if (!handoffs[line.gateId]) handoffs[line.gateId] = line.end;
+            // Точки передачи у торца стеллажей: погрузчик берёт/ставит паллету на ленту.
+            // Ворота связи без своей ленты — к ближайшей точке передачи: с конвейером
+            // весь поток связи идёт через ленту, мимо неё к фуре погрузчик не ездит.
+            const hubs = level.linkFleets[level.linkFleets.length - 1].fleet.hubs;
+            const hubList = Object.values(hubs);
+            handoffs = hubList.length ? {} : null;
+            if (hubList.length) for (const gate of gates) {
+              handoffs[gate.id] =
+                hubs[gate.id] ??
+                hubList.reduce((best, hub) =>
+                  Math.hypot(hub.x - gate.worldCenter.x, hub.z - gate.worldCenter.z) <
+                  Math.hypot(best.x - gate.worldCenter.x, best.z - gate.worldCenter.z)
+                    ? hub
+                    : best
+                );
+            }
           }
           if (modelState !== "ready") continue;
           link.carriers.forEach((carrier, i) => {

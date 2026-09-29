@@ -3,10 +3,12 @@ import { createEnergyMeter } from "../energy.js";
 import { disposeTree } from "../sceneUtils.js";
 import { activePalette } from "../studioLook.js";
 
-// Конвейерные линии: лента от зоны ворот вглубь склада. Груз появляется у
-// ворот с темпом паспортной производительности линии (ед./ч), едет по ленте и
-// уходит на хранение в дальнем конце. Линии стационарны — для пылесосов это
-// прямоугольные препятствия. Где проложить линии, решает layout.conveyorLines.
+// Конвейерные линии связи сценария: лента от ворот до точки передачи у торца
+// стеллажей (P&D). Приёмка: паллета появляется у ворот с темпом паспортной
+// производительности линии, доезжает до конца и ждёт там, пока её не заберёт
+// погрузчик (hub.take); не забирают — лента встаёт. Отгрузка: паллету на ленту
+// ставит погрузчик (hub.put) у стеллажей, лента везёт её к воротам, к фуре.
+// Линии стационарны — для пылесосов это прямоугольные препятствия.
 
 const BELT_WIDTH = 2.4;
 const BELT_Y = 1.0;
@@ -61,6 +63,8 @@ export function createConveyorFleet({ group, lines, throughputPerHour, beltTextu
       length,
       dir,
       start: line.start,
+      gateId: line.gateId,
+      end: line.end,
       units: [],
       credit: 0,
       perSecond: Math.max(0.01, (throughputPerHour || 0) / 3600),
@@ -70,34 +74,82 @@ export function createConveyorFleet({ group, lines, throughputPerHour, beltTextu
 
   let unitsMoved = 0;
 
+  const endOf = (line) => line.length - PALLET_SIZE / 2;
+
   function step(dt) {
     for (const line of built) {
       line.meter.consume(dt, line.units.length ? "work" : "idle");
-      line.credit += line.perSecond * dt;
 
-      // Новая единица груза у ворот — если есть место в начале ленты.
-      const tail = line.units[line.units.length - 1];
-      if (line.credit >= 1 && (!tail || tail.d > PALLET_SIZE + UNIT_GAP)) {
-        line.credit -= 1;
-        const mesh = new THREE.Mesh(palletGeometry, palletMaterials[unitsMoved % palletMaterials.length]);
-        line.group.add(mesh);
-        line.units.push({ mesh, d: 0 });
+      // Приёмка: новая паллета у ворот — с темпом линии, если в начале ленты есть место.
+      if (!line.reverse) {
+        line.credit = Math.min(line.credit + line.perSecond * dt, 3);
+        const tail = line.units[line.units.length - 1];
+        if (line.credit >= 1 && (!tail || tail.d > PALLET_SIZE + UNIT_GAP)) {
+          line.credit -= 1;
+          addUnit(line);
+        }
       }
-      line.credit = Math.min(line.credit, 3);
 
-      let limit = Infinity;
+      // Паллеты едут до конца и копятся друг за другом, первая ждёт на конце.
+      let limit = endOf(line) + PALLET_SIZE + UNIT_GAP;
       for (const unit of line.units) {
         unit.d = Math.min(unit.d + beltSpeed * dt, limit - (PALLET_SIZE + UNIT_GAP));
         limit = unit.d;
         unit.mesh.position.set(0, BELT_Y + 0.56, line.reverse ? line.length - unit.d : unit.d);
       }
-      // Дошла до конца — сдана на хранение.
-      while (line.units.length && line.units[0].d >= line.length - PALLET_SIZE / 2) {
-        const done = line.units.shift();
-        line.group.remove(done.mesh);
-        unitsMoved += 1;
+
+      // Отгрузка: доехала до ворот — в фуру.
+      if (line.reverse) {
+        while (line.units.length && line.units[0].d >= endOf(line) - 1e-3) {
+          removeFront(line);
+        }
       }
     }
+  }
+
+  function addUnit(line) {
+    const mesh = new THREE.Mesh(palletGeometry, palletMaterials[(unitsMoved + line.units.length) % palletMaterials.length]);
+    mesh.position.set(0, BELT_Y + 0.56, line.reverse ? line.length : 0);
+    line.group.add(mesh);
+    line.units.push({ mesh, d: 0 });
+  }
+
+  function removeFront(line) {
+    const done = line.units.shift();
+    line.group.remove(done.mesh);
+    unitsMoved += 1;
+  }
+
+  // Точки передачи по воротам: погрузчик забирает паллету с конца ленты приёмки
+  // или ставит на начало ленты отгрузки. Несколько линий у одних ворот — одна точка.
+  const hubs = {};
+  for (const line of built) {
+    if (line.gateId === undefined) continue;
+    // Погрузчик встаёт за концом ленты, в проходе у стеллажей.
+    const hub = (hubs[line.gateId] ??= {
+      x: line.end.x + line.dir.x * PALLET_SIZE,
+      z: line.end.z + line.dir.z * PALLET_SIZE,
+      lines: [],
+    });
+    hub.lines.push(line);
+  }
+  for (const hub of Object.values(hubs)) {
+    hub.take = () => {
+      const line = hub.lines.find((l) => !l.reverse && l.units.length && l.units[0].d >= endOf(l) - 0.05);
+      if (!line) return false;
+      removeFront(line);
+      return true;
+    };
+    hub.put = () => {
+      const line = hub.lines.find((l) => {
+        if (!l.reverse) return false;
+        const tail = l.units[l.units.length - 1];
+        return !tail || tail.d > PALLET_SIZE + UNIT_GAP;
+      });
+      if (!line) return false;
+      addUnit(line);
+      return true;
+    };
   }
 
   const obstacles = built.map((line) => {
@@ -127,6 +179,7 @@ export function createConveyorFleet({ group, lines, throughputPerHour, beltTextu
     obstacles,
     meters: built.map((line) => line.meter),
     getUnitsMoved: () => unitsMoved,
+    hubs,
     lengthUnits: built.reduce((sum, line) => sum + line.length, 0),
   };
 }

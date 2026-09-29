@@ -128,3 +128,25 @@ export function rackStorage(shape: Shape, parameters: Record<string, string>): R
 export function palletSlotsOf(parameters: Record<string, string>): number {
   return numberOf(parameters.wh_kolichestvo_palletomest, 20000);
 }
+
+/**
+ * Стандартная расстановка стеллажей для сценария, если на планировке их нет:
+ * у ворот — зона доков, дальше — три ряда двойных стеллажей с рабочими проходами
+ * и центральным поперечным проездом (к нему выходят конвейеры приёмки и
+ * отгрузки), у дальней стены — свободная зона комплектации для роборук и сортера.
+ * Доли — от сетки, поэтому раскладка одна и та же на любом размере склада.
+ */
+export function withStandardRacks(shape: Shape): Shape {
+  if (shape.cells.some((value) => value === CELL.RACK)) return shape;
+  const n = shape.gridSize;
+  const next = { ...shape, cells: shape.cells.slice() } as Shape;
+  const rowPairs = [0.28, 0.44, 0.6].map((f) => Math.round(f * n));
+  const cross = Math.floor(n / 2);
+  for (const gz of rowPairs.flatMap((z) => [z, z + 1])) {
+    for (let gx = 2; gx <= n - 3; gx += 1) {
+      if (gx === cross) continue;
+      if (next.cells[gz * n + gx] === CELL.FLOOR) next.cells[gz * n + gx] = CELL.RACK;
+    }
+  }
+  return next;
+}

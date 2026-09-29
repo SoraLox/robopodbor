@@ -13,7 +13,8 @@ import { OBJECT_TYPES, defaultParamsFor, selectOption } from '@/upstream/domain/
 import { MAX_VACUUM_COUNT, computeLayout } from '@/upstream/simulation/layout.js';
 import { maxSorterCount } from '@/upstream/simulation/sorters/sorterFleet.js';
 import { buildDefaultShape } from '@/upstream/simulation/shape/shapeTypes.js';
-import { decodeShape, layoutMetrics, rackStorage } from '@/features/objects/layout/warehouseLayout';
+import { computeGateClusters } from '@/upstream/simulation/shape/shapeGeometry.js';
+import { decodeShape, layoutMetrics, rackStorage, withStandardRacks } from '@/features/objects/layout/warehouseLayout';
 
 /** Форма склада — стандартный прямоугольник upstream: своей формы в паспорте нет. */
 export const DEFAULT_SHAPE = buildDefaultShape();
@@ -179,7 +180,23 @@ export function buildSimulationInput(
   }
   const robotTypes = groups.map((group) => group.kind);
   const workZoneShare = params.workZonePct / 100;
-  const sceneLayout = computeLayout(shape, robotTypes, workZoneShare);
+
+  // Связи приёмки и отгрузки со своими флотами. Простой паллетный склад (одна
+  // модель погрузчиков, без конвейера, стандартная форма, по погрузчику на ворота) —
+  // прежним флотом Егора с полосами хранения; остальное — по связям, на складе со
+  // стеллажами: нарисованными или стандартными (withStandardRacks).
+  const transportGroups = raw.filter((g) => g.slot === 'inbound' || g.slot === 'outbound');
+  const carrierIds = new Set(transportGroups.filter((g) => g.kind === 'loader').map((g) => g.solutionId));
+  const loaderTotal = transportGroups.filter((g) => g.kind === 'loader').reduce((sum, g) => sum + g.count, 0);
+  const simple =
+    !custom &&
+    !transportGroups.some((g) => g.kind === 'conveyor') &&
+    carrierIds.size <= 1 &&
+    !transportGroups.some((g) => g.model === 'storagecube') &&
+    loaderTotal <= computeGateClusters(shape).length;
+  const sceneShape = simple ? shape : withStandardRacks(shape);
+  if (sceneShape !== shape) (sceneShape as { rackTiers?: number }).rackTiers = rackStorage(sceneShape, merged)?.levels;
+  const sceneLayout = computeLayout(sceneShape, robotTypes, workZoneShare);
   const maxOf: Record<SimRobotType, number> = {
     vacuum: MAX_VACUUM_COUNT,
     arm: sceneLayout.maxArmCount,
@@ -218,23 +235,12 @@ export function buildSimulationInput(
     };
   };
 
-  // Связи приёмки и отгрузки со своими флотами. Простой паллетный склад (одна
-  // модель погрузчиков, без конвейера, стандартная форма, по погрузчику на ворота) —
-  // прежним флотом Егора с полосами хранения; остальное — по связям.
   const energyOfGroup = (group: FleetGroup) => ({
     runtimeHours: group.autonomyHours ?? null,
     chargeHours: group.chargeHours ?? null,
     workPowerKw: group.workPowerKw,
     idlePowerKw: group.idlePowerKw,
   });
-  const transportGroups = raw.filter((g) => g.slot === 'inbound' || g.slot === 'outbound');
-  const carrierIds = new Set(transportGroups.filter((g) => g.kind === 'loader').map((g) => g.solutionId));
-  const simple =
-    !custom &&
-    !transportGroups.some((g) => g.kind === 'conveyor') &&
-    carrierIds.size <= 1 &&
-    !transportGroups.some((g) => g.model === 'storagecube') &&
-    (fleets.loader?.requiredCount ?? 0) <= sceneLayout.gates.length;
   const transportLinks = simple
     ? null
     : (['inbound', 'outbound'] as const)
@@ -274,7 +280,7 @@ export function buildSimulationInput(
     : params.routeLengthM;
 
   return {
-    shape,
+    shape: sceneShape,
     transportLinks,
     checkRouteM,
     params,
