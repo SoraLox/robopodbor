@@ -36,7 +36,14 @@ export function findBlocker(me, next, others) {
     if (other === me) continue;
 
     const after = bodyGap(next, other, me.body, other.body);
-    if (after < 0 && after < bodyGap(me, other, me.body, other.body)) return other;
+    if (after < 0 && after < bodyGap(me, other, me.body, other.body)) {
+      // Центр уходит от другого — это «удаляться»: доворот корпуса на ходу чуть
+      // приближает задний круг, и без этого два робота с перекрытием замирали навсегда.
+      const awayNow = Math.hypot(me.x - other.x, me.z - other.z);
+      const awayNext = Math.hypot(next.x - other.x, next.z - other.z);
+      if (awayNext > awayNow) continue;
+      return other;
+    }
   }
 
   return null;
