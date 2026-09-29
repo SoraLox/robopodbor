@@ -5,7 +5,7 @@
  * демо-робота того же вида из демо-каталога Егора — с пометкой в substitutions,
  * чтобы экономика и сцена считали по одним и тем же числам.
  */
-import type { CatalogSolution } from "./catalog.js";
+import { isTeamEstimate, type CatalogSolution } from "./catalog.js";
 
 /**
  * Флот сцены и группа расчёта: уборка, отбор роборуками, перемещение паллет,
@@ -182,8 +182,11 @@ export function fleetRobotOf(solution: CatalogSolution, kind: FleetKind): FleetR
       ? take(solution.payloadKg || null, demo.capacityKg, "грузоподъёмность", `${demo.capacityKg} кг`)
       : solution.payloadKg ?? null;
 
+  // Оценка команды — не паспортная производительность: парк считаем по циклу или демо-роботу.
   const cardRate =
-    solution.throughput && UNIT_OF_KIND[kind].test(solution.throughputUnit ?? "") ? solution.throughput : null;
+    solution.throughput && !isTeamEstimate(solution, "throughput") && UNIT_OF_KIND[kind].test(solution.throughputUnit ?? "")
+      ? solution.throughput
+      : null;
   const ownRate = cardRate ?? (kind === "arm" ? hourlyRateFrom(solution.useCase) : null);
   // Погрузчик со скоростью считается по циклу маршрута (как у Егора), паспортная
   // производительность — только верхняя граница; без скорости — от демо-робота.
