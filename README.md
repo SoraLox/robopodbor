@@ -4,38 +4,6 @@
 
 Каталог реальных решений → паспорт объекта → сценарии «как есть / покупка / аренда» → 3D-проверка склада или аэропорта → PDF и Excel для инвестиционного комитета.
 
-<p align="center">
-  <a href="https://soralox.github.io/robopodbor/"><img src="docs/assets/hero.png" alt="Лендинг РОБОПОДБОР" width="920" /></a>
-</p>
-
-<p align="center">
-  <a href="https://soralox.github.io/robopodbor/"><b>Открыть демо</b></a>
-  ·
-  <a href="https://soralox.github.io/robopodbor/#/catalog">Каталог</a>
-  ·
-  <a href="docs/README.md">Документация</a>
-  ·
-  <a href="contracts/openapi.yaml">OpenAPI</a>
-</p>
-
----
-
-## Что внутри
-
-| | |
-|---|---|
-| **Каталог** | ~190 роботов с источником каждой цифры |
-| **Подбор** | склад, аэропорт, клиника — от паспорта объекта |
-| **Экономика** | горизонт 7 лет, CAPEX/OPEX, чувствительность |
-| **Симуляция** | 3D-сцена склада и аэропорта по параметрам расчёта |
-| **Отчёт** | PDF и Excel для защиты бюджета |
-
-<p align="center">
-  <img src="docs/assets/catalog.png" alt="Каталог решений" width="920" />
-</p>
-
-Демо на Pages работает с MSW-моками (без бэкенда). Полный стек с API и Postgres — через Docker ниже.
-
 ## Запуск
 
 Нужен только [Docker Desktop](https://www.docker.com/products/docker-desktop/).
@@ -56,6 +24,8 @@ docker compose up --build
 
 Без входа доступны каталог и полный расчёт.
 
+Демо без Docker: [soralox.github.io/robopodbor](https://soralox.github.io/robopodbor/) (MSW-моки, без бэкенда).
+
 <details>
 <summary>Если что-то пошло не так</summary>
 
@@ -71,6 +41,36 @@ docker compose up --build
 Остановить: `Ctrl+C` или `docker compose down`. Чистая база: `docker compose down -v`.
 
 </details>
+
+---
+
+<p align="center">
+  <a href="https://soralox.github.io/robopodbor/"><img src="docs/assets/hero.png" alt="Лендинг РОБОПОДБОР" width="920" /></a>
+</p>
+
+<p align="center">
+  <a href="https://soralox.github.io/robopodbor/"><b>Открыть демо</b></a>
+  ·
+  <a href="https://soralox.github.io/robopodbor/#/catalog">Каталог</a>
+  ·
+  <a href="docs/README.md">Документация</a>
+  ·
+  <a href="contracts/openapi.yaml">OpenAPI</a>
+</p>
+
+## Что внутри
+
+| | |
+|---|---|
+| **Каталог** | ~190 роботов с источником каждой цифры |
+| **Подбор** | склад, аэропорт, клиника — от паспорта объекта |
+| **Экономика** | горизонт 7 лет, CAPEX/OPEX, чувствительность |
+| **Симуляция** | 3D-сцена склада и аэропорта по параметрам расчёта |
+| **Отчёт** | PDF и Excel для защиты бюджета |
+
+<p align="center">
+  <img src="docs/assets/catalog.png" alt="Каталог решений" width="920" />
+</p>
 
 ## Структура
 
