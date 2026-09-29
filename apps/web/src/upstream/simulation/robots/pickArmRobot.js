@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { buildConveyors } from "./armRobot.js";
 import { createGlbModel } from "./glbModel.js";
 
 // Роборука отбора — модель пользователя (public/models/pick_arm.glb, исходник —
@@ -157,7 +156,9 @@ export function poseArm(joints, yaw, radius, height) {
   joints.wrist.rotation.x = -(joints.shoulder.rotation.x + joints.elbow.rotation.x);
 }
 
-export function makePickArmRig(accentColor, beltTexture) {
+// Рука без своих лент — стоит у общих конвейеров участка (arms/armUnit.js).
+// pose(yaw, radius, height) — в единицах модели (масштаб задаёт вызывающий).
+export function makePickArmRig() {
   const group = new THREE.Group();
   const model = pickArmModel.clone();
   group.add(model);
@@ -168,13 +169,7 @@ export function makePickArmRig(accentColor, beltTexture) {
     wrist: model.getObjectByName("wrist"),
   };
   const claw = model.getObjectByName("grip");
-
-  const beltMat = new THREE.MeshStandardMaterial({ map: beltTexture, flatShading: true, roughness: 0.7, metalness: 0.0 });
-  const boxes = buildConveyors(group, beltMat);
-
-  // dip: 1 — присоски на коробке у ленты, 0 — рука поднята для переноса.
-  const pose = (yaw, dip) => poseArm(joints, yaw, REACH, CARRY_HEIGHT + (PICK_HEIGHT - CARRY_HEIGHT) * dip);
-  pose(Math.PI, 0);
-
-  return { group, pivot: joints.turret, claw, boxes, pose };
+  const pose = (yaw, radius, height) => poseArm(joints, yaw, radius, height);
+  pose(Math.PI, REACH, CARRY_HEIGHT);
+  return { group, claw, pose };
 }

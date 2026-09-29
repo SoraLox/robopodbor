@@ -158,7 +158,9 @@ export function createCustomLoaderFleet({
 
   const nav = makeNavGrid(shape);
   // Стоянки транспортировщиков — не проезд для погрузчиков.
-  const bayParks = [storageHub?.park, ...Object.values(handoffs ?? {}).map((h) => h.park)].filter(Boolean);
+  // Точка «хранения» — одна или по одной на ворота (карусель станции приёмки).
+  const storageHubs = Array.isArray(storageHub) ? storageHub : storageHub ? [storageHub] : [];
+  const bayParks = [...storageHubs.map((h) => h.park), ...Object.values(handoffs ?? {}).map((h) => h.park)].filter(Boolean);
   blockedRects = [...blockedRects, ...bayParks.map((p) => ({ x: p.x, z: p.z, halfX: 0.6, halfZ: 0.6 }))];
   for (let gz = 0; gz < nav.n; gz++) {
     for (let gx = 0; gx < nav.n; gx++) {
@@ -171,7 +173,7 @@ export function createCustomLoaderFleet({
   }
   const reserved = [
     ...reservedPoints,
-    ...(storageHub ? [storageHub.park, storageHub.stand] : []),
+    ...storageHubs.flatMap((h) => [h.park, h.stand].filter(Boolean)),
     ...Object.values(handoffs ?? {}).flatMap((h) => (h.park ? [h.park, h.stand] : [])),
   ];
   const storage = collectStorage(shape, nav, gates, routeLengthM ? routeLengthM / Math.max(1e-6, metersPerUnit) : null)
@@ -235,7 +237,8 @@ export function createCustomLoaderFleet({
     group.add(model.group);
 
     // Несколько погрузчиков на одних воротах начинают с разных стеллажей.
-    const myRacks = storageHub ? [storageHub.stand] : near ?? racksByGate.get(gate.id);
+    const ownHub = storageHubs.find((h) => h.gateId === gate.id) ?? storageHubs[0];
+    const myRacks = ownHub ? [ownHub.stand] : near ?? racksByGate.get(gate.id);
     const loader = {
       model,
       gate,
@@ -297,11 +300,28 @@ export function createCustomLoaderFleet({
     return list[loader.rackIndex % list.length];
   }
 
-  function attachCargo(loader) {
+  // unit — груз, полученный от ленты/транспортировщика (тот же объект сцены);
+  // нет — новый (из фуры).
+  function attachCargo(loader, unit = null) {
     loader.carrying = true;
-    loader.cargoUnit = cargoFactory.create();
-    loader.cargoUnit.position.y = 0;
+    loader.cargoUnit = unit && unit !== true ? unit : cargoFactory.create();
+    loader.cargoUnit.removeFromParent();
+    loader.cargoUnit.position.set(0, 0, 0);
+    loader.cargoUnit.rotation.set(0, 0, 0);
     loader.model.carry.add(loader.cargoUnit);
+  }
+
+  // Груз отдан точке, которая забирает сам объект (лента, транспортировщик).
+  function handOver(loader) {
+    loader.carrying = false;
+    loader.cargoUnit = null;
+  }
+
+  // Поставить груз в точку: hub.put(unit) — принят ли; adopts — объект теперь её.
+  function putTo(loader, hub) {
+    if (!hub.put(loader.cargoUnit)) return false;
+    if (hub.adopts) handOver(loader);
+    return true;
   }
 
   function detachCargo(loader) {
@@ -341,8 +361,10 @@ export function createCustomLoaderFleet({
       loader.forkTarget = lift;
       const raised = moveFork(loader, dt);
       loader.timer += dt;
-      if (!raised || loader.timer < PAUSE_SECONDS / 2 || !ready()) return false;
-      act();
+      if (!raised || loader.timer < PAUSE_SECONDS / 2) return false;
+      const got = ready();
+      if (!got) return false;
+      act(got);
       loader.acted = true;
     }
     loader.forkTarget = travelLift(loader);
@@ -391,7 +413,7 @@ export function createCustomLoaderFleet({
         loader.meter.consume(dt, "work");
         const hub = loader.rackTarget.hub;
         // С транспортировщика снимают, только когда он стоит на месте с грузом.
-        if (handle(loader, dt, hub ? hub.lift : rackLift(loader), () => (hub ? hub.take() : true), () => attachCargo(loader))) {
+        if (handle(loader, dt, hub ? hub.lift : rackLift(loader), () => (hub ? hub.take() : true), (got) => attachCargo(loader, got))) {
           doneAtRack(loader);
           loader.state = "toGateDrop";
         }
@@ -411,9 +433,10 @@ export function createCustomLoaderFleet({
             dt,
             gateLift(loader),
             // Ставим, когда у ворот фура, а у ленты отгрузки — когда в начале есть место.
-            () => truckReady(loader) && (!loader.handoff?.put || loader.handoff.put()),
+            () => truckReady(loader) && (!loader.handoff?.put || putTo(loader, loader.handoff)),
             () => {
-              detachCargo(loader);
+              if (loader.cargoUnit) detachCargo(loader);
+              else loader.carrying = false;
               if (loader.gate.truck) loader.gate.truck.exchanged++;
               cyclesOut++;
             }
@@ -439,8 +462,8 @@ export function createCustomLoaderFleet({
             gateLift(loader),
             // С ленты забирают паллету, что доехала до конца; нет её — ждём с поднятыми вилами.
             () => truckReady(loader) && (!loader.handoff?.take || loader.handoff.take()),
-            () => {
-              attachCargo(loader);
+            (got) => {
+              attachCargo(loader, got);
               if (loader.gate.truck) loader.gate.truck.exchanged++;
             }
           )
@@ -462,8 +485,9 @@ export function createCustomLoaderFleet({
         const hub = loader.rackTarget.hub;
         // На транспортировщик ставят, только когда он пустой стоит на месте.
         if (
-          handle(loader, dt, hub ? hub.lift : rackLift(loader), () => (hub ? hub.put() : true), () => {
-            detachCargo(loader);
+          handle(loader, dt, hub ? hub.lift : rackLift(loader), () => (hub ? putTo(loader, hub) : true), () => {
+            if (loader.cargoUnit) detachCargo(loader);
+            else loader.carrying = false;
             cyclesIn++;
           })
         ) {

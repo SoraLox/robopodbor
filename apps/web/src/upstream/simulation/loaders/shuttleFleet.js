@@ -35,12 +35,15 @@ function nearGate(shape, gx, gz, cells) {
 }
 
 // standSign: +1 — место погрузчика со стороны точки point, −1 — с противоположной.
-function bayNear(nav, shape, point, { minCells = 2, preferRack = false, targetCells = null, standSign = 1 } = {}) {
+// aisle — только во внутреннем проходе: стеллажи по обе стороны (в пределах двух клеток).
+function bayNear(nav, shape, point, { minCells = 2, preferRack = false, targetCells = null, standSign = 1, aisle = false, avoid = [] } = {}) {
   const from = cellOfPoint(nav, point);
   let best = null;
   for (let gz = 0; gz < nav.n; gz++) {
     for (let gx = 0; gx < nav.n; gx++) {
       if (!isWalkable(nav, gx, gz) || nearGate(shape, gx, gz, 3)) continue;
+      const here = cellCenter(nav, gx, gz);
+      if (avoid.some((p) => Math.hypot(p.x - here.x, p.z - here.z) < 9)) continue;
       const d = Math.abs(gx - from.gx) + Math.abs(gz - from.gz);
       if (d < minCells) continue;
       const sides = [[1, 0], [-1, 0], [0, 1], [0, -1]];
@@ -52,6 +55,13 @@ function bayNear(nav, shape, point, { minCells = 2, preferRack = false, targetCe
       if (!stand) continue;
       const byRack = sides.some(([dx, dz]) => cellAt(shape, gx + dx, gz + dz) === CELL.RACK);
       if (preferRack && !byRack) continue;
+      const rackAt = (dx, dz) => cellAt(shape, gx + dx, gz + dz) === CELL.RACK;
+      const between =
+        ((rackAt(0, -1) || rackAt(0, -2)) && (rackAt(0, 1) || rackAt(0, 2))) ||
+        ((rackAt(-1, 0) || rackAt(-2, 0)) && (rackAt(1, 0) || rackAt(2, 0)));
+      if (aisle && !between) continue;
+      // Не в узком проходе между рядами: там разъехаться транспортировщикам негде.
+      if (!aisle && between) continue;
       const score = targetCells !== null ? Math.abs(d - targetCells) : d;
       if (!best || score < best.score) best = { score, gx, gz, stand };
     }
@@ -73,6 +83,8 @@ function holdsNear(nav, shape, bay, other, count) {
   for (let gz = 0; gz < nav.n; gz++) {
     for (let gx = 0; gx < nav.n; gx++) {
       if (!isWalkable(nav, gx, gz) || nearGate(shape, gx, gz, 3)) continue;
+      const rackAt = (dx, dz) => cellAt(shape, gx + dx, gz + dz) === CELL.RACK;
+      if ((rackAt(0, -1) && rackAt(0, 1)) || (rackAt(-1, 0) && rackAt(1, 0))) continue;
       const c = cellCenter(nav, gx, gz);
       const d = Math.hypot(c.x - bay.park.x, c.z - bay.park.z) / nav.cellSize;
       if (d < 2 || d > 4.5 || offLine(c) < 6) continue;
@@ -91,11 +103,12 @@ function holdsNear(nav, shape, bay, other, count) {
 
 // Места стоянки связи: A — у точки передачи ворот/ленты, B — в хранении на
 // расчётном плече от A; у каждой — карманы ожидания. null — если на форме их не поставить.
-export function planShuttleBays({ shape, blockedRects = [], gatePoint, routeUnits, holds = 3 }) {
+// avoid — точки, у которых стоянку не ставить (карманы и стоянки станции приёмки).
+export function planShuttleBays({ shape, blockedRects = [], gatePoint, routeUnits, holds = 3, avoid = [] }) {
   const nav = blockedNav(shape, blockedRects);
   const a = bayNear(nav, shape, gatePoint, { minCells: 2 });
   if (!a) return null;
-  const b = bayNear(nav, shape, a.park, { minCells: 3, preferRack: true, targetCells: Math.max(3, routeUnits / nav.cellSize), standSign: -1 });
+  const b = bayNear(nav, shape, a.park, { minCells: 3, preferRack: true, targetCells: Math.max(3, routeUnits / nav.cellSize), standSign: -1, avoid });
   if (!b) return null;
   a.holds = holdsNear(nav, shape, a, b, holds);
   b.holds = holdsNear(nav, shape, b, a, holds);
@@ -121,32 +134,43 @@ export function blockedNav(shape, blockedRects) {
 
 // Место стоянки: транспортировщик паркуется в park, погрузчик стоит в stand
 // вилами к нему. take/put — снять груз с припаркованного / поставить на пустой.
+// Груз — тот же объект сцены: снимают его (take → объект), ставят его (put(unit)).
 function makeBay(spot, cargoFactory) {
   const bay = {
     park: servicePoint(spot.park),
     parked: null,
     lift: DECK_HEIGHT,
+    adopts: true,
     take() {
       const t = bay.parked;
-      if (!t || !t.loaded) return false;
-      pair(t);
+      if (!t || !t.loaded || t.state !== "waitUnload") return null;
+      if (bay.stand) pair(t);
       t.loaded = false;
-      t.model.carry.remove(t.cargo);
-      disposeTree(t.cargo);
+      const unit = t.cargo;
       t.cargo = null;
-      return true;
+      unit.removeFromParent();
+      return unit;
     },
-    put() {
+    put(unit) {
       const t = bay.parked;
-      if (!t || t.loaded) return false;
-      pair(t);
+      if (!t || t.loaded || t.state !== "waitLoad") return false;
+      if (bay.stand) pair(t);
       t.loaded = true;
-      t.cargo = cargoFactory.create();
-      t.cargo.position.y = 0;
+      t.cargo = unit ?? cargoFactory.create();
+      t.cargo.removeFromParent();
+      t.cargo.position.set(0, 0, 0);
+      t.cargo.rotation.set(0, 0, 0);
       t.model.carry.add(t.cargo);
       return true;
     },
+    // Рука может ставить: пустой транспортировщик стоит и ждёт груз.
+    readyForArm: () => Boolean(bay.parked && !bay.parked.loaded && bay.parked.state === "waitLoad"),
   };
+  if (!spot.stand) {
+    // Стоянка у руки (станция приёмки): без погрузчика, очередь — в общих карманах.
+    bay.park.holds = spot.holds ?? [];
+    return bay;
+  }
   // Погрузчик и транспортировщик после перегрузки разъезжаются, не блокируя друг друга.
   function pair(t) {
     const lift = bay.stand.owner;
@@ -180,24 +204,41 @@ export function createShuttleFleet({
 }) {
   // Транспортировщики не ездят через места погрузчиков у стоянок.
   const pad = (p) => ({ x: p.x, z: p.z, halfX: 0.6, halfZ: 0.6 });
-  const nav = blockedNav(shape, [...blockedRects, pad(bays.a.stand), pad(bays.b.stand)]);
+  const nav = blockedNav(shape, [...blockedRects, ...[bays.a?.stand, bays.b.stand].filter(Boolean).map(pad)]);
   const driver = createDriver({ nav, traffic });
   const cargoFactory = createCargoFactory(cargo);
-  const bayA = makeBay(bays.a, cargoFactory);
+  // Станция приёмки: стоянки погрузки — под руками (bays.loads), карманы — общие.
+  const holds = (bays.holds ?? []).map((h) => servicePoint(h));
+  const loadBays = bays.loads ? bays.loads.map((spot) => makeBay({ park: spot, holds }, cargoFactory)) : null;
+  const bayA = loadBays ? loadBays[0] : makeBay(bays.a, cargoFactory);
   const bayB = makeBay(bays.b, cargoFactory);
-  const loadBay = direction === "in" ? bayA : bayB;
-  const unloadBay = direction === "in" ? bayB : bayA;
+  const loadList = direction === "in" ? loadBays ?? [bayA] : [bayB];
+  const unloadList = direction === "in" ? [bayB] : [bayA];
   const speed = speedMps / Math.max(1e-6, metersPerUnit);
   let delivered = 0;
 
-  // Стартуют вдоль пути между местами стоянки, друг за другом — не у ворот.
-  const startLine = { x: bayB.park.x - bayA.park.x, z: bayB.park.z - bayA.park.z };
-  const startLen = Math.max(1, Math.hypot(startLine.x, startLine.z));
+  // Стартуют на свободных клетках у стоянок погрузки — не в стеллажах и не друг в друге.
+  const starts = [];
+  const home = loadList[0].park;
+  const cells = [];
+  for (let gz = 0; gz < nav.n; gz++) {
+    for (let gx = 0; gx < nav.n; gx++) {
+      if (!isWalkable(nav, gx, gz)) continue;
+      const c = cellCenter(nav, gx, gz);
+      cells.push({ ...c, d: Math.hypot(c.x - home.x, c.z - home.z) });
+    }
+  }
+  cells.sort((p, q) => p.d - q.d);
+  const parks = [...loadList, ...unloadList].map((b) => b.park);
+  for (const c of cells) {
+    if (starts.length >= count) break;
+    if (parks.some((b) => Math.hypot(b.x - c.x, b.z - c.z) < 3)) continue;
+    if (starts.some((p) => Math.hypot(p.x - c.x, p.z - c.z) < 4)) continue;
+    starts.push({ x: c.x, z: c.z });
+  }
   const shuttles = Array.from({ length: Math.max(1, count) }, (_, i) => {
     const model = robotFactory();
-    const t0 = Math.min(0.8, (i + 1) / (count + 1));
-    const start = { x: bayA.park.x + startLine.x * t0, z: bayA.park.z + startLine.z * t0 };
-    void startLen;
+    const start = starts[i] ?? { x: home.x, z: home.z };
     model.group.position.set(start.x, 0, start.z);
     group.add(model.group);
     const t = {
@@ -222,39 +263,66 @@ export function createShuttleFleet({
     driver.release(t, bay.park);
   }
 
-  // Едем к стоянке; занята — ждём в кармане (driver.js). true — встали.
-  const approach = (t, bay, dt) => driver.drive(t, bay.park, dt, speed);
+  // Свободная стоянка из списка: занимаем и едем к ней; все заняты — ждём в
+  // кармане (driver.js). Предыдущий, отъезжающий от стоянки, её ещё не освободил.
+  function chooseBay(t, list) {
+    if (t.bay && list.includes(t.bay) && t.bay.park.owner === t) return t.bay;
+    for (const bay of list) {
+      const p = bay.park;
+      if (p.leaving && Math.hypot(p.leaving.pos.x - p.x, p.leaving.pos.z - p.z) > 7) p.leaving = null;
+      if (!p.owner && !p.leaving) {
+        p.owner = t;
+        t.bay = bay;
+        return bay;
+      }
+    }
+    t.bay = null;
+    return list[0];
+  }
+
+  // true — встали на стоянку.
+  function approach(t, list, dt) {
+    const bay = chooseBay(t, list);
+    const arrived = driver.drive(t, bay.park, dt, speed);
+    return arrived && bay.park.owner === t ? bay : null;
+  }
 
   function step(dt) {
     for (const t of shuttles) {
       switch (t.state) {
-        case "toLoad":
+        case "toLoad": {
           t.meter.consume(dt, "work");
-          if (approach(t, loadBay, dt)) {
-            park(t, loadBay);
+          const bay = approach(t, loadList, dt);
+          if (bay) {
+            park(t, bay);
             t.state = "waitLoad";
           }
           break;
+        }
         case "waitLoad":
           t.meter.consume(dt, "idle");
           // Погрузчик поставил груз (bay.put) — везём.
           if (t.loaded) {
-            leave(t, loadBay);
+            leave(t, t.bay);
+            t.bay = null;
             t.state = "toUnload";
           }
           break;
-        case "toUnload":
+        case "toUnload": {
           t.meter.consume(dt, "work");
-          if (approach(t, unloadBay, dt)) {
-            park(t, unloadBay);
+          const bay = approach(t, unloadList, dt);
+          if (bay) {
+            park(t, bay);
             t.state = "waitUnload";
           }
           break;
+        }
         case "waitUnload":
           t.meter.consume(dt, "idle");
           if (!t.loaded) {
             delivered += 1;
-            leave(t, unloadBay);
+            leave(t, t.bay);
+            t.bay = null;
             t.state = "toLoad";
           }
           break;
@@ -279,6 +347,7 @@ export function createShuttleFleet({
     dispose,
     bayA,
     bayB,
+    loadBays,
     meters: shuttles.map((t) => t.meter),
     getDelivered: () => delivered,
     getStats: () => ({ busyLoaders: shuttles.filter((t) => t.state.startsWith("to")).length, cycles: delivered }),
