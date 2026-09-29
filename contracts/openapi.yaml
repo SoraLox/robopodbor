@@ -1214,6 +1214,7 @@ components:
         country: { type: string, description: Страна происхождения. }
         availability: { type: string, enum: [available, on-order, pilot], description: Статус доступности. }
         payloadKg: { type: number, description: 'Грузоподъёмность, кг (0 — решение не перевозит грузы).' }
+        perMeter: { type: boolean, description: 'Цена и мощность — за погонный метр (конвейерные линии).' }
         weightKg: { type: number, description: 'Собственная масса, кг.' }
         dimensions: { type: string, description: 'Габариты, Д×Ш×В.' }
         throughput: { type: number, description: Производительность в единицах throughputUnit. }

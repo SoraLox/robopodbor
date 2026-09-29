@@ -66,6 +66,7 @@ export function CalculatingStep({ active, revealed }: { active: boolean; reveale
   const processes = useWizardStore((s) => s.processes);
   const solutionId = useWizardStore((s) => s.solutionId);
   const fleetIds = useWizardStore((s) => s.fleetIds);
+  const assignments = useWizardStore((s) => s.assignments);
   const layout = useWizardStore((s) => s.layout);
   // Набор роботов — только у склада: там экономика складывает флоты.
   const solutionIds = objectType === 'warehouse' && fleetIds.length > 1 ? fleetIds : undefined;
@@ -74,8 +75,10 @@ export function CalculatingStep({ active, revealed }: { active: boolean; reveale
     objectType === 'warehouse'
       ? { ...parameters, ...layoutParameters(layout, areaOf(parameters)) }
       : parameters;
+  // Состав решения склада — по слотам сценария (приёмка, отгрузка, отбор…).
+  const withAssignments = objectType === 'warehouse' && assignments.length ? { assignments } : {};
   const input = solutionId
-    ? { objectType, solutionId, parameters: withLayout, processes, ...(solutionIds ? { solutionIds } : {}) }
+    ? { objectType, solutionId, parameters: withLayout, processes, ...(solutionIds ? { solutionIds } : {}), ...withAssignments }
     : null;
   const query = useRunCalculation(input, active);
   const barRef = useRef<HTMLDivElement>(null);

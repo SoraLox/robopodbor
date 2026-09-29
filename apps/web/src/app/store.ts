@@ -1,6 +1,7 @@
 import { create, type StateCreator } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { exposeForPerf } from '@/lib/perf/frameProfiler';
+import type { Assignment } from '@/api/types';
 
 interface WizardState {
   /** Введённые параметры паспорта объекта — переживают шаги мастера. */
@@ -23,6 +24,11 @@ interface WizardState {
   /** Набор роботов склада — по одному на флот (уборка, отбор, перемещение паллет). */
   fleetIds: string[];
   setFleet: (ids: string[], primary: string | null) => void;
+
+  /** Склад: состав решения — какой робот в каком слоте (приёмка, отгрузка, отбор…). */
+  assignments: Assignment[];
+  /** Задаёт состав; набор роботов и главный робот выводятся из него. */
+  setAssignments: (assignments: Assignment[]) => void;
 
   /** Загружает сохранённый проект обратно в мастер. */
   loadProject: (input: {
@@ -53,13 +59,19 @@ const wizard: StateCreator<WizardState> = (set) => ({
   setProcesses: (ids) => set({ processes: ids }),
 
   solutionId: null,
-  setSolutionId: (id) => set({ solutionId: id, fleetIds: [id] }),
+  setSolutionId: (id) => set({ solutionId: id, fleetIds: [id], assignments: [] }),
 
   layout: null,
   setLayout: (layout) => set({ layout }),
 
   fleetIds: [],
   setFleet: (ids, primary) => set({ fleetIds: ids, solutionId: primary }),
+
+  assignments: [],
+  setAssignments: (assignments) => {
+    const ids = [...new Set(assignments.map((a) => a.solutionId))];
+    set({ assignments, fleetIds: ids, solutionId: ids[0] ?? null });
+  },
 
   loadProject: ({ objectType, parameters, processes }) =>
     set({
@@ -95,8 +107,9 @@ export const useWizardStore =
           name: 'wizard',
           version: 1,
           storage: createJSONStorage(() => localStorage),
-          partialize: ({ objectType, parameters, processes, solutionId, fleetIds, layout, comparedIds }) => ({
+          partialize: ({ objectType, parameters, processes, solutionId, fleetIds, assignments, layout, comparedIds }) => ({
             objectType,
+            assignments,
             layout,
             parameters,
             processes,

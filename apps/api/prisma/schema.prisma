@@ -195,6 +195,8 @@ model CatalogSolution {
   costs                 Json? // {equipment, software, implementation, maintenancePerYear}, млн ₽
   acquisitionModels     String[] @default([])
   lifespanYears         Float?
+  // Цена и мощность — за погонный метр (конвейерные линии)
+  perMeter              Boolean?
   // Применимость
   maturity     Maturity
   objectTypes  String[]       @default([])

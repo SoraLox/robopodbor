@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tansta
 import { API_BASE, api } from './client';
 import type {
   CalculationRequest,
+  ScenarioVariant,
   CalculationResult,
   CalculationSnapshot,
   CatalogImportResult,
@@ -253,6 +254,22 @@ export function useSelection(objectType: string | null, parameters: Record<strin
     queryFn: async (): Promise<SelectionResult> => {
       const { data, error } = await api.POST('/selection', { body: { objectType: objectType ?? '', parameters } });
       if (error || !data) throw new Error('Не удалось подобрать решения');
+      return data;
+    },
+  });
+}
+
+/** Варианты сценария склада с экономикой каждого (POST /calculations/scenarios). Запускается по кнопке. */
+export function useScenarioVariants(parameters: Record<string, string>, enabled: boolean) {
+  return useQuery({
+    queryKey: ['scenario-variants', parameters] as const,
+    enabled,
+    staleTime: REFERENCE_STALE_MS,
+    queryFn: async (): Promise<ScenarioVariant[]> => {
+      const { data, error } = await api.POST('/calculations/scenarios', {
+        body: { objectType: 'warehouse', parameters },
+      });
+      if (error || !data) throw new Error('Не удалось собрать варианты');
       return data;
     },
   });

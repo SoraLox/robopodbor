@@ -74,7 +74,7 @@ const TEMPLATES: Template[] = [
   {
     id: "goods-to-person",
     title: "Товар к человеку",
-    description: "AMR подвозят груз, роборуки собирают заказы, сортер раскладывает по направлениям.",
+    description: "AMR подвозят груз, роборуки собирают заказы.",
     roles: ["amr", "arm"],
     optional: ["sorter"],
     slots: (r) => [...both(r.amr), { slot: "picking", solutionId: r.arm }, ...optionalSlots({ sorter: r.sorter })],
@@ -82,7 +82,7 @@ const TEMPLATES: Template[] = [
   {
     id: "full",
     title: "Полная автоматизация",
-    description: "Конвейеры и погрузчики на приёмке и отгрузке, роборуки на отборе, сортер и уборка.",
+    description: "Конвейеры и погрузчики на приёмке и отгрузке, роборуки на отборе.",
     roles: ["conveyor", "fmr", "arm"],
     optional: ["sorter", "cleaner"],
     slots: (r) => [...both(r.conveyor), ...both(r.fmr), { slot: "picking", solutionId: r.arm }, ...optionalSlots(r)],
@@ -120,10 +120,21 @@ export function generateWarehouseScenarios(input: {
     });
     const num = (text: string) => Number(text.replace(/\s/g, "").replace(",", "."));
     const purchase = result.scenarios.find((s) => s.id === "purchase");
+    // Описание — по фактическому составу: необязательные роли, которых нет в подборе, не упоминаем.
+    const extras = [
+      assignments.some((x) => x.slot === "sorting") ? "сортер раскладывает по направлениям" : "",
+      assignments.some((x) => x.slot === "cleaning") ? "роботы-уборщики" : "",
+    ].filter(Boolean);
+    const missing = (template.optional ?? []).filter((role) => !picks[role]);
+    const description = [
+      template.description,
+      extras.length ? ` Плюс: ${extras.join(", ")}.` : "",
+      missing.length ? ` Без ${missing.map((r) => (r === "sorter" ? "сортера" : "уборки")).join(" и ")}: подходящих объекту нет (цена или ограничения).` : "",
+    ].join("");
     variants.push({
       id: template.id,
       title: template.title,
-      description: template.description,
+      description,
       assignments,
       solutionIds,
       capexMln: num(result.capex.value),

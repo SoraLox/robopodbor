@@ -938,6 +938,8 @@ export interface components {
             availability?: "available" | "on-order" | "pilot";
             /** @description Грузоподъёмность, кг (0 — решение не перевозит грузы). */
             payloadKg?: number;
+            /** @description Цена и мощность — за погонный метр (конвейерные линии). */
+            perMeter?: boolean;
             /** @description Собственная масса, кг. */
             weightKg?: number;
             /** @description Габариты, Д×Ш×В. */
