@@ -89,8 +89,6 @@ export interface FleetOutput {
   substitutions: Substitution[];
   /** СтойкаБокс: башен в сетке — ёмкость хранения (роботы — шаттлы, count). */
   storageTowers?: number;
-  /** Габарит робота в плане, м — по нему сцена масштабирует модель и расставляет роботов. */
-  footprint: { lengthM: number; widthM: number; estimated: boolean; basis: string };
 }
 
 export interface CalculationOutput {
@@ -1193,7 +1191,6 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
     idlePowerKw: g.robot.idlePowerKw,
     substitutions: g.robot.substitutions,
     ...(g.robot.model === "storagecube" && cubeTowers ? { storageTowers: cubeTowers } : {}),
-    footprint: g.robot.footprint,
   }));
 
   return {

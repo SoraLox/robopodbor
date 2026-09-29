@@ -179,27 +179,12 @@ export function buildSimulationInput(
   }
   const robotTypes = groups.map((group) => group.kind);
   const workZoneShare = params.workZonePct / 100;
-  // Масштаб сцены: сетка 100 ед. на сторону = площадь склада (сцены), отсюда метров в единице.
-  const metersPerUnit = Math.sqrt(params.floorAreaM2) / 100;
-  const toUnits = (m: number) => m / metersPerUnit;
-  const footprintOf = (kind: SimRobotType) => groups.find((group) => group.kind === kind)?.footprint;
-  const armFp = footprintOf('arm');
-  const loaderFp = footprintOf('loader');
-  const sorterFp = footprintOf('sorter');
-  const conveyorFp = footprintOf('conveyor');
-  const robotSizes = {
-    aisleUnits: toUnits(1.5),
-    ...(armFp ? { arm: { lengthUnits: toUnits(armFp.lengthM), widthUnits: toUnits(armFp.widthM) } } : {}),
-    ...(loaderFp ? { loader: { lengthUnits: toUnits(loaderFp.lengthM) } } : {}),
-    ...(sorterFp ? { sorter: { lengthUnits: toUnits(sorterFp.lengthM), widthUnits: toUnits(sorterFp.widthM) } } : {}),
-    ...(conveyorFp ? { conveyor: { widthUnits: toUnits(Math.max(conveyorFp.widthM, 0.9)) } } : {}),
-  };
-  const sceneLayout = computeLayout(shape, robotTypes, workZoneShare, robotSizes);
+  const sceneLayout = computeLayout(shape, robotTypes, workZoneShare);
   const maxOf: Record<SimRobotType, number> = {
     vacuum: MAX_VACUUM_COUNT,
     arm: sceneLayout.maxArmCount,
     loader: sceneLayout.maxLoaderCount,
-    sorter: sceneLayout.sorterZone ? maxSorterCount(sceneLayout.sorterZone, robotSizes.sorter ?? null) : 1,
+    sorter: sceneLayout.sorterZone ? maxSorterCount(sceneLayout.sorterZone) : 1,
     // Линии тянутся от ворот — до трёх на ворота.
     conveyor: Math.max(1, sceneLayout.gates.length * 3),
   };
@@ -274,7 +259,6 @@ export function buildSimulationInput(
               count: g.count,
               speedMps: g.speedMps ?? 2,
               capacityKg: g.capacityKg ?? 100,
-              lengthUnits: toUnits(g.footprint.lengthM),
               storageTowers: g.storageTowers,
               energyProfile: energyOfGroup(g),
             })),
@@ -291,7 +275,6 @@ export function buildSimulationInput(
 
   return {
     shape,
-    robotSizes,
     transportLinks,
     checkRouteM,
     params,

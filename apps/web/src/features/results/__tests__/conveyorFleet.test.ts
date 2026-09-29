@@ -12,7 +12,6 @@ describe('конвейерная линия', () => {
       lines: [{ start: { x: 0, z: -40 }, end: { x: 0, z: 0 } }],
       throughputPerHour: 120,
       beltTexture: null,
-      size: null,
       energyProfile: profile,
       metersPerUnit: 1.41,
     });

@@ -8,23 +8,19 @@ import { activePalette } from "../studioLook.js";
 // уходит на хранение в дальнем конце. Линии стационарны — для пылесосов это
 // прямоугольные препятствия. Где проложить линии, решает layout.conveyorLines.
 
-const DEFAULT_BELT_WIDTH = 2.4;
+const BELT_WIDTH = 2.4;
 const BELT_Y = 1.0;
 // Скорость паллетного конвейера, м/с — типовая для роликовых и цепных линий.
 const BELT_SPEED_MPS = 0.5;
 const UNIT_GAP = 1.6; // минимальный зазор между единицами груза на ленте
-const DEFAULT_PALLET_SIZE = 1.5;
+const PALLET_SIZE = 1.5;
 
-// size — габарит в ед. сцены: ширина ленты (из каталога) и паллета 1,2 м (европаллета).
-export function createConveyorFleet({ group, lines, throughputPerHour, beltTexture, energyProfile, metersPerUnit = 1, size }) {
-  const BELT_WIDTH = size?.widthUnits ?? DEFAULT_BELT_WIDTH;
-  const PALLET_SIZE = size ? Math.min(BELT_WIDTH * 0.95, 1.2 / Math.max(1e-6, metersPerUnit)) : DEFAULT_PALLET_SIZE;
-  const UNIT_GAP_UNITS = size ? 0.3 / Math.max(1e-6, metersPerUnit) : UNIT_GAP;
+export function createConveyorFleet({ group, lines, throughputPerHour, beltTexture, energyProfile, metersPerUnit = 1 }) {
   const beltSpeed = BELT_SPEED_MPS / Math.max(1e-6, metersPerUnit);
   const palette = activePalette();
   const beltMaterial = new THREE.MeshStandardMaterial({ color: palette.belt, map: beltTexture ?? null, roughness: 0.7 });
   const frameMaterial = new THREE.MeshStandardMaterial({ color: palette.storage, flatShading: true, roughness: 0.6 });
-  const palletGeometry = new THREE.BoxGeometry(PALLET_SIZE, Math.min(0.9, PALLET_SIZE * 0.7), PALLET_SIZE);
+  const palletGeometry = new THREE.BoxGeometry(PALLET_SIZE, 0.9, PALLET_SIZE);
   const palletMaterials = [palette.cargoCrate, palette.crateA, palette.crateB].map(
     (color) => new THREE.MeshStandardMaterial({ color, flatShading: true, roughness: 0.6 })
   );
@@ -81,7 +77,7 @@ export function createConveyorFleet({ group, lines, throughputPerHour, beltTextu
 
       // Новая единица груза у ворот — если есть место в начале ленты.
       const tail = line.units[line.units.length - 1];
-      if (line.credit >= 1 && (!tail || tail.d > PALLET_SIZE + UNIT_GAP_UNITS)) {
+      if (line.credit >= 1 && (!tail || tail.d > PALLET_SIZE + UNIT_GAP)) {
         line.credit -= 1;
         const mesh = new THREE.Mesh(palletGeometry, palletMaterials[unitsMoved % palletMaterials.length]);
         line.group.add(mesh);
@@ -91,7 +87,7 @@ export function createConveyorFleet({ group, lines, throughputPerHour, beltTextu
 
       let limit = Infinity;
       for (const unit of line.units) {
-        unit.d = Math.min(unit.d + beltSpeed * dt, limit - (PALLET_SIZE + UNIT_GAP_UNITS));
+        unit.d = Math.min(unit.d + beltSpeed * dt, limit - (PALLET_SIZE + UNIT_GAP));
         limit = unit.d;
         unit.mesh.position.set(0, BELT_Y + 0.56, line.reverse ? line.length - unit.d : unit.d);
       }

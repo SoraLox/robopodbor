@@ -152,15 +152,8 @@ function AirportSimulation({ immersive, planned }: { immersive: boolean; planned
       : []),
     ...(input.gatesCount > AIRPORT_MAX_GATES ? [`гейтов ${input.gatesCount}, в сцене ${AIRPORT_MAX_GATES}`] : []),
   ];
-  const note =
-    [
-      input.substitutions.length
-        ? `Нет в карточке робота, взято у демо-робота: ${input.substitutions.map((item) => `${item.field} — ${item.value}`).join(', ')}.`
-        : '',
-      limits.length ? `${limits.join('; ')}.`.replace(/^./, (c) => c.toUpperCase()) : '',
-    ]
-      .filter(Boolean)
-      .join(' ') || null;
+  // Подстановки из демо-робота — в допущениях отчёта, на сцене только пределы сцены.
+  const note = limits.length ? `${limits.join('; ')}.`.replace(/^./, (c) => c.toUpperCase()) : null;
 
   return (
     <div className={immersive ? 'relative h-full w-full' : 'grid gap-3'}>
@@ -279,7 +272,6 @@ function SimulationScene({ input, immersive }: { input: SimulationInput; immersi
         loaderSpeedMps={fleets.loader?.speedMps ?? 2}
         loaderThroughput={fleets.loader?.throughput ?? 0}
         storageTowers={fleets.loader?.storageTowers}
-        robotSizes={input.robotSizes}
         transportLinks={input.transportLinks}
         sorterCount={counts.sorter}
         sorterThroughput={fleets.sorter?.throughput ?? 0}
@@ -335,19 +327,11 @@ function SimulationScene({ input, immersive }: { input: SimulationInput; immersi
   );
 }
 
-/** Какие характеристики роботов взяты у демо-робота и сколько роботов не поместилось в сцену. */
+/** Сколько роботов и башен не поместилось в сцену (подстановки из демо-робота — в допущениях отчёта). */
 function SubstitutionNote({ input, floating }: { input: SimulationInput; floating?: boolean }) {
   const fleets = Object.values(input.fleets);
   const many = fleets.length > 1;
   const lines = [
-    ...fleets
-      .filter((f) => f.substitutions.length)
-      .map(
-        (f) =>
-          `${many ? `${f.name}: н` : 'Н'}ет в карточке робота, взято у демо-робота: ${f.substitutions
-            .map((item) => `${item.field} — ${item.value}`)
-            .join(', ')}.`,
-      ),
     ...fleets
       .filter((f) => (f.storageTowers ?? 0) > MAX_TOWERS)
       .map((f) => `Сетка ${f.name}: в сцене ${MAX_TOWERS} башен из ${f.storageTowers!.toLocaleString('ru-RU')} по расчёту ёмкости.`),

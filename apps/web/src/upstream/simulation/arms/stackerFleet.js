@@ -32,15 +32,15 @@ const NODE_NAMES = {
 
 const BELT_CYCLE_S = 1.6; // отдельный, более быстрый цикл ленты — груз едет непрерывно, а не раз за такт манипулятора
 
-export function createStackerFleet({ group, zone, count, armProd, energyProfile, modelScale = MODEL_SCALE, pitch }) {
+export function createStackerFleet({ group, zone, count, armProd, energyProfile }) {
   const cycleDuration = 1 / Math.max(armProd / 60, 0.001);
-  const slots = computeArmSlots(zone, count, pitch);
+  const slots = computeArmSlots(zone, count);
 
   const arms = slots.map((slot, i) => {
     const model = makeStackerRobot();
     model.position.set(slot.x, 0, slot.z);
     model.rotation.y = i % 2 === 0 ? 0 : Math.PI;
-    model.scale.setScalar(modelScale);
+    model.scale.setScalar(MODEL_SCALE);
     group.add(model);
 
     const nodes = {};
@@ -57,7 +57,7 @@ export function createStackerFleet({ group, zone, count, armProd, energyProfile,
   });
 
   const meters = arms.map(() => createEnergyMeter(energyProfile));
-  const obstacles = computeArmObstacles(arms, modelScale / MODEL_SCALE);
+  const obstacles = computeArmObstacles(arms);
   let opsDone = 0;
 
   function step(dt) {

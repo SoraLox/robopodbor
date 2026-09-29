@@ -48,12 +48,21 @@ interface WizardState {
   resetCompared: () => void;
 }
 
+const EMPTY_SELECTION = { solutionId: null, fleetIds: [] as string[], assignments: [] as Assignment[] };
+
 const wizard: StateCreator<WizardState> = (set) => ({
   objectType: null,
-  setObjectType: (slug) => set({ objectType: slug }),
+  // Новый подбор начинается с типа объекта или с паспорта: прежний состав решения
+  // сбрасывается, иначе в новый расчёт тихо попадают роботы из прошлого.
+  setObjectType: (slug) =>
+    set((state) =>
+      state.objectType === slug
+        ? { objectType: slug, ...EMPTY_SELECTION }
+        : { objectType: slug, ...EMPTY_SELECTION, layout: null },
+    ),
 
   parameters: {},
-  setParameters: (values) => set({ parameters: values }),
+  setParameters: (values) => set({ parameters: values, ...EMPTY_SELECTION }),
 
   processes: ['transport', 'storage', 'picking'],
   setProcesses: (ids) => set({ processes: ids }),

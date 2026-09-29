@@ -4,6 +4,7 @@ import {
   Camera,
   ChevronDown,
   ChevronUp,
+  SkipBack,
   ClipboardList,
   GitCompareArrows,
   Gauge,
@@ -319,7 +320,23 @@ function HeroMetrics({
     'grid size-8 flex-none place-items-center rounded-[10px] border border-foreground bg-white text-foreground';
 
   return (
-    <div className="pointer-events-auto w-full max-w-[520px]">
+    <div className="pointer-events-auto relative w-full max-w-[520px]">
+      {/* Свернуть/развернуть — ярлык на верхнем крае, а не 17-я кнопка в полосе инструментов
+          (там она не помещалась и уезжала за край). */}
+      <button
+        type="button"
+        onClick={() => setCollapsed((value) => !value)}
+        aria-expanded={!collapsed}
+        aria-label={collapsed ? 'Развернуть показатели' : 'Свернуть до управления симуляцией'}
+        title={collapsed ? 'Развернуть' : 'Свернуть'}
+        className="absolute -top-3 right-4 z-10 grid h-6 w-9 place-items-center rounded-full border border-[#E5E5EA] bg-white text-foreground shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-colors hover:bg-[#FAFAFA]"
+      >
+        {collapsed ? (
+          <ChevronUp className="size-4" strokeWidth={1.75} aria-hidden />
+        ) : (
+          <ChevronDown className="size-4" strokeWidth={1.75} aria-hidden />
+        )}
+      </button>
       <div className="overflow-hidden rounded-[20px] border border-[#E5E5EA] bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
         <div
           className={cn(
@@ -389,7 +406,7 @@ function HeroMetrics({
           </div>
         </div>
 
-        <div className="flex items-center gap-0.5 px-2 py-1.5">
+        <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5">
           <button
             type="button"
             onClick={toggleTopView}
@@ -431,8 +448,8 @@ function HeroMetrics({
               <Play className="size-4" strokeWidth={1.75} aria-hidden />
             )}
           </button>
-          <button type="button" onClick={reset} aria-label="Сброс" title="Сброс" className={iconBtn}>
-            <RotateCcw className="size-4" strokeWidth={1.75} aria-hidden />
+          <button type="button" onClick={reset} aria-label="Сначала" title="Сначала" className={iconBtn}>
+            <SkipBack className="size-4" strokeWidth={1.75} aria-hidden />
           </button>
           <div
             className="flex h-8 flex-none items-center overflow-hidden rounded-[10px] border border-[#E5E5EA] bg-white"
@@ -493,20 +510,6 @@ function HeroMetrics({
             <span className="text-[11px] font-bold tracking-wide">XLS</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => setCollapsed((value) => !value)}
-            aria-expanded={!collapsed}
-            aria-label={collapsed ? 'Развернуть показатели' : 'Свернуть до управления симуляцией'}
-            title={collapsed ? 'Развернуть' : 'Свернуть'}
-            className={cn(iconBtn, 'ml-auto')}
-          >
-            {collapsed ? (
-              <ChevronDown className="size-4" strokeWidth={1.75} aria-hidden />
-            ) : (
-              <ChevronUp className="size-4" strokeWidth={1.75} aria-hidden />
-            )}
-          </button>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { ISO_ELEV, MODEL_SCALE } from "./constants.js";
+import { ISO_ELEV } from "./constants.js";
 import { drawFloorBase } from "./floor.js";
 import { areRobotModelsReady, loadRobotModels } from "./robots/models.js";
 import { createVacuumFleet } from "./vacuums/vacuumFleet.js";
@@ -36,22 +36,6 @@ const LOADER_FACTORIES = { transporter: makeTransporterRobot };
 const vacuumFactoryOf = (type) => VACUUM_FACTORIES[type] ?? makeVacuumRobot;
 const armFactoryOf = (type) => ARM_FACTORIES[type] ?? makeArmRobot;
 const loaderFactoryOf = (type) => LOADER_FACTORIES[type] ?? makeForkliftRobot;
-
-// Модель в реальную длину робота (габарит из каталога / масштаб склада): меряем
-// собранную модель и масштабируем её группу. Без размера — модель как есть.
-function scaledFactory(factory, lengthUnits) {
-  if (!lengthUnits) return factory;
-  return () => {
-    const model = factory();
-    const size = new THREE.Box3().setFromObject(model.group).getSize(new THREE.Vector3());
-    const length = Math.max(size.x, size.z);
-    if (length > 0) model.group.scale.multiplyScalar(lengthUnits / length);
-    return model;
-  };
-}
-
-// Длина стилизованной ячейки роборуки Егора: лента 12 ед. модели × MODEL_SCALE.
-const STYLIZED_ARM_CELL = 12 * MODEL_SCALE;
 
 // Связка React ↔ Three.js: сборка сцены один раз, пересборка этажей и роботов при
 // смене параметров и покадровый цикл симуляции. Компонент WarehouseScene остаётся
@@ -124,7 +108,6 @@ export function useSimulation(cfg) {
     sorterThroughput = 0,
     conveyorCount = 0,
     conveyorThroughput = 0,
-    robotSizes,
     // Сценарий склада: связи приёмки и отгрузки со своими флотами (см. simulationInput.ts).
     transportLinks,
     energyProfiles,
@@ -257,9 +240,7 @@ export function useSimulation(cfg) {
 
     st.levels.forEach((level, index) => {
       disposeFleets(level);
-      // Декоративные штабели Егора (по ~10 м) рядом с роботами в реальном масштабе
-      // выглядят гигантскими — при реальных габаритах их не показываем.
-      level.crates.visible = !useLoader && !robotSizes;
+      level.crates.visible = !useLoader;
       level.vacuumGroup.clear();
       level.armGroup.clear();
       level.loaderGroup.clear();
@@ -277,8 +258,6 @@ export function useSimulation(cfg) {
             zone: layout.armZone,
             count: armCount,
             armProd,
-            pitch: layout.armPitch,
-            ...(robotSizes?.arm ? { modelScale: MODEL_SCALE * (robotSizes.arm.lengthUnits / STYLIZED_ARM_CELL) } : {}),
             energyProfile: energyProfiles.arm,
           });
         } else {
@@ -290,8 +269,6 @@ export function useSimulation(cfg) {
             armProd,
             energyProfile: energyProfiles.arm,
             robotFactory: armFactoryOf(armType),
-            pitch: layout.armPitch,
-            ...(robotSizes?.arm ? { modelScale: MODEL_SCALE * (robotSizes.arm.lengthUnits / STYLIZED_ARM_CELL) } : {}),
           });
         }
       }
@@ -304,7 +281,6 @@ export function useSimulation(cfg) {
           count: sorterCount,
           throughputPerHour: sorterThroughput,
           metersPerUnit: chunkGrid.metersPerUnit,
-          size: robotSizes?.sorter ?? null,
           beltTexture: st.beltTexture,
           energyProfile: energyProfiles.sorter ?? energyProfiles.arm,
         });
@@ -331,7 +307,6 @@ export function useSimulation(cfg) {
                 lines,
                 throughputPerHour: link.conveyor.throughput,
                 metersPerUnit: chunkGrid.metersPerUnit,
-                size: robotSizes?.conveyor ?? null,
                 beltTexture: st.beltTexture,
                 energyProfile: link.conveyor.energyProfile,
               }),
@@ -370,7 +345,7 @@ export function useSimulation(cfg) {
                       direction,
                       handoffs,
                       showTrucks: i === 0,
-                      robotFactory: scaledFactory(loaderFactoryOf(carrier.model), carrier.lengthUnits),
+                      robotFactory: loaderFactoryOf(carrier.model),
                     }),
             });
           });
@@ -382,7 +357,6 @@ export function useSimulation(cfg) {
           lines: computeConveyorLines(layout, shape, conveyorCount, lengthUnits),
           throughputPerHour: conveyorThroughput,
           metersPerUnit: chunkGrid.metersPerUnit,
-          size: robotSizes?.conveyor ?? null,
           beltTexture: st.beltTexture,
           energyProfile: energyProfiles.conveyor ?? energyProfiles.arm,
         });
@@ -445,7 +419,7 @@ export function useSimulation(cfg) {
             cargo: loader.cargo,
             startDelay: index * FLOOR_STAGGER_SECONDS,
             energyProfile: energyProfiles.loader,
-            robotFactory: scaledFactory(loaderFactoryOf(loaderType), robotSizes?.loader?.lengthUnits),
+            robotFactory: loaderFactoryOf(loaderType),
           });
         } else {
           level.loaderSystem = createCustomLoaderFleet({
@@ -460,7 +434,7 @@ export function useSimulation(cfg) {
             energyProfile: energyProfiles.loader,
             truckPayload: loader.truckPayload,
             routeLengthM: loader.routeLengthM,
-            robotFactory: scaledFactory(loaderFactoryOf(loaderType), robotSizes?.loader?.lengthUnits),
+            robotFactory: loaderFactoryOf(loaderType),
           });
         }
       }
@@ -489,7 +463,6 @@ export function useSimulation(cfg) {
     sorterThroughput,
     conveyorCount,
     conveyorThroughput,
-    robotSizes,
     transportLinks,
     energyProfiles,
     loader.capacityKg,
