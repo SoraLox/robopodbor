@@ -78,21 +78,29 @@ describe('simulationInput', () => {
 });
 
 describe('сцена по связям сценария', () => {
-  const sceneWith = (ids: string[], assignments?: Parameters<typeof calculateEconomics>[0]['assignments']) => {
+  const sceneWith = (
+    ids: string[],
+    assignments?: Parameters<typeof calculateEconomics>[0]['assignments'],
+    parameters: Record<string, string> = {},
+  ) => {
     const fleet =
       calculateEconomics({
         objectType: 'warehouse',
-        parameters: {},
+        parameters,
         fields,
         solution: byId(ids[0]!) as unknown as CatalogSolution,
         solutions: ids.map((id) => byId(id) as unknown as CatalogSolution),
         ...(assignments ? { assignments } : {}),
       }).fleet ?? [];
-    return buildSimulationInput(fields, {}, fleet);
+    return buildSimulationInput(fields, parameters, fleet);
   };
 
   it('простой паллетный склад — прежним флотом с полосами хранения', () => {
-    expect(sceneWith(['FL0002']).transportLinks).toBeNull();
+    // Погрузчиков не больше, чем ворот: по одному на ворота.
+    const small = { wh_obem_priemki: '300', wh_obem_otgruzki: '300' };
+    expect(sceneWith(['FL0002'], undefined, small).transportLinks).toBeNull();
+    // Больше, чем ворот, — уже по связям, до трёх на ворота.
+    expect(sceneWith(['FL0002']).transportLinks).not.toBeNull();
   });
 
   it('конвейер и два транспортных робота — по связям, погрузчики на последних метрах', () => {
