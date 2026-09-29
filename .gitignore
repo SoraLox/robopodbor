@@ -13,3 +13,6 @@ apps/api/*.tsbuildinfo
 # Приватный ключ деплоя — только на этой машине и в секретах Sourcecraft,
 # в репозиторий не идёт
 deploy/robopodbor_deploy_key
+
+# Локальный бэкап исходников фото до перекладки в robots_photo
+apps/web/public/robots_photo_old/

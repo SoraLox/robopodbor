@@ -5,8 +5,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/../public/robots_photo"
 mkdir -p preview
-for src in *.png *.jpg *.jpeg *.webp; do
-  [ -e "$src" ] || continue
+shopt -s nullglob
+for src in *.png *.jpg *.jpeg *.jfif *.webp; do
   out="preview/${src%.*}.webp"
   [ "$out" -nt "$src" ] && continue
   width=$(sips -g pixelWidth "$src" 2>/dev/null | awk '/pixelWidth/ {print $2}')
