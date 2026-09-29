@@ -211,11 +211,8 @@ function HeroScreen() {
             </div>
           </div>
 
-          {/*
-            На мобильном робот — под текстом, обычным блоком в потоке.
-            От lg — привычный full-bleed силуэт у правого края.
-          */}
-          <div className="relative flex justify-center sm:min-h-[44svh] lg:min-h-0" aria-hidden>
+          {/* На мобильном и планшете фото робота не показываем — только от lg, full-bleed у правого края. */}
+          <div className="relative hidden lg:block" aria-hidden>
             <img
               src={`${import.meta.env.BASE_URL}pics/roboarm3.webp`}
               srcSet={`${import.meta.env.BASE_URL}pics/roboarm3-560.webp 560w, ${import.meta.env.BASE_URL}pics/roboarm3.webp 1121w`}
@@ -226,7 +223,7 @@ function HeroScreen() {
               loading="eager"
               fetchPriority="high"
               decoding="async"
-              className="pointer-events-none relative z-[1] h-auto w-full max-w-[340px] scale-x-[-1] object-contain object-bottom sm:max-w-[400px] lg:absolute lg:bottom-0 lg:right-0 lg:h-[min(96svh,980px)] lg:w-auto lg:max-w-[min(110%,780px)] lg:origin-bottom lg:translate-y-[1%]"
+              className="pointer-events-none absolute bottom-0 right-0 z-[1] h-[min(96svh,980px)] w-auto max-w-[min(110%,780px)] origin-bottom translate-y-[1%] scale-x-[-1] object-contain object-bottom"
             />
           </div>
         </div>
