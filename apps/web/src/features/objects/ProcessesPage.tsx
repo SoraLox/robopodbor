@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useState, type MutableRefObject } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AlertTriangle, ChevronRight, type LucideIcon } from 'lucide-react';
@@ -487,10 +487,16 @@ export function ProcessesPage({
         ? `${group.id}:subs`
         : `${group.id}:${subgroup?.id ?? 'robots'}`;
 
+  // Новый экран списка — с начала, а не с позиции прокрутки прошлого.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [contentKey]);
+
   return (
     <>
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="-mx-1 min-h-0 flex-1 overflow-y-auto overscroll-contain px-1 [scrollbar-width:thin]">
+        <div ref={scrollRef} className="-mx-1 min-h-0 flex-1 overflow-y-auto overscroll-contain px-1 [scrollbar-width:thin]">
           <div key={contentKey} className="wizard-drill-enter">
             {listBody}
           </div>
