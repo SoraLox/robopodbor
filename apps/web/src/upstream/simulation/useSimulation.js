@@ -15,7 +15,9 @@ import { createCustomLoaderFleet } from "./loaders/customLoaderFleet.js";
 import { createStorageCubeFleet } from "./loaders/storageCubeFleet.js";
 import { createSorterFleet } from "./sorters/sorterFleet.js";
 import { createConveyorFleet } from "./conveyors/conveyorFleet.js";
-import { computeConveyorLines, linkGatesOf } from "./layout.js";
+import { computeArmSlots, computeConveyorLines, linkGatesOf } from "./layout.js";
+import { planPickingNetwork } from "./arms/pickingNetwork.js";
+import { ARM_BELT_HALF_LENGTH, ARM_BELT_X, MODEL_SCALE } from "./constants.js";
 import { makeForkliftRobot } from "./robots/forkliftRobot.js";
 import { makeTransporterRobot } from "./robots/transporterRobot.js";
 import { createWarehouseScene } from "./sceneSetup.js";
@@ -65,6 +67,20 @@ function isCameraSettling(camera, activeFloor) {
     Math.abs(activeFloor * FLOOR_PITCH - camera.focusY) > SETTLE_EPSILON
   );
 }
+
+// Прямоугольник конвейерной линии связи и места руки — для обхода сетью и погрузчиками.
+const lineRect = (line) => ({
+  x: (line.start.x + line.end.x) / 2,
+  z: (line.start.z + line.end.z) / 2,
+  halfX: Math.abs(line.end.x - line.start.x) / 2 + 2.2,
+  halfZ: Math.abs(line.end.z - line.start.z) / 2 + 2.2,
+});
+const armRect = (slot) => ({
+  x: slot.x,
+  z: slot.z,
+  halfX: (ARM_BELT_X + 0.8) * MODEL_SCALE,
+  halfZ: ARM_BELT_HALF_LENGTH * MODEL_SCALE,
+});
 
 function disposeFleets(level) {
   level.armFleet?.dispose();
@@ -251,27 +267,38 @@ export function useSimulation(cfg) {
       level.trailTexture.needsUpdate = true;
       level.grid.fill(0);
 
-      if (useArm && armCount > 0) {
-        if (armType === "stacker") {
-          level.armFleet = createStackerFleet({
-            group: level.armGroup,
-            zone: layout.armZone,
-            count: armCount,
-            armProd,
-            energyProfile: energyProfiles.arm,
-          });
-        } else {
-          level.armFleet = createArmFleet({
-            group: level.armGroup,
-            zone: layout.armZone,
-            count: armCount,
-            beltTexture: st.beltTexture,
-            armProd,
-            energyProfile: energyProfiles.arm,
-            robotFactory: armFactoryOf(armType),
-          });
-        }
-      }
+      // Конвейерные линии связей (чистая геометрия) — заранее: сеть участка
+      // отбора прокладывается в обход них, а погрузчики объезжают сеть отбора.
+      const split = transportLinks && index === 0 ? linkGatesOf(layout) : null;
+      const linkPlans = split
+        ? transportLinks.map((link) => {
+            const gateIds = split[link.slot] ?? [];
+            const gates = layout.gates.filter((gate) => gateIds.includes(gate.id));
+            const direction = link.slot === "inbound" ? "in" : "out";
+            const lines =
+              link.conveyor && gates.length
+                ? computeConveyorLines(
+                    layout,
+                    shape,
+                    link.conveyor.count,
+                    link.conveyor.lineLengthM / Math.max(1e-6, chunkGrid.metersPerUnit),
+                    gates
+                  ).map((line) => ({ ...line, direction }))
+                : [];
+            return { link, gateIds, gates, direction, lines };
+          })
+        : [];
+      const armSlots = useArm && armCount > 0 && armType !== "stacker" ? computeArmSlots(layout.armZone, armCount) : null;
+      const pickingNet =
+        armSlots && index === 0 && layout.gates.length
+          ? planPickingNetwork({
+              shape,
+              slots: armSlots,
+              gates: layout.gates.filter((gate) => linkGatesOf(layout).outbound.includes(gate.id)),
+              avoid: linkPlans.flatMap((plan) => plan.lines.map(lineRect)),
+            })
+          : null;
+      const pickingAvoid = pickingNet ? [...pickingNet.obstacles, ...armSlots.map(armRect)] : [];
 
       // Сортировочная система и конвейерные линии — стационарные, строятся сразу.
       if (layout.useSorter && sorterCount > 0 && index === 0) {
@@ -289,17 +316,11 @@ export function useSimulation(cfg) {
         // Связи сценария: у каждой — свои ворота, конвейер от ворот к зоне хранения
         // (на отгрузке лента везёт обратно) и транспорт, который работает от конца
         // ленты (последние метры) или от ворот до стеллажей.
-        const split = linkGatesOf(layout);
         level.linkFleets = [];
-        for (const link of transportLinks) {
-          const gateIds = split[link.slot] ?? [];
-          const gates = layout.gates.filter((gate) => gateIds.includes(gate.id));
+        for (const { link, gateIds, gates, direction, lines } of linkPlans) {
           if (!gates.length) continue;
-          const direction = link.slot === "inbound" ? "in" : "out";
           let handoffs = null;
           if (link.conveyor) {
-            const lengthUnits = link.conveyor.lineLengthM / Math.max(1e-6, chunkGrid.metersPerUnit);
-            const lines = computeConveyorLines(layout, shape, link.conveyor.count, lengthUnits, gates).map((line) => ({ ...line, direction }));
             level.linkFleets.push({
               kind: "conveyor",
               fleet: createConveyorFleet({
@@ -360,6 +381,7 @@ export function useSimulation(cfg) {
                       handoffs,
                       showTrucks: i === 0,
                       robotFactory: loaderFactoryOf(carrier.model),
+                      blockedRects: pickingAvoid,
                     }),
             });
           });
@@ -374,6 +396,30 @@ export function useSimulation(cfg) {
           beltTexture: st.beltTexture,
           energyProfile: energyProfiles.conveyor ?? energyProfiles.arm,
         });
+      }
+
+      if (useArm && armCount > 0) {
+        if (armType === "stacker") {
+          level.armFleet = createStackerFleet({
+            group: level.armGroup,
+            zone: layout.armZone,
+            count: armCount,
+            armProd,
+            energyProfile: energyProfiles.arm,
+          });
+        } else {
+          level.armFleet = createArmFleet({
+            group: level.armGroup,
+            zone: layout.armZone,
+            count: armCount,
+            beltTexture: st.beltTexture,
+            armProd,
+            energyProfile: energyProfiles.arm,
+            robotFactory: armFactoryOf(armType),
+            slots: armSlots,
+            network: pickingNet,
+          });
+        }
       }
 
       if (useVacuum && vacuumCount > 0 && modelState === "ready") {
@@ -449,6 +495,7 @@ export function useSimulation(cfg) {
             truckPayload: loader.truckPayload,
             routeLengthM: loader.routeLengthM,
             robotFactory: loaderFactoryOf(loaderType),
+            blockedRects: pickingAvoid,
           });
         }
       }

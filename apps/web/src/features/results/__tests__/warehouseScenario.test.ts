@@ -45,10 +45,19 @@ describe('сценарий склада: зоны и связи', () => {
     expect(count(withLoaders)).toBeLessThan(count(loadersOnly));
   });
 
-  it('генератор собирает варианты из подходящих решений и отмечает лучший по TCO', () => {
+  it('генератор перебирает составы и отдаёт варианты с причиной выбора', () => {
+    const started = performance.now();
     const variants = generateWarehouseScenarios({ parameters: {}, fields, solutions: solutions as unknown as CatalogSolution[] });
+    const elapsed = performance.now() - started;
+    console.log(elapsed.toFixed(0), 'мс', variants.map((v) => `${v.title} | ${v.highlights.join(', ')} | экономия ${v.savingMln} | окуп ${v.paybackYears} | capex ${v.capexMln}\n   ${v.description}`).join('\n'));
     expect(variants.length).toBeGreaterThanOrEqual(2);
     expect(variants.filter((v) => v.best)).toHaveLength(1);
-    for (const v of variants) expect(v.assignments.length).toBeGreaterThan(0);
+    // Лучший — с наибольшей экономией за горизонт.
+    const best = variants.find((v) => v.best)!;
+    expect(Math.max(...variants.map((v) => v.savingMln))).toBe(best.savingMln);
+    // У каждого варианта — причина выбора, разные составы.
+    for (const v of variants) expect(v.highlights.length).toBeGreaterThan(0);
+    const keys = variants.map((v) => v.assignments.map((a) => `${a.slot}:${a.solutionId}`).sort().join('|'));
+    expect(new Set(keys).size).toBe(variants.length);
   });
 });

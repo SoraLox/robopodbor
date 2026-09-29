@@ -28,7 +28,7 @@ export const GATE_HEIGHT = 7.5;
 // Роботов одного типа не больше, чем помещается без наложения моделей.
 export const MAX_VACUUM_COUNT = 8;
 export const MAX_LOADER_COUNT = GATE_XS.length; // пресет по умолчанию; для своей формы — layout.maxLoaderCount
-const ARM_ROW_PITCH_MIN = 21.4; // длина конвейера роборуки с запасом
+const ARM_ROW_PITCH_MIN = 25.5; // длина конвейера роборуки + подающая и сборная магистрали (arms/pickingNetwork.js)
 const ARM_COLUMN_PITCH_MIN = 14; // ширина роборуки с конвейерами + проезд пылесоса между колонками
 export const MAX_ARM_COUNT = 16;
 

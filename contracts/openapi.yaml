@@ -1031,7 +1031,7 @@ components:
         share: { type: number, description: 'Доля потока слота 0..1; нет — поровну.' }
     ScenarioVariant:
       type: object
-      required: [id, title, description, assignments, solutionIds, capexMln, paybackYears, roiPct, effectMlnPerYear, tcoMln, robots]
+      required: [id, title, description, assignments, solutionIds, capexMln, paybackYears, roiPct, effectMlnPerYear, tcoMln, savingMln, horizonYears, robots, highlights]
       properties:
         id: { type: string }
         title: { type: string }
@@ -1047,7 +1047,15 @@ components:
         roiPct: { type: number, nullable: true }
         effectMlnPerYear: { type: number }
         tcoMln: { type: number }
+        savingMln:
+          type: number
+          description: Экономия за горизонт расчёта — TCO «как есть» минус TCO варианта, млн ₽.
+        horizonYears: { type: integer }
         robots: { type: integer }
+        highlights:
+          type: array
+          description: Чем вариант лучше остальных («Больше всего экономии», «Быстрее окупается»…).
+          items: { type: string }
         best: { type: boolean }
     CalculationResult:
       type: object

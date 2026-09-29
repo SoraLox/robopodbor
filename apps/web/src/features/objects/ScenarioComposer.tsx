@@ -57,6 +57,8 @@ const STAGE: Record<SlotId, { title: string; hint: string; fits: string; manual:
 
 const MAX_CARRIERS = 3;
 
+const yearsWord = (n: number) => (n % 10 === 1 && n % 100 !== 11 ? 'год' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'года' : 'лет');
+
 const fmt = (value: number) => value.toLocaleString('ru-RU', { maximumFractionDigits: 1 });
 
 /** Доли транспорта на связи: заданные — как есть, остальным — поровну. */
@@ -272,15 +274,22 @@ export function ScenarioComposer({
       >
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-1.5 text-[13.5px] font-semibold leading-tight text-foreground">
-              {variant.title}
-              {variant.best ? (
-                <span className="rounded-full bg-status-operation-tint px-1.5 py-0.5 text-[10.5px] font-semibold leading-none text-status-operation">
-                  Выгоднее всего
+            <div className="flex flex-wrap gap-1">
+              {variant.highlights.map((text) => (
+                <span
+                  key={text}
+                  className={cn(
+                    'rounded-full px-1.5 py-0.5 text-[10.5px] font-semibold leading-none',
+                    variant.best && text === variant.highlights[0]
+                      ? 'bg-status-operation-tint text-status-operation'
+                      : 'bg-[#F2F2F4] text-[#6E6E73]',
+                  )}
+                >
+                  {text}
                 </span>
-              ) : null}
+              ))}
             </div>
-            <p className="mt-0.5 text-[11.5px] leading-snug text-[#8E8E93]">{variant.description}</p>
+            <div className="mt-1 text-[13.5px] font-semibold leading-tight text-foreground">{variant.title}</div>
           </div>
           <button
             type="button"
@@ -295,6 +304,7 @@ export function ScenarioComposer({
             {selected ? 'Выбрано' : 'Выбрать'}
           </button>
         </div>
+        <p className="mt-1 text-[11.5px] leading-snug text-[#8E8E93]">{variant.description}</p>
         <ul className="mt-2 grid gap-0.5 text-[11.5px] leading-snug">
           {compositionLines(variant.assignments).map((line) => (
             <li key={line.slot} className="min-w-0">
@@ -303,11 +313,19 @@ export function ScenarioComposer({
             </li>
           ))}
         </ul>
-        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-[11.5px] tabular-nums text-[#6E6E73]">
-          <span>CAPEX {fmt(variant.capexMln)} млн ₽</span>
-          <span>окупаемость {variant.paybackYears === null ? '—' : `${fmt(variant.paybackYears)} г.`}</span>
-          <span>TCO {fmt(variant.tcoMln)} млн ₽</span>
-        </div>
+        <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[11.5px] leading-tight tabular-nums">
+          {[
+            [`Экономия за ${variant.horizonYears} ${yearsWord(variant.horizonYears)}`, `${fmt(variant.savingMln)} млн ₽`],
+            ['Окупаемость', variant.paybackYears === null ? 'не окупается' : `${fmt(variant.paybackYears)} г.`],
+            ['Вложения', `${fmt(variant.capexMln)} млн ₽`],
+            ['Роботов', String(variant.robots)],
+          ].map(([label, value]) => (
+            <div key={label} className="min-w-0">
+              <dt className="text-[#8E8E93]">{label}</dt>
+              <dd className="font-semibold text-foreground">{value}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
     );
   };

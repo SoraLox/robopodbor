@@ -62,6 +62,40 @@ const NEIGHBORS = [
   [1, 1, Math.SQRT2], [1, -1, Math.SQRT2], [-1, 1, Math.SQRT2], [-1, -1, Math.SQRT2],
 ];
 
+// Открытый список A* — двоичная куча по f: раньше был массив с линейным
+// поиском минимума, и на сетке с рядами стеллажей один путь стоил десятки
+// миллисекунд — погрузчики «подвисали» на каждом новом плече.
+function heapPush(heap, node) {
+  heap.push(node);
+  let i = heap.length - 1;
+  while (i > 0) {
+    const parent = (i - 1) >> 1;
+    if (heap[parent].f <= heap[i].f) break;
+    [heap[parent], heap[i]] = [heap[i], heap[parent]];
+    i = parent;
+  }
+}
+
+function heapPop(heap) {
+  const top = heap[0];
+  const last = heap.pop();
+  if (heap.length) {
+    heap[0] = last;
+    let i = 0;
+    for (;;) {
+      const l = 2 * i + 1;
+      const r = l + 1;
+      let m = i;
+      if (l < heap.length && heap[l].f < heap[m].f) m = l;
+      if (r < heap.length && heap[r].f < heap[m].f) m = r;
+      if (m === i) break;
+      [heap[m], heap[i]] = [heap[i], heap[m]];
+      i = m;
+    }
+  }
+  return top;
+}
+
 export function findCellPath(nav, start, goal) {
   const n = nav.n;
   const key = (gx, gz) => gz * n + gx;
@@ -69,13 +103,12 @@ export function findCellPath(nav, start, goal) {
   const came = new Int32Array(n * n).fill(-1);
   const closed = new Uint8Array(n * n);
   const h = (gx, gz) => Math.hypot(gx - goal.gx, gz - goal.gz);
-  const open = [{ gx: start.gx, gz: start.gz, f: h(start.gx, start.gz) }];
+  const open = [];
+  heapPush(open, { gx: start.gx, gz: start.gz, f: h(start.gx, start.gz) });
   g[key(start.gx, start.gz)] = 0;
 
   while (open.length) {
-    let bestIndex = 0;
-    for (let i = 1; i < open.length; i++) if (open[i].f < open[bestIndex].f) bestIndex = i;
-    const current = open.splice(bestIndex, 1)[0];
+    const current = heapPop(open);
     const ck = key(current.gx, current.gz);
     if (closed[ck]) continue;
     closed[ck] = 1;
@@ -97,7 +130,7 @@ export function findCellPath(nav, start, goal) {
       if (next < g[nk]) {
         g[nk] = next;
         came[nk] = ck;
-        open.push({ gx, gz, f: next + h(gx, gz) });
+        heapPush(open, { gx, gz, f: next + h(gx, gz) });
       }
     }
   }
@@ -125,23 +158,34 @@ function segmentClear(nav, a, b, halfWidth) {
 }
 
 // Путь в мировых точках от from до to (to — центр проезжей клетки или точка в ней).
+// Маршруты погрузчиков повторяются (ворота ↔ одни и те же стеллажи), поэтому
+// сглаженный путь кэшируется по клеткам начала и конца.
 export function findPath(nav, from, to, halfWidth = 0.9) {
   const start = nearestWalkable(nav, cellOfPoint(nav, from));
   const goal = nearestWalkable(nav, cellOfPoint(nav, to));
   if (!start || !goal) return [to];
+  nav.cache ??= new Map();
+  const cacheKey = `${start.gx},${start.gz}>${goal.gx},${goal.gz}>${to.x.toFixed(2)},${to.z.toFixed(2)}`;
+  const cached = nav.cache.get(cacheKey);
+  if (cached) return cached.slice();
+
   const cells = findCellPath(nav, start, goal);
   if (!cells) return [to];
 
-  const points = [from, ...cells.slice(1, -1).map((c) => cellCenter(nav, c.gx, c.gz)), to];
-  const smoothed = [points[0]];
+  const origin = cellCenter(nav, start.gx, start.gz);
+  const points = [origin, ...cells.slice(1, -1).map((c) => cellCenter(nav, c.gx, c.gz)), to];
+  // «Натягивание нити» вперёд: от опорной точки тянемся, пока отрезок свободен.
+  const smoothed = [];
   let anchor = 0;
   while (anchor < points.length - 1) {
-    let next = points.length - 1;
-    while (next > anchor + 1 && !segmentClear(nav, points[anchor], points[next], halfWidth)) next--;
+    let next = anchor + 1;
+    while (next + 1 < points.length && segmentClear(nav, points[anchor], points[next + 1], halfWidth)) next++;
     smoothed.push(points[next]);
     anchor = next;
   }
-  return smoothed.slice(1);
+  if (nav.cache.size > 2000) nav.cache.clear();
+  nav.cache.set(cacheKey, smoothed);
+  return smoothed.slice();
 }
 
 export function pathLength(from, points) {

@@ -802,7 +802,12 @@ export interface components {
             roiPct: number | null;
             effectMlnPerYear: number;
             tcoMln: number;
+            /** @description Экономия за горизонт расчёта — TCO «как есть» минус TCO варианта, млн ₽. */
+            savingMln: number;
+            horizonYears: number;
             robots: number;
+            /** @description Чем вариант лучше остальных («Больше всего экономии», «Быстрее окупается»…). */
+            highlights: string[];
             best?: boolean;
         };
         CalculationResult: {

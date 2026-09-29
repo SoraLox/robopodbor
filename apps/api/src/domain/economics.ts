@@ -356,7 +356,7 @@ function yearsText(years: number | null): string {
   return `${fmt(years)} ${yearsUnit(round1(years))}`;
 }
 
-function yearsUnit(value: number): string {
+export function yearsUnit(value: number): string {
   const n = Math.floor(value);
   if (!Number.isInteger(value)) return "года";
   if (n % 10 === 1 && n % 100 !== 11) return "год";
