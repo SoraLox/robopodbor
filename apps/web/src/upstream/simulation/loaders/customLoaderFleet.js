@@ -8,7 +8,9 @@ import { makeForkliftRobot } from "../robots/forkliftRobot.js";
 import { makeTruck } from "../robots/truckRobot.js";
 import { LOAD_SLOWDOWN } from "../constants.js";
 
-const PAUSE_SECONDS = 1.4; // пауза на погрузку/разгрузку у стеллажа и у ворот
+// Работа вилами за цикл — 25 с, как в расчёте (warehouseEconomics loaderHandlingSeconds):
+// половина у стеллажа, половина у ворот. Раньше было 1,4 с — сцена «обгоняла» расчёт.
+const PAUSE_SECONDS = 12.5;
 const FORK_LIFT_HEIGHT = 1.1;
 const ARRIVE_EPS = 0.15;
 const TURN_RATE = 6; // рад/с
@@ -21,9 +23,12 @@ export const LOADERS_PER_GATE = 3;
 const TRUCK_DOCK_DISTANCE = 3.2;
 const TRUCK_APPROACH_DISTANCE = 16;
 const TRUCK_DRIVE_SECONDS = 3.5;
-const TRUCK_DOCKED_SECONDS = 9;
-const TRUCK_GAP_MIN_S = 3;
-const TRUCK_GAP_MAX_S = 8;
+// Фура стоит у ворот, пока не обменяет свою загрузку (truckPayload единиц), но не
+// дольше TRUCK_MAX_DOCKED_SECONDS; следующая подъезжает через 2–4 с — при пиковом
+// потоке погрузчики не должны простаивать из-за случайного разрыва между фурами.
+const TRUCK_MAX_DOCKED_SECONDS = 600;
+const TRUCK_GAP_MIN_S = 2;
+const TRUCK_GAP_MAX_S = 4;
 const TRUCK_FADE_SECONDS = 1.2;
 
 // Погрузчики для «своей» формы склада (конструктор): в отличие от штатного
@@ -42,7 +47,7 @@ function lerp(a, b, t) {
 // Места хранения: у каждого стеллажа — клетка подъезда (проезжий сосед,
 // ближайший к воротам), погрузчик встаёт там и поворачивается к стеллажу.
 // Раньше целью был центр клетки стеллажа — погрузчик въезжал в сам стеллаж.
-function collectStorage(shape, nav, gates) {
+function collectStorage(shape, nav, gates, routeUnits) {
   const places = [];
   const gateCells = gates.map((gate) => cellOfPoint(nav, gate.worldCenter));
   const toGate = (gx, gz) => Math.min(...gateCells.map((c) => Math.abs(c.gx - gx) + Math.abs(c.gz - gz)));
@@ -63,17 +68,21 @@ function collectStorage(shape, nav, gates) {
 
   if (places.length) return places;
 
-  // Стеллажи не нарисованы — напольное хранение в дальней от ворот половине пола.
+  // Стеллажи не нарисованы — напольное хранение на расчётном пути от ворот
+  // (routeUnits — «Средняя протяжённость маршрута» расчёта), чтобы цикл сцены
+  // совпадал с циклом, по которому посчитан парк. Без пути — дальняя половина пола.
   const floor = [];
   for (let gz = 0; gz < shape.gridSize; gz++) {
     for (let gx = 0; gx < shape.gridSize; gx++) {
       if (cellAt(shape, gx, gz) === CELL.FLOOR) floor.push({ gx, gz, d: toGate(gx, gz) });
     }
   }
-  floor.sort((a, b) => b.d - a.d);
+  const targetCells = routeUnits ? routeUnits / nav.cellSize : null;
+  if (targetCells) floor.sort((a, b) => Math.abs(a.d - targetCells) - Math.abs(b.d - targetCells));
+  else floor.sort((a, b) => b.d - a.d);
   return floor
-    .slice(0, Math.ceil(floor.length / 2))
-    .filter((_, i) => i % 3 === 0)
+    .slice(0, Math.max(6, Math.ceil(floor.length / (targetCells ? 6 : 2))))
+    .filter((_, i) => i % 2 === 0)
     .map((c) => {
       const point = cellCenter(nav, c.gx, c.gz);
       return { x: point.x, z: point.z, face: null };
@@ -109,6 +118,8 @@ export function createCustomLoaderFleet({
   metersPerUnit,
   cargo,
   energyProfile,
+  truckPayload = 18,
+  routeLengthM,
   robotFactory = makeForkliftRobot,
 }) {
   const gates = computeGateClusters(shape);
@@ -122,7 +133,7 @@ export function createCustomLoaderFleet({
   const loadSlowFactor = 1 - LOAD_SLOWDOWN * Math.min(1, cargoWeightKg / Math.max(1, capacityKg));
 
   const nav = makeNavGrid(shape);
-  const storage = collectStorage(shape, nav, gates);
+  const storage = collectStorage(shape, nav, gates, routeLengthM ? routeLengthM / Math.max(1e-6, metersPerUnit) : null);
 
   const racksByGate = new Map(gates.map((gate) => [gate.id, []]));
   for (const place of storage) {
@@ -172,7 +183,9 @@ export function createCustomLoaderFleet({
       model,
       gate,
       gateStop,
-      kind: gate.kind, // 'in' — выгрузка (ворота→стеллаж), иначе — загрузка (стеллаж→ворота)
+      // 'in' — выгрузка (ворота→стеллаж), иначе — загрузка (стеллаж→ворота). Двусторонние
+      // ворота (стандартная форма) делят погрузчиков поровну на приёмку и отгрузку.
+      kind: gate.kind === "generic" ? (index % 2 === 0 ? "in" : "out") : gate.kind,
       myRacks,
       rackIndex: myRacks.length ? Math.floor((slot * myRacks.length) / Math.max(1, slots)) : 0,
       path: null,
@@ -325,6 +338,7 @@ export function createCustomLoaderFleet({
         loader.timer += dt;
         if (loader.timer >= PAUSE_SECONDS) {
           detachCargo(loader);
+          loader.gate.truck.exchanged++;
           cyclesOut++;
           loader.state = "toRack";
         }
@@ -346,6 +360,7 @@ export function createCustomLoaderFleet({
         loader.timer += dt;
         if (loader.timer >= PAUSE_SECONDS) {
           attachCargo(loader);
+          loader.gate.truck.exchanged++;
           loader.state = "toRackDrop";
         }
         break;
@@ -393,6 +408,7 @@ export function createCustomLoaderFleet({
       to,
       t: 0,
       timer: 0,
+      exchanged: 0,
       fade: createMaterializeFade(model.group, TRUCK_FADE_SECONDS),
     };
   }
@@ -428,7 +444,7 @@ export function createCustomLoaderFleet({
       }
     } else if (truck.state === "docked") {
       truck.timer += dt;
-      if (truck.timer >= TRUCK_DOCKED_SECONDS) {
+      if (truck.exchanged >= truckPayload || truck.timer >= TRUCK_MAX_DOCKED_SECONDS) {
         truck.state = "leaving";
         truck.t = 0;
         truck.model.setDoors(0);

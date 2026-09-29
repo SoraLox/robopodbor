@@ -141,8 +141,9 @@ export function computeLayout(shape, robotTypes, workZoneShare = 1, robotSizes) 
     sorterZone,
     maxArmCount: maxArmCountOf(armWidth, workZMax - workZMin, armPitchOf(robotSizes)),
     armPitch: armPitchOf(robotSizes),
-    // На своей форме у ворот встают до трёх погрузчиков (customLoaderFleet.js LOADERS_PER_GATE).
-    maxLoaderCount: Math.max(1, gates.length * (custom ? 3 : 1)),
+    // До трёх погрузчиков на ворота (customLoaderFleet.js LOADERS_PER_GATE); на стандартной
+    // форме больше одного на ворота — тоже маршрутом по сетке (см. useSimulation).
+    maxLoaderCount: Math.max(1, gates.length * 3),
     gates,
     bounds,
     /** Свободный пол для стационарного оборудования: весь контур у пресета, наибольший прямоугольник пола у своей формы. */

@@ -359,7 +359,7 @@ export function useSimulation(cfg) {
             towerCount: loader.storageTowers,
             energyProfile: energyProfiles.loader,
           });
-        } else if (isDefaultShape(shape)) {
+        } else if (isDefaultShape(shape) && loaderCount <= layout.gates.length) {
           level.loaderSystem = createLoaderSystem({
             group: level.loaderGroup,
             count: loaderCount,
@@ -387,6 +387,8 @@ export function useSimulation(cfg) {
             metersPerUnit: chunkGrid.metersPerUnit,
             cargo: loader.cargo,
             energyProfile: energyProfiles.loader,
+            truckPayload: loader.truckPayload,
+            routeLengthM: loader.routeLengthM,
             robotFactory: scaledFactory(loaderFactoryOf(loaderType), robotSizes?.loader?.lengthUnits),
           });
         }

@@ -291,8 +291,9 @@ function SimulationScene({ input, immersive }: { input: SimulationInput; immersi
         skuCount={params.skuCount}
         slotsPerLane={input.slotsPerLane}
         routeLengthM={params.routeLengthM}
-        cargoPerHour={params.requiredLoadThroughput}
-        outboundPerHour={params.requiredOutboundThroughput}
+        // Сцена проверяет парк на расчётной (пиковой) нагрузке, а не на средней.
+        cargoPerHour={params.requiredLoadThroughput * params.peakLoadFactor}
+        outboundPerHour={params.requiredOutboundThroughput * params.peakLoadFactor}
         truckPayload={params.truckPayloadUnits}
         workZoneShare={input.workZoneShare}
         demand={input.demand}
