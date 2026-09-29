@@ -229,6 +229,18 @@ function unitCostsOf(solution: CatalogSolution, costFactor = 1): UnitCosts {
   };
 }
 
+function scaleCosts(costs: UnitCosts, factor: number): UnitCosts {
+  if (factor === 1) return costs;
+  return {
+    ...costs,
+    equipment: costs.equipment * factor,
+    software: costs.software * factor,
+    implementationPerRobot: costs.implementationPerRobot * factor,
+    serviceYear: costs.serviceYear * factor,
+    raasMonthly: costs.raasMonthly * factor,
+  };
+}
+
 /** Электроэнергия за год, ₽: работа и простой с учётом загрузки, потери зарядки у батарейных. */
 function energyPerYear(robot: FleetRobot, count: number, p: WarehouseParams): number {
   const hours = p.hoursPerDay * p.daysPerYear;
@@ -260,6 +272,12 @@ export function buildFleet(
     // Один флот каждого вида: второй робот того же вида делил бы тот же поток.
     if (!kind || groups.some((g) => g.kind === kind)) continue;
     const robot = fleetRobotOf(solution, kind);
+    // Линия, у которой цена и мощность заданы за метр: длина — путь от ворот до хранения.
+    const lineM = solution.perMeter ? p.routeLengthM : 1;
+    if (lineM !== 1) {
+      robot.workPowerKw *= lineM;
+      robot.idlePowerKw *= lineM;
+    }
     const throughputPerRobot = effectiveThroughput(robot, p);
     const peakDemand = peakDemandOf(kind, p);
     const counted = requiredRobotCount(peakDemand, throughputPerRobot);
@@ -269,7 +287,7 @@ export function buildFleet(
       count: Math.max(1, overrides?.[kind] ?? counted),
       throughputPerRobot,
       peakDemand,
-      costs: unitCostsOf(solution, costFactor),
+      costs: scaleCosts(unitCostsOf(solution, costFactor), lineM),
     });
   }
   return groups;

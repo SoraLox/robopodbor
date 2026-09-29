@@ -71,6 +71,8 @@ export interface CatalogSolution {
   };
   acquisitionModels?: AcquisitionModel[];
   lifespanYears?: number;
+  /** Цена (costs, price) и мощность указаны за погонный метр — у конвейерных линий. */
+  perMeter?: boolean;
 
   processes?: string[];
   limitations?: string[];

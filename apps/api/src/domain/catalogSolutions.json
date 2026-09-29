@@ -21911,5 +21911,523 @@
         ]
       }
     }
+  },
+  {
+    "id": "SR0001",
+    "name": "Кросс-белт сортер COMITAS",
+    "vendor": "COMITAS",
+    "useCase": "Сортировка посылок, коробок и пакетов по направлениям: петля с каретками, до 15 000 отправлений в час",
+    "price": "135",
+    "payload": "до 50 кг",
+    "speed": "3 м/с",
+    "maturity": "operation",
+    "confidence": "needs-review",
+    "solutionType": "sorter",
+    "country": "Россия",
+    "payloadKg": 50,
+    "throughput": 15000,
+    "throughputUnit": "шт/ч",
+    "powerKw": 40,
+    "dimensions": "55000×6000×1100 мм",
+    "lifespanYears": 15,
+    "costs": {
+      "equipment": 135
+    },
+    "environment": "indoor",
+    "objectTypes": [
+      "warehouse"
+    ],
+    "processes": [
+      "sorting"
+    ],
+    "source": "Исследование команды: сайт производителя и отраслевые оценки",
+    "sourceDate": "29.09.2026",
+    "sourceUrl": "https://www.comitas.ru/articles/otechestvennoe-konveyernoe-i-sortirovochnoe-oborudovanie-proizvodstva-comitas-novye-vozmozhnosti/",
+    "limitations": [
+      "Нет в каталоге ФЦ БАС: добавлено командой по открытым источникам",
+      "Цена, мощность и габарит — оценки по отрасли, уточнить у производителя"
+    ],
+    "fieldSources": {
+      "throughput": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "COMITAS: более 15 тысяч отправлений в час, превысил требования Почты России на 25%",
+            "date": "29.09.2026",
+            "url": "https://www.comitas.ru/articles/otechestvennoe-konveyernoe-i-sortirovochnoe-oborudovanie-proizvodstva-comitas-novye-vozmozhnosti/"
+          }
+        ]
+      },
+      "speed": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "COMITAS: скорость до 3 м/с",
+            "date": "29.09.2026",
+            "url": "https://www.comitas.ru/articles/otechestvennoe-konveyernoe-i-sortirovochnoe-oborudovanie-proizvodstva-comitas-novye-vozmozhnosti/"
+          }
+        ]
+      },
+      "payloadKg": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "COMITAS: грузы весом до 50 кг",
+            "date": "29.09.2026",
+            "url": "https://www.comitas.ru/articles/vysokoskorostnoy-sortirovshchik-cross-belt-krossbelt-sorter-/"
+          }
+        ]
+      },
+      "costs.equipment": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Среднее по отрасли: однопетлевой кросс-белт — от сотен тысяч до нескольких млн USD (rksort.com); середина ≈ 1,5 млн USD × 90 ₽/USD",
+            "date": "29.09.2026",
+            "url": "https://www.rksort.com/best-cross-belt-sorter-manufacturers-how-to-compare-the-field/"
+          }
+        ]
+      },
+      "powerKw": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Оценка команды: петля ~120 м при шаге кареток ~0,7 м (15 000 шт/ч при 3 м/с) ≈ 170 кареток × ~0,25 кВт на линейный привод ≈ 40 кВт",
+            "date": "29.09.2026"
+          }
+        ]
+      },
+      "dimensions": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Оценка команды: петля ~120 м → два прямых участка ~55 м и торцы, ширина с лотками ~6 м",
+            "date": "29.09.2026"
+          }
+        ]
+      },
+      "lifespanYears": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Среднее по отрасли для стационарного конвейерно-сортировочного оборудования — 15 лет",
+            "date": "29.09.2026"
+          }
+        ]
+      },
+      "country": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "COMITAS — российский производитель",
+            "date": "29.09.2026",
+            "url": "https://www.comitas.ru/articles/otechestvennoe-konveyernoe-i-sortirovochnoe-oborudovanie-proizvodstva-comitas-novye-vozmozhnosti/"
+          }
+        ]
+      }
+    },
+    "photos": [],
+    "objectFit": {
+      "warehouse": "inferred"
+    }
+  },
+  {
+    "id": "SR0002",
+    "name": "Interroll MX H горизонтальный кросс-белт",
+    "vendor": "Interroll",
+    "useCase": "Горизонтальный кросс-белт сортер для посылок и коробок: 4 000–20 000 шт/ч, до 50 кг",
+    "price": "135",
+    "payload": "до 50 кг",
+    "speed": "2.7 м/с",
+    "maturity": "operation",
+    "confidence": "needs-review",
+    "solutionType": "sorter",
+    "country": "Швейцария",
+    "payloadKg": 50,
+    "throughput": 20000,
+    "throughputUnit": "шт/ч",
+    "powerKw": 40,
+    "noiseDb": 68,
+    "dimensions": "55000×6000×1100 мм",
+    "lifespanYears": 15,
+    "costs": {
+      "equipment": 135
+    },
+    "environment": "indoor",
+    "objectTypes": [
+      "warehouse"
+    ],
+    "processes": [
+      "sorting"
+    ],
+    "source": "Исследование команды: сайт производителя и отраслевые оценки",
+    "sourceDate": "29.09.2026",
+    "sourceUrl": "https://www.interroll.com/products/sorters/mx-h-horizontal-crossbelt-sorter",
+    "limitations": [
+      "Нет в каталоге ФЦ БАС: добавлено командой по открытым источникам",
+      "Иностранный производитель: доступность поставки в РФ уточнить",
+      "20 000 шт/ч — верхняя граница диапазона производителя"
+    ],
+    "fieldSources": {
+      "throughput": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "Interroll MX H: 4 000 — до 20 000 шт/ч",
+            "date": "29.09.2026",
+            "url": "https://www.interroll.com/products/sorters/mx-h-horizontal-crossbelt-sorter"
+          }
+        ]
+      },
+      "speed": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "Interroll MX H: скорость до 2,7 м/с",
+            "date": "29.09.2026",
+            "url": "https://www.interroll.com/products/sorters/mx-h-horizontal-crossbelt-sorter"
+          }
+        ]
+      },
+      "payloadKg": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "Interroll MX H: вес до 50 кг",
+            "date": "29.09.2026",
+            "url": "https://www.interroll.com/products/sorters/mx-h-horizontal-crossbelt-sorter"
+          }
+        ]
+      },
+      "noiseDb": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "Interroll MX H: шум < 68 дБ(А)",
+            "date": "29.09.2026",
+            "url": "https://www.interroll.com/products/sorters/mx-h-horizontal-crossbelt-sorter"
+          }
+        ]
+      },
+      "costs.equipment": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Среднее по отрасли: однопетлевой кросс-белт — от сотен тысяч до нескольких млн USD (rksort.com); середина ≈ 1,5 млн USD × 90 ₽/USD",
+            "date": "29.09.2026",
+            "url": "https://www.rksort.com/best-cross-belt-sorter-manufacturers-how-to-compare-the-field/"
+          }
+        ]
+      },
+      "powerKw": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Оценка команды: петля ~120 м при шаге кареток ~0,7 м (15 000 шт/ч при 3 м/с) ≈ 170 кареток × ~0,25 кВт на линейный привод ≈ 40 кВт",
+            "date": "29.09.2026"
+          }
+        ]
+      },
+      "dimensions": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Оценка команды: петля ~120 м → два прямых участка ~55 м и торцы, ширина с лотками ~6 м",
+            "date": "29.09.2026"
+          }
+        ]
+      },
+      "lifespanYears": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Среднее по отрасли для стационарного конвейерно-сортировочного оборудования — 15 лет",
+            "date": "29.09.2026"
+          }
+        ]
+      }
+    },
+    "photos": [],
+    "objectFit": {
+      "warehouse": "inferred"
+    }
+  },
+  {
+    "id": "CV0001",
+    "name": "Паллетный роликовый конвейер НТЛС",
+    "vendor": "НТЛС",
+    "useCase": "Приводной роликовый конвейер для европаллет от ворот к зоне хранения; цена и мощность — за погонный метр",
+    "price": "0.11",
+    "payload": "до 1 500 кг",
+    "speed": "0.5 м/с",
+    "maturity": "operation",
+    "confidence": "needs-review",
+    "solutionType": "conveyor",
+    "country": "Россия",
+    "payloadKg": 1500,
+    "throughput": 240,
+    "throughputUnit": "паллет/ч",
+    "powerKw": 0.14,
+    "dimensions": "секции 1329/2665/2999 мм, высота 900 мм, под паллету 800×1200 мм",
+    "lifespanYears": 15,
+    "perMeter": true,
+    "costs": {
+      "equipment": 0.11
+    },
+    "environment": "indoor",
+    "objectTypes": [
+      "warehouse"
+    ],
+    "processes": [
+      "transport",
+      "receiving"
+    ],
+    "source": "Исследование команды: сайт производителя и отраслевые оценки",
+    "sourceDate": "29.09.2026",
+    "sourceUrl": "https://nt-ls.ru/catalog/konvejernye-i-sortirovochnye/konveiery-dla-pallet/rolikovyi",
+    "limitations": [
+      "Нет в каталоге ФЦ БАС: добавлено командой по открытым источникам",
+      "Цена и мощность — за погонный метр; длина линии — путь от ворот до хранения по планировке"
+    ],
+    "fieldSources": {
+      "payloadKg": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "НТЛС: максимальная нагрузка 1500 кг, европаллета 800×1200 мм",
+            "date": "29.09.2026",
+            "url": "https://nt-ls.ru/catalog/konvejernye-i-sortirovochnye/konveiery-dla-pallet/rolikovyi"
+          }
+        ]
+      },
+      "dimensions": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "НТЛС: секции 1329/2665/2999 мм, высота 900 мм",
+            "date": "29.09.2026",
+            "url": "https://nt-ls.ru/catalog/konvejernye-i-sortirovochnye/konveiery-dla-pallet/rolikovyi"
+          }
+        ]
+      },
+      "speed": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "Interroll: Modular Pallet Conveyor Platform — скорость до 0,5 м/с",
+            "date": "29.09.2026",
+            "url": "https://www.interroll.com/company/news-press-events/press-detail/interroll-expands-modular-pallet-conveyor-platform-mpp-with-flexible-and-powerful-control-solution/"
+          }
+        ],
+        "note": "Скорость на странице НТЛС не указана — типовая для паллетных конвейеров"
+      },
+      "throughput": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Оценка команды: 0,5 м/с при шаге паллет 1,5 м — до 1 200 паллет/ч по ленте; зонное накопление и передача на хранение ограничивают реальный поток примерно пятой частью — 240 паллет/ч",
+            "date": "29.09.2026"
+          }
+        ]
+      },
+      "costs.equipment": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Рынок РФ: неприводной роликовый конвейер для паллет — от 45 000 ₽/м (zavod-conveyer.ru, rutkonveer.ru); приводной с автоматикой ×2,5 ≈ 0,11 млн ₽/м",
+            "date": "29.09.2026",
+            "url": "https://zavod-conveyer.ru/rolikovyj-konvejer/"
+          }
+        ]
+      },
+      "powerKw": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Оценка команды: мотор-редуктор ~0,37 кВт на секцию 2,665 м (секции НТЛС) ≈ 0,14 кВт на метр",
+            "date": "29.09.2026"
+          }
+        ]
+      },
+      "lifespanYears": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Среднее по отрасли для стационарного конвейерно-сортировочного оборудования — 15 лет",
+            "date": "29.09.2026"
+          }
+        ]
+      },
+      "country": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "НТЛС — российская компания",
+            "date": "29.09.2026",
+            "url": "https://nt-ls.ru/catalog/konvejernye-i-sortirovochnye/konveiery-dla-pallet/rolikovyi"
+          }
+        ]
+      }
+    },
+    "photos": [],
+    "objectFit": {
+      "warehouse": "inferred"
+    }
+  },
+  {
+    "id": "CV0002",
+    "name": "Interroll Modular Pallet Conveyor Platform",
+    "vendor": "Interroll",
+    "useCase": "Модульный паллетный конвейер (роликовые и цепные модули, поворотные столы); цена и мощность — за погонный метр",
+    "price": "0.11",
+    "payload": "до 1 500 кг",
+    "speed": "0.5 м/с",
+    "maturity": "operation",
+    "confidence": "needs-review",
+    "solutionType": "conveyor",
+    "country": "Швейцария",
+    "payloadKg": 1500,
+    "throughput": 100,
+    "throughputUnit": "паллет/ч",
+    "powerKw": 0.14,
+    "minTempC": -28,
+    "maxTempC": 40,
+    "lifespanYears": 15,
+    "perMeter": true,
+    "costs": {
+      "equipment": 0.11
+    },
+    "environment": "indoor",
+    "objectTypes": [
+      "warehouse"
+    ],
+    "processes": [
+      "transport",
+      "receiving"
+    ],
+    "source": "Исследование команды: сайт производителя и отраслевые оценки",
+    "sourceDate": "29.09.2026",
+    "sourceUrl": "https://www.interroll.com/company/news-press-events/press-detail/interroll-expands-modular-pallet-conveyor-platform-mpp-with-flexible-and-powerful-control-solution/",
+    "limitations": [
+      "Нет в каталоге ФЦ БАС: добавлено командой по открытым источникам",
+      "Иностранный производитель: доступность поставки в РФ уточнить",
+      "100 паллет/ч — узел передачи (штабелёр, передаточная тележка), сама лента быстрее"
+    ],
+    "fieldSources": {
+      "speed": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "Interroll MPP: скорость до 0,5 м/с",
+            "date": "29.09.2026",
+            "url": "https://www.interroll.com/company/news-press-events/press-detail/interroll-expands-modular-pallet-conveyor-platform-mpp-with-flexible-and-powerful-control-solution/"
+          }
+        ]
+      },
+      "payloadKg": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "Interroll MPP: паллеты до 1 200–1 500 кг",
+            "date": "29.09.2026",
+            "url": "https://www.interroll.com/company/news-press-events/press-detail/interroll-expands-modular-pallet-conveyor-platform-mpp-with-flexible-and-powerful-control-solution/"
+          }
+        ]
+      },
+      "throughput": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "Interroll MPP: до 100 паллет/ч на штабелёр или передаточную тележку",
+            "date": "29.09.2026",
+            "url": "https://www.interroll.com/company/news-press-events/press-detail/interroll-expands-modular-pallet-conveyor-platform-mpp-with-flexible-and-powerful-control-solution/"
+          }
+        ]
+      },
+      "minTempC": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "Interroll MPP: от −28 до +40 °C",
+            "date": "29.09.2026",
+            "url": "https://www.interroll.com/company/news-press-events/press-detail/interroll-expands-modular-pallet-conveyor-platform-mpp-with-flexible-and-powerful-control-solution/"
+          }
+        ]
+      },
+      "maxTempC": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "Interroll MPP: от −28 до +40 °C",
+            "date": "29.09.2026",
+            "url": "https://www.interroll.com/company/news-press-events/press-detail/interroll-expands-modular-pallet-conveyor-platform-mpp-with-flexible-and-powerful-control-solution/"
+          }
+        ]
+      },
+      "costs.equipment": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Рынок РФ: неприводной роликовый конвейер для паллет — от 45 000 ₽/м (zavod-conveyer.ru, rutkonveer.ru); приводной с автоматикой ×2,5 ≈ 0,11 млн ₽/м",
+            "date": "29.09.2026",
+            "url": "https://zavod-conveyer.ru/rolikovyj-konvejer/"
+          }
+        ]
+      },
+      "powerKw": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Оценка команды: мотор-редуктор ~0,37 кВт на секцию 2,665 м (секции НТЛС) ≈ 0,14 кВт на метр",
+            "date": "29.09.2026"
+          }
+        ]
+      },
+      "lifespanYears": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Среднее по отрасли для стационарного конвейерно-сортировочного оборудования — 15 лет",
+            "date": "29.09.2026"
+          }
+        ]
+      }
+    },
+    "photos": [],
+    "objectFit": {
+      "warehouse": "inferred"
+    }
   }
 ]

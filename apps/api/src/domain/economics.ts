@@ -997,7 +997,9 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
   // ─ Структура затрат (покупка, за горизонт)
   const capexLines = [
     ...groups.map((g) => ({
-      title: `${g.count} × ${g.robot.solution.name}`,
+      title: g.robot.solution.perMeter
+        ? `${g.count} × ${g.robot.solution.name}, линия ${params.routeLengthM} м`
+        : `${g.count} × ${g.robot.solution.name}`,
       amount: g.count * g.costs.equipment,
       source: g.robot.solution.source ? `Каталог: ${g.robot.solution.source}` : "Каталог решений",
       confidence: (g.robot.solution.fieldSources?.["costs.equipment"]?.confirmed === false ? "needs-review" : "confirmed") as Confidence,
