@@ -40,6 +40,28 @@ export function buildVerifyRows({ layout, demand, fleet, stats, areaPerUnit2, in
     });
   }
 
+  if (layout.useSorter) {
+    rows.push({
+      label: "Сортировка",
+      unit: "шт/ч",
+      required: demand.sorter ?? 0,
+      calculated: fleet.sorter ?? 0,
+      simulated: enoughTime ? stats.sorterItems / simHours : null,
+      note: stats.sorterSystems ? `В сцене ${stats.sorterSystems} сист.; каретки подают штуки с темпом паспортной производительности.` : undefined,
+    });
+  }
+
+  if (layout.useConveyor) {
+    rows.push({
+      label: "Конвейерные линии",
+      unit: "ед./ч",
+      required: demand.conveyor ?? 0,
+      calculated: fleet.conveyor ?? 0,
+      simulated: enoughTime ? stats.conveyorUnits / simHours : null,
+      note: stats.conveyorLines ? `В сцене ${stats.conveyorLines} лин. от ворот до хранения.` : undefined,
+    });
+  }
+
   if (layout.useLoader) {
     rows.push(
       {

@@ -1,96 +1,47 @@
 /**
- * Параметры расчёта (форма мастера) + выбранное решение каталога → входы
- * перенесённой 3D-симуляции склада (src/upstream, см. UPSTREAM.md).
+ * Паспорт склада + парк из расчёта экономики (CalculationResult.fleet) → входы
+ * 3D-симуляции склада (src/upstream, см. UPSTREAM.md).
  *
- * Число роботов, пиковая потребность и производительность считаются теми же
- * функциями upstream (warehouseAdapter), что и в исходном проекте, — здесь
- * только перевод наших полей в его формат. Допущения перевода собраны в
- * SIMULATION_ASSUMPTIONS и показываются рядом со сценой.
+ * Сколько роботов, какая у них производительность и какой пиковый спрос —
+ * считает экономика (apps/api/src/domain/warehouseEconomics.ts); сцена берёт
+ * те же числа и только переводит паспорт в геометрию склада. Поэтому «Нужно /
+ * Расчёт парка / В симуляции» не спорят друг с другом.
  */
-import type { ParameterField, Solution } from '@/api/types';
-import { CATALOG } from '@/upstream/domain/catalog.js';
+import type { FleetGroup, ParameterField, Solution } from '@/api/types';
+import { fleetKindOf, fleetModelOf, leadingNumber, type FleetKind } from '@domain/fleet';
 import { OBJECT_TYPES, defaultParamsFor, selectOption } from '@/upstream/domain/objectTypes.js';
-import {
-  armPeakDemand,
-  computeRobotCounts,
-  effectiveThroughput,
-  loaderCycleSeconds,
-  loaderPeakDemand,
-  vacuumPeakDemand,
-} from '@/upstream/domain/warehouseAdapter.js';
-import { energyProfileOf } from '@/upstream/simulation/energy.js';
-import {
-  MAX_VACUUM_COUNT,
-  computeLayout,
-  computeVacuumZoneAreaM2,
-} from '@/upstream/simulation/layout.js';
+import { MAX_VACUUM_COUNT, computeLayout } from '@/upstream/simulation/layout.js';
+import { maxSorterCount } from '@/upstream/simulation/sorters/sorterFleet.js';
 import { buildDefaultShape } from '@/upstream/simulation/shape/shapeTypes.js';
+import { computeGateClusters } from '@/upstream/simulation/shape/shapeGeometry.js';
+import { decodeShape, layoutMetrics, rackStorage, withStandardRacks } from '@/features/objects/layout/warehouseLayout';
 
 /** Форма склада — стандартный прямоугольник upstream: своей формы в паспорте нет. */
 export const DEFAULT_SHAPE = buildDefaultShape();
 
-export type SimRobotType = 'vacuum' | 'arm' | 'loader';
+export type SimRobotType = FleetKind;
 
 export const SIMULATION_ASSUMPTIONS = [
-  'Тип робота в сцене определяется по типу решения каталога: уборщики — пылесосы (поломоечные — моделью мойщика), манипуляторы и ячейки — роборуки, AMR и тягачи — низкой платформой-транспортировщиком, погрузчики и штабелёры — погрузчиком, системы хранения — сеткой башен с шаттлом.',
-  'Склад в сцене — стандартный прямоугольник с пятью воротами: формы склада в паспорте объекта нет.',
-  'Потоки приёмки, отгрузки и отбора переведены из суточных в часовые делением на часы работы (смены × длительность смены).',
-  'Путь погрузчика от ворот до места хранения — половина стороны склада, если считать его квадратным.',
-  'Скорость, грузоподъёмность, производительность, время работы, время зарядки и мощность берутся из карточки робота. Чего в карточке нет — подставляется из демо-робота симуляции того же типа; такие поля перечислены у сцены.',
+  'Тип робота в сцене определяется по типу решения каталога: уборщики — пылесосы (поломоечные — моделью мойщика), манипуляторы и ячейки — роборуки, AMR и тягачи — низкой платформой-транспортировщиком, погрузчики и штабелёры — погрузчиком, системы хранения — сеткой башен с шаттлами, сортировочные системы — петлёй с каретками, конвейеры — линиями от ворот вглубь склада.',
+  'Число роботов, их производительность и пиковый спрос сцена берёт из расчёта экономики — тех же чисел, что в отчёте.',
+  'Склад в сцене — планировка из шага «Планировка»: нарисованный контур равен площади склада из паспорта; без своей планировки — стандартный прямоугольник с пятью воротами.',
+  'Потоки приёмки, отгрузки и отбора переведены из суточных в часовые делением на часы работы (смены × длительность смены); сцена работает на пиковом потоке (× пиковый коэффициент) — так видно, успевает ли парк в самый загруженный час.',
+  'Путь погрузчика от ворот до места хранения — средний путь по планировке от ближайших ворот до стеллажа; без своей планировки — половина стороны квадратного склада.',
+  'Скорость, грузоподъёмность, производительность, время работы, время зарядки и мощность берутся из карточки робота. Чего в карточке нет — подставляется из демо-робота того же типа, и в расчёте, и в сцене; такие поля перечислены у сцены.',
   'Фура в сцене вмещает не больше 18 паллет (предел модели ворот), реальная еврофура — 33.',
 ];
 
-const TYPE_KEYWORDS: ReadonlyArray<readonly [SimRobotType, RegExp]> = [
-  ['vacuum', /уборк|клининг|мойк|дезинфекц/i],
-  ['arm', /манипулятор|сортир|сортер|пикинг/i],
-  ['loader', /паллет|штабел|погрузчик|agv|буксир|тележ|транспорт/i],
-];
-
-const TYPE_BY_SOLUTION_TYPE: Record<string, SimRobotType> = {
-  cleaner: 'vacuum',
-  disinfection: 'vacuum',
-  manipulator: 'arm',
-  cell: 'arm',
-  sorter: 'arm',
-  asrs: 'loader',
-  amr: 'loader',
-  fmr: 'loader',
-  stacker: 'loader',
-  tug: 'loader',
-};
-
 export function simRobotTypeOf(solution: Solution): SimRobotType | null {
-  // Тип решения известен — сцены для него либо есть, либо нет (ПО, дроны, охрана).
-  // Ключевые слова — только для решений без типа, например добавленных вручную.
-  if (solution.solutionType) return TYPE_BY_SOLUTION_TYPE[solution.solutionType] ?? null;
-  const text = `${solution.name} ${solution.useCase}`;
-  return TYPE_KEYWORDS.find(([, pattern]) => pattern.test(text))?.[0] ?? null;
+  return fleetKindOf(solution);
 }
 
-/**
- * Какую 3D-модель upstream показать для нашего решения (ключ фабрик в useSimulation.js).
- * undefined — модель по умолчанию для флота: пылесос, процедурная рука, погрузчик.
- */
+/** Ключ 3D-модели upstream (washer, stacker, transporter, storagecube); undefined — модель флота по умолчанию. */
 export function simModelOf(solution: Solution, type: SimRobotType): string | undefined {
-  const text = `${solution.name} ${solution.useCase}`;
-  if (type === 'vacuum') return /поломо|мою|мойщ|влажн/i.test(text) ? 'washer' : undefined;
-  if (type === 'arm') return /укладк|паллетиз|палетиз/i.test(text) ? 'stacker' : undefined;
-  if (solution.solutionType === 'asrs') return 'storagecube';
-  if (solution.solutionType === 'amr' || solution.solutionType === 'tug') return 'transporter';
-  return undefined;
+  return fleetModelOf(solution, type);
 }
 
 /** «1 500 кг» → 1500, «1.8 м/с» → 1.8, «—» → null. */
-export function parseLeadingNumber(text: string | undefined): number | null {
-  const match = text?.replace(/\s/g, '').replace(',', '.').match(/\d+(\.\d+)?/);
-  return match ? Number(match[0]) : null;
-}
-
-/** «Сортировка заказов, 8 000 посылок/ч» → 8000. */
-function hourlyRateFrom(useCase: string): number | null {
-  const match = useCase.match(/(\d[\d\s]*)\s*[^\d,/]*\/ч/);
-  return match?.[1] ? parseLeadingNumber(match[1]) : null;
-}
+export const parseLeadingNumber = leadingNumber;
 
 /** «1200» мм → см; запасной разбор старого «1200×800×1600». */
 function dimensionsCm(values: Record<string, string>): number[] {
@@ -164,144 +115,192 @@ export function toUpstreamParams(values: Record<string, string>): UpstreamParams
   };
 }
 
-type CatalogItem = (typeof CATALOG)[number];
-type UpstreamSolution = Omit<CatalogItem, 'technical'> & {
-  technical: Omit<CatalogItem['technical'], 'speed' | 'capacityKg'> & {
-    speed: number | null;
-    capacityKg?: number | undefined;
-  };
-};
-
-/** Поле паспорта робота, которое симуляция берёт из демо-каталога, потому что в карточке его нет. */
+/** Поле паспорта робота, которое взято у демо-робота, потому что в карточке его нет. */
 export interface SimSubstitution {
   field: string;
   value: string;
 }
 
-/**
- * Наше решение в формате каталога upstream: паспорт — из карточки; чего в ней нет —
- * от демо-робота того же типа, с отметкой в substitutions.
- */
-export function toUpstreamSolution(
-  solution: Solution,
-  type: SimRobotType,
-  params: UpstreamParams,
-  substitutions: SimSubstitution[] = [],
-): UpstreamSolution {
-  // Демо-робот той же модели (СтойкаБокс, LowCart…), иначе — базовый для флота.
-  const model = simModelOf(solution, type);
-  const reference =
-    CATALOG.find((item) => item.identification.type === model) ??
-    CATALOG.find((item) => item.identification.type === type)!;
-  const demo = reference.technical;
-  const substitute = <T,>(own: T | null | undefined, fallback: T, field: string, shown: string): T => {
-    if (own !== null && own !== undefined) return own;
-    // У демо-робота этой величины тоже нет (стационарная СтойкаБокс не ездит) —
-    // подставлять нечего, и упоминать это в пометке незачем.
-    if (fallback !== null && fallback !== undefined) substitutions.push({ field, value: shown });
-    return fallback;
-  };
-
-  const speed = substitute(parseLeadingNumber(solution.speed), demo.speed, 'скорость', `${demo.speed} м/с`);
-  const capacityKg =
-    type === 'loader'
-      ? substitute(parseLeadingNumber(solution.payload), demo.capacityKg, 'грузоподъёмность', `${demo.capacityKg} кг`)
-      : parseLeadingNumber(solution.payload) ?? demo.capacityKg;
-  const autonomyHours = substitute(solution.autonomyHours, demo.autonomyHours, 'время работы', `${demo.autonomyHours} ч`);
-  const chargeHours = substitute(solution.chargeHours, demo.energy.chargeHours, 'время зарядки', `${demo.energy.chargeHours} ч`);
-  const ownPower =
-    solution.powerKw ??
-    (solution.batteryKwh && solution.autonomyHours ? solution.batteryKwh / solution.autonomyHours : undefined);
-  const workPowerKw = substitute(ownPower, demo.energy.workPowerKw, 'мощность', `${demo.energy.workPowerKw} кВт`);
-  // Простой — та же доля от рабочей мощности, что у демо-робота.
-  const idlePowerKw = (demo.energy.idlePowerKw / demo.energy.workPowerKw) * workPowerKw;
-
-  const technical = {
-    ...demo,
-    speed,
-    capacityKg,
-    autonomyHours,
-    energy: { ...demo.energy, workPowerKw, idlePowerKw, chargeHours },
-  };
-
-  if (type === 'vacuum') {
-    const ownArea = solution.throughput && /м²|м2/i.test(solution.throughputUnit ?? '') ? solution.throughput : null;
-    const scaled = demo.speed && speed ? (demo.throughput * speed) / demo.speed : demo.throughput;
-    technical.throughput = substitute(ownArea, scaled, 'производительность уборки', `${Math.round(scaled)} м²/ч`);
-  } else if (type === 'arm') {
-    technical.throughput = substitute(
-      solution.throughput ?? hourlyRateFrom(solution.useCase),
-      demo.throughput,
-      'производительность',
-      `${demo.throughput} ${demo.throughputUnit}`,
-    );
-  } else if (type === 'loader') {
-    technical.throughput = 3600 / loaderCycleSeconds({ technical }, params);
-  }
-
-  return {
-    ...reference,
-    id: solution.id,
-    identification: { ...reference.identification, name: solution.name, vendor: solution.vendor },
-    technical,
-  };
+/** Флот сцены: те же числа, что в расчёте, плюс предел сцены. */
+export interface SimFleet {
+  kind: SimRobotType;
+  name: string;
+  model: string | undefined;
+  /** Сколько роботов в расчёте. */
+  requiredCount: number;
+  /** Сколько помещается в сцене. */
+  maxCount: number;
+  /** Стартовое число в сцене: расчётное, но не больше maxCount. */
+  recommendedCount: number;
+  /** СтойкаБокс: башен в сетке (ёмкость); count — шаттлы. */
+  storageTowers: number | undefined;
+  /** Эффективная производительность одного робота: м²/ч, строк/ч, паллет/ч. */
+  throughput: number;
+  capacityKg: number;
+  speedMps: number;
+  substitutions: FleetGroup['substitutions'];
 }
 
 export function buildSimulationInput(
   fields: ParameterField[],
   values: Record<string, string>,
-  solution: Solution,
-  type: SimRobotType,
+  fleet: FleetGroup[],
+  /** Планировка из конструктора; нет — стандартный прямоугольник. */
+  layout?: string | null,
 ) {
   const merged = {
     ...Object.fromEntries(fields.map((field) => [field.id, field.defaultValue ?? ''])),
     ...values,
   };
   const params = toUpstreamParams(merged);
-  const substitutions: SimSubstitution[] = [];
-  const simSolution = toUpstreamSolution(solution, type, params, substitutions);
-  const robotTypes = [type];
+  const custom = decodeShape(layout);
+  // Ярусы стеллажей в 3D — те же, что в расчёте ёмкости (потолок / высота паллеты).
+  if (custom) (custom as { rackTiers?: number }).rackTiers = rackStorage(custom, merged)?.levels;
+  const shape = custom ?? DEFAULT_SHAPE;
+  if (custom) {
+    // Контур — вся площадь склада: сцена масштабирует по площади всей сетки.
+    const metrics = layoutMetrics(custom, params.floorAreaM2);
+    params.floorAreaM2 = metrics.sceneAreaM2;
+    params.routeLengthM = metrics.routeLengthM;
+  }
+  // Один робот на нескольких связях (приёмка и отгрузка) — в сцене один флот вида:
+  // число складывается, производительность — взвешенная по числу роботов.
+  const raw = fleet as Array<FleetGroup & { kind: SimRobotType }>;
+  const groups: Array<FleetGroup & { kind: SimRobotType }> = [];
+  for (const group of fleet as Array<FleetGroup & { kind: SimRobotType }>) {
+    const same = groups.find((g) => g.kind === group.kind);
+    if (!same) {
+      groups.push({ ...group });
+      continue;
+    }
+    const total = same.count + group.count;
+    same.throughputPerRobot = (same.throughputPerRobot * same.count + group.throughputPerRobot * group.count) / total;
+    same.count = total;
+    same.peakDemand += group.peakDemand;
+  }
+  const robotTypes = groups.map((group) => group.kind);
   const workZoneShare = params.workZonePct / 100;
-  const layout = computeLayout(DEFAULT_SHAPE, robotTypes, workZoneShare);
-  const vacuumZoneAreaM2 = computeVacuumZoneAreaM2(layout, params.floorAreaM2);
-  const only = (t: SimRobotType) => (type === t ? simSolution : null);
 
-  const counts = computeRobotCounts({
-    params,
-    vacuumZoneAreaM2,
-    vacuumSolution: only('vacuum'),
-    armSolution: only('arm'),
-    loaderSolution: only('loader'),
+  // Связи приёмки и отгрузки со своими флотами. Простой паллетный склад (одна
+  // модель погрузчиков, без конвейера, стандартная форма, по погрузчику на ворота) —
+  // прежним флотом Егора с полосами хранения; остальное — по связям, на складе со
+  // стеллажами: нарисованными или стандартными (withStandardRacks).
+  const transportGroups = raw.filter((g) => g.slot === 'inbound' || g.slot === 'outbound');
+  const carrierIds = new Set(transportGroups.filter((g) => g.kind === 'loader').map((g) => g.solutionId));
+  const loaderTotal = transportGroups.filter((g) => g.kind === 'loader').reduce((sum, g) => sum + g.count, 0);
+  const simple =
+    !custom &&
+    !transportGroups.some((g) => g.kind === 'conveyor') &&
+    carrierIds.size <= 1 &&
+    !transportGroups.some((g) => g.model === 'storagecube') &&
+    loaderTotal <= computeGateClusters(shape).length;
+  const sceneShape = simple ? shape : withStandardRacks(shape);
+  if (sceneShape !== shape) (sceneShape as { rackTiers?: number }).rackTiers = rackStorage(sceneShape, merged)?.levels;
+  const sceneLayout = computeLayout(sceneShape, robotTypes, workZoneShare);
+  const maxOf: Record<SimRobotType, number> = {
+    vacuum: MAX_VACUUM_COUNT,
+    arm: sceneLayout.maxArmCount,
+    loader: sceneLayout.maxLoaderCount,
+    sorter: sceneLayout.sorterZone ? maxSorterCount(sceneLayout.sorterZone) : 1,
+    // Линии тянутся от ворот — до трёх на ворота.
+    conveyor: Math.max(1, sceneLayout.gates.length * 3),
+  };
+
+  const fleets: Partial<Record<SimRobotType, SimFleet>> = {};
+  for (const group of groups) {
+    // Шаттлы СтойкаБокса ездят по сетке, а не через ворота — предел свой.
+    const maxCount = group.model === 'storagecube' ? 16 : maxOf[group.kind];
+    fleets[group.kind] = {
+      kind: group.kind,
+      name: group.name,
+      model: group.model,
+      requiredCount: group.count,
+      maxCount,
+      recommendedCount: Math.max(1, Math.min(maxCount, group.count)),
+      storageTowers: group.storageTowers,
+      throughput: group.throughputPerRobot,
+      capacityKg: group.capacityKg ?? 100,
+      speedMps: group.speedMps ?? 2,
+      substitutions: group.substitutions,
+    };
+  }
+  const demandOf = (kind: SimRobotType) => groups.find((group) => group.kind === kind)?.peakDemand ?? 0;
+  const energyOf = (kind: SimRobotType) => {
+    const group = groups.find((item) => item.kind === kind);
+    return {
+      runtimeHours: group?.autonomyHours ?? null,
+      chargeHours: group?.chargeHours ?? null,
+      workPowerKw: group?.workPowerKw ?? 0,
+      idlePowerKw: group?.idlePowerKw ?? 0,
+    };
+  };
+
+  const energyOfGroup = (group: FleetGroup) => ({
+    runtimeHours: group.autonomyHours ?? null,
+    chargeHours: group.chargeHours ?? null,
+    workPowerKw: group.workPowerKw,
+    idlePowerKw: group.idlePowerKw,
   });
-  const maxCount = { vacuum: MAX_VACUUM_COUNT, arm: layout.maxArmCount, loader: layout.maxLoaderCount }[type];
-  const rawRecommended = { vacuum: counts.vacuumCount, arm: counts.armCount, loader: counts.loaderCount }[type];
+  const transportLinks = simple
+    ? null
+    : (['inbound', 'outbound'] as const)
+        .map((slot) => {
+          const inSlot = transportGroups.filter((g) => g.slot === slot);
+          const conveyor = inSlot.find((g) => g.kind === 'conveyor');
+          const carriers = inSlot.filter((g) => g.kind === 'loader');
+          return {
+            slot,
+            effectiveRouteM: carriers[0]?.routeM ?? params.routeLengthM,
+            conveyor: conveyor
+              ? {
+                  count: conveyor.count,
+                  throughput: conveyor.throughputPerRobot,
+                  lineLengthM: conveyor.lineLengthM ?? params.routeLengthM,
+                  energyProfile: energyOfGroup(conveyor),
+                }
+              : null,
+            carriers: carriers.map((g) => ({
+              name: g.name,
+              model: g.model,
+              count: g.count,
+              speedMps: g.speedMps ?? 2,
+              capacityKg: g.capacityKg ?? 100,
+              storageTowers: g.storageTowers,
+              energyProfile: energyOfGroup(g),
+            })),
+          };
+        })
+        .filter((link) => link.conveyor || link.carriers.length);
+
+  // Путь транспорта для сверки: с конвейером — последние метры, без — весь путь.
+  const carriersOnLinks = (transportLinks ?? []).flatMap((link) => link.carriers.map((c) => ({ ...c, route: link.effectiveRouteM })));
+  const carrierTotal = carriersOnLinks.reduce((sum, c) => sum + c.count, 0);
+  const checkRouteM = carrierTotal
+    ? Math.round(carriersOnLinks.reduce((sum, c) => sum + c.route * c.count, 0) / carrierTotal)
+    : params.routeLengthM;
 
   return {
-    type,
-    /** Ключ 3D-модели upstream для этого флота (washer, transporter, storagecube…). */
-    model: simModelOf(solution, type),
+    shape: sceneShape,
+    transportLinks,
+    checkRouteM,
     params,
-    /** Что взято из демо-каталога симуляции — показывается у сцены. */
-    substitutions,
     robotTypes,
     workZoneShare,
-    maxCount,
-    /** Сколько роботов нужно по расчёту; сцена показывает не больше maxCount. */
-    requiredCount: rawRecommended,
-    recommendedCount: Math.max(1, Math.min(maxCount, rawRecommended)),
-    throughput: effectiveThroughput(simSolution, params),
-    capacityKg: simSolution.technical.capacityKg ?? 100,
-    speedMps: simSolution.technical.speed ?? 2,
+    fleets,
     slotsPerLane: selectOption('warehouse', 'storageType', params.storageType)?.slotsPerLane ?? 1,
     demand: {
-      vacuum: type === 'vacuum' ? vacuumPeakDemand(params, vacuumZoneAreaM2) : 0,
-      arm: type === 'arm' ? armPeakDemand(params) : 0,
-      loader: type === 'loader' ? loaderPeakDemand(params) : 0,
+      vacuum: demandOf('vacuum'),
+      arm: demandOf('arm'),
+      loader: demandOf('loader'),
+      sorter: demandOf('sorter'),
+      conveyor: demandOf('conveyor'),
     },
     energyProfiles: {
-      vacuum: energyProfileOf(only('vacuum')),
-      arm: energyProfileOf(only('arm')),
-      loader: energyProfileOf(only('loader')),
+      vacuum: energyOf('vacuum'),
+      arm: energyOf('arm'),
+      loader: energyOf('loader'),
+      sorter: energyOf('sorter'),
+      conveyor: energyOf('conveyor'),
     },
   };
 }

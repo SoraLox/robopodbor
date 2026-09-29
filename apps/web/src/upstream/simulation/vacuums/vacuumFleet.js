@@ -69,7 +69,7 @@ function sortByDistanceFromCorner(sectors) {
 // любая модель на колёсах, см. floorWasherRobot.js для мойщика полов.
 export function createVacuumFleet({ group, zone, count, cleaningSpeed, energyProfile, obstacles, trail, grid, robotFactory = makeVacuumRobot }) {
   const transitSpeed = cleaningSpeed * VACUUM_TRANSIT_FACTOR;
-  const stations = chargingStationPositions(count, zone.xMin);
+  const stations = chargingStationPositions(count, zone.xMin, zone.dockZ);
   const sectors = sortByDistanceFromCorner(computeSectors(count, zone));
 
   const robots = sectors.map((sector, index) => createRobot(sector, stations[index]));
@@ -81,7 +81,7 @@ export function createVacuumFleet({ group, zone, count, cleaningSpeed, energyPro
   function createRobot(sector, station) {
     const rowCenters = buildRowCenters(sector);
     const model = robotFactory();
-    const charger = createCharger(station.x);
+    const charger = createCharger(station.x, zone.dockZ);
 
     model.scale.setScalar(VACUUM_MODEL_SCALE);
     model.position.set(station.x, VACUUM_FLOOR_OFFSET, station.z);

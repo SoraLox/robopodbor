@@ -135,12 +135,12 @@ function drawLoaderFloor(ctx, slotsPerLane) {
 }
 
 // Площадки зарядных станций пылесосов — зелёные, по одной на робота.
-function drawChargingStations(ctx, vacuumCount, laneMinX) {
+function drawChargingStations(ctx, vacuumCount, laneMinX, dockZ) {
   ctx.fillStyle = isStudioLook() ? "rgba(47,134,240,0.16)" : "rgba(79,155,144,0.28)";
   ctx.strokeStyle = isStudioLook() ? "#2F86F0" : "#4F9B90";
   ctx.lineWidth = 2;
 
-  for (const { x, z } of chargingStationPositions(vacuumCount, laneMinX)) {
+  for (const { x, z } of chargingStationPositions(vacuumCount, laneMinX, dockZ)) {
     const pad = rectToPx(x - STATION_PAD_WIDTH / 2, x + STATION_PAD_WIDTH / 2, z - STATION_PAD_DEPTH / 2, z + STATION_PAD_DEPTH / 2);
     fillRect(ctx, pad);
     strokeRect(ctx, pad);
@@ -274,7 +274,7 @@ export function drawFloorBase(ctx, { shape, layout, armCount, vacuumCount, chunk
     drawGateCells(ctx, shape);
   }
   if (layout.armZone && armCount > 0) drawArmPads(ctx, layout.armZone, armCount);
-  if (layout.useVacuum) drawChargingStations(ctx, vacuumCount, layout.vacuumZone.xMin);
+  if (layout.useVacuum) drawChargingStations(ctx, vacuumCount, layout.vacuumZone.xMin, layout.vacuumZone.dockZ);
 
   drawChunkGrid(ctx, chunkGrid);
 

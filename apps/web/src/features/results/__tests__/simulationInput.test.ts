@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { calculateEconomics } from '@domain/economics';
+import type { CatalogSolution } from '@domain/catalog';
 import { objectParameters, solutions } from '@/mocks/fixtures';
 import {
   buildSimulationInput,
@@ -8,6 +10,17 @@ import {
 
 const fields = objectParameters.warehouse ?? [];
 const byId = (id: string) => solutions.find((s) => s.id === id)!;
+/** Парк из расчёта экономики — ровно то, что сцена получает с сервера. */
+const fleetOf = (ids: string[], values: Record<string, string> = {}) =>
+  calculateEconomics({
+    objectType: 'warehouse',
+    parameters: values,
+    fields,
+    solution: byId(ids[0]!) as unknown as CatalogSolution,
+    solutions: ids.map((id) => byId(id) as unknown as CatalogSolution),
+  }).fleet ?? [];
+const sceneOf = (ids: string[], values: Record<string, string> = {}) =>
+  buildSimulationInput(fields, values, fleetOf(ids, values));
 
 describe('simulationInput', () => {
   it('разбирает числа из паспорта решения', () => {
@@ -29,29 +42,78 @@ describe('simulationInput', () => {
     expect(simRobotTypeOf({ ...byId('AM0001'), solutionType: undefined, useCase: 'Уборка терминала' })).toBe('vacuum');
   });
 
-  it('переносит параметры склада и паспорт погрузчика в сцену', () => {
-    const input = buildSimulationInput(fields, {}, byId('AM0001'), 'loader');
+  it('переносит параметры склада и парк из расчёта в сцену', () => {
+    const input = sceneOf(['AM0001']);
+    const loader = input.fleets.loader!;
+    const economics = fleetOf(['AM0001']).filter((g) => g.kind === 'loader');
+    const sum = (key: 'count' | 'peakDemand') => economics.reduce((s, g) => s + g[key], 0);
 
     expect(input.params.floorAreaM2).toBe(20000);
     expect(input.params.workZonePct).toBe(50);
     expect(input.params.cargoWeightKg).toBe(800);
     // 1000 поддонов/сут при 2 сменах по 11 ч
     expect(input.params.requiredLoadThroughput).toBeCloseTo(1000 / 22);
-    expect(input.capacityKg).toBe(1500);
-    expect(input.speedMps).toBe(1.5);
-    expect(input.throughput).toBeGreaterThan(0);
-    expect(input.recommendedCount).toBeGreaterThanOrEqual(1);
-    expect(input.recommendedCount).toBeLessThanOrEqual(input.maxCount);
+    expect(loader.capacityKg).toBe(1500);
+    expect(loader.speedMps).toBe(1.5);
+    // Сцена и экономика — одни числа.
+    // Сцена и экономика — одни числа: приёмка + отгрузка.
+    expect(loader.throughput).toBeCloseTo(economics[0]!.throughputPerRobot);
+    expect(loader.requiredCount).toBe(sum('count'));
+    expect(input.demand.loader).toBeCloseTo(sum('peakDemand'));
+    expect(loader.recommendedCount).toBeLessThanOrEqual(loader.maxCount);
   });
 
   it('больше приёмка — больше погрузчиков по расчёту', () => {
-    const low = buildSimulationInput(fields, { wh_obem_priemki: '500', wh_obem_otgruzki: '500' }, byId('AM0001'), 'loader');
-    const high = buildSimulationInput(fields, { wh_obem_priemki: '5000', wh_obem_otgruzki: '5000' }, byId('AM0001'), 'loader');
-    expect(high.requiredCount).toBeGreaterThan(low.requiredCount);
+    const low = sceneOf(['AM0001'], { wh_obem_priemki: '500', wh_obem_otgruzki: '500' });
+    const high = sceneOf(['AM0001'], { wh_obem_priemki: '5000', wh_obem_otgruzki: '5000' });
+    expect(high.fleets.loader!.requiredCount).toBeGreaterThan(low.fleets.loader!.requiredCount);
   });
 
-  it('берёт производительность роборуки из карточки каталога', () => {
-    const input = buildSimulationInput(fields, {}, byId('RC0007'), 'arm');
-    expect(input.throughput).toBe(6000);
+  it('набор роботов — все флоты в одной сцене', () => {
+    const input = sceneOf(['FL0002', 'MM0002', 'FC0002']);
+    expect(input.robotTypes).toEqual(['loader', 'arm', 'vacuum']);
+    expect(input.fleets.arm?.name).toBe(byId('MM0002').name);
+    expect(input.demand.vacuum).toBeGreaterThan(0);
+  });
+});
+
+describe('сцена по связям сценария', () => {
+  const sceneWith = (
+    ids: string[],
+    assignments?: Parameters<typeof calculateEconomics>[0]['assignments'],
+    parameters: Record<string, string> = {},
+  ) => {
+    const fleet =
+      calculateEconomics({
+        objectType: 'warehouse',
+        parameters,
+        fields,
+        solution: byId(ids[0]!) as unknown as CatalogSolution,
+        solutions: ids.map((id) => byId(id) as unknown as CatalogSolution),
+        ...(assignments ? { assignments } : {}),
+      }).fleet ?? [];
+    return buildSimulationInput(fields, parameters, fleet);
+  };
+
+  it('простой паллетный склад — прежним флотом с полосами хранения', () => {
+    // Погрузчиков не больше, чем ворот: по одному на ворота.
+    const small = { wh_obem_priemki: '300', wh_obem_otgruzki: '300' };
+    expect(sceneWith(['FL0002'], undefined, small).transportLinks).toBeNull();
+    // Больше, чем ворот, — уже по связям, до трёх на ворота.
+    expect(sceneWith(['FL0002']).transportLinks).not.toBeNull();
+  });
+
+  it('конвейер и два транспортных робота — по связям, погрузчики на последних метрах', () => {
+    const input = sceneWith(['CV0001', 'FL0002', 'AM0001'], [
+      { slot: 'inbound', solutionId: 'CV0001' },
+      { slot: 'inbound', solutionId: 'FL0002' },
+      { slot: 'inbound', solutionId: 'AM0001' },
+      { slot: 'outbound', solutionId: 'FL0002' },
+    ]);
+    const inbound = input.transportLinks!.find((l) => l.slot === 'inbound')!;
+    expect(inbound.conveyor).not.toBeNull();
+    expect(inbound.carriers.map((c) => c.name).sort()).toEqual([byId('AM0001').name, byId('FL0002').name].sort());
+    expect(inbound.effectiveRouteM).toBeLessThan(input.params.routeLengthM);
+    expect(input.transportLinks!.find((l) => l.slot === 'outbound')!.conveyor).toBeNull();
   });
 });

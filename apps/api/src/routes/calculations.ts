@@ -10,6 +10,7 @@ import { currentDataVersion } from "../changeLog.js";
 import { DEFAULT_MODEL_VERSION } from "../domain/versions.js";
 import { ECONOMICS_MODEL_VERSION, calculateEconomics } from "../domain/economics.js";
 import { toSolutionDto } from "../solutionDto.js";
+import { generateWarehouseScenarios } from "../domain/warehouseScenarios.js";
 import { loadParameterFields } from "./catalog.js";
 
 const router = Router();
@@ -24,8 +25,26 @@ const demoCalculation = JSON.parse(
 const requestSchema = z.object({
   objectType: z.string().min(1).max(40),
   solutionId: z.string().min(1).max(64),
-  parameters: z.record(z.string(), z.string().max(500)).default({}),
+  parameters: z.record(z.string(), z.string().max(2000)).default({}),
   processes: z.array(z.string().max(40)).max(20).optional(),
+  /** Набор роботов (по одному на флот склада); solutionId — главный из них. */
+  solutionIds: z.array(z.string().min(1).max(64)).max(8).optional(),
+  /** Склад: какой робот в каком слоте сценария. */
+  assignments: z
+    .array(
+      z.object({
+        slot: z.enum(["inbound", "outbound", "picking", "sorting", "cleaning"]),
+        solutionId: z.string().min(1).max(64),
+        share: z.number().min(0).max(1).optional(),
+      }),
+    )
+    .max(20)
+    .optional(),
+});
+
+const scenariosSchema = z.object({
+  objectType: z.literal("warehouse"),
+  parameters: z.record(z.string(), z.string().max(2000)).default({}),
 });
 
 // Расчёт мастера: паспорт объекта + выбранное решение → экономика (src/domain/economics.ts).
@@ -34,12 +53,17 @@ router.post("/", wrap(async (req, res) => {
   const parsed = requestSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: "Некорректный запрос: нужны objectType и solutionId" });
   const { objectType, solutionId, parameters, processes } = parsed.data;
+  const assignments = parsed.data.assignments;
+  const solutionIds = [
+    ...new Set([solutionId, ...(parsed.data.solutionIds ?? []), ...(assignments ?? []).map((a) => a.solutionId)]),
+  ];
 
-  const [row, fields] = await Promise.all([
-    prisma.catalogSolution.findUnique({ where: { id: solutionId } }),
+  const [rows, fields] = await Promise.all([
+    prisma.catalogSolution.findMany({ where: { id: { in: solutionIds } } }),
     loadParameterFields(objectType),
   ]);
-  if (!row) return res.status(404).json({ message: "Решение не найдено в каталоге" });
+  const row = rows.find((item) => item.id === solutionId);
+  if (!row || rows.length !== solutionIds.length) return res.status(404).json({ message: "Решение не найдено в каталоге" });
   if (fields.length === 0) return res.status(404).json({ message: "Тип объекта не найден" });
 
   const economics = calculateEconomics({
@@ -47,6 +71,8 @@ router.post("/", wrap(async (req, res) => {
     parameters,
     fields,
     solution: toSolutionDto(row),
+    solutions: solutionIds.map((id) => toSolutionDto(rows.find((item) => item.id === id)!)),
+    ...(assignments ? { assignments: assignments.map(({ share, ...rest }) => (share === undefined ? rest : { ...rest, share })) } : {}),
     ...(processes ? { processes } : {}),
   });
   const dataVersion = await currentDataVersion();
@@ -59,17 +85,33 @@ router.post("/", wrap(async (req, res) => {
       parameters: parameters as Prisma.InputJsonValue,
       dataVersion,
       modelVersion: ECONOMICS_MODEL_VERSION,
-      result: { ...economics, solutionId } as unknown as Prisma.InputJsonValue,
+      result: { ...economics, solutionId, solutionIds, ...(assignments ? { assignments } : {}) } as unknown as Prisma.InputJsonValue,
     },
   });
   res.status(201).json({
     ...economics,
     solutionId,
+    solutionIds,
+    ...(assignments ? { assignments } : {}),
     id: saved.id,
     dataVersion,
     modelVersion: ECONOMICS_MODEL_VERSION,
     calculatedAt: saved.createdAt.toISOString(),
   });
+}));
+
+// Варианты сценария склада (warehouseScenarios.ts): из подходящих объекту решений
+// каталога — несколько цепочек роботов с экономикой каждой.
+router.post("/scenarios", wrap(async (req, res) => {
+  const parsed = scenariosSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ message: "Некорректный запрос: варианты есть только для склада" });
+  const [rows, fields] = await Promise.all([
+    prisma.catalogSolution.findMany(),
+    loadParameterFields("warehouse"),
+  ]);
+  const solutions = rows.map(toSolutionDto);
+  res.set("Cache-Control", "no-store");
+  res.json(generateWarehouseScenarios({ parameters: parsed.data.parameters, fields, solutions }));
 }));
 
 // Сохранённый снапшот проекта видит только владелец (см. 4.4.3 ТЗ). Расчёт мастера —

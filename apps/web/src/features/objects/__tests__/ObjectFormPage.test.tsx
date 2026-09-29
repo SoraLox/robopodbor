@@ -11,6 +11,7 @@ function renderForm(route: string) {
       <Route path="/calculate/:objectType" element={<ObjectWizardLayout />}>
         <Route index element={null} />
         <Route path="form" element={null} />
+        <Route path="layout" element={null} />
       </Route>
       <Route path="/calculate/:objectType/processes" element={<div>ЭКРАН ПРОЦЕССОВ</div>} />
     </Routes>,
@@ -36,15 +37,25 @@ describe('ObjectFormPage', () => {
     await user.type(area, '5');
     await user.click(screen.getByRole('button', { name: 'Далее' }));
 
-    await waitFor(() => expect(screen.getByText(/меньше допустимого минимума 10000/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/меньше допустимого минимума 10\s?000/)).toBeInTheDocument());
     expect(screen.queryByText('ЭКРАН ПРОЦЕССОВ')).not.toBeInTheDocument();
   });
 
-  it('с корректными значениями переходит к процессам', async () => {
+  it('склад с корректными значениями переходит к планировке', async () => {
     const user = userEvent.setup();
     renderForm('/calculate/warehouse/form');
 
     await screen.findByLabelText(/Общая площадь склада/);
+    await user.click(screen.getByRole('button', { name: 'Далее' }));
+
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Планировка склада' })).toBeInTheDocument());
+  });
+
+  it('аэропорт с корректными значениями переходит к процессам', async () => {
+    const user = userEvent.setup();
+    renderForm('/calculate/airport/form');
+
+    await screen.findByLabelText(/Пассажиропоток/);
     await user.click(screen.getByRole('button', { name: 'Далее' }));
 
     await waitFor(() => expect(screen.getByText('ЭКРАН ПРОЦЕССОВ')).toBeInTheDocument());

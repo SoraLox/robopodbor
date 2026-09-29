@@ -9,6 +9,7 @@ import { ROBOT_TITLES, PHASE_LABELS, formatHours, formatSimTime } from "./simSta
 import { Stat, RobotCountPanel, MapLegend, VerificationPanel } from "./SimPanels.jsx";
 import { ViewToolbar, FloorSwitcher, PlaybackControls } from "./SimControls.jsx";
 import { useSimPlaybackOptional } from "@/features/results/simulation/SimPlaybackContext";
+import { publishVerifyRows } from "@/features/results/simulation/simVerifyStore";
 
 // ============================================================
 // Управляемый (controlled) компонент: состав роботов, площадь, этажи, counts,
@@ -54,6 +55,12 @@ export default function WarehouseScene({
   loaderCapacityKg,
   loaderSpeedMps,
   loaderThroughput,
+  storageTowers,
+  sorterCount = 0,
+  sorterThroughput = 0,
+  conveyorCount = 0,
+  conveyorThroughput = 0,
+  transportLinks,
   cargoWeightKg,
   cargoLengthCm,
   cargoWidthCm,
@@ -131,6 +138,11 @@ export default function WarehouseScene({
     armType,
     loaderCount,
     loaderType,
+    sorterCount,
+    sorterThroughput,
+    conveyorCount,
+    conveyorThroughput,
+      transportLinks,
     energyProfiles,
     immersive,
     loader: {
@@ -141,6 +153,7 @@ export default function WarehouseScene({
       truckPayload,
       slotsPerLane,
       routeLengthM,
+      storageTowers,
       cargo: { lengthCm: cargoLengthCm, widthCm: cargoWidthCm, heightCm: cargoHeightCm, skuCount, oversizedSharePct: oversizedCargoPct },
     },
   });
@@ -168,12 +181,25 @@ export default function WarehouseScene({
   const verifyRows = buildVerifyRows({
     layout,
     demand,
-    fleet: { vacuum: vacuumCount * vacuumProd * chargeDuty, arm: armOpsPerHour, loader: loaderCount * loaderThroughput },
+    fleet: {
+      vacuum: vacuumCount * vacuumProd * chargeDuty,
+      arm: armOpsPerHour,
+      loader: loaderCount * loaderThroughput,
+      sorter: sorterCount * sorterThroughput,
+      conveyor: conveyorCount * conveyorThroughput,
+    },
     stats,
     areaPerUnit2: chunkGrid.areaPerUnit2,
     inflowPerFloor: { inbound: cargoPerHour / floorsCount, outbound: outboundPerHour / floorsCount },
     routeLengthM,
   });
+
+  // Отчёт (immersive) показывает сверку своим разделом — отдаём ему строки.
+  useEffect(() => {
+    if (!immersive) return;
+    publishVerifyRows({ rows: verifyRows, simSeconds: stats.simSeconds });
+  });
+  useEffect(() => () => publishVerifyRows(null), []);
 
   const viewToolbar = (
     <ViewToolbar
@@ -198,6 +224,8 @@ export default function WarehouseScene({
       {useVacuum && <Stat label="На зарядке" value={`${vacuumStats.charging}/${vacuumCount}`} />}
       {useArm && <Stat label="Обработано, шт" value={stats.opsDone} />}
       {useArm && <Stat label="Темп рук" value={`${armOpsPerHour.toFixed(0)} оп/ч`} />}
+      {layout.useSorter && <Stat label="Отсортировано, шт" value={stats.sorterItems} />}
+      {layout.useConveyor && <Stat label="По конвейеру, ед." value={stats.conveyorUnits} />}
       {useLoader && <Stat label="Склад" value={PHASE_LABELS[loaderStats.phase]} />}
       {useLoader && <Stat label="Заполнено" value={`${loaderStats.fillPercent}%`} />}
       {useLoader && <Stat label="На складе, кг" value={loaderStats.storedKg} />}

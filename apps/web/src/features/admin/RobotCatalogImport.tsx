@@ -117,7 +117,7 @@ export function RobotCatalogReport({ report }: { report: RobotCatalogImportRepor
           </ul>
         </Details>
         <Details title={report.applied ? 'Обновлены' : 'Изменятся'} count={report.updated.length}>
-          <ul className="grid gap-0.5">
+          <ul className="grid grid-cols-1 gap-0.5">
             {report.updated.map((item) => (
               <li key={item.id}>
                 <span className="text-foreground">

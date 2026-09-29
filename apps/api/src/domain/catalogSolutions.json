@@ -6901,7 +6901,9 @@
     ],
     "catalogCategory": "IN",
     "trl": 8,
-    "photos": [],
+    "photos": [
+      "IN0001.webp"
+    ],
     "objectFit": {
       "warehouse": "declared"
     },
@@ -7051,7 +7053,9 @@
     ],
     "catalogCategory": "IN",
     "trl": 9,
-    "photos": [],
+    "photos": [
+      "IN0002.png"
+    ],
     "objectFit": {
       "warehouse": "declared"
     },
@@ -7202,7 +7206,9 @@
     ],
     "catalogCategory": "DL",
     "trl": 9,
-    "photos": [],
+    "photos": [
+      "DL0001.png"
+    ],
     "objectFit": {
       "clinic": "inferred"
     },
@@ -7298,7 +7304,9 @@
     "unconfirmedFields": [],
     "catalogCategory": "DL",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "DL0002.jpg"
+    ],
     "objectFit": {
       "clinic": "inferred"
     },
@@ -7573,7 +7581,9 @@
     ],
     "catalogCategory": "SC",
     "trl": 8,
-    "photos": [],
+    "photos": [
+      "SC0002.png"
+    ],
     "objectFit": {
       "warehouse": "declared",
       "airport": "inferred"
@@ -7698,7 +7708,9 @@
     ],
     "catalogCategory": "SC",
     "trl": 8,
-    "photos": [],
+    "photos": [
+      "SC0003.png"
+    ],
     "objectFit": {
       "airport": "inferred"
     },
@@ -7919,7 +7931,9 @@
     ],
     "catalogCategory": "SC",
     "trl": 8,
-    "photos": [],
+    "photos": [
+      "SC0004.png"
+    ],
     "objectFit": {
       "airport": "inferred"
     },
@@ -8008,7 +8022,9 @@
     ],
     "catalogCategory": "ER",
     "trl": 8,
-    "photos": [],
+    "photos": [
+      "ER0001.png"
+    ],
     "objectFit": {
       "airport": "inferred"
     },
@@ -8196,7 +8212,9 @@
     ],
     "catalogCategory": "IR",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "IR0001.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -8275,7 +8293,9 @@
     "unconfirmedFields": [],
     "catalogCategory": "IR",
     "trl": 9,
-    "photos": [],
+    "photos": [
+      "IR0002.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -8355,7 +8375,9 @@
     "unconfirmedFields": [],
     "catalogCategory": "IR",
     "trl": 9,
-    "photos": [],
+    "photos": [
+      "IR0003.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -8437,7 +8459,9 @@
     ],
     "catalogCategory": "IR",
     "trl": 9,
-    "photos": [],
+    "photos": [
+      "IR0004.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -8517,7 +8541,9 @@
     ],
     "catalogCategory": "IR",
     "trl": 9,
-    "photos": [],
+    "photos": [
+      "IR0005.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -8600,7 +8626,9 @@
     "unconfirmedFields": [],
     "catalogCategory": "IR",
     "trl": 9,
-    "photos": [],
+    "photos": [
+      "IR0006.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -8705,7 +8733,9 @@
     ],
     "catalogCategory": "IR",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "IR0007.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -8786,7 +8816,9 @@
     ],
     "catalogCategory": "UG",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "UG0001.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -8873,7 +8905,9 @@
     "unconfirmedFields": [],
     "catalogCategory": "UG",
     "trl": 9,
-    "photos": [],
+    "photos": [
+      "UG0002.png"
+    ],
     "objectFit": {
       "warehouse": "declared",
       "airport": "inferred"
@@ -9068,7 +9102,9 @@
     ],
     "catalogCategory": "UG",
     "trl": 4,
-    "photos": [],
+    "photos": [
+      "UG0003.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -9147,7 +9183,9 @@
     "unconfirmedFields": [],
     "catalogCategory": "RW",
     "trl": 8,
-    "photos": [],
+    "photos": [
+      "RW0001.jpg"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -9241,7 +9279,9 @@
     ],
     "catalogCategory": "RW",
     "trl": 8,
-    "photos": [],
+    "photos": [
+      "RW0002.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -9321,7 +9361,9 @@
     ],
     "catalogCategory": "RW",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "RW0003.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -9406,7 +9448,9 @@
     "unconfirmedFields": [],
     "catalogCategory": "AG",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "AG0001.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -9545,7 +9589,9 @@
     ],
     "catalogCategory": "AG",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "AG0002.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -9664,7 +9710,10 @@
     ],
     "catalogCategory": "AG",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "AG0003_1.png",
+      "AG0003_2.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -9767,7 +9816,9 @@
     "unconfirmedFields": [],
     "catalogCategory": "AG",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "AG0004.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -9860,7 +9911,9 @@
     ],
     "catalogCategory": "AG",
     "trl": 6,
-    "photos": [],
+    "photos": [
+      "AG0005.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -9940,7 +9993,9 @@
     ],
     "catalogCategory": "HV",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "HV0001.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -10020,7 +10075,9 @@
     ],
     "catalogCategory": "HV",
     "trl": 6,
-    "photos": [],
+    "photos": [
+      "HV0002.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -10100,7 +10157,9 @@
     ],
     "catalogCategory": "HV",
     "trl": 5,
-    "photos": [],
+    "photos": [
+      "HV0003.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -10184,7 +10243,9 @@
     ],
     "catalogCategory": "HV",
     "trl": 4,
-    "photos": [],
+    "photos": [
+      "HV0004.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -11584,7 +11645,9 @@
     ],
     "catalogCategory": "CE",
     "trl": 9,
-    "photos": [],
+    "photos": [
+      "CE0001.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -11678,7 +11741,9 @@
     ],
     "catalogCategory": "CE",
     "trl": 8,
-    "photos": [],
+    "photos": [
+      "CE0002.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -11771,7 +11836,9 @@
     "unconfirmedFields": [],
     "catalogCategory": "CE",
     "trl": 8,
-    "photos": [],
+    "photos": [
+      "CE0003.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -11899,7 +11966,9 @@
     "unconfirmedFields": [],
     "catalogCategory": "CE",
     "trl": 9,
-    "photos": [],
+    "photos": [
+      "CE0004.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -12013,7 +12082,9 @@
     "unconfirmedFields": [],
     "catalogCategory": "CE",
     "trl": 8,
-    "photos": [],
+    "photos": [
+      "CE0005.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -12744,7 +12815,9 @@
     "unconfirmedFields": [],
     "catalogCategory": "CB",
     "trl": 8,
-    "photos": [],
+    "photos": [
+      "CB0001.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -12854,7 +12927,10 @@
     "unconfirmedFields": [],
     "catalogCategory": "CB",
     "trl": 8,
-    "photos": [],
+    "photos": [
+      "CB0002_1.jpg",
+      "CB0002_2.jpg"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -13176,7 +13252,9 @@
     ],
     "catalogCategory": "RC",
     "trl": 9,
-    "photos": [],
+    "photos": [
+      "RC0001.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -13269,7 +13347,9 @@
     ],
     "catalogCategory": "RC",
     "trl": 9,
-    "photos": [],
+    "photos": [
+      "RC0002.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -13350,7 +13430,9 @@
     ],
     "catalogCategory": "RC",
     "trl": 8,
-    "photos": [],
+    "photos": [
+      "RC0003.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -13429,7 +13511,9 @@
     "unconfirmedFields": [],
     "catalogCategory": "RC",
     "trl": 9,
-    "photos": [],
+    "photos": [
+      "RC0004.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -13511,7 +13595,9 @@
     ],
     "catalogCategory": "RC",
     "trl": 8,
-    "photos": [],
+    "photos": [
+      "RC0005.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -13590,7 +13676,9 @@
     "unconfirmedFields": [],
     "catalogCategory": "RC",
     "trl": 9,
-    "photos": [],
+    "photos": [
+      "RC0006.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -13678,7 +13766,9 @@
     ],
     "catalogCategory": "RC",
     "trl": 8,
-    "photos": [],
+    "photos": [
+      "RC0007.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -13798,7 +13888,9 @@
     ],
     "catalogCategory": "RC",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "RC0008.png"
+    ],
     "objectFit": {
       "warehouse": "inferred"
     },
@@ -13885,7 +13977,9 @@
     ],
     "catalogCategory": "RC",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "RC0009.png"
+    ],
     "objectFit": {
       "clinic": "inferred"
     },
@@ -14055,7 +14149,9 @@
     "unconfirmedFields": [],
     "catalogCategory": "AS",
     "trl": 8,
-    "photos": [],
+    "photos": [
+      "AS0001.png"
+    ],
     "objectFit": {
       "warehouse": "declared"
     },
@@ -14233,7 +14329,9 @@
     ],
     "catalogCategory": "AS",
     "trl": 9,
-    "photos": [],
+    "photos": [
+      "AS0002.webp"
+    ],
     "objectFit": {
       "warehouse": "inferred"
     },
@@ -14322,7 +14420,9 @@
     ],
     "catalogCategory": "AS",
     "trl": 6,
-    "photos": [],
+    "photos": [
+      "AS0003.webp"
+    ],
     "objectFit": {
       "warehouse": "inferred"
     },
@@ -14415,7 +14515,10 @@
     ],
     "catalogCategory": "AS",
     "trl": 9,
-    "photos": [],
+    "photos": [
+      "AS0004_1.jpg",
+      "AS0004_2.jpg"
+    ],
     "objectFit": {
       "warehouse": "declared"
     },
@@ -14586,7 +14689,9 @@
     ],
     "catalogCategory": "CA",
     "trl": 8,
-    "photos": [],
+    "photos": [
+      "CA0001.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -14683,7 +14788,9 @@
     ],
     "catalogCategory": "CA",
     "trl": 8,
-    "photos": [],
+    "photos": [
+      "CA0002.png"
+    ],
     "objectFit": {
       "warehouse": "inferred"
     },
@@ -14771,7 +14878,9 @@
     ],
     "catalogCategory": "FB",
     "trl": 9,
-    "photos": [],
+    "photos": [
+      "FB0001.png"
+    ],
     "objectFit": {
       "airport": "inferred"
     },
@@ -14855,7 +14964,9 @@
     ],
     "catalogCategory": "FB",
     "trl": 9,
-    "photos": [],
+    "photos": [
+      "FB0002.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -14937,7 +15048,9 @@
     "unconfirmedFields": [],
     "catalogCategory": "HU",
     "trl": 3,
-    "photos": [],
+    "photos": [
+      "HU0001.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -15062,7 +15175,9 @@
     ],
     "catalogCategory": "HU",
     "trl": 9,
-    "photos": [],
+    "photos": [
+      "HU0002.png"
+    ],
     "objectFit": {
       "airport": "inferred"
     },
@@ -15252,7 +15367,9 @@
     ],
     "catalogCategory": "HU",
     "trl": 6,
-    "photos": [],
+    "photos": [
+      "HU0003.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -15368,7 +15485,9 @@
     ],
     "catalogCategory": "HU",
     "trl": 4,
-    "photos": [],
+    "photos": [
+      "HU0004.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -15471,7 +15590,9 @@
     "unconfirmedFields": [],
     "catalogCategory": "HU",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "HU0005.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -15575,7 +15696,9 @@
     ],
     "catalogCategory": "UA",
     "trl": 9,
-    "photos": [],
+    "photos": [
+      "UA0001.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -15660,7 +15783,9 @@
     ],
     "catalogCategory": "UA",
     "trl": 8,
-    "photos": [],
+    "photos": [
+      "UA0002.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -15767,7 +15892,9 @@
     ],
     "catalogCategory": "UA",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "UA0003.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -15871,7 +15998,9 @@
     "unconfirmedFields": [],
     "catalogCategory": "UA",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "UA0004.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -15967,7 +16096,9 @@
     ],
     "catalogCategory": "UA",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "UA0005.png"
+    ],
     "objectFit": {
       "airport": "inferred"
     },
@@ -16062,7 +16193,9 @@
     ],
     "catalogCategory": "UA",
     "trl": 9,
-    "photos": [],
+    "photos": [
+      "UA0006.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -16142,7 +16275,9 @@
     ],
     "catalogCategory": "UA",
     "trl": 9,
-    "photos": [],
+    "photos": [
+      "UA0007.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -16223,7 +16358,9 @@
     ],
     "catalogCategory": "UA",
     "trl": 8,
-    "photos": [],
+    "photos": [
+      "UA0008.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -16304,7 +16441,9 @@
     ],
     "catalogCategory": "UA",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "UA0009.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -19441,7 +19580,9 @@
     ],
     "catalogCategory": "MS",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "MS0001.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -19521,7 +19662,9 @@
     ],
     "catalogCategory": "MS",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "MS0002.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -19601,7 +19744,9 @@
     ],
     "catalogCategory": "MS",
     "trl": 6,
-    "photos": [],
+    "photos": [
+      "MS0003.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -19681,7 +19826,9 @@
     ],
     "catalogCategory": "MS",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "MS0004.jpg"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -19761,7 +19908,10 @@
     ],
     "catalogCategory": "MS",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "MS0005_1.jpeg",
+      "MS0005_2.jpeg"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -19841,7 +19991,10 @@
     ],
     "catalogCategory": "MS",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "MS0006_1.jpg",
+      "MS0006_2.jpg"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -19921,7 +20074,10 @@
     ],
     "catalogCategory": "MS",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "MS0007_1.jpeg",
+      "MS0007_2.jpeg"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -20001,7 +20157,11 @@
     ],
     "catalogCategory": "MS",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "MS0008_1.jpeg",
+      "MS0008_2.jpeg",
+      "MS0008_3.jpeg"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -20081,7 +20241,11 @@
     ],
     "catalogCategory": "MS",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "MS0009_1.jpg",
+      "MS0009_2.jpg",
+      "MS0009_3.jpg"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -20722,7 +20886,9 @@
     ],
     "catalogCategory": "MU",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "MU0001.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -20806,7 +20972,9 @@
     ],
     "catalogCategory": "MU",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "MU0002.webp"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -20940,7 +21108,9 @@
     ],
     "catalogCategory": "MU",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "MU0003.webp"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -21073,7 +21243,10 @@
     ],
     "catalogCategory": "MU",
     "trl": 7,
-    "photos": [],
+    "photos": [
+      "MU0004_1.webp",
+      "MU0004_2.webp"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -21492,7 +21665,9 @@
     ],
     "catalogCategory": "OT",
     "trl": 3,
-    "photos": [],
+    "photos": [
+      "OT0001.png"
+    ],
     "fieldSources": {
       "vendor": {
         "confirmed": true,
@@ -21631,7 +21806,9 @@
     ],
     "catalogCategory": "OT",
     "trl": 9,
-    "photos": [],
+    "photos": [
+      "OT0002.png"
+    ],
     "objectFit": {
       "clinic": "declared"
     },
@@ -21910,6 +22087,524 @@
           }
         ]
       }
+    }
+  },
+  {
+    "id": "SR0001",
+    "name": "Кросс-белт сортер COMITAS",
+    "vendor": "COMITAS",
+    "useCase": "Сортировка посылок, коробок и пакетов по направлениям: петля с каретками, до 15 000 отправлений в час",
+    "price": "135",
+    "payload": "до 50 кг",
+    "speed": "3 м/с",
+    "maturity": "operation",
+    "confidence": "needs-review",
+    "solutionType": "sorter",
+    "country": "Россия",
+    "payloadKg": 50,
+    "throughput": 15000,
+    "throughputUnit": "шт/ч",
+    "powerKw": 40,
+    "dimensions": "55000×6000×1100 мм",
+    "lifespanYears": 15,
+    "costs": {
+      "equipment": 135
+    },
+    "environment": "indoor",
+    "objectTypes": [
+      "warehouse"
+    ],
+    "processes": [
+      "sorting"
+    ],
+    "source": "Исследование команды: сайт производителя и отраслевые оценки",
+    "sourceDate": "29.09.2026",
+    "sourceUrl": "https://www.comitas.ru/articles/otechestvennoe-konveyernoe-i-sortirovochnoe-oborudovanie-proizvodstva-comitas-novye-vozmozhnosti/",
+    "limitations": [
+      "Нет в каталоге ФЦ БАС: добавлено командой по открытым источникам",
+      "Цена, мощность и габарит — оценки по отрасли, уточнить у производителя"
+    ],
+    "fieldSources": {
+      "throughput": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "COMITAS: более 15 тысяч отправлений в час, превысил требования Почты России на 25%",
+            "date": "29.09.2026",
+            "url": "https://www.comitas.ru/articles/otechestvennoe-konveyernoe-i-sortirovochnoe-oborudovanie-proizvodstva-comitas-novye-vozmozhnosti/"
+          }
+        ]
+      },
+      "speed": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "COMITAS: скорость до 3 м/с",
+            "date": "29.09.2026",
+            "url": "https://www.comitas.ru/articles/otechestvennoe-konveyernoe-i-sortirovochnoe-oborudovanie-proizvodstva-comitas-novye-vozmozhnosti/"
+          }
+        ]
+      },
+      "payloadKg": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "COMITAS: грузы весом до 50 кг",
+            "date": "29.09.2026",
+            "url": "https://www.comitas.ru/articles/vysokoskorostnoy-sortirovshchik-cross-belt-krossbelt-sorter-/"
+          }
+        ]
+      },
+      "costs.equipment": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Среднее по отрасли: однопетлевой кросс-белт — от сотен тысяч до нескольких млн USD (rksort.com); середина ≈ 1,5 млн USD × 90 ₽/USD",
+            "date": "29.09.2026",
+            "url": "https://www.rksort.com/best-cross-belt-sorter-manufacturers-how-to-compare-the-field/"
+          }
+        ]
+      },
+      "powerKw": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Оценка команды: петля ~120 м при шаге кареток ~0,7 м (15 000 шт/ч при 3 м/с) ≈ 170 кареток × ~0,25 кВт на линейный привод ≈ 40 кВт",
+            "date": "29.09.2026"
+          }
+        ]
+      },
+      "dimensions": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Оценка команды: петля ~120 м → два прямых участка ~55 м и торцы, ширина с лотками ~6 м",
+            "date": "29.09.2026"
+          }
+        ]
+      },
+      "lifespanYears": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Среднее по отрасли для стационарного конвейерно-сортировочного оборудования — 15 лет",
+            "date": "29.09.2026"
+          }
+        ]
+      },
+      "country": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "COMITAS — российский производитель",
+            "date": "29.09.2026",
+            "url": "https://www.comitas.ru/articles/otechestvennoe-konveyernoe-i-sortirovochnoe-oborudovanie-proizvodstva-comitas-novye-vozmozhnosti/"
+          }
+        ]
+      }
+    },
+    "photos": [],
+    "objectFit": {
+      "warehouse": "inferred"
+    }
+  },
+  {
+    "id": "SR0002",
+    "name": "Interroll MX H горизонтальный кросс-белт",
+    "vendor": "Interroll",
+    "useCase": "Горизонтальный кросс-белт сортер для посылок и коробок: 4 000–20 000 шт/ч, до 50 кг",
+    "price": "135",
+    "payload": "до 50 кг",
+    "speed": "2.7 м/с",
+    "maturity": "operation",
+    "confidence": "needs-review",
+    "solutionType": "sorter",
+    "country": "Швейцария",
+    "payloadKg": 50,
+    "throughput": 20000,
+    "throughputUnit": "шт/ч",
+    "powerKw": 40,
+    "noiseDb": 68,
+    "dimensions": "55000×6000×1100 мм",
+    "lifespanYears": 15,
+    "costs": {
+      "equipment": 135
+    },
+    "environment": "indoor",
+    "objectTypes": [
+      "warehouse"
+    ],
+    "processes": [
+      "sorting"
+    ],
+    "source": "Исследование команды: сайт производителя и отраслевые оценки",
+    "sourceDate": "29.09.2026",
+    "sourceUrl": "https://www.interroll.com/products/sorters/mx-h-horizontal-crossbelt-sorter",
+    "limitations": [
+      "Нет в каталоге ФЦ БАС: добавлено командой по открытым источникам",
+      "Иностранный производитель: доступность поставки в РФ уточнить",
+      "20 000 шт/ч — верхняя граница диапазона производителя"
+    ],
+    "fieldSources": {
+      "throughput": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "Interroll MX H: 4 000 — до 20 000 шт/ч",
+            "date": "29.09.2026",
+            "url": "https://www.interroll.com/products/sorters/mx-h-horizontal-crossbelt-sorter"
+          }
+        ]
+      },
+      "speed": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "Interroll MX H: скорость до 2,7 м/с",
+            "date": "29.09.2026",
+            "url": "https://www.interroll.com/products/sorters/mx-h-horizontal-crossbelt-sorter"
+          }
+        ]
+      },
+      "payloadKg": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "Interroll MX H: вес до 50 кг",
+            "date": "29.09.2026",
+            "url": "https://www.interroll.com/products/sorters/mx-h-horizontal-crossbelt-sorter"
+          }
+        ]
+      },
+      "noiseDb": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "Interroll MX H: шум < 68 дБ(А)",
+            "date": "29.09.2026",
+            "url": "https://www.interroll.com/products/sorters/mx-h-horizontal-crossbelt-sorter"
+          }
+        ]
+      },
+      "costs.equipment": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Среднее по отрасли: однопетлевой кросс-белт — от сотен тысяч до нескольких млн USD (rksort.com); середина ≈ 1,5 млн USD × 90 ₽/USD",
+            "date": "29.09.2026",
+            "url": "https://www.rksort.com/best-cross-belt-sorter-manufacturers-how-to-compare-the-field/"
+          }
+        ]
+      },
+      "powerKw": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Оценка команды: петля ~120 м при шаге кареток ~0,7 м (15 000 шт/ч при 3 м/с) ≈ 170 кареток × ~0,25 кВт на линейный привод ≈ 40 кВт",
+            "date": "29.09.2026"
+          }
+        ]
+      },
+      "dimensions": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Оценка команды: петля ~120 м → два прямых участка ~55 м и торцы, ширина с лотками ~6 м",
+            "date": "29.09.2026"
+          }
+        ]
+      },
+      "lifespanYears": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Среднее по отрасли для стационарного конвейерно-сортировочного оборудования — 15 лет",
+            "date": "29.09.2026"
+          }
+        ]
+      }
+    },
+    "photos": [],
+    "objectFit": {
+      "warehouse": "inferred"
+    }
+  },
+  {
+    "id": "CV0001",
+    "name": "Паллетный роликовый конвейер НТЛС",
+    "vendor": "НТЛС",
+    "useCase": "Приводной роликовый конвейер для европаллет от ворот к зоне хранения; цена и мощность — за погонный метр",
+    "price": "0.11",
+    "payload": "до 1 500 кг",
+    "speed": "0.5 м/с",
+    "maturity": "operation",
+    "confidence": "needs-review",
+    "solutionType": "conveyor",
+    "country": "Россия",
+    "payloadKg": 1500,
+    "throughput": 240,
+    "throughputUnit": "паллет/ч",
+    "powerKw": 0.14,
+    "dimensions": "секции 1329/2665/2999 мм, высота 900 мм, под паллету 800×1200 мм",
+    "lifespanYears": 15,
+    "perMeter": true,
+    "costs": {
+      "equipment": 0.11
+    },
+    "environment": "indoor",
+    "objectTypes": [
+      "warehouse"
+    ],
+    "processes": [
+      "transport",
+      "receiving"
+    ],
+    "source": "Исследование команды: сайт производителя и отраслевые оценки",
+    "sourceDate": "29.09.2026",
+    "sourceUrl": "https://nt-ls.ru/catalog/konvejernye-i-sortirovochnye/konveiery-dla-pallet/rolikovyi",
+    "limitations": [
+      "Нет в каталоге ФЦ БАС: добавлено командой по открытым источникам",
+      "Цена и мощность — за погонный метр; длина линии — путь от ворот до хранения по планировке"
+    ],
+    "fieldSources": {
+      "payloadKg": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "НТЛС: максимальная нагрузка 1500 кг, европаллета 800×1200 мм",
+            "date": "29.09.2026",
+            "url": "https://nt-ls.ru/catalog/konvejernye-i-sortirovochnye/konveiery-dla-pallet/rolikovyi"
+          }
+        ]
+      },
+      "dimensions": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "НТЛС: секции 1329/2665/2999 мм, высота 900 мм",
+            "date": "29.09.2026",
+            "url": "https://nt-ls.ru/catalog/konvejernye-i-sortirovochnye/konveiery-dla-pallet/rolikovyi"
+          }
+        ]
+      },
+      "speed": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "Interroll: Modular Pallet Conveyor Platform — скорость до 0,5 м/с",
+            "date": "29.09.2026",
+            "url": "https://www.interroll.com/company/news-press-events/press-detail/interroll-expands-modular-pallet-conveyor-platform-mpp-with-flexible-and-powerful-control-solution/"
+          }
+        ],
+        "note": "Скорость на странице НТЛС не указана — типовая для паллетных конвейеров"
+      },
+      "throughput": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Оценка команды: 0,5 м/с при шаге паллет 1,5 м — до 1 200 паллет/ч по ленте; зонное накопление и передача на хранение ограничивают реальный поток примерно пятой частью — 240 паллет/ч",
+            "date": "29.09.2026"
+          }
+        ]
+      },
+      "costs.equipment": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Рынок РФ: неприводной роликовый конвейер для паллет — от 45 000 ₽/м (zavod-conveyer.ru, rutkonveer.ru); приводной с автоматикой ×2,5 ≈ 0,11 млн ₽/м",
+            "date": "29.09.2026",
+            "url": "https://zavod-conveyer.ru/rolikovyj-konvejer/"
+          }
+        ]
+      },
+      "powerKw": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Оценка команды: мотор-редуктор ~0,37 кВт на секцию 2,665 м (секции НТЛС) ≈ 0,14 кВт на метр",
+            "date": "29.09.2026"
+          }
+        ]
+      },
+      "lifespanYears": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Среднее по отрасли для стационарного конвейерно-сортировочного оборудования — 15 лет",
+            "date": "29.09.2026"
+          }
+        ]
+      },
+      "country": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "НТЛС — российская компания",
+            "date": "29.09.2026",
+            "url": "https://nt-ls.ru/catalog/konvejernye-i-sortirovochnye/konveiery-dla-pallet/rolikovyi"
+          }
+        ]
+      }
+    },
+    "photos": [],
+    "objectFit": {
+      "warehouse": "inferred"
+    }
+  },
+  {
+    "id": "CV0002",
+    "name": "Interroll Modular Pallet Conveyor Platform",
+    "vendor": "Interroll",
+    "useCase": "Модульный паллетный конвейер (роликовые и цепные модули, поворотные столы); цена и мощность — за погонный метр",
+    "price": "0.11",
+    "payload": "до 1 500 кг",
+    "speed": "0.5 м/с",
+    "maturity": "operation",
+    "confidence": "needs-review",
+    "solutionType": "conveyor",
+    "country": "Швейцария",
+    "payloadKg": 1500,
+    "throughput": 100,
+    "throughputUnit": "паллет/ч",
+    "powerKw": 0.14,
+    "minTempC": -28,
+    "maxTempC": 40,
+    "lifespanYears": 15,
+    "perMeter": true,
+    "costs": {
+      "equipment": 0.11
+    },
+    "environment": "indoor",
+    "objectTypes": [
+      "warehouse"
+    ],
+    "processes": [
+      "transport",
+      "receiving"
+    ],
+    "source": "Исследование команды: сайт производителя и отраслевые оценки",
+    "sourceDate": "29.09.2026",
+    "sourceUrl": "https://www.interroll.com/company/news-press-events/press-detail/interroll-expands-modular-pallet-conveyor-platform-mpp-with-flexible-and-powerful-control-solution/",
+    "limitations": [
+      "Нет в каталоге ФЦ БАС: добавлено командой по открытым источникам",
+      "Иностранный производитель: доступность поставки в РФ уточнить",
+      "100 паллет/ч — узел передачи (штабелёр, передаточная тележка), сама лента быстрее"
+    ],
+    "fieldSources": {
+      "speed": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "Interroll MPP: скорость до 0,5 м/с",
+            "date": "29.09.2026",
+            "url": "https://www.interroll.com/company/news-press-events/press-detail/interroll-expands-modular-pallet-conveyor-platform-mpp-with-flexible-and-powerful-control-solution/"
+          }
+        ]
+      },
+      "payloadKg": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "Interroll MPP: паллеты до 1 200–1 500 кг",
+            "date": "29.09.2026",
+            "url": "https://www.interroll.com/company/news-press-events/press-detail/interroll-expands-modular-pallet-conveyor-platform-mpp-with-flexible-and-powerful-control-solution/"
+          }
+        ]
+      },
+      "throughput": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "Interroll MPP: до 100 паллет/ч на штабелёр или передаточную тележку",
+            "date": "29.09.2026",
+            "url": "https://www.interroll.com/company/news-press-events/press-detail/interroll-expands-modular-pallet-conveyor-platform-mpp-with-flexible-and-powerful-control-solution/"
+          }
+        ]
+      },
+      "minTempC": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "Interroll MPP: от −28 до +40 °C",
+            "date": "29.09.2026",
+            "url": "https://www.interroll.com/company/news-press-events/press-detail/interroll-expands-modular-pallet-conveyor-platform-mpp-with-flexible-and-powerful-control-solution/"
+          }
+        ]
+      },
+      "maxTempC": {
+        "confirmed": true,
+        "sources": [
+          {
+            "kind": "vendor",
+            "title": "Interroll MPP: от −28 до +40 °C",
+            "date": "29.09.2026",
+            "url": "https://www.interroll.com/company/news-press-events/press-detail/interroll-expands-modular-pallet-conveyor-platform-mpp-with-flexible-and-powerful-control-solution/"
+          }
+        ]
+      },
+      "costs.equipment": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Рынок РФ: неприводной роликовый конвейер для паллет — от 45 000 ₽/м (zavod-conveyer.ru, rutkonveer.ru); приводной с автоматикой ×2,5 ≈ 0,11 млн ₽/м",
+            "date": "29.09.2026",
+            "url": "https://zavod-conveyer.ru/rolikovyj-konvejer/"
+          }
+        ]
+      },
+      "powerKw": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Оценка команды: мотор-редуктор ~0,37 кВт на секцию 2,665 м (секции НТЛС) ≈ 0,14 кВт на метр",
+            "date": "29.09.2026"
+          }
+        ]
+      },
+      "lifespanYears": {
+        "confirmed": false,
+        "sources": [
+          {
+            "kind": "team",
+            "title": "Среднее по отрасли для стационарного конвейерно-сортировочного оборудования — 15 лет",
+            "date": "29.09.2026"
+          }
+        ]
+      }
+    },
+    "photos": [],
+    "objectFit": {
+      "warehouse": "inferred"
     }
   }
 ]

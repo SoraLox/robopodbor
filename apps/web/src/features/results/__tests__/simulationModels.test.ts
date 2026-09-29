@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { calculateEconomics } from '@domain/economics';
+import type { CatalogSolution } from '@domain/catalog';
 import type { Solution } from '@/api/types';
 import { solutions, objectParameters } from '@/mocks/fixtures';
 import { buildSimulationInput, simModelOf, simRobotTypeOf } from '@/features/results/simulation/simulationInput';
@@ -19,8 +21,12 @@ describe('3D-модели upstream для наших роботов', () => {
   });
 
   it('у стационарной системы хранения не пишем «скорость — null»', () => {
-    const input = buildSimulationInput(objectParameters.warehouse ?? [], {}, byId('AS0001'), 'loader');
-    expect(input.substitutions.map((item) => item.value).join(' ')).not.toMatch(/null|undefined/);
+    const fields = objectParameters.warehouse ?? [];
+    const solution = byId('AS0001') as unknown as CatalogSolution;
+    const fleet = calculateEconomics({ objectType: 'warehouse', parameters: {}, fields, solution }).fleet ?? [];
+    const input = buildSimulationInput(fields, {}, fleet);
+    expect(input.fleets.loader?.model).toBe('storagecube');
+    expect(input.fleets.loader!.substitutions.map((item) => item.value).join(' ')).not.toMatch(/null|undefined/);
   });
 });
 
@@ -38,5 +44,22 @@ describe('сцена аэропорта', () => {
     expect(input.gatesCount).toBe(12);
     expect(input.transportCount).toBe(7);
     expect(input.demand.transport).toBe(32 * 18);
+  });
+});
+
+describe('СтойкаБокс: шаттлы — роботы, башни — ёмкость', () => {
+  it('шаттлов столько, сколько в расчёте, башни — от паллетомест паспорта', () => {
+    const fields = objectParameters.warehouse ?? [];
+    const solution = byId('AS0004') as unknown as CatalogSolution;
+    const result = calculateEconomics({ objectType: 'warehouse', parameters: {}, fields, solution });
+    const cubes = result.fleet!.filter((g) => g.model === 'storagecube');
+    const cube = { ...cubes[0]!, count: cubes.reduce((s, g) => s + g.count, 0) };
+    expect(cube.model).toBe('storagecube');
+    // 20 000 паллетомест / 5 ярусов (10 м / (1,6 + 0,2) м).
+    expect(cube.storageTowers).toBe(4000);
+    expect(result.assumptions.some((line) => line.includes('шаттлы над сеткой башен'))).toBe(true);
+    const input = buildSimulationInput(fields, {}, result.fleet!);
+    expect(input.fleets.loader!.requiredCount).toBe(cube.count);
+    expect(input.fleets.loader!.storageTowers).toBe(4000);
   });
 });

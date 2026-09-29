@@ -1,7 +1,9 @@
-import { useEffect, useLayoutEffect, useMemo, useState, type MutableRefObject } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AlertTriangle, ChevronRight, type LucideIcon } from 'lucide-react';
+import type { SlotId } from '@domain/warehouseEconomics';
+import { ScenarioComposer } from '@/features/objects/ScenarioComposer';
 import { useSelection, useSolutions } from '@/api/queries';
 import { useWizardStore } from '@/app/store';
 import type { SelectionItem, Solution } from '@/api/types';
@@ -229,6 +231,10 @@ export function ProcessesPage({
   const { data: selection, isLoading: selectionLoading } = useSelection(objectType, parameters);
   const isLoading = solutionsLoading || selectionLoading;
   const setSolutionId = useWizardStore((s) => s.setSolutionId);
+  // Склад считает набор роботов — по одному на флот; другие объекты — одного робота.
+  const isWarehouse = objectType === 'warehouse';
+  const assignments = useWizardStore((s) => s.assignments);
+  const [pickingSlot, setPickingSlot] = useState<SlotId | null>(null);
   const [showExcluded, setShowExcluded] = useState(false);
   // Путь выбора: процесс → подкатегория (если их несколько) → робот.
   const [groupId, setGroupId] = useState<string | null>(null);
@@ -280,6 +286,10 @@ export function ProcessesPage({
     if (!backRef) return;
     backRef.current = () => {
       if (!active) return false;
+      if (pickingSlot) {
+        setPickingSlot(null);
+        return true;
+      }
       if (previewOpen) {
         setPreviewOpen(false);
         return true;
@@ -300,7 +310,7 @@ export function ProcessesPage({
     return () => {
       backRef.current = null;
     };
-  }, [active, backRef, previewOpen, subgroupId, groupId]);
+  }, [active, backRef, previewOpen, subgroupId, groupId, pickingSlot]);
 
   useLayoutEffect(() => {
     setCompanion(document.getElementById(WIZARD_COMPANION_ID));
@@ -327,9 +337,14 @@ export function ProcessesPage({
     setPreviewOpen(true);
   };
 
+  const canCalculate = isWarehouse ? assignments.length > 0 : Boolean(selectedId);
   const goCalculate = () => {
-    if (!selectedId) return;
-    setSolutionId(selectedId);
+    if (isWarehouse) {
+      if (!assignments.length) return;
+    } else {
+      if (!selectedId) return;
+      setSolutionId(selectedId);
+    }
     setPreviewOpen(false);
     navigate(`/calculate/${objectType}/calculating`);
   };
@@ -364,6 +379,16 @@ export function ProcessesPage({
     <p className="py-6 text-center text-[13px] text-[#8E8E93]">
       Для этого типа объекта в каталоге пока нет решений.
     </p>
+  ) : isWarehouse ? (
+    <ScenarioComposer
+      rows={ordered}
+      pickingSlot={pickingSlot}
+      onPickSlot={setPickingSlot}
+      onPreview={(id) => {
+        setSelectedId(id);
+        setPreviewOpen(true);
+      }}
+    />
   ) : !group ? (
     <>
       {selection ? (
@@ -454,16 +479,24 @@ export function ProcessesPage({
 
   const contentKey = isLoading
     ? 'loading'
-    : !group
+    : isWarehouse
+      ? `composer:${pickingSlot ?? 'root'}`
+      : !group
       ? 'root'
       : hasSubgroups && !subgroup
         ? `${group.id}:subs`
         : `${group.id}:${subgroup?.id ?? 'robots'}`;
 
+  // Новый экран списка — с начала, а не с позиции прокрутки прошлого.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [contentKey]);
+
   return (
     <>
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="-mx-1 min-h-0 flex-1 overflow-y-auto overscroll-contain px-1 [scrollbar-width:thin]">
+        <div ref={scrollRef} className="-mx-1 min-h-0 flex-1 overflow-y-auto overscroll-contain px-1 [scrollbar-width:thin]">
           <div key={contentKey} className="wizard-drill-enter">
             {listBody}
           </div>
@@ -479,13 +512,14 @@ export function ProcessesPage({
           </p>
         ) : null}
 
+
         <button
           type="button"
-          disabled={!selectedId}
+          disabled={!canCalculate}
           onClick={goCalculate}
-          className="mt-auto flex h-11 w-full flex-none items-center justify-center rounded-[10px] bg-foreground text-[14px] font-semibold text-white transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:active:scale-100 disabled:bg-[#E5E5EA] disabled:text-[#8E8E93] disabled:opacity-100"
+          className="mt-auto flex h-11 w-full flex-none items-center justify-center rounded-[10px] bg-primary-bright text-[14px] font-semibold text-white transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:active:scale-100 disabled:bg-[#E5E5EA] disabled:text-[#8E8E93] disabled:opacity-100"
         >
-          Рассчитать
+          {isWarehouse && assignments.length ? `Рассчитать состав · ${new Set(assignments.map((a) => a.solutionId)).size}` : 'Рассчитать'}
         </button>
       </div>
 

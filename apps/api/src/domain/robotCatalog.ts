@@ -73,6 +73,12 @@ export interface CatalogSupplements {
   examples: Array<{ id: string; objectType: string; process: string }>;
   fields: Record<string, Partial<CatalogSolution>>;
   robots: CatalogSolution[];
+  /**
+   * Решения, которых нет ни в каталоге ФЦ БАС, ни у организатора (сортеры, конвейеры):
+   * найдены командой в открытых источниках. У каждого поля — свой источник в
+   * fieldSources; оценки по отрасли помечены confirmed: false и kind: "team".
+   */
+  researched?: CatalogSolution[];
 }
 
 /**
@@ -561,6 +567,17 @@ export function buildCatalog(
         note: "В материалах организатора страна не указана",
       };
     }
+    solutions.push(solution);
+    byId.set(robot.id, solution);
+  }
+
+  for (const robot of supplements.researched ?? []) {
+    if (byId.has(robot.id)) throw new Error(`${robot.id} из исследования команды уже есть в каталоге — выберите другой ID`);
+    const solution: CatalogSolution = {
+      ...robot,
+      photos: photosOf(robot.id),
+      objectFit: robot.objectFit ?? Object.fromEntries((robot.objectTypes ?? []).map((type) => [type, "inferred" as ObjectFit])),
+    };
     solutions.push(solution);
     byId.set(robot.id, solution);
   }

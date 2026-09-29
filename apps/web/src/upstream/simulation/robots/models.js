@@ -6,6 +6,7 @@ import { floorWasherModel } from "./floorWasherRobot.js";
 import { weldArmModel } from "./weldArmRobot.js";
 import { storageCubeModel } from "./storageCubeRobot.js";
 import { stackerModel } from "./stackerRobot.js";
+import { pickArmModel } from "./pickArmRobot.js";
 
 // Все glb-модели роботов и техники, которые нужны сцене, — в одном месте, чтобы
 // main.jsx и WarehouseScene не знали, сколько их и как они называются.
@@ -18,6 +19,7 @@ const MODELS = [
   weldArmModel,
   storageCubeModel,
   stackerModel,
+  pickArmModel,
 ];
 
 export const areRobotModelsReady = () => MODELS.every((model) => model.isReady());

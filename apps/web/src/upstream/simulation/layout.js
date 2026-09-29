@@ -7,8 +7,9 @@
 // часть этой канвы, см. shape/). Сколько это метров — решает площадь
 // помещения (см. chunkGrid.js), здесь только относительная раскладка.
 
-import { boundingBoxOf, computeGateClusters } from "./shape/shapeGeometry.js";
+import { boundingBoxOf, computeGateClusters, isDefaultShape, largestFloorRect } from "./shape/shapeGeometry.js";
 import { FLOOR } from "./floorConstants.js";
+import { cellOfPoint, isWalkable, makeNavGrid } from "./loaders/gridPath.js";
 
 export { FLOOR };
 export const MARGIN = 10;
@@ -27,11 +28,11 @@ export const GATE_HEIGHT = 7.5;
 // Роботов одного типа не больше, чем помещается без наложения моделей.
 export const MAX_VACUUM_COUNT = 8;
 export const MAX_LOADER_COUNT = GATE_XS.length; // пресет по умолчанию; для своей формы — layout.maxLoaderCount
-const ARM_ROW_PITCH_MIN = 21.4; // длина конвейера роборуки с запасом
+const ARM_ROW_PITCH_MIN = 25.5; // длина конвейера роборуки + подающая и сборная магистрали (arms/pickingNetwork.js)
 const ARM_COLUMN_PITCH_MIN = 14; // ширина роборуки с конвейерами + проезд пылесоса между колонками
 export const MAX_ARM_COUNT = 16;
 
-export const ROBOT_TYPES = ["vacuum", "arm", "loader"];
+export const ROBOT_TYPES = ["vacuum", "arm", "loader", "sorter", "conveyor"];
 
 // Что можно выбрать на первом экране: одна симуляция — один тип робота, плюс
 // демонстрационная связка «пылесосы + роборуки».
@@ -59,44 +60,63 @@ export function computeLayout(shape, robotTypes, workZoneShare = 1) {
   const useVacuum = robotTypes.includes("vacuum");
   const useArm = robotTypes.includes("arm");
   const useLoader = robotTypes.includes("loader");
+  const useSorter = robotTypes.includes("sorter");
+  const useConveyor = robotTypes.includes("conveyor");
 
   // Для пресета по умолчанию bounds — ровно {-50..50, -50..50}, то есть то же
   // самое, что раньше давали константы LANE_MIN_X/LANE_MAX_X/Z_MIN/Z_MAX —
   // отступы (MARGIN, +3, −8) те же, просто считаются от границ формы.
   const bounds = boundingBoxOf(shape);
-  const laneMinX = bounds.xMin + MARGIN;
-  const laneMaxX = bounds.xMax - MARGIN;
-  const zMin = bounds.zMin + 3;
+  // На своей форме зоны — внутри наибольшего свободного прямоугольника пола, а не
+  // габаритов: у Г-образного склада габарит захватывает место за стенами.
+  const custom = !isDefaultShape(shape);
+  const free = custom ? largestFloorRect(shape) ?? bounds : bounds;
+  const inset = custom ? Math.min(MARGIN, (free.xMax - free.xMin) * 0.1) : MARGIN;
+  const laneMinX = free.xMin + inset;
+  const laneMaxX = free.xMax - inset;
+  const zMin = free.zMin + 3;
   // Южнее zMax — полоса зарядных станций пылесосов, в зону уборки она не входит.
-  const zMax = bounds.zMax - 8;
+  // На своей форме полосу занимаем, только если пылесосы есть.
+  const zMax = free.zMax - (custom && !useVacuum ? 3 : 8);
+  // Южный край полосы станций: у пресета — южная стена (z = 50).
+  const dockZ = free.zMax;
 
   const usableWidth = laneMaxX - laneMinX;
   // Роботам доступна южная часть пола; у северной стены (у ворот) — зона разгрузки,
   // куда пылесосы и роборуки не заходят.
-  const share = Math.min(1, Math.max(0.3, workZoneShare));
+  // На своей форме рабочую зону задаёт сам рисунок, доля из паспорта не нужна.
+  const share = custom ? 1 : Math.min(1, Math.max(0.3, workZoneShare));
   const workZMin = zMax - (zMax - zMin) * share;
   const workZMax = zMax;
 
   // Пылесосы мобильны и убирают весь рабочий пол, включая зону роборук — зоны
   // описывают, где стоит стационарное оборудование, а не делят пол физически.
   const vacuumZone = useVacuum
-    ? { xMin: laneMinX, width: usableWidth, zMin: workZMin, zMax: workZMax }
+    ? { xMin: laneMinX, width: usableWidth, zMin: workZMin, zMax: workZMax, dockZ }
     : null;
 
-  // Роборуки стационарны — у них своя полоса с конвейерами: правые 45% пола,
-  // если рядом работают пылесосы, иначе весь пол.
-  const armWidth = useVacuum ? usableWidth * 0.45 : usableWidth;
+  // Стационарное оборудование (роборуки, сортировочная система) — своя полоса:
+  // правые 45% пола, если рядом работают пылесосы, иначе весь пол. Роборуки и
+  // сортер вместе делят её пополам: сортер — западная половина.
+  const stationWidth = useVacuum ? usableWidth * 0.45 : usableWidth;
+  const stationXMin = useVacuum ? laneMinX + usableWidth * 0.55 : laneMinX;
+  const shared = useArm && useSorter;
+  const armWidth = shared ? stationWidth / 2 : stationWidth;
   const armZone = useArm
     ? {
-        xMin: useVacuum ? laneMinX + usableWidth * 0.55 : laneMinX,
+        xMin: shared ? stationXMin + stationWidth / 2 : stationXMin,
         width: armWidth,
         zMin: workZMin,
         zMax: workZMax,
       }
     : null;
+  const sorterZone = useSorter
+    ? { xMin: stationXMin, width: shared ? stationWidth / 2 : stationWidth, zMin: workZMin, zMax: workZMax }
+    : null;
 
   // Зона разгрузки у ворот, недоступная роботам (рисуется штриховкой).
-  const restrictedZone = workZMin > zMin + 0.01 && !useLoader ? { zMin: bounds.zMin, zMax: workZMin } : null;
+  const restrictedZone =
+    workZMin > zMin + 0.01 && !useLoader && !useConveyor && !custom ? { zMin: bounds.zMin, zMax: workZMin } : null;
 
   const gates = computeGateClusters(shape);
 
@@ -104,13 +124,20 @@ export function computeLayout(shape, robotTypes, workZoneShare = 1) {
     useVacuum,
     useArm,
     useLoader,
+    useSorter,
+    useConveyor,
     restrictedZone,
     vacuumZone,
     armZone,
+    sorterZone,
     maxArmCount: maxArmCountOf(armWidth, workZMax - workZMin),
-    maxLoaderCount: Math.max(1, gates.length),
+    // До трёх погрузчиков на ворота (customLoaderFleet.js LOADERS_PER_GATE); на стандартной
+    // форме больше одного на ворота — тоже маршрутом по сетке (см. useSimulation).
+    maxLoaderCount: Math.max(1, gates.length * 3),
     gates,
     bounds,
+    /** Свободный пол для стационарного оборудования: весь контур у пресета, наибольший прямоугольник пола у своей формы. */
+    free,
   };
 }
 
@@ -155,4 +182,63 @@ export function computeVacuumZoneAreaM2(layout, floorAreaM2) {
   if (!zone) return 0;
 
   return Math.round((floorAreaM2 * zone.width * (zone.zMax - zone.zMin)) / (FLOOR * FLOOR));
+}
+
+// Конвейерные линии: от ворот вглубь склада, рядом с проёмом (не в нём — там
+// работают погрузчики и фуры). Линия тянется по проезжему полу до нужной длины,
+// стеллажа или зоны стационарного оборудования. На одни ворота — до трёх линий.
+export function computeConveyorLines(layout, shape, count, lengthUnits, gateSubset = null) {
+  const gates = gateSubset ?? layout.gates;
+  if (!gates.length || count <= 0) return [];
+  const nav = makeNavGrid(shape);
+  const blocked = [layout.armZone, layout.sorterZone].filter(Boolean);
+  const inStation = (p) => blocked.some((z) => p.x >= z.xMin - 2 && p.x <= z.xMin + z.width + 2 && p.z >= z.zMin - 2 && p.z <= z.zMax + 2);
+  const walkable = (p) => {
+    const cell = cellOfPoint(nav, p);
+    return isWalkable(nav, cell.gx, cell.gz) && Math.abs(p.x) < FLOOR / 2 - 1 && Math.abs(p.z) < FLOOR / 2 - 1;
+  };
+
+  const lines = [];
+  for (let i = 0; i < Math.min(count, gates.length * 3); i++) {
+    const gate = gates[i % gates.length];
+    const slot = Math.floor(i / gates.length);
+    const inward = { x: -gate.normal[0], z: -gate.normal[1] };
+    const along = { x: Math.abs(inward.z), z: Math.abs(inward.x) };
+    const halfSpan = (gate.worldSpan.max - gate.worldSpan.min) / 2;
+    const offset = halfSpan + 2.5 + slot * 3.5;
+    const start = {
+      x: gate.worldCenter.x + along.x * offset + inward.x * 3,
+      z: gate.worldCenter.z + along.z * offset + inward.z * 3,
+    };
+    if (!walkable(start)) continue;
+    let d = 0;
+    while (d < lengthUnits) {
+      const next = { x: start.x + inward.x * (d + 1), z: start.z + inward.z * (d + 1) };
+      if (!walkable(next) || inStation(next)) break;
+      d += 1;
+    }
+    if (d >= 6) lines.push({ gateId: gate.id, start, end: { x: start.x + inward.x * d, z: start.z + inward.z * d } });
+  }
+  return lines;
+}
+
+// Ворота связей сценария: ворота выгрузки — приёмка, загрузки — отгрузка;
+// двусторонние (стандартная форма) делятся пополам вдоль стены: первая
+// половина — приёмка, вторая — отгрузка. Одни ворота на всё — общие.
+export function linkGatesOf(layout) {
+  const gates = [...layout.gates].sort((a, b) => a.worldCenter.x - b.worldCenter.x || a.worldCenter.z - b.worldCenter.z);
+  const inbound = gates.filter((g) => g.kind === "in").map((g) => g.id);
+  const outbound = gates.filter((g) => g.kind === "out").map((g) => g.id);
+  const generic = gates.filter((g) => g.kind !== "in" && g.kind !== "out").map((g) => g.id);
+  if (generic.length) {
+    const half = Math.ceil(generic.length / 2);
+    if (!inbound.length && !outbound.length && generic.length > 1) {
+      inbound.push(...generic.slice(0, half));
+      outbound.push(...generic.slice(half));
+    } else {
+      inbound.push(...generic);
+      outbound.push(...generic);
+    }
+  }
+  return { inbound: inbound.length ? inbound : outbound, outbound: outbound.length ? outbound : inbound };
 }

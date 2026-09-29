@@ -38,7 +38,7 @@ export function readCatalogFolder(): CatalogFiles {
 function photosById(): Map<string, string[]> {
   const byId = new Map<string, string[]>();
   for (const file of readdirSync(photosDir).sort()) {
-    const match = /^([A-Z]{2}\d{4})(?:_\d+)?\.(png|jpe?g|webp)$/i.exec(file);
+    const match = /^([A-Z]{2}\d{4})(?:_\d+)?\.(png|jpe?g|jfif|webp)$/i.exec(file);
     if (!match) continue;
     byId.set(match[1]!, [...(byId.get(match[1]!) ?? []), file]);
   }

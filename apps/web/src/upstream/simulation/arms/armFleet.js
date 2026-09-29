@@ -16,6 +16,8 @@ import { makeArmRobot } from "../robots/armRobot.js";
 import { createEnergyMeter } from "../energy.js";
 import { computeArmSlots } from "../layout.js";
 import { activePalette } from "../studioLook.js";
+import * as THREE from "three";
+import { buildNetworkMeshes, NETWORK_BOX } from "./pickingNetwork.js";
 
 // ============================================================
 // Роборуки: стационарные, перекладывают коробки с входного конвейера на
@@ -31,11 +33,14 @@ import { activePalette } from "../studioLook.js";
 // (конвейеры, захват/передача коробок, счётчик операций) подходит любой руке,
 // у которой есть {group, pivot, claw, boxes} — см. makeWeldArmRig.js для
 // альтернативы с настоящей моделью клешни.
-export function createArmFleet({ group, zone, count, beltTexture, armProd, energyProfile, robotFactory = makeArmRobot }) {
+// network — сеть участка отбора (pickingNetwork.js planPickingNetwork): коробки
+// приходят с подающей ленты от стеллажей и уходят на сборный конвейер к воротам.
+// Без неё — прежний демо-режим: у каждой руки свои замкнутые ленты.
+export function createArmFleet({ group, zone, count, beltTexture, armProd, energyProfile, robotFactory = makeArmRobot, network = null, slots: givenSlots = null }) {
   const cycleDuration = 1 / Math.max(armProd / 60, 0.001);
   const beltRate = 1.45 * Math.max(1, armProd / 15);
 
-  const slots = computeArmSlots(zone, count);
+  const slots = givenSlots ?? computeArmSlots(zone, count);
 
   const accents = activePalette().armAccents;
   const arms = slots.map((slot, i) => {
@@ -52,7 +57,138 @@ export function createArmFleet({ group, zone, count, beltTexture, armProd, energ
   let opsDone = 0;
 
   // Роборуки стационарны — препятствия для объезда пылесосов считаются один раз.
-  const obstacles = computeArmObstacles(arms);
+  const obstacles = [...computeArmObstacles(arms), ...(network?.obstacles ?? [])];
+
+  // ----------------------------------------------------------
+  // Сеть участка отбора
+  // ----------------------------------------------------------
+
+  const net = network ? createNetworkFlow() : null;
+
+  function createNetworkFlow() {
+    // Свои коробки руки (демо-цикл) убираем — груз теперь приходит по подаче.
+    const materials = [];
+    for (const arm of arms) {
+      for (const box of arm.boxes ?? []) {
+        arm.group.remove(box);
+        materials.push(box.material);
+        box.geometry.dispose();
+      }
+      arm.boxes = [];
+    }
+    const geometry = new THREE.BoxGeometry(0.68, 0.68, 0.68);
+    const meshes = buildNetworkMeshes(group, network.rows, beltTexture);
+    const speed = beltRate * MODEL_SCALE;
+    const rate = (arms.length * armProd) / 60;
+    let made = 0;
+
+    const rows = network.rows.map((row) => ({ ...row, feedBoxes: [], takeBoxes: [], credit: 0 }));
+
+    const newBox = () => {
+      const box = new THREE.Mesh(geometry, materials[made++ % Math.max(1, materials.length)]);
+      box.castShadow = true;
+      return box;
+    };
+
+    const placeOn = (line, box, d) => {
+      const p = line.at(d);
+      box.position.set(p.x, NETWORK_BOX.y, p.z);
+    };
+
+    // Сколько коробок уже идёт к руке или ждёт на её входной ленте.
+    const pending = (row, entry) =>
+      row.feedBoxes.filter((b) => b.target === entry).length +
+      arms[entry.index].boxes.filter((b) => b.userData.side === -1 && b.userData.state !== "carried").length;
+
+    const inputHasRoom = (arm) =>
+      !arm.boxes.some((b) => b.userData.side === -1 && b.userData.state === "input" && b.userData.z < ARM_BELT_START_Z + BOX_GAP);
+
+    function stepFeed(row, dt) {
+      // Выдача из хранения — в темпе рук, пока в начале подачи есть место.
+      row.credit = Math.min(row.credit + (rate * row.arms.length) / Math.max(1, arms.length) * 1.1 * dt, 2);
+      const tail = row.feedBoxes[row.feedBoxes.length - 1];
+      if (row.credit >= 1 && (!tail || tail.d > NETWORK_BOX.spacing)) {
+        const target = row.arms.reduce((best, entry) => (pending(row, entry) < pending(row, best) ? entry : best));
+        if (pending(row, target) < 4) {
+          row.credit -= 1;
+          const mesh = newBox();
+          mesh.scale.setScalar(MODEL_SCALE);
+          group.add(mesh);
+          row.feedBoxes.push({ mesh, d: 0, target });
+        }
+      }
+      let limit = Infinity;
+      for (const box of [...row.feedBoxes]) {
+        box.d = Math.min(box.d + speed * dt, limit, box.target.divertD);
+        placeOn(row.feed, box.mesh, box.d);
+        const arm = arms[box.target.index];
+        if (box.d >= box.target.divertD - 1e-3 && inputHasRoom(arm)) {
+          // Сход на входную ленту руки.
+          row.feedBoxes.splice(row.feedBoxes.indexOf(box), 1);
+          group.remove(box.mesh);
+          box.mesh.scale.setScalar(1);
+          box.mesh.userData = { state: "input", z: ARM_BELT_START_Z, side: -1 };
+          box.mesh.position.set(-ARM_BELT_X, 0.82, ARM_BELT_START_Z);
+          arm.group.add(box.mesh);
+          arm.boxes.push(box.mesh);
+          continue;
+        }
+        limit = box.d - NETWORK_BOX.spacing;
+      }
+    }
+
+    // Коробка с конца выходной ленты руки — на сборный, если там есть окно.
+    function merge(armIndex, box) {
+      const row = rows.find((r) => r.arms.some((e) => e.index === armIndex));
+      const entry = row.arms.find((e) => e.index === armIndex);
+      if (row.takeBoxes.some((b) => Math.abs(b.d - entry.mergeD) < NETWORK_BOX.spacing)) return false;
+      const arm = arms[armIndex];
+      arm.group.remove(box);
+      arm.boxes.splice(arm.boxes.indexOf(box), 1);
+      box.scale.setScalar(MODEL_SCALE);
+      box.rotation.set(0, 0, 0);
+      group.add(box);
+      row.takeBoxes.push({ mesh: box, d: entry.mergeD });
+      row.takeBoxes.sort((a, b) => b.d - a.d);
+      placeOn(row.take, box, entry.mergeD);
+      return true;
+    }
+
+    function stepTake(row, dt) {
+      let limit = Infinity;
+      for (const box of [...row.takeBoxes]) {
+        box.d = Math.min(box.d + speed * dt, limit);
+        if (box.d >= row.take.total) {
+          // Доехала до ворот — в фуру.
+          row.takeBoxes.splice(row.takeBoxes.indexOf(box), 1);
+          group.remove(box.mesh);
+          flow.delivered += 1;
+          continue;
+        }
+        placeOn(row.take, box.mesh, box.d);
+        limit = box.d - NETWORK_BOX.spacing;
+      }
+    }
+
+    const flow = {
+      delivered: 0,
+      merge,
+      step(dt) {
+        for (const row of rows) {
+          stepFeed(row, dt);
+          stepTake(row, dt);
+        }
+      },
+      dispose() {
+        for (const row of rows) for (const b of [...row.feedBoxes, ...row.takeBoxes]) group.remove(b.mesh);
+        group.remove(meshes);
+        disposeTree(meshes);
+        geometry.dispose();
+        new Set(materials).forEach((m) => m.dispose());
+      },
+    };
+    return flow;
+  }
 
   // ----------------------------------------------------------
   // Конвейеры
@@ -92,7 +228,20 @@ export function createArmFleet({ group, zone, count, beltTexture, armProd, energ
     });
   }
 
-  function advanceOutputQueue(boxes, dt) {
+  function advanceOutputQueue(boxes, dt, armIndex) {
+    if (net) {
+      // Сеть: коробки копятся к концу выходной ленты и уходят на сборный конвейер.
+      const queue = boxes.filter((b) => b.userData.state === "output").sort((a, b) => b.userData.z - a.userData.z);
+      let limit = ARM_BELT_END_Z;
+      for (const box of queue) {
+        box.userData.z = Math.min(box.userData.z + beltRate * dt, limit);
+        box.position.set(ARM_BELT_X, 0.82, box.userData.z);
+        if (box.userData.z >= ARM_BELT_END_Z - 1e-3 && net.merge(armIndex, box)) continue;
+        limit = box.userData.z - BOX_GAP;
+      }
+      return;
+    }
+
     const queue = boxes.filter((b) => b.userData.state === "output");
     queue.sort((a, b) => a.userData.z - b.userData.z);
 
@@ -121,7 +270,7 @@ export function createArmFleet({ group, zone, count, beltTexture, armProd, energ
   // Рука
   // ----------------------------------------------------------
 
-  function advanceArm(arm, dt) {
+  function advanceArm(arm, dt, armIndex) {
     arm.phase = (arm.phase + dt / cycleDuration) % 1;
     if (arm.phase < 0) arm.phase += 1;
 
@@ -137,14 +286,22 @@ export function createArmFleet({ group, zone, count, beltTexture, armProd, energ
 
     const dip = Math.cos(Math.PI * legPhase) ** 2;
 
-    arm.pivot.rotation.y = angle;
-    arm.claw.position.y = ARM_CARRY_Y + (ARM_PICKUP_Y - ARM_CARRY_Y) * dip;
+    if (arm.pose) {
+      // Модель с суставами (pickArmRobot.js): поза по обратной кинематике.
+      arm.pose(angle, dip);
+    } else {
+      arm.pivot.rotation.y = angle;
+      arm.claw.position.y = ARM_CARRY_Y + (ARM_PICKUP_Y - ARM_CARRY_Y) * dip;
+    }
 
     const boxes = arm.boxes;
-    if (!boxes?.length) return;
+    if (!boxes?.length) {
+      arm.lastGoingRight = goingRight;
+      return;
+    }
 
     advanceInputQueue(boxes.filter((b) => b.userData.side === -1 && b.userData.state !== "carried"), dt);
-    advanceOutputQueue(boxes.filter((b) => b.userData.side === 1 && b.userData.state !== "carried"), dt);
+    advanceOutputQueue(boxes.filter((b) => b.userData.side === 1 && b.userData.state !== "carried"), dt, armIndex);
 
     if (arm.lastGoingRight === undefined) arm.lastGoingRight = goingRight;
 
@@ -184,19 +341,21 @@ export function createArmFleet({ group, zone, count, beltTexture, armProd, energ
   // ----------------------------------------------------------
 
   function step(dt) {
+    net?.step(dt);
     arms.forEach((arm, i) => {
       meters[i].consume(dt, "work");
-      advanceArm(arm, dt);
+      advanceArm(arm, dt, i);
     });
   }
 
   // У каждой роборуки свои геометрии и материалы (текстура ленты общая).
   function dispose() {
+    net?.dispose();
     for (const arm of arms) {
       group.remove(arm.group);
       disposeTree(arm.group);
     }
   }
 
-  return { step, obstacles, meters, dispose, getOpsDone: () => opsDone };
+  return { step, obstacles, meters, dispose, getOpsDone: () => opsDone, getDelivered: () => net?.delivered ?? 0 };
 }

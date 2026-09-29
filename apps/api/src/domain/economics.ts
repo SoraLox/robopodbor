@@ -7,8 +7,27 @@
  * а берём явно названное допущение и выносим его в «Допущения» и предупреждение.
  */
 import { OBJECT_LABEL, type CatalogSolution } from "./catalog.js";
+import type { FleetKind, Substitution } from "./fleet.js";
+import { decodeLayoutCells, rackStorageOf, storageLevels } from "./warehouseLayout.js";
+import {
+  DEMAND_UNIT,
+  FLEET_LABEL,
+  WAREHOUSE_NORMS,
+  fleetSubstitutions,
+  laborAssumption,
+  manualForkliftRate,
+  MANUAL_FORKLIFT_SPEED,
+  pickComplexityFactor,
+  runWarehouseModel,
+  warehouseParamsOf,
+  type Assignment,
+  type SlotId,
+  SLOT_LABEL,
+  type WarehouseModel,
+  type WarehouseParams,
+} from "./warehouseEconomics.js";
 
-export const ECONOMICS_MODEL_VERSION = "economics-2026.09b";
+export const ECONOMICS_MODEL_VERSION = "economics-2026.09c";
 
 type Params = Record<string, string>;
 type Confidence = "confirmed" | "needs-review";
@@ -20,6 +39,56 @@ export interface CalculationInput {
   fields: Array<{ id: string; label: string; defaultValue?: string }>;
   processes?: string[];
   solution: CatalogSolution;
+  /** Набор роботов (по одному на флот); solution — главный из них. Нет — только solution. */
+  solutions?: CatalogSolution[];
+  /** Склад: какой робот в каком слоте сценария (приёмка, отгрузка, отбор…); нет — по виду робота. */
+  assignments?: Assignment[];
+}
+
+export interface ScenarioOutput {
+  links: Array<{
+    slot: SlotId;
+    label: string;
+    flowPerHour: number;
+    routeM: number;
+    /** Путь транспорта после конвейера (последние метры) или весь путь. */
+    effectiveRouteM: number;
+    conveyorSolutionId?: string;
+    /** Доля потока на людях (0..1). */
+    manualShare: number;
+  }>;
+}
+
+/** Флот в расчёте склада — те же числа идут в 3D-сцену. */
+export interface FleetOutput {
+  kind: FleetKind;
+  /** Слот сценария: приёмка, отгрузка, отбор, сортировка, уборка. */
+  slot: SlotId;
+  /** Доля потока слота (0..1). */
+  share: number;
+  /** Путь в одну сторону для транспорта, м. */
+  routeM?: number;
+  /** Длина одной конвейерной линии, м. */
+  lineLengthM?: number;
+  label: string;
+  /** Ключ 3D-модели сцены (washer, transporter, storagecube…). */
+  model?: string;
+  solutionId: string;
+  name: string;
+  count: number;
+  /** Эффективная производительность одного робота на этом складе. */
+  throughputPerRobot: number;
+  unit: string;
+  peakDemand: number;
+  speedMps?: number;
+  capacityKg?: number;
+  autonomyHours?: number;
+  chargeHours?: number;
+  workPowerKw: number;
+  idlePowerKw: number;
+  substitutions: Substitution[];
+  /** СтойкаБокс: башен в сетке — ёмкость хранения (роботы — шаттлы, count). */
+  storageTowers?: number;
 }
 
 export interface CalculationOutput {
@@ -54,6 +123,9 @@ export interface CalculationOutput {
   solutionId?: string;
   /** Сколько роботов заложено в расчёт и почему. */
   robots: { count: number; basis: string };
+  fleet?: FleetOutput[];
+  /** Склад: связи приёмки и отгрузки — поток, путь, конвейер, доля на людях. */
+  scenario?: ScenarioOutput;
 }
 
 interface Kpi {
@@ -284,7 +356,7 @@ function yearsText(years: number | null): string {
   return `${fmt(years)} ${yearsUnit(round1(years))}`;
 }
 
-function yearsUnit(value: number): string {
+export function yearsUnit(value: number): string {
   const n = Math.floor(value);
   if (!Number.isInteger(value)) return "года";
   if (n % 10 === 1 && n % 100 !== 11) return "год";
@@ -368,6 +440,7 @@ function baselineTco(core: Core): number {
 }
 
 export function calculateEconomics(input: CalculationInput): CalculationOutput {
+  if (input.objectType === "warehouse") return calculateWarehouseEconomics(input);
   const { objectType, solution } = input;
   const values: Params = {
     ...Object.fromEntries(input.fields.map((field) => [field.id, field.defaultValue ?? ""])),
@@ -811,5 +884,353 @@ export function calculateEconomics(input: CalculationInput): CalculationOutput {
     sensitivity,
     solutionId: solution.id,
     robots: { count, basis },
+  };
+}
+
+// ─── Склад: модель Егора (warehouseEconomics.ts) ─────────────────────────
+function paybackKpi(model: WarehouseModel, priceKnown: boolean): Kpi {
+  const { purchase, raas, labor } = model;
+  if (purchase.paybackYears !== null) {
+    return {
+      label: "Срок окупаемости",
+      value: fmt(purchase.paybackYears),
+      unit: yearsUnit(round1(purchase.paybackYears)),
+      trend: "down",
+      note:
+        raas.effect > 0
+          ? `Покупка: CAPEX / годовой эффект. Аренда (RaaS) даёт ${fmt(mln(raas.effect))} млн ₽ в год без вложений.`
+          : "Покупка: CAPEX / годовой эффект. Аренда (RaaS) не окупается.",
+    };
+  }
+  return {
+    label: "Срок окупаемости",
+    value: "—",
+    unit: "",
+    trend: "none",
+    note: !priceKnown
+      ? "Нет цены робота — окупаемость не посчитать."
+      : labor.savings === 0
+        ? "Парк не замещает ролей с зарплатой в паспорте — эффекта нет."
+        : "Экономия ФОТ не покрывает расходы на парк — не окупается.",
+  };
+}
+
+function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput {
+  const values: Params = {
+    ...Object.fromEntries(input.fields.map((field) => [field.id, field.defaultValue ?? ""])),
+    ...Object.fromEntries(Object.entries(input.parameters).filter(([, value]) => value?.trim() !== "")),
+  };
+  const entered = new Set(Object.entries(input.parameters).filter(([, v]) => v?.trim()).map(([k]) => k));
+  const labelOf = (id: string) => input.fields.find((field) => field.id === id)?.label ?? id;
+  const defaultsUsed = input.fields
+    .filter((field) => !entered.has(field.id) && field.defaultValue && /^wh_/.test(field.id))
+    .map((field) => labelOf(field.id));
+
+  const params = warehouseParamsOf(values);
+  const solutions = input.solutions?.length ? input.solutions : [input.solution];
+  const plan = { solutions, ...(input.assignments ? { assignments: input.assignments } : {}) };
+  const model = runWarehouseModel(plan, params);
+  const { groups, labor, purchase, raas } = model;
+  const horizon = params.horizonYears;
+  const gaps: string[] = [];
+
+  if (!groups.length) gaps.push(`для «${input.solution.name}» в модели склада нет флота (уборка, отбор, перемещение паллет)`);
+  const priceKnown = groups.length > 0 && groups.every((g) => g.costs.priceKnown);
+  if (!priceKnown) gaps.push("цена робота");
+  if (labor.baseline === 0) gaps.push("численность и з/п отборщиков и операторов погрузчиков");
+  for (const g of groups.filter((item) => item.throughputPerRobot <= 0)) {
+    gaps.push(`производительность «${g.robot.solution.name}» не указана — заложена 1 система, экономия по ней не считается`);
+  }
+  const substituted = fleetSubstitutions(groups);
+  if (substituted.length) {
+    gaps.push(
+      substituted
+        .map(({ name, items }) => `${name} — из демо-робота: ${items.map((item) => item.field).join(", ")}`)
+        .join("; "),
+    );
+  }
+  const peakPowerKw = groups.reduce((sum, g) => sum + g.robot.workPowerKw * g.count, 0);
+  if (params.availablePowerKw !== undefined && peakPowerKw > params.availablePowerKw) {
+    gaps.push(`пиковая мощность парка ${fmt(peakPowerKw)} кВт больше доступной ${fmt(params.availablePowerKw)} кВт`);
+  }
+  if (params.budgetMln && priceKnown && mln(purchase.capex) > params.budgetMln * 1.001) {
+    gaps.push(`CAPEX ${fmt(mln(purchase.capex))} млн ₽ больше бюджета ${fmt(params.budgetMln)} млн ₽ из паспорта`);
+  }
+
+  // Планировка из конструктора: ёмкость нарисованных стеллажей против паспорта.
+  const layout = decodeLayoutCells(values.wh_layout);
+  const num = (id: string, fallback: number) => numberOf(values[id]) ?? fallback;
+  const storage = layout
+    ? rackStorageOf(layout, {
+        areaM2: params.floorAreaM2,
+        ceilingM: num("wh_vysota_potolkov_zone_hraneniya", 10),
+        palletLengthM: num("wh_pallet_length", 1200) / 1000,
+        palletWidthM: num("wh_pallet_width", 800) / 1000,
+        palletHeightM: num("wh_pallet_height", 1600) / 1000,
+      })
+    : null;
+  const palletSlots = num("wh_kolichestvo_palletomest", 0);
+  if (storage && palletSlots && storage.pallets < palletSlots * 0.9) {
+    gaps.push(
+      `стеллажи на планировке вмещают ≈ ${Math.round(storage.pallets).toLocaleString("ru-RU")} из ${palletSlots.toLocaleString("ru-RU")} паллетомест паспорта`,
+    );
+  }
+
+  // СтойкаБокс: роботы — шаттлы (их считает поток), сетка башен — ёмкость хранения.
+  const cubeLevels = storageLevels(num("wh_vysota_potolkov_zone_hraneniya", 10), num("wh_pallet_height", 1600) / 1000);
+  const cubeTowers = palletSlots ? Math.ceil(palletSlots / cubeLevels) : undefined;
+  const cube = groups.find((g) => g.robot.model === "storagecube");
+
+  const count = groups.reduce((sum, g) => sum + g.count, 0);
+  const fleetLine = (g: (typeof groups)[number]) =>
+    `${SLOT_LABEL[g.slot]}: ${g.count} × ${g.robot.solution.name}${g.share < 1 ? ` (${Math.round(g.share * 100)}% потока)` : ""} — пик ${fmt(g.peakDemand)} ${DEMAND_UNIT[g.kind]}, на робота ${fmt(g.throughputPerRobot)} ${DEMAND_UNIT[g.kind]}`;
+  const basis = groups.length
+    ? `${groups.map(fleetLine).join("; ")}. Загрузка ${WAREHOUSE_NORMS.loadFactor}, готовность ${WAREHOUSE_NORMS.availability}, резерв парка ×${WAREHOUSE_NORMS.reserveFactor}.`
+    : "Решение не относится ни к одному флоту склада — заложен 1 робот.";
+
+  const assumptions = [
+    `Роботов в расчёте: ${count}. ${basis}`,
+    laborAssumption(model),
+    `ФОТ = численность × з/п × 12 × коэффициент начислений ${params.payrollTaxFactor}. Сколько роль делает в час — штат одной смены с учётом потерь рабочего времени ${Math.round(params.staffLossFactor * 100)}%; для операторов погрузчиков нормы выработки в паспорте нет — оператор проходит тот же маршрут со скоростью ${MANUAL_FORKLIFT_SPEED} м/с: ${fmt(manualForkliftRate(params))} паллет/ч.`,
+    ...(groups.some((g) => g.kind === "arm")
+      ? [`Производительность отбора скорректирована на состав заказов: ${params.piecePickSharePct}% мелкоштучного и ${params.fastSkuSharePct}% SKU А-класса — множитель ×${pickComplexityFactor(params).toFixed(2)}.`]
+      : []),
+    ...(groups.some((g) => g.kind === "loader" && g.robot.mobile)
+      ? [`Цикл погрузчика: маршрут ${params.routeLengthM} м туда порожним и обратно с грузом ${params.cargoWeightKg} кг (с грузом медленнее) + ${WAREHOUSE_NORMS.loaderHandlingSeconds} с на вилы.`]
+      : []),
+    ...(layout
+      ? [
+          `Планировка из конструктора: путь погрузчика ${params.routeLengthM} м — средний путь по проездам от ближайших ворот до стеллажа.${
+            storage
+              ? ` Стеллажи ${fmt(storage.rackAreaM2)} м² × ${storage.levels} ярусов (потолок / высота паллеты с зазором) × ${fmt(storage.perLevelPerM2)} паллет на м² ≈ ${Math.round(storage.pallets).toLocaleString("ru-RU")} паллетомест.`
+              : ""
+          }`,
+        ]
+      : []),
+    ...(cube
+      ? [
+          `${cube.robot.solution.name}: роботы — шаттлы над сеткой башен, их ${cube.count} по потоку; сетка — ёмкость хранения${
+            cubeTowers ? `: ${cubeTowers.toLocaleString("ru-RU")} башен по ${cubeLevels} ярусов на ${palletSlots.toLocaleString("ru-RU")} паллетомест паспорта` : ""
+          }. Цена карточки — модуль «шаттл + участок сетки»: отдельной цены сетки в каталоге нет.`,
+        ]
+      : []),
+    ...(groups.some((g) => g.kind === "vacuum")
+      ? [`Уборка: активная зона ${fmt(params.activeAreaM2)} м² за одну смену ${params.hoursPerShift} ч.`]
+      : []),
+    `Окупаемость = CAPEX / годовой эффект; эффект = экономия ФОТ − OPEX парка. ROI = эффект × ${horizon} ${yearsUnit(horizon)} / CAPEX.`,
+    `TCO = CAPEX + замена оборудования по сроку службы − остаточная стоимость + (OPEX + оставшийся ФОТ) × горизонт.`,
+    `Резерв CAPEX ${pct(WAREHOUSE_NORMS.capexReserveRatio)}%. Нет в карточке: внедрение ${pct(WAREHOUSE_NORMS.implementationShare)}% цены, сервис ${pct(WAREHOUSE_NORMS.serviceShare)}% цены в год, срок службы ${WAREHOUSE_NORMS.lifespanYears} лет, RaaS ${pct(WAREHOUSE_NORMS.raasMonthlyShare)}% цены в месяц.`,
+    `Электроэнергия ${WAREHOUSE_NORMS.tariffRubPerKwh} ₽/кВт·ч, ${fmt(params.hoursPerDay)} ч в сутки, ${params.daysPerYear} дн. в году; батарейные роботы берут из сети на ${Math.round((1 / WAREHOUSE_NORMS.chargeEfficiency - 1) * 100)}% больше.`,
+    ...(defaultsUsed.length ? [`Значения по умолчанию (в паспорте не введены): ${[...new Set(defaultsUsed)].join(", ")}.`] : []),
+  ];
+
+  // ─ Структура затрат (покупка, за горизонт)
+  const capexLines = [
+    ...groups.map((g) => ({
+      title: g.robot.solution.perMeter
+        ? `${g.count} × ${g.robot.solution.name}, линия ${g.lineLengthM ?? params.routeLengthM} м — ${SLOT_LABEL[g.slot].toLowerCase()}`
+        : `${g.count} × ${g.robot.solution.name} — ${SLOT_LABEL[g.slot].toLowerCase()}`,
+      amount: g.count * g.costs.equipment,
+      source: g.robot.solution.source ? `Каталог: ${g.robot.solution.source}` : "Каталог решений",
+      confidence: (g.robot.solution.fieldSources?.["costs.equipment"]?.confirmed === false ? "needs-review" : "confirmed") as Confidence,
+    })),
+    ...(purchase.capexRaw.software > 0
+      ? [{ title: "Программное обеспечение", amount: purchase.capexRaw.software, source: "Каталог решений", confidence: "confirmed" as Confidence }]
+      : []),
+    {
+      title: groups.every((g) => g.costs.implementationFromCard)
+        ? "Внедрение и интеграция"
+        : `Внедрение, интеграция, зарядка — ${pct(WAREHOUSE_NORMS.implementationShare)}% от оборудования`,
+      amount: purchase.capexRaw.implementation,
+      source: groups.every((g) => g.costs.implementationFromCard) ? "Каталог решений" : "Оценка",
+      confidence: "needs-review" as Confidence,
+    },
+    { title: `Резерв ${pct(WAREHOUSE_NORMS.capexReserveRatio)}%`, amount: purchase.capexRaw.reserve, source: "Методика", confidence: "needs-review" as Confidence },
+    ...(purchase.replacementCapex > 0
+      ? [{ title: `Замена оборудования после ${fmt(purchase.lifespanYears)} лет`, amount: purchase.replacementCapex, source: "Срок службы", confidence: "needs-review" as Confidence }]
+      : []),
+    ...(purchase.residualValue > 0
+      ? [{ title: `Остаточная стоимость на конец ${horizon}-го года`, amount: -purchase.residualValue, source: "Линейная амортизация", confidence: "needs-review" as Confidence }]
+      : []),
+  ];
+  const opexLines = [
+    {
+      title: groups.every((g) => g.costs.serviceFromCard) ? "Обслуживание" : `Обслуживание, ${pct(WAREHOUSE_NORMS.serviceShare)}% цены в год`,
+      amount: purchase.service * horizon,
+      source: groups.every((g) => g.costs.serviceFromCard) ? "Каталог решений" : "Отраслевой бенчмарк",
+      confidence: (groups.every((g) => g.costs.serviceFromCard) ? "confirmed" : "needs-review") as Confidence,
+    },
+    {
+      title: `Электроэнергия (${WAREHOUSE_NORMS.tariffRubPerKwh} ₽/кВт·ч)`,
+      amount: purchase.energy * horizon,
+      source: "Каталог + тариф",
+      confidence: "needs-review" as Confidence,
+    },
+    ...(purchase.residualLabor > 0
+      ? [{ title: "Оставшийся ФОТ: работа, которую парк не берёт", amount: purchase.residualLabor * horizon, source: "Паспорт объекта", confidence: "confirmed" as Confidence }]
+      : []),
+  ];
+  const totalTco = purchase.tco;
+  const share = (amount: number) => (totalTco > 0 ? Math.round((amount / totalTco) * 100) : 0);
+  const group = (id: string, title: string, lines: typeof capexLines) => {
+    const amount = lines.reduce((sum, line) => sum + line.amount, 0);
+    return {
+      id,
+      title,
+      amount: round1(mln(amount)),
+      share: share(amount),
+      confidence: (lines.some((line) => line.confidence === "needs-review") ? "needs-review" : "confirmed") as Confidence,
+      lines: lines.map((line) => ({ ...line, amount: round1(mln(line.amount)), share: share(line.amount) })),
+    };
+  };
+
+  // ─ Сценарии
+  const asIsTco = model.baselineTco;
+  const maxTco = Math.max(asIsTco, purchase.tco, raas.tco, 1);
+  const recommendedId =
+    !priceKnown || labor.savings === 0
+      ? null
+      : Math.min(purchase.tco, raas.tco) < asIsTco
+        ? purchase.tco <= raas.tco ? "purchase" : "raas"
+        : null;
+  const delta = (tco: number) => {
+    const diff = mln(tco - asIsTco);
+    return `${diff < 0 ? "−" : "+"}${fmt(Math.abs(diff))}`;
+  };
+  const scenarios = [
+    {
+      id: "as-is",
+      title: "Как есть",
+      subtitle: "Без автоматизации",
+      tco: round1(mln(asIsTco)),
+      share: round1((asIsTco / maxTco) * 100) / 100,
+      delta: "база",
+      detail: `${fmt(mln(asIsTco))} млн ₽: ФОТ отборщиков и операторов погрузчиков за ${horizon} ${yearsUnit(horizon)}`,
+    },
+    {
+      id: "purchase",
+      title: "Покупка",
+      subtitle: "CAPEX + сервис",
+      tco: round1(mln(purchase.tco)),
+      share: round1((purchase.tco / maxTco) * 100) / 100,
+      delta: delta(purchase.tco),
+      ...(recommendedId === "purchase" ? { recommended: true } : {}),
+    },
+    {
+      id: "raas",
+      title: "RaaS",
+      subtitle: "Аренда, без покупки",
+      tco: round1(mln(raas.tco)),
+      share: round1((raas.tco / maxTco) * 100) / 100,
+      delta: delta(raas.tco),
+      ...(recommendedId === "raas" ? { recommended: true } : {}),
+    },
+  ];
+
+  // ─ Чувствительность (buildSensitivityScenario): ±20% к цене, зарплатам и объёму операций
+  const sensitivity: CalculationOutput["sensitivity"] = [];
+  const basePayback = purchase.paybackYears;
+  if (basePayback !== null) {
+    const shift = (k: { cost?: number; labor?: number; demand?: number }) => {
+      const p: WarehouseParams = {
+        ...params,
+        pickerWageMonth: params.pickerWageMonth * (k.labor ?? 1),
+        forkliftWageMonth: params.forkliftWageMonth * (k.labor ?? 1),
+        loadPerHour: params.loadPerHour * (k.demand ?? 1),
+        outboundPerHour: params.outboundPerHour * (k.demand ?? 1),
+        sortPerHour: params.sortPerHour * (k.demand ?? 1),
+        activeAreaM2: params.activeAreaM2 * (k.demand ?? 1),
+      };
+      return runWarehouseModel(plan, p, k.cost ?? 1).purchase.paybackYears;
+    };
+    const variants = [
+      { id: "equipment", label: "Цена оборудования", direction: "up" as const, run: (f: number) => shift({ cost: f }) },
+      { id: "wage", label: "Зарплата замещаемого персонала", direction: "down" as const, run: (f: number) => shift({ labor: f }) },
+      { id: "demand", label: "Объём операций (число роботов)", direction: "up" as const, run: (f: number) => shift({ demand: f }) },
+    ];
+    for (const variant of variants) {
+      const optimistic = variant.run(variant.direction === "down" ? 1.2 : 0.8);
+      const cautious = variant.run(variant.direction === "down" ? 0.8 : 1.2);
+      const spread = (cautious ?? basePayback * 2) - (optimistic ?? basePayback);
+      sensitivity.push({
+        id: variant.id,
+        label: `${variant.label}, ±20%`,
+        impact: round1((Math.abs(spread) / 2 / basePayback) * 100) / 100,
+        direction: variant.direction,
+        low: yearsText(optimistic),
+        high: yearsText(cautious),
+      });
+    }
+    sensitivity.sort((a, b) => b.impact - a.impact);
+  }
+
+  const warning = gaps.length
+    ? `Не хватает данных: ${[...new Set(gaps)].join("; ")}. Там, где данных нет, приняты допущения — результат предварительный.`
+    : "Цены и производительность — из каталога; обслуживание, внедрение и тариф RaaS — отраслевые оценки. Уточните у поставщика перед защитой бюджета.";
+
+  const effect = purchase.effect;
+  const fleet: FleetOutput[] = groups.map((g) => ({
+    kind: g.kind,
+    slot: g.slot,
+    share: Math.round(g.share * 1000) / 1000,
+    ...(g.routeM !== undefined ? { routeM: g.routeM } : {}),
+    ...(g.lineLengthM !== undefined ? { lineLengthM: g.lineLengthM } : {}),
+    label: FLEET_LABEL[g.kind],
+    ...(g.robot.model ? { model: g.robot.model } : {}),
+    solutionId: g.robot.solution.id,
+    name: g.robot.solution.name,
+    count: g.count,
+    throughputPerRobot: round1(g.throughputPerRobot),
+    unit: DEMAND_UNIT[g.kind],
+    peakDemand: round1(g.peakDemand),
+    ...(g.robot.speed !== null ? { speedMps: g.robot.speed } : {}),
+    ...(g.robot.capacityKg !== null ? { capacityKg: g.robot.capacityKg } : {}),
+    ...(g.robot.autonomyHours !== null ? { autonomyHours: g.robot.autonomyHours } : {}),
+    ...(g.robot.chargeHours !== null ? { chargeHours: g.robot.chargeHours } : {}),
+    workPowerKw: g.robot.workPowerKw,
+    idlePowerKw: g.robot.idlePowerKw,
+    substitutions: g.robot.substitutions,
+    ...(g.robot.model === "storagecube" && cubeTowers ? { storageTowers: cubeTowers } : {}),
+  }));
+
+  return {
+    objectTitle: `${OBJECT_LABEL.warehouse} · ${Math.round(params.floorAreaM2).toLocaleString("ru-RU").replace(/ /g, " ")} м²`,
+    meta: `${groups.map((g) => `${g.count} × ${g.robot.solution.name}`).join(" + ") || input.solution.name} · ${params.shifts} ${params.shifts === 1 ? "смена" : "смены"} · горизонт ${horizon} ${yearsUnit(horizon)}`,
+    payback: paybackKpi(model, priceKnown),
+    capex: { label: "CAPEX", value: fmt(mln(purchase.capex)), note: "млн ₽, разово", trend: "none" },
+    roi: {
+      label: `ROI, ${horizon} ${yearsUnit(horizon)}`,
+      value: purchase.roiPct === null || labor.savings === 0 ? "—" : `${Math.round(purchase.roiPct)}%`,
+      note: `Годовой эффект ${fmt(mln(effect))} млн ₽`,
+      trend: purchase.roiPct !== null && purchase.roiPct > 0 ? "up" : "down",
+    },
+    opexSaving: {
+      series: Array.from({ length: horizon }, () => round1(mln(effect))),
+      percent: labor.baseline > 0 ? `${effect >= 0 ? "+" : "−"}${fmt(Math.abs((effect / labor.baseline) * 100))}%` : "—",
+      meta: `${fmt(mln(effect))} млн ₽ в год: экономия ФОТ ${fmt(mln(labor.savings))} − OPEX парка ${fmt(mln(purchase.opexPerYear))}`,
+    },
+    warning,
+    assumptions,
+    scenarios,
+    costGroups: [
+      group("capex", "CAPEX — покупка, замена и остаточная стоимость", capexLines),
+      group("opex", `OPEX и оставшийся ФОТ за ${horizon} ${yearsUnit(horizon)}`, opexLines),
+    ],
+    totalTco: round1(mln(totalTco)),
+    sensitivity,
+    solutionId: input.solution.id,
+    robots: { count: Math.max(1, count), basis },
+    fleet,
+    scenario: {
+      links: model.links.map((l) => ({
+        slot: l.slot,
+        label: SLOT_LABEL[l.slot],
+        flowPerHour: round1(l.flow),
+        routeM: l.routeM,
+        effectiveRouteM: l.effectiveRouteM,
+        ...(l.conveyor ? { conveyorSolutionId: l.conveyor.robot.solution.id } : {}),
+        manualShare: Math.round(l.manualShare * 1000) / 1000,
+      })),
+    },
   };
 }

@@ -18,10 +18,14 @@ export const STATION_PAD_DEPTH = 5.6;
 // Пылесос заезжает на станцию носом к стене, где стоит зарядное устройство.
 export const STATION_HEADING = 0;
 
-export function chargingStationPositions(count, laneMinX) {
+// dockZ — южный край полосы станций (у пресета — южная стена, z = 50); на своей
+// форме склада — край свободного прямоугольника пола (layout.vacuumZone.dockZ).
+const WALL_Z = 50;
+
+export function chargingStationPositions(count, laneMinX, dockZ = WALL_Z) {
   return Array.from({ length: count }, (_, i) => ({
     x: laneMinX + 2 + i * STATION_PITCH,
-    z: STATION_Z,
+    z: STATION_Z + dockZ - WALL_Z,
   }));
 }
 
@@ -37,7 +41,7 @@ const bodyMaterial = new THREE.MeshStandardMaterial({ color: PALETTE.storage, fl
 
 // Зарядное устройство с индикатором: цвет светодиода показывает, что делает
 // робот на станции.
-export function createCharger(x) {
+export function createCharger(x, dockZ = WALL_Z) {
   const group = new THREE.Group();
 
   const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
@@ -49,7 +53,7 @@ export function createCharger(x) {
   led.position.set(0, 0.62, -0.42);
 
   group.add(body, led);
-  group.position.set(x, 0, CHARGER_Z);
+  group.position.set(x, 0, CHARGER_Z + dockZ - WALL_Z);
 
   let current = null;
 

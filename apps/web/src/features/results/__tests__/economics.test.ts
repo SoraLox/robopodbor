@@ -20,15 +20,44 @@ describe('расчёт экономики по паспорту и решени�
     expect(Number(pricier.payback.value.replace(',', '.'))).toBeLessThan(Number(base.payback.value.replace(',', '.')));
   });
 
-  it('число роботов по потоку и производительности из карточки', () => {
+  it('склад: парк по пиковому потоку и циклу маршрута (модель Егора)', () => {
     const result = run('warehouse', 'AM0001');
-    expect(result.robots.basis).toContain('производительность из карточки');
-    expect(result.robots.count).toBeGreaterThan(0);
+    const loaders = result.fleet!.filter((g) => g.kind === 'loader');
+    // Один робот — на обеих связях: приёмка и отгрузка.
+    expect(loaders.map((g) => g.slot)).toEqual(['inbound', 'outbound']);
+    for (const loader of loaders) {
+      expect(loader.model).toBe('transporter');
+      // Хватает на пик связи с учётом загрузки 0,85 и готовности 0,95.
+      expect(loader.count * loader.throughputPerRobot * 0.85 * 0.95).toBeGreaterThanOrEqual(loader.peakDemand);
+    }
+    expect(result.robots.count).toBe(loaders.reduce((sum, g) => sum + g.count, 0));
   });
 
-  it('роботы замещают не больше постов, чем закрывают', () => {
+  it('склад: экономия ФОТ по ролям, не больше того, что успевает парк', () => {
     const result = run('warehouse', 'AM0001');
-    expect(result.assumptions.some((line) => line.startsWith('Роботы закрывают'))).toBe(true);
+    expect(result.assumptions.some((line) => line.includes('Операторы погрузчиков'))).toBe(true);
+    expect(result.assumptions.some((line) => /Операторы погрузчиков — остаётся \d+% часов/.test(line))).toBe(true);
+  });
+
+  it('склад: пробелы карточки закрываются демо-роботом и названы в предупреждении', () => {
+    const result = run('warehouse', 'MM0002');
+    expect(result.fleet?.[0]?.substitutions.map((item) => item.field)).toContain('производительность');
+    expect(result.warning).toContain('из демо-робота');
+  });
+
+  it('склад: набор роботов — флоты складываются', () => {
+    const solution = solutionOf('FL0002');
+    const combo = calculateEconomics({
+      objectType: 'warehouse',
+      parameters: {},
+      fields: objectParameters.warehouse ?? [],
+      solution,
+      solutions: [solution, solutionOf('MM0002'), solutionOf('FC0002')],
+    });
+    const single = run('warehouse', 'FL0002');
+    expect([...new Set(combo.fleet?.map((group) => group.kind))]).toEqual(['loader', 'arm', 'vacuum']);
+    expect(combo.robots.count).toBe(combo.fleet!.reduce((sum, group) => sum + group.count, 0));
+    expect(Number(combo.capex.value.replace(',', '.'))).toBeGreaterThan(Number(single.capex.value.replace(',', '.')));
   });
 
   it('без производительности парк ограничен бюджетом из паспорта', () => {
@@ -37,11 +66,11 @@ describe('расчёт экономики по паспорту и решени�
     expect(Number(result.capex.value.replace(',', '.'))).toBeLessThanOrEqual(120);
   });
 
-  it('нет данных о замещаемом персонале — окупаемость не выдумываем', () => {
+  it('уборка не замещает ролей с зарплатой — окупаемость не выдумываем', () => {
     const result = run('warehouse', 'FC0002');
     expect(result.payback.value).toBe('—');
     expect(result.roi.value).toBe('—');
-    expect(result.warning).toMatch(/Не хватает данных/);
+    expect(result.payback.note).toMatch(/не замещает/);
   });
 
   it('сценарии и структура затрат согласованы', () => {
