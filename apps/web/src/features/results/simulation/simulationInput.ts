@@ -162,7 +162,20 @@ export function buildSimulationInput(
     params.floorAreaM2 = metrics.sceneAreaM2;
     params.routeLengthM = metrics.routeLengthM;
   }
-  const groups = fleet as Array<FleetGroup & { kind: SimRobotType }>;
+  // Один робот на нескольких связях (приёмка и отгрузка) — в сцене один флот вида:
+  // число складывается, производительность — взвешенная по числу роботов.
+  const groups: Array<FleetGroup & { kind: SimRobotType }> = [];
+  for (const group of fleet as Array<FleetGroup & { kind: SimRobotType }>) {
+    const same = groups.find((g) => g.kind === group.kind);
+    if (!same) {
+      groups.push({ ...group });
+      continue;
+    }
+    const total = same.count + group.count;
+    same.throughputPerRobot = (same.throughputPerRobot * same.count + group.throughputPerRobot * group.count) / total;
+    same.count = total;
+    same.peakDemand += group.peakDemand;
+  }
   const robotTypes = groups.map((group) => group.kind);
   const workZoneShare = params.workZonePct / 100;
   // Масштаб сцены: сетка 100 ед. на сторону = площадь склада (сцены), отсюда метров в единице.

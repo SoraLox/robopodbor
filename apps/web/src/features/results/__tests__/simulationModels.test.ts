@@ -52,7 +52,8 @@ describe('СтойкаБокс: шаттлы — роботы, башни — ё
     const fields = objectParameters.warehouse ?? [];
     const solution = byId('AS0004') as unknown as CatalogSolution;
     const result = calculateEconomics({ objectType: 'warehouse', parameters: {}, fields, solution });
-    const cube = result.fleet![0]!;
+    const cubes = result.fleet!.filter((g) => g.model === 'storagecube');
+    const cube = { ...cubes[0]!, count: cubes.reduce((s, g) => s + g.count, 0) };
     expect(cube.model).toBe('storagecube');
     // 20 000 паллетомест / 5 ярусов (10 м / (1,6 + 0,2) м).
     expect(cube.storageTowers).toBe(4000);

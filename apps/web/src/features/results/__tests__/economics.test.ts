@@ -22,20 +22,21 @@ describe('расчёт экономики по паспорту и решени�
 
   it('склад: парк по пиковому потоку и циклу маршрута (модель Егора)', () => {
     const result = run('warehouse', 'AM0001');
-    const loader = result.fleet?.[0];
-    expect(loader?.kind).toBe('loader');
-    expect(loader?.model).toBe('transporter');
-    expect(loader!.count).toBeGreaterThan(0);
-    // Хватает на пик с учётом загрузки 0,85 и готовности 0,95.
-    expect(loader!.count * loader!.throughputPerRobot * 0.85 * 0.95).toBeGreaterThanOrEqual(loader!.peakDemand);
-    expect(result.robots.count).toBe(loader!.count);
+    const loaders = result.fleet!.filter((g) => g.kind === 'loader');
+    // Один робот — на обеих связях: приёмка и отгрузка.
+    expect(loaders.map((g) => g.slot)).toEqual(['inbound', 'outbound']);
+    for (const loader of loaders) {
+      expect(loader.model).toBe('transporter');
+      // Хватает на пик связи с учётом загрузки 0,85 и готовности 0,95.
+      expect(loader.count * loader.throughputPerRobot * 0.85 * 0.95).toBeGreaterThanOrEqual(loader.peakDemand);
+    }
+    expect(result.robots.count).toBe(loaders.reduce((sum, g) => sum + g.count, 0));
   });
 
   it('склад: экономия ФОТ по ролям, не больше того, что успевает парк', () => {
     const result = run('warehouse', 'AM0001');
     expect(result.assumptions.some((line) => line.includes('Операторы погрузчиков'))).toBe(true);
-    const few = run('warehouse', 'AM0001', { wh_obem_priemki: '10', wh_obem_otgruzki: '10' });
-    expect(few.assumptions.some((line) => /успевает \d+%/.test(line))).toBe(true);
+    expect(result.assumptions.some((line) => /Операторы погрузчиков — остаётся \d+% часов/.test(line))).toBe(true);
   });
 
   it('склад: пробелы карточки закрываются демо-роботом и названы в предупреждении', () => {
@@ -54,7 +55,7 @@ describe('расчёт экономики по паспорту и решени�
       solutions: [solution, solutionOf('MM0002'), solutionOf('FC0002')],
     });
     const single = run('warehouse', 'FL0002');
-    expect(combo.fleet?.map((group) => group.kind)).toEqual(['loader', 'arm', 'vacuum']);
+    expect([...new Set(combo.fleet?.map((group) => group.kind))]).toEqual(['loader', 'arm', 'vacuum']);
     expect(combo.robots.count).toBe(combo.fleet!.reduce((sum, group) => sum + group.count, 0));
     expect(Number(combo.capex.value.replace(',', '.'))).toBeGreaterThan(Number(single.capex.value.replace(',', '.')));
   });

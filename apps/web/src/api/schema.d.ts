@@ -101,6 +101,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/calculations/scenarios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Варианты сценария склада с экономикой каждого
+         * @description Из подходящих объекту решений каталога собирает несколько цепочек роботов по зонам и связям склада (src/domain/warehouseScenarios.ts).
+         */
+        post: operations["generateScenarios"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/calculations/{calculationId}": {
         parameters: {
             query?: never;
@@ -760,6 +780,30 @@ export interface components {
             processes?: string[];
             /** @description Набор роботов — по одному на флот склада (уборка, отбор, перемещение паллет); solutionId — главный из них. */
             solutionIds?: string[];
+            /** @description Склад — какой робот в каком слоте сценария; нет — слоты по виду робота. */
+            assignments?: components["schemas"]["Assignment"][];
+        };
+        /** @enum {string} */
+        SlotId: "inbound" | "outbound" | "picking" | "sorting" | "cleaning";
+        Assignment: {
+            slot: components["schemas"]["SlotId"];
+            solutionId: string;
+            /** @description Доля потока слота 0..1; нет — поровну. */
+            share?: number;
+        };
+        ScenarioVariant: {
+            id: string;
+            title: string;
+            description: string;
+            assignments: components["schemas"]["Assignment"][];
+            solutionIds: string[];
+            capexMln: number;
+            paybackYears: number | null;
+            roiPct: number | null;
+            effectMlnPerYear: number;
+            tcoMln: number;
+            robots: number;
+            best?: boolean;
         };
         CalculationResult: {
             id: string;
@@ -797,8 +841,24 @@ export interface components {
             solutionIds?: string[];
             /** @description Парк склада по флотам — те же числа, что в 3D-симуляции. */
             fleet?: components["schemas"]["FleetGroup"][];
+            assignments?: components["schemas"]["Assignment"][];
+            scenario?: {
+                links: {
+                    slot: components["schemas"]["SlotId"];
+                    label: string;
+                    flowPerHour: number;
+                    routeM: number;
+                    effectiveRouteM: number;
+                    conveyorSolutionId?: string;
+                    manualShare: number;
+                }[];
+            };
         };
         FleetGroup: {
+            slot: components["schemas"]["SlotId"];
+            share: number;
+            routeM?: number;
+            lineLengthM?: number;
             /** @enum {string} */
             kind: "vacuum" | "arm" | "loader" | "sorter" | "conveyor";
             label: string;
@@ -1216,6 +1276,43 @@ export interface operations {
             };
             /** @description Решение или тип объекта не найдены */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    generateScenarios: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    objectType: "warehouse";
+                    parameters?: {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Варианты */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScenarioVariant"][];
+                };
+            };
+            /** @description Некорректный запрос */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };

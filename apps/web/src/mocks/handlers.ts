@@ -13,6 +13,7 @@ import { DEFAULT_SOURCES } from '@domain/sources';
 import { DEFAULT_MODEL_VERSION } from '@domain/versions';
 import { selectSolutions } from '@domain/selection';
 import { ECONOMICS_MODEL_VERSION, calculateEconomics } from '@domain/economics';
+import { generateWarehouseScenarios } from '@domain/warehouseScenarios';
 import {
   buildCatalog,
   mergeCatalogVersion,
@@ -290,7 +291,9 @@ export const handlers = [
       return HttpResponse.json({ message: 'Некорректный запрос: нужны objectType и solutionId' }, { status: 400 });
     }
     const solution = catalog.get(body.solutionId);
-    const solutionIds = [...new Set([body.solutionId, ...(body.solutionIds ?? [])])];
+    const solutionIds = [
+      ...new Set([body.solutionId, ...(body.solutionIds ?? []), ...(body.assignments ?? []).map((a) => a.solutionId)]),
+    ];
     const set = solutionIds.map((id) => catalog.get(id));
     if (!solution || set.some((item) => !item)) {
       return HttpResponse.json({ message: 'Решение не найдено в каталоге' }, { status: 404 });
@@ -301,16 +304,32 @@ export const handlers = [
       fields: fieldsFor(body.objectType),
       solution: solution as unknown as CatalogSolution,
       solutions: set as unknown as CatalogSolution[],
+      ...(body.assignments ? { assignments: body.assignments } : {}),
       ...(body.processes ? { processes: body.processes } : {}),
     });
     const stored = calculationStore.save({
       ...(economics as unknown as Omit<CalculationResult, 'id'>),
       solutionIds,
+      ...(body.assignments ? { assignments: body.assignments } : {}),
       dataVersion: 'data-demo',
       modelVersion: ECONOMICS_MODEL_VERSION,
       calculatedAt: new Date().toISOString(),
     });
     return HttpResponse.json(stored, { status: 201 });
+  }),
+
+  http.post('*/api/calculations/scenarios', async ({ request }) => {
+    const body = (await request.json()) as { objectType?: string; parameters?: Record<string, string> };
+    if (body.objectType !== 'warehouse') {
+      return HttpResponse.json({ message: 'Некорректный запрос: варианты есть только для склада' }, { status: 400 });
+    }
+    return HttpResponse.json(
+      generateWarehouseScenarios({
+        parameters: body.parameters ?? {},
+        fields: fieldsFor('warehouse'),
+        solutions: [...catalog.values()] as unknown as CatalogSolution[],
+      }),
+    );
   }),
 
   http.get('*/api/calculations/:calculationId', ({ params }) => {

@@ -20,6 +20,9 @@ import {
   pickComplexityFactor,
   runWarehouseModel,
   warehouseParamsOf,
+  type Assignment,
+  type SlotId,
+  SLOT_LABEL,
   type WarehouseModel,
   type WarehouseParams,
 } from "./warehouseEconomics.js";
@@ -38,11 +41,35 @@ export interface CalculationInput {
   solution: CatalogSolution;
   /** Набор роботов (по одному на флот); solution — главный из них. Нет — только solution. */
   solutions?: CatalogSolution[];
+  /** Склад: какой робот в каком слоте сценария (приёмка, отгрузка, отбор…); нет — по виду робота. */
+  assignments?: Assignment[];
+}
+
+export interface ScenarioOutput {
+  links: Array<{
+    slot: SlotId;
+    label: string;
+    flowPerHour: number;
+    routeM: number;
+    /** Путь транспорта после конвейера (последние метры) или весь путь. */
+    effectiveRouteM: number;
+    conveyorSolutionId?: string;
+    /** Доля потока на людях (0..1). */
+    manualShare: number;
+  }>;
 }
 
 /** Флот в расчёте склада — те же числа идут в 3D-сцену. */
 export interface FleetOutput {
   kind: FleetKind;
+  /** Слот сценария: приёмка, отгрузка, отбор, сортировка, уборка. */
+  slot: SlotId;
+  /** Доля потока слота (0..1). */
+  share: number;
+  /** Путь в одну сторону для транспорта, м. */
+  routeM?: number;
+  /** Длина одной конвейерной линии, м. */
+  lineLengthM?: number;
   label: string;
   /** Ключ 3D-модели сцены (washer, transporter, storagecube…). */
   model?: string;
@@ -99,6 +126,8 @@ export interface CalculationOutput {
   /** Сколько роботов заложено в расчёт и почему. */
   robots: { count: number; basis: string };
   fleet?: FleetOutput[];
+  /** Склад: связи приёмки и отгрузки — поток, путь, конвейер, доля на людях. */
+  scenario?: ScenarioOutput;
 }
 
 interface Kpi {
@@ -901,7 +930,8 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
 
   const params = warehouseParamsOf(values);
   const solutions = input.solutions?.length ? input.solutions : [input.solution];
-  const model = runWarehouseModel(solutions, params);
+  const plan = { solutions, ...(input.assignments ? { assignments: input.assignments } : {}) };
+  const model = runWarehouseModel(plan, params);
   const { groups, labor, purchase, raas } = model;
   const horizon = params.horizonYears;
   const gaps: string[] = [];
@@ -955,7 +985,7 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
 
   const count = groups.reduce((sum, g) => sum + g.count, 0);
   const fleetLine = (g: (typeof groups)[number]) =>
-    `${FLEET_LABEL[g.kind]}: ${g.count} × ${g.robot.solution.name} — пик ${fmt(g.peakDemand)} ${DEMAND_UNIT[g.kind]}, на робота ${fmt(g.throughputPerRobot)} ${DEMAND_UNIT[g.kind]}`;
+    `${SLOT_LABEL[g.slot]}: ${g.count} × ${g.robot.solution.name}${g.share < 1 ? ` (${Math.round(g.share * 100)}% потока)` : ""} — пик ${fmt(g.peakDemand)} ${DEMAND_UNIT[g.kind]}, на робота ${fmt(g.throughputPerRobot)} ${DEMAND_UNIT[g.kind]}`;
   const basis = groups.length
     ? `${groups.map(fleetLine).join("; ")}. Загрузка ${WAREHOUSE_NORMS.loadFactor}, готовность ${WAREHOUSE_NORMS.availability}, резерв парка ×${WAREHOUSE_NORMS.reserveFactor}.`
     : "Решение не относится ни к одному флоту склада — заложен 1 робот.";
@@ -1000,8 +1030,8 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
   const capexLines = [
     ...groups.map((g) => ({
       title: g.robot.solution.perMeter
-        ? `${g.count} × ${g.robot.solution.name}, линия ${params.routeLengthM} м`
-        : `${g.count} × ${g.robot.solution.name}`,
+        ? `${g.count} × ${g.robot.solution.name}, линия ${g.lineLengthM ?? params.routeLengthM} м — ${SLOT_LABEL[g.slot].toLowerCase()}`
+        : `${g.count} × ${g.robot.solution.name} — ${SLOT_LABEL[g.slot].toLowerCase()}`,
       amount: g.count * g.costs.equipment,
       source: g.robot.solution.source ? `Каталог: ${g.robot.solution.source}` : "Каталог решений",
       confidence: (g.robot.solution.fieldSources?.["costs.equipment"]?.confirmed === false ? "needs-review" : "confirmed") as Confidence,
@@ -1113,7 +1143,7 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
         sortPerHour: params.sortPerHour * (k.demand ?? 1),
         activeAreaM2: params.activeAreaM2 * (k.demand ?? 1),
       };
-      return runWarehouseModel(solutions, p, undefined, k.cost ?? 1).purchase.paybackYears;
+      return runWarehouseModel(plan, p, k.cost ?? 1).purchase.paybackYears;
     };
     const variants = [
       { id: "equipment", label: "Цена оборудования", direction: "up" as const, run: (f: number) => shift({ cost: f }) },
@@ -1143,6 +1173,10 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
   const effect = purchase.effect;
   const fleet: FleetOutput[] = groups.map((g) => ({
     kind: g.kind,
+    slot: g.slot,
+    share: Math.round(g.share * 1000) / 1000,
+    ...(g.routeM !== undefined ? { routeM: g.routeM } : {}),
+    ...(g.lineLengthM !== undefined ? { lineLengthM: g.lineLengthM } : {}),
     label: FLEET_LABEL[g.kind],
     ...(g.robot.model ? { model: g.robot.model } : {}),
     solutionId: g.robot.solution.id,
@@ -1190,5 +1224,16 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
     solutionId: input.solution.id,
     robots: { count: Math.max(1, count), basis },
     fleet,
+    scenario: {
+      links: model.links.map((l) => ({
+        slot: l.slot,
+        label: SLOT_LABEL[l.slot],
+        flowPerHour: round1(l.flow),
+        routeM: l.routeM,
+        effectiveRouteM: l.effectiveRouteM,
+        ...(l.conveyor ? { conveyorSolutionId: l.conveyor.robot.solution.id } : {}),
+        manualShare: Math.round(l.manualShare * 1000) / 1000,
+      })),
+    },
   };
 }

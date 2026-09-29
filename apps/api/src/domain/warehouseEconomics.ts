@@ -250,50 +250,208 @@ function energyPerYear(robot: FleetRobot, count: number, p: WarehouseParams): nu
   return count * gridKwh * WAREHOUSE_NORMS.tariffRubPerKwh;
 }
 
+// ─── Сценарий склада: зоны и связи ──────────────────────────────────────
+/**
+ * Склад — цепочка зон и связей между ними. Связи приёмки и отгрузки везут
+ * паллеты между воротами и хранением: их закрывают транспортные роботы (с
+ * долями потока) и конвейер — инфраструктура связи, который укорачивает путь
+ * до «последних метров» у стеллажа. Зоны отбора и сортировки — стационарные
+ * роботы, уборка — поверх всего пола.
+ */
+export type SlotId = "inbound" | "outbound" | "picking" | "sorting" | "cleaning";
+
+export const SLOTS: SlotId[] = ["inbound", "outbound", "picking", "sorting", "cleaning"];
+
+export const SLOT_LABEL: Record<SlotId, string> = {
+  inbound: "Приёмка: ворота → хранение",
+  outbound: "Отгрузка: хранение → ворота",
+  picking: "Отбор",
+  sorting: "Сортировка",
+  cleaning: "Уборка",
+};
+
+/** Какие виды роботов работают в слоте. */
+export const SLOT_KINDS: Record<SlotId, FleetKind[]> = {
+  inbound: ["loader", "conveyor"],
+  outbound: ["loader", "conveyor"],
+  picking: ["arm"],
+  sorting: ["sorter"],
+  cleaning: ["vacuum"],
+};
+
+export const TRANSPORT_SLOTS: SlotId[] = ["inbound", "outbound"];
+
+export interface Assignment {
+  slot: SlotId;
+  solutionId: string;
+  /** Доля потока слота (0..1); нет — поровну между роботами слота. Конвейеру не нужна. */
+  share?: number;
+}
+
+/** Последние метры от конца конвейера до места на стеллаже: четверть пути, не меньше 10 м. */
+export function lastMileM(routeM: number): number {
+  return Math.min(routeM, Math.max(10, Math.round(routeM * 0.25)));
+}
+
+/** Слоты по умолчанию для набора роботов: каждый — туда, где работает его вид. */
+export function defaultAssignments(solutions: CatalogSolution[]): Assignment[] {
+  const list: Assignment[] = [];
+  for (const solution of solutions) {
+    const kind = fleetKindOf(solution);
+    if (!kind) continue;
+    for (const slot of SLOTS.filter((id) => SLOT_KINDS[id].includes(kind))) {
+      list.push({ slot, solutionId: solution.id });
+    }
+  }
+  return list;
+}
+
+function slotDemand(slot: SlotId, p: WarehouseParams): number {
+  if (slot === "inbound") return p.loadPerHour * p.peakLoadFactor;
+  if (slot === "outbound") return p.outboundPerHour * p.peakLoadFactor;
+  if (slot === "picking") return p.sortPerHour * p.peakLoadFactor;
+  if (slot === "sorting") return p.itemsPerHour * p.peakLoadFactor;
+  return p.activeAreaM2 / p.hoursPerShift;
+}
+
 // ─── Флот ───────────────────────────────────────────────────────────────
 export interface FleetGroup {
   kind: FleetKind;
+  slot: SlotId;
+  /** Доля потока слота, которую везёт/делает эта группа (конвейер — 1). */
+  share: number;
   robot: FleetRobot;
   count: number;
   throughputPerRobot: number;
   peakDemand: number;
+  /** Путь в одну сторону, по которому считается цикл транспортного робота, м. */
+  routeM?: number;
+  /** Длина одной конвейерной линии, м. */
+  lineLengthM?: number;
   costs: UnitCosts;
 }
 
-export function buildFleet(
-  solutions: CatalogSolution[],
-  p: WarehouseParams,
-  overrides?: Partial<Record<FleetKind, number>>,
-  costFactor = 1,
-): FleetGroup[] {
-  const groups: FleetGroup[] = [];
-  for (const solution of solutions) {
-    const kind = fleetKindOf(solution);
-    // Один флот каждого вида: второй робот того же вида делил бы тот же поток.
-    if (!kind || groups.some((g) => g.kind === kind)) continue;
-    const robot = fleetRobotOf(solution, kind);
-    // Линия, у которой цена и мощность заданы за метр: длина — путь от ворот до хранения.
-    const lineM = solution.perMeter ? p.routeLengthM : 1;
-    if (lineM !== 1) {
-      robot.workPowerKw *= lineM;
-      robot.idlePowerKw *= lineM;
-    }
-    const throughputPerRobot = effectiveThroughput(robot, p);
-    const peakDemand = peakDemandOf(kind, p);
-    const counted = requiredRobotCount(peakDemand, throughputPerRobot);
-    groups.push({
-      kind,
-      robot,
-      count: Math.max(1, overrides?.[kind] ?? counted),
-      throughputPerRobot,
-      peakDemand,
-      costs: scaleCosts(unitCostsOf(solution, costFactor), lineM),
-    });
-  }
-  return groups;
+/** Связь приёмки или отгрузки: поток, путь и сколько ручной работы остаётся. */
+export interface LinkPlan {
+  slot: SlotId;
+  flow: number;
+  routeM: number;
+  /** Путь после конвейера (последние метры) или весь путь без конвейера. */
+  effectiveRouteM: number;
+  conveyor: FleetGroup | null;
+  carriers: FleetGroup[];
+  /** Доля потока без робота — на людях. */
+  manualShare: number;
+  /** Часов работы операторов в час: сейчас и после роботизации. */
+  manualHoursBefore: number;
+  manualHoursAfter: number;
 }
 
-// ─── Труд (laborSavingsFractionOf) ───────────────────────────────────────
+export interface ScenarioPlan {
+  solutions: CatalogSolution[];
+  assignments?: Assignment[];
+}
+
+function groupOf(
+  solution: CatalogSolution,
+  kind: FleetKind,
+  slot: SlotId,
+  share: number,
+  demand: number,
+  p: WarehouseParams,
+  costFactor: number,
+  extra: { routeM?: number; lineLengthM?: number } = {},
+): FleetGroup {
+  const robot = fleetRobotOf(solution, kind);
+  // Цена и мощность за метр — на длину линии.
+  const lineM = solution.perMeter ? extra.lineLengthM ?? p.routeLengthM : 1;
+  if (lineM !== 1) {
+    robot.workPowerKw *= lineM;
+    robot.idlePowerKw *= lineM;
+  }
+  const params = extra.routeM !== undefined ? { ...p, routeLengthM: extra.routeM } : p;
+  const throughputPerRobot = effectiveThroughput(robot, params);
+  return {
+    kind,
+    slot,
+    share,
+    robot,
+    count: Math.max(1, requiredRobotCount(demand, throughputPerRobot)),
+    throughputPerRobot,
+    peakDemand: demand,
+    ...extra,
+    costs: scaleCosts(unitCostsOf(solution, costFactor), lineM),
+  };
+}
+
+export function buildScenarioFleet(
+  plan: ScenarioPlan,
+  p: WarehouseParams,
+  costFactor = 1,
+): { groups: FleetGroup[]; links: LinkPlan[] } {
+  const byId = new Map(plan.solutions.map((s) => [s.id, s]));
+  const assignments = (plan.assignments?.length ? plan.assignments : defaultAssignments(plan.solutions)).filter((a) => {
+    const solution = byId.get(a.solutionId);
+    const kind = solution ? fleetKindOf(solution) : null;
+    return kind !== null && SLOT_KINDS[a.slot].includes(kind);
+  });
+  const groups: FleetGroup[] = [];
+  const links: LinkPlan[] = [];
+
+  for (const slot of SLOTS) {
+    const inSlot = assignments.filter((a) => a.slot === slot);
+    if (!inSlot.length && !TRANSPORT_SLOTS.includes(slot)) continue;
+    const demand = slotDemand(slot, p);
+
+    if (TRANSPORT_SLOTS.includes(slot)) {
+      const routeM = p.routeLengthM;
+      const conveyorA = inSlot.find((a) => fleetKindOf(byId.get(a.solutionId)!) === "conveyor");
+      const carriersA = inSlot.filter((a) => a !== conveyorA && fleetKindOf(byId.get(a.solutionId)!) !== "conveyor");
+      const effectiveRouteM = conveyorA ? lastMileM(routeM) : routeM;
+      const conveyor = conveyorA
+        ? groupOf(byId.get(conveyorA.solutionId)!, "conveyor", slot, 1, demand, p, costFactor, {
+            lineLengthM: Math.max(5, routeM - effectiveRouteM),
+          })
+        : null;
+      if (conveyor) groups.push(conveyor);
+
+      // Доли: заданные — как есть (сумма не больше 1), остальным — поровну из остатка.
+      const fixed = carriersA.filter((a) => a.share !== undefined);
+      const fixedSum = Math.min(1, fixed.reduce((sum, a) => sum + Math.max(0, a.share!), 0));
+      const free = carriersA.length - fixed.length;
+      const shareOf = (a: Assignment) =>
+        a.share !== undefined ? (Math.max(0, a.share) / Math.max(1, fixedSum || 1)) * Math.min(1, fixedSum) : free ? (1 - fixedSum) / free : 0;
+      const carriers = carriersA.map((a) =>
+        groupOf(byId.get(a.solutionId)!, "loader", slot, shareOf(a), demand * shareOf(a), p, costFactor, { routeM: effectiveRouteM }),
+      );
+      groups.push(...carriers);
+
+      // Робот без известной производительности свою долю не закрывает — она на людях.
+      const covered = carriers.reduce((sum, g) => sum + (g.throughputPerRobot > 0 ? g.share : 0), 0);
+      const manualShare = Math.max(0, 1 - covered);
+      const before = demand / manualForkliftRate({ ...p, routeLengthM: routeM });
+      const after = (demand * manualShare) / manualForkliftRate({ ...p, routeLengthM: effectiveRouteM });
+      links.push({ slot, flow: demand, routeM, effectiveRouteM, conveyor, carriers, manualShare, manualHoursBefore: before, manualHoursAfter: after });
+      continue;
+    }
+
+    const shares = inSlot.map((a) => a.share ?? 1 / inSlot.length);
+    const total = shares.reduce((a, b) => a + b, 0) || 1;
+    inSlot.forEach((a, i) => {
+      const solution = byId.get(a.solutionId)!;
+      const share = shares[i]! / total;
+      groups.push(groupOf(solution, fleetKindOf(solution)!, slot, share, demand * share, p, costFactor));
+    });
+  }
+  return { groups, links };
+}
+
+/** Старый вызов: набор решений без слотов — слоты по умолчанию. */
+export function buildFleet(solutions: CatalogSolution[], p: WarehouseParams, costFactor = 1): FleetGroup[] {
+  return buildScenarioFleet({ solutions }, p, costFactor).groups;
+}
+
+// ─── Труд ───────────────────────────────────────────────────────────────
 interface Labor {
   pickerCost: number;
   forkliftCost: number;
@@ -302,51 +460,42 @@ interface Labor {
   pickerFraction: number;
   forkliftFraction: number;
   armCapacityFraction: number | null;
-  loaderCapacityFraction: number | null;
+  /** Доля часов операторов погрузчиков, которая остаётся на связях (null — связи не тронуты). */
+  forkliftRemaining: number | null;
   oversizedCeiling: number;
 }
 
-function laborOf(p: WarehouseParams, groups: FleetGroup[]): Labor {
+function laborOf(p: WarehouseParams, groups: FleetGroup[], links: LinkPlan[]): Labor {
   const payroll = (count: number, wage: number) => count * wage * 12 * p.payrollTaxFactor;
   const pickerCost = payroll(p.pickerCount, p.pickerWageMonth);
   const forkliftCost = payroll(p.forkliftOperatorCount, p.forkliftWageMonth);
-
   const oversizedCeiling = 1 - Math.min(1, Math.max(0, p.oversizedCargoPct / 100));
-  // Сколько роль делает в час сейчас: штат одной смены за вычетом потерь рабочего времени.
+
+  // Отборщики: пропускная способность роборук и сортера против того, что роль делает сейчас.
   const perShift = (roster: number) => roster / p.shifts / (1 + p.staffLossFactor);
   const pickerCapacity = perShift(p.pickerCount) * p.manualProductivity;
-  const forkliftCapacity = perShift(p.forkliftOperatorCount) * manualForkliftRate(p);
-
-  const fleetOf = (kind: FleetKind) => groups.find((g) => g.kind === kind);
-  // Роль замещают несколько флотов вместе: отборщиков — роборуки и сортер (его
-  // штуки переводим в строки), операторов погрузчиков — погрузчики и конвейеры.
-  const throughputOf = (kind: FleetKind, perUnit = 1) => {
-    const group = fleetOf(kind);
-    return group ? (group.count * group.throughputPerRobot) / perUnit : 0;
-  };
-  // Флота нет — null (роль не затронута); флот есть, а производительность не
-  // известна — 0: замещать работу, которую парк не успевает, нечем.
-  const capacityFraction = (present: boolean, total: number, roleCapacity: number) => {
-    if (!present) return null;
-    if (total <= 0) return 0;
-    return roleCapacity > 0 ? Math.min(1, total / roleCapacity) : 1;
-  };
-  const armCapacityFraction = capacityFraction(
-    Boolean(fleetOf("arm") || fleetOf("sorter")),
-    throughputOf("arm") + throughputOf("sorter", p.itemsPerLine),
-    pickerCapacity,
+  const pickGroups = groups.filter((g) => g.kind === "arm" || g.kind === "sorter");
+  const pickThroughput = pickGroups.reduce(
+    (sum, g) => sum + (g.count * g.throughputPerRobot) / (g.kind === "sorter" ? p.itemsPerLine : 1),
+    0,
   );
-  const loaderCapacityFraction = capacityFraction(
-    Boolean(fleetOf("loader") || fleetOf("conveyor")),
-    throughputOf("loader") + throughputOf("conveyor"),
-    forkliftCapacity,
-  );
-  const pickerFraction = Math.min(oversizedCeiling, armCapacityFraction ?? 1);
-  const forkliftFraction = Math.min(oversizedCeiling, loaderCapacityFraction ?? 1);
+  const armCapacityFraction = pickGroups.length
+    ? pickThroughput <= 0
+      ? 0
+      : pickerCapacity > 0
+        ? Math.min(1, pickThroughput / pickerCapacity)
+        : 1
+    : null;
+  const pickerFraction = armCapacityFraction === null ? 0 : Math.min(oversizedCeiling, armCapacityFraction);
 
-  const replacesPickers = Boolean(fleetOf("arm") || fleetOf("sorter"));
-  const replacesForklifts = Boolean(fleetOf("loader") || fleetOf("conveyor"));
-  const savings = (replacesPickers ? pickerCost * pickerFraction : 0) + (replacesForklifts ? forkliftCost * forkliftFraction : 0);
+  // Операторы погрузчиков: сколько часов ручной работы остаётся на связях приёмки и отгрузки.
+  const touched = links.some((l) => l.conveyor || l.carriers.length);
+  const before = links.reduce((sum, l) => sum + l.manualHoursBefore, 0);
+  const after = links.reduce((sum, l) => sum + l.manualHoursAfter, 0);
+  const forkliftRemaining = touched && before > 0 ? after / before : null;
+  const forkliftFraction = forkliftRemaining === null ? 0 : Math.min(oversizedCeiling, 1 - forkliftRemaining);
+
+  const savings = pickerCost * pickerFraction + forkliftCost * forkliftFraction;
   // Базовый ФОТ — обе роли, как у Егора; незамещённая часть входит в TCO сценариев
   // роботизации как оставшийся ФОТ, поэтому сравнение с «Как есть» честное.
   const baseline = pickerCost + forkliftCost;
@@ -359,7 +508,7 @@ function laborOf(p: WarehouseParams, groups: FleetGroup[]): Labor {
     pickerFraction,
     forkliftFraction,
     armCapacityFraction,
-    loaderCapacityFraction,
+    forkliftRemaining,
     oversizedCeiling,
   };
 }
@@ -442,23 +591,20 @@ export function buildWarehouseScenario(kind: "purchase" | "raas", p: WarehousePa
 export interface WarehouseModel {
   params: WarehouseParams;
   groups: FleetGroup[];
+  links: LinkPlan[];
   labor: Labor;
   purchase: WarehouseScenario;
   raas: WarehouseScenario;
   baselineTco: number;
 }
 
-export function runWarehouseModel(
-  solutions: CatalogSolution[],
-  p: WarehouseParams,
-  overrides?: Partial<Record<FleetKind, number>>,
-  costFactor = 1,
-): WarehouseModel {
-  const groups = buildFleet(solutions, p, overrides, costFactor);
-  const labor = laborOf(p, groups);
+export function runWarehouseModel(plan: ScenarioPlan, p: WarehouseParams, costFactor = 1): WarehouseModel {
+  const { groups, links } = buildScenarioFleet(plan, p, costFactor);
+  const labor = laborOf(p, groups, links);
   return {
     params: p,
     groups,
+    links,
     labor,
     purchase: buildWarehouseScenario("purchase", p, groups, labor),
     raas: buildWarehouseScenario("raas", p, groups, labor),
@@ -476,13 +622,26 @@ function roleLine(role: string, fraction: number, capacityFraction: number | nul
 }
 
 export function laborAssumption(model: WarehouseModel): string {
-  const { labor, groups } = model;
+  const { labor, groups, links } = model;
   const lines: string[] = [];
   if (groups.some((g) => g.kind === "arm" || g.kind === "sorter")) {
     lines.push(roleLine("Отборщики", labor.pickerFraction, labor.armCapacityFraction));
   }
-  if (groups.some((g) => g.kind === "loader" || g.kind === "conveyor")) {
-    lines.push(roleLine("Операторы погрузчиков", labor.forkliftFraction, labor.loaderCapacityFraction));
+  if (labor.forkliftRemaining !== null) {
+    const parts = links
+      .filter((l) => l.conveyor || l.carriers.length)
+      .map((l) => {
+        const how = [
+          l.conveyor ? `конвейер до последних ${l.effectiveRouteM} м` : "",
+          l.carriers.length ? `роботы везут ${Math.round((1 - l.manualShare) * 100)}% потока` : "",
+        ]
+          .filter(Boolean)
+          .join(", ");
+        return `${l.slot === "inbound" ? "приёмка" : "отгрузка"} — ${how}`;
+      });
+    lines.push(
+      `Операторы погрузчиков — остаётся ${Math.round(labor.forkliftRemaining * 100)}% часов (${parts.join("; ")}), заменяется ${Math.round(labor.forkliftFraction * 100)}%.`,
+    );
   }
   if (!lines.length) {
     return "Уборщиков в паспорте склада нет — экономия труда для уборки не считается, только её собственные затраты.";
@@ -490,7 +649,7 @@ export function laborAssumption(model: WarehouseModel): string {
   const ceiling = labor.oversizedCeiling < 1
     ? ` Потолок экономии — ${Math.round(labor.oversizedCeiling * 100)}%: негабаритные грузы остаются ручными при любом парке.`
     : "";
-  return `Экономия труда считается по каждой роли отдельно — пропускная способность парка против того, что роль делает сейчас. ${lines.join(" ")}${ceiling}`;
+  return `Экономия труда считается по каждой роли отдельно. ${lines.join(" ")}${ceiling}`;
 }
 
 export function fleetSubstitutions(groups: FleetGroup[]): Array<{ name: string; items: Substitution[] }> {

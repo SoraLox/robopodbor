@@ -45,7 +45,8 @@ describe('simulationInput', () => {
   it('переносит параметры склада и парк из расчёта в сцену', () => {
     const input = sceneOf(['AM0001']);
     const loader = input.fleets.loader!;
-    const economics = fleetOf(['AM0001'])[0]!;
+    const economics = fleetOf(['AM0001']).filter((g) => g.kind === 'loader');
+    const sum = (key: 'count' | 'peakDemand') => economics.reduce((s, g) => s + g[key], 0);
 
     expect(input.params.floorAreaM2).toBe(20000);
     expect(input.params.workZonePct).toBe(50);
@@ -55,9 +56,10 @@ describe('simulationInput', () => {
     expect(loader.capacityKg).toBe(1500);
     expect(loader.speedMps).toBe(1.5);
     // Сцена и экономика — одни числа.
-    expect(loader.throughput).toBe(economics.throughputPerRobot);
-    expect(loader.requiredCount).toBe(economics.count);
-    expect(input.demand.loader).toBe(economics.peakDemand);
+    // Сцена и экономика — одни числа: приёмка + отгрузка.
+    expect(loader.throughput).toBeCloseTo(economics[0]!.throughputPerRobot);
+    expect(loader.requiredCount).toBe(sum('count'));
+    expect(input.demand.loader).toBeCloseTo(sum('peakDemand'));
     expect(loader.recommendedCount).toBeLessThanOrEqual(loader.maxCount);
   });
 

@@ -112,6 +112,35 @@ paths:
               schema: { $ref: '#/components/schemas/CalculationResult' }
         '400': { description: Некорректный запрос }
         '404': { description: Решение или тип объекта не найдены }
+  /calculations/scenarios:
+    post:
+      operationId: generateScenarios
+      summary: Варианты сценария склада с экономикой каждого
+      description: >
+        Из подходящих объекту решений каталога собирает несколько цепочек
+        роботов по зонам и связям склада (src/domain/warehouseScenarios.ts).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [objectType]
+              properties:
+                objectType: { type: string, enum: [warehouse] }
+                parameters:
+                  type: object
+                  additionalProperties: { type: string }
+      responses:
+        '200':
+          description: Варианты
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ScenarioVariant' }
+        '400': { description: Некорректный запрос }
   /calculations/{calculationId}:
     get:
       operationId: getCalculation
@@ -986,6 +1015,40 @@ components:
           type: array
           description: Набор роботов — по одному на флот склада (уборка, отбор, перемещение паллет); solutionId — главный из них.
           items: { type: string }
+        assignments:
+          type: array
+          description: Склад — какой робот в каком слоте сценария; нет — слоты по виду робота.
+          items: { $ref: '#/components/schemas/Assignment' }
+    SlotId:
+      type: string
+      enum: [inbound, outbound, picking, sorting, cleaning]
+    Assignment:
+      type: object
+      required: [slot, solutionId]
+      properties:
+        slot: { $ref: '#/components/schemas/SlotId' }
+        solutionId: { type: string }
+        share: { type: number, description: 'Доля потока слота 0..1; нет — поровну.' }
+    ScenarioVariant:
+      type: object
+      required: [id, title, description, assignments, solutionIds, capexMln, paybackYears, roiPct, effectMlnPerYear, tcoMln, robots]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        assignments:
+          type: array
+          items: { $ref: '#/components/schemas/Assignment' }
+        solutionIds:
+          type: array
+          items: { type: string }
+        capexMln: { type: number }
+        paybackYears: { type: number, nullable: true }
+        roiPct: { type: number, nullable: true }
+        effectMlnPerYear: { type: number }
+        tcoMln: { type: number }
+        robots: { type: integer }
+        best: { type: boolean }
     CalculationResult:
       type: object
       required:
@@ -1043,10 +1106,34 @@ components:
           type: array
           description: Парк склада по флотам — те же числа, что в 3D-симуляции.
           items: { $ref: '#/components/schemas/FleetGroup' }
+        assignments:
+          type: array
+          items: { $ref: '#/components/schemas/Assignment' }
+        scenario:
+          type: object
+          required: [links]
+          properties:
+            links:
+              type: array
+              items:
+                type: object
+                required: [slot, label, flowPerHour, routeM, effectiveRouteM, manualShare]
+                properties:
+                  slot: { $ref: '#/components/schemas/SlotId' }
+                  label: { type: string }
+                  flowPerHour: { type: number }
+                  routeM: { type: number }
+                  effectiveRouteM: { type: number }
+                  conveyorSolutionId: { type: string }
+                  manualShare: { type: number }
     FleetGroup:
       type: object
-      required: [kind, label, solutionId, name, count, throughputPerRobot, unit, peakDemand, workPowerKw, idlePowerKw, substitutions, footprint]
+      required: [kind, slot, share, label, solutionId, name, count, throughputPerRobot, unit, peakDemand, workPowerKw, idlePowerKw, substitutions, footprint]
       properties:
+        slot: { $ref: '#/components/schemas/SlotId' }
+        share: { type: number }
+        routeM: { type: number }
+        lineLengthM: { type: number }
         kind: { type: string, enum: [vacuum, arm, loader, sorter, conveyor] }
         label: { type: string }
         model: { type: string, description: 'Ключ 3D-модели сцены: washer, stacker, transporter, storagecube.' }
