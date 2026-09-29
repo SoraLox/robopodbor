@@ -57,7 +57,7 @@ erDiagram
 
 | Таблица | Назначение |
 |---|---|
-| `User`, `Session` | Учётные записи (роль `user` или `admin`) и сессии |
+| `User`, `Session` | Учётные записи (роль `user` или `admin`), избранные роботы (`favoriteSolutionIds`), дата смены пароля и сессии |
 | `Project` | Проект: тип объекта, значения паспорта, выбранные процессы и решение, последний снимок расчёта с `dataVersion`, `modelVersion`, `calculatedAt` |
 | `ProjectCalculation` | История расчётов: каждый сохранённый результат вместе с паспортом, версией данных и версией модели (ТЗ 3.1.5) |
 | `Scenario` | Сценарии проекта для списка и дашборда |
@@ -80,6 +80,7 @@ erDiagram
 |---|---|---|
 | Здоровье | `GET /health` | все |
 | Вход | `POST /auth/register`, `/auth/login`, `/auth/logout`, `GET /auth/session` | все |
+| Личный кабинет | `PATCH /auth/profile` — имя и организация; `POST /auth/password` — смена пароля (другие сессии закрываются); `GET /auth/favorites`, `PUT`, `DELETE /auth/favorites/{solutionId}` — избранные роботы | вошедший пользователь |
 | Типы объектов и паспорта | `GET /object-types`, `/object-types/{slug}/parameters`, `/object-types/{slug}/parameters/template`; `POST /object-types/{slug}/parameters/import` | все |
 | Каталог | `GET /catalog/solutions`, `/catalog/taxonomy` | все |
 | Каталог, изменение | `POST`, `PUT`, `DELETE /catalog/solutions[/{id}]`; `GET /catalog/solutions/export`; `POST /catalog/solutions/import` | админ |
