@@ -32,6 +32,7 @@ docker compose up --build
 | Симптом | Что сделать |
 |---|---|
 | `Cannot connect to the Docker daemon` | Запустите Docker Desktop |
+| `500 Internal Server Error … dockerDesktopLinuxEngine/_ping` | Движок Docker Desktop не запущен, проект тут ни при чём. Дождитесь «Engine running» в Docker Desktop и проверьте `docker version` — должен быть раздел `Server`. Не помогло: Quit Docker Desktop → `wsl --shutdown` → запустить снова |
 | Порт 8080 занят | Создайте `.env` со строкой `WEB_PORT=8090` и откройте <http://localhost:8090> |
 | Падает `npm ci` / скачивание образов | Нужен интернет на первой сборке; проверьте VPN/прокси |
 | Не хватает памяти | Docker Desktop → Resources → ≥ 4 ГБ |
