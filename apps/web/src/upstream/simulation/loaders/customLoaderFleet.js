@@ -1,21 +1,17 @@
 import { computeGateClusters } from "../shape/shapeGeometry.js";
-import { cellCenter, cellOfPoint, findPath, isWalkable, makeNavGrid, pathLength } from "./gridPath.js";
+import { cellCenter, cellOfPoint, isWalkable, makeNavGrid } from "./gridPath.js";
+import { createDriver, createTraffic, headingZForward, servicePoint } from "./driver.js";
 import { CELL, cellAt, cellWorldOrigin } from "../shape/shapeTypes.js";
 import { createCargoFactory } from "./cargo.js";
 import { createEnergyMeter } from "../energy.js";
 import { disposeTree, createMaterializeFade } from "../sceneUtils.js";
 import { makeForkliftRobot } from "../robots/forkliftRobot.js";
 import { makeTruck } from "../robots/truckRobot.js";
-import { FORK_CARRY_LIFT, FORK_CLEARANCE, FORK_LIFT_SPEED, FORKLIFT_TURN_RATE, LOAD_SLOWDOWN } from "../constants.js";
+import { FORK_CARRY_LIFT, FORK_CLEARANCE, FORK_LIFT_SPEED, LOAD_SLOWDOWN } from "../constants.js";
 
 // Работа вилами за цикл — 25 с, как в расчёте (warehouseEconomics loaderHandlingSeconds):
 // половина у стеллажа, половина у ворот. Раньше было 1,4 с — сцена «обгоняла» расчёт.
 const PAUSE_SECONDS = 12.5;
-const ARRIVE_EPS = 0.15;
-const TURN_RATE = FORKLIFT_TURN_RATE * 1.5; // рад/с, доворот на ходу
-// Больше этого угла до следующей точки — сначала разворот на месте, потом едем:
-// как у штатных погрузчиков (loaderSystem), а не «боком» по дуге.
-const TURN_IN_PLACE = 0.6;
 // Высоты вил: ярус стеллажа (warehouseRacks TIER_HEIGHT), лента конвейера, пол фуры.
 const RACK_TIER_HEIGHT = 1.9;
 const BELT_HEIGHT = 1.0;
@@ -44,7 +40,6 @@ const TRUCK_FADE_SECONDS = 1.2;
 // от ворот к стеллажу (фура привозит), на зоне загрузки (GATE_OUT) — от
 // стеллажа к воротам (фура забирает); у ворот погрузчик ждёт, пока
 // подъедет фура (см. stepGateTruck) — без неё передавать груз некому.
-const headingZForward = (dx, dz) => Math.atan2(dx, dz);
 
 function lerp(a, b, t) {
   return a + (b - a) * t;
@@ -136,8 +131,19 @@ export function createCustomLoaderFleet({
   direction = null,
   handoffs = null,
   showTrucks = true,
-  // Стационарное оборудование (сеть участка отбора) — проезд закрыт.
+  // Стационарное оборудование (ленты, сеть участка отбора) — проезд закрыт.
   blockedRects = [],
+  // Общий реестр движения уровня (driver.js): роботы разных флотов не въезжают друг в друга.
+  traffic = createTraffic(),
+  // Челночная схема (shuttleFleet.js): вместо стеллажей — место стоянки
+  // транспортировщика {stand, take, put}: погрузчик ставит груз на него / снимает.
+  storageHub = null,
+  // Погрузчики у зоны хранения: стеллажи — ближайшие rackLimit мест к точке rackNear.
+  rackNear = null,
+  rackLimit = 8,
+  truckFactory = makeTruck,
+  // Точки, которые не могут быть местом хранения (стоянки транспортировщиков и т. п.).
+  reservedPoints = [],
 }) {
   const allGates = computeGateClusters(shape);
   const gates = gateIds ? allGates.filter((gate) => gateIds.includes(gate.id)) : allGates;
@@ -151,6 +157,9 @@ export function createCustomLoaderFleet({
   const loadSlowFactor = 1 - LOAD_SLOWDOWN * Math.min(1, cargoWeightKg / Math.max(1, capacityKg));
 
   const nav = makeNavGrid(shape);
+  // Стоянки транспортировщиков — не проезд для погрузчиков.
+  const bayParks = [storageHub?.park, ...Object.values(handoffs ?? {}).map((h) => h.park)].filter(Boolean);
+  blockedRects = [...blockedRects, ...bayParks.map((p) => ({ x: p.x, z: p.z, halfX: 0.6, halfZ: 0.6 }))];
   for (let gz = 0; gz < nav.n; gz++) {
     for (let gx = 0; gx < nav.n; gx++) {
       const c = cellCenter(nav, gx, gz);
@@ -160,7 +169,22 @@ export function createCustomLoaderFleet({
       }
     }
   }
-  const storage = collectStorage(shape, nav, gates, routeLengthM ? routeLengthM / Math.max(1e-6, metersPerUnit) : null);
+  const reserved = [
+    ...reservedPoints,
+    ...(storageHub ? [storageHub.park, storageHub.stand] : []),
+    ...Object.values(handoffs ?? {}).flatMap((h) => (h.park ? [h.park, h.stand] : [])),
+  ];
+  const storage = collectStorage(shape, nav, gates, routeLengthM ? routeLengthM / Math.max(1e-6, metersPerUnit) : null)
+    .filter((place) => !reserved.some((r) => Math.hypot(r.x - place.x, r.z - place.z) < 3.5))
+    .map((place) => servicePoint(place));
+  const driver = createDriver({ nav, traffic });
+  const drivePath = driver.drive;
+  const near = rackNear
+    ? [...storage].sort((a, b) => Math.hypot(a.x - rackNear.x, a.z - rackNear.z) - Math.hypot(b.x - rackNear.x, b.z - rackNear.z)).slice(0, rackLimit)
+    : null;
+  // Одна точка передачи на конец ленты: погрузчики у неё — по очереди.
+  const hubStops = new Map();
+  const starts = [];
 
   const racksByGate = new Map(gates.map((gate) => [gate.id, []]));
   for (const place of storage) {
@@ -199,17 +223,20 @@ export function createCustomLoaderFleet({
     const slot = Math.floor(index / gates.length);
     const slots = Math.ceil((loaderCount - (index % gates.length)) / gates.length);
     const handoff = handoffs?.[gate.id];
-    const gateStop = handoff
-      ? { x: handoff.x + (slot - (slots - 1) / 2) * nav.cellSize * 0.5, z: handoff.z }
-      : gateStopOf(gate, slot, slots);
+    // Место стоянки транспортировщика (shuttleFleet) — тот же объект, что у его флота.
+    if (handoff && !hubStops.has(handoff))
+      hubStops.set(handoff, handoff.stand ?? servicePoint({ x: handoff.x, z: handoff.z, face: handoff.face }));
+    const gateStop = handoff ? hubStops.get(handoff) : servicePoint(gateStopOf(gate, slot, slots));
     const model = robotFactory();
+    // Стартуют на свободных клетках рядом с точкой — не в ней и не друг в друге.
+    const start = freeStart(gateStop);
 
-    model.group.position.set(gateStop.x, 0, gateStop.z);
+    model.group.position.set(start.x, 0, start.z);
     group.add(model.group);
 
     // Несколько погрузчиков на одних воротах начинают с разных стеллажей.
-    const myRacks = racksByGate.get(gate.id);
-    return {
+    const myRacks = storageHub ? [storageHub.stand] : near ?? racksByGate.get(gate.id);
+    const loader = {
       model,
       gate,
       gateStop,
@@ -227,84 +254,47 @@ export function createCustomLoaderFleet({
       carrying: false,
       cargoUnit: null,
       meter: createEnergyMeter(energyProfile),
-      pos: { x: gateStop.x, z: gateStop.z },
-      heading: 0,
+      pos: { x: start.x, z: start.z, heading: 0 },
       legTarget: null,
-      legWaypoint: null,
+      rackTarget: null,
       forkLift: 0,
       forkTarget: 0,
     };
+    traffic.add(loader);
+    return loader;
   }
 
-  function placeAt(loader, x, z) {
-    loader.pos.x = x;
-    loader.pos.z = z;
-    loader.model.group.position.set(x, 0, z);
+  // Свободная проезжая клетка у точки, подальше от уже занятых стартов и роботов.
+  function freeStart(point) {
+    const taken = [...starts, ...traffic.list().map((a) => a.pos)];
+    let best = null;
+    for (let gz = 0; gz < nav.n; gz++) {
+      for (let gx = 0; gx < nav.n; gx++) {
+        if (!isWalkable(nav, gx, gz)) continue;
+        const c = cellCenter(nav, gx, gz);
+        const d = Math.hypot(c.x - point.x, c.z - point.z);
+        // Не на самой точке и не там, куда смотрит погрузчик (лента, стоянка транспортировщика).
+        const face = point.face ? Math.hypot(c.x - point.face.x, c.z - point.face.z) : Infinity;
+        if (d < 3 || face < 4 || taken.some((t) => Math.hypot(t.x - c.x, t.z - c.z) < 4)) continue;
+        if (!best || d < best.d) best = { d, x: c.x, z: c.z };
+      }
+    }
+    const start = best ?? { x: point.x, z: point.z };
+    starts.push(start);
+    return start;
   }
 
-  function driveToward(loader, target, dt, speed) {
-    const dx = target.x - loader.pos.x;
-    const dz = target.z - loader.pos.z;
-    const distance = Math.hypot(dx, dz);
-
-    if (distance < ARRIVE_EPS) {
-      placeAt(loader, target.x, target.z);
-      return true;
+  // Следующее место хранения, которое не занято другим погрузчиком.
+  function nextRack(loader) {
+    const list = loader.myRacks;
+    for (let k = 0; k < list.length; k++) {
+      const place = list[(loader.rackIndex + k) % list.length];
+      if (!place.owner || place.owner === loader) {
+        loader.rackIndex += k;
+        return place;
+      }
     }
-
-    const want = headingZForward(dx, dz);
-    const diff = Math.atan2(Math.sin(want - loader.heading), Math.cos(want - loader.heading));
-    if (Math.abs(diff) > TURN_IN_PLACE && distance > 0.5) {
-      loader.heading = turnToward(loader.heading, want, FORKLIFT_TURN_RATE * dt);
-      loader.model.group.rotation.y = loader.heading;
-      return false;
-    }
-
-    const step = speed * dt;
-
-    if (distance <= step) {
-      placeAt(loader, target.x, target.z);
-      return true;
-    }
-
-    loader.pos.x += (dx / distance) * step;
-    loader.pos.z += (dz / distance) * step;
-    loader.heading = turnToward(loader.heading, want, TURN_RATE * dt);
-    placeAt(loader, loader.pos.x, loader.pos.z);
-    loader.model.group.rotation.y = loader.heading;
-
-    return false;
-  }
-
-  function turnToward(heading, target, maxTurn) {
-    const diff = Math.atan2(Math.sin(target - heading), Math.cos(target - heading));
-    return heading + (Math.abs(diff) <= maxTurn ? diff : Math.sign(diff) * maxTurn);
-  }
-
-  let routeUnits = 0;
-  let routeLegs = 0;
-
-  // Едем к цели по пути A* (gridPath.js): путь строится один раз на новую цель.
-  function drivePath(loader, target, dt, speed) {
-    if (loader.legTarget !== target) {
-      loader.legTarget = target;
-      loader.path = findPath(nav, loader.pos, target);
-      routeUnits += pathLength(loader.pos, loader.path);
-      routeLegs += 1;
-    }
-
-    while (loader.path.length) {
-      if (!driveToward(loader, loader.path[0], dt, speed)) return false;
-      loader.path.shift();
-    }
-
-    // У стеллажа — повернуться к нему вилами.
-    if (target.face) {
-      const want = headingZForward(target.face.x - loader.pos.x, target.face.z - loader.pos.z);
-      loader.heading = turnToward(loader.heading, want, TURN_RATE * dt);
-      loader.model.group.rotation.y = loader.heading;
-    }
-    return true;
+    return list[loader.rackIndex % list.length];
   }
 
   function attachCargo(loader) {
@@ -339,7 +329,7 @@ export function createCustomLoaderFleet({
 
   // Ярус стеллажа для очередной паллеты: по кругу нижний–средний–верхний.
   const rackLift = (loader) => (loader.rackIndex % 3) * RACK_TIER_HEIGHT + FORK_CLEARANCE;
-  const gateLift = (loader) => (loader.viaConveyor ? BELT_HEIGHT : TRUCK_BED_HEIGHT);
+  const gateLift = (loader) => loader.handoff?.lift ?? (loader.viaConveyor ? BELT_HEIGHT : TRUCK_BED_HEIGHT);
   const travelLift = (loader) => (loader.carrying ? FORK_CARRY_LIFT : 0);
 
   // Операция у стеллажа, ленты или фуры — PAUSE_SECONDS, как в расчёте: вилы
@@ -366,6 +356,12 @@ export function createCustomLoaderFleet({
     loader.acted = false;
   }
 
+  function doneAtRack(loader) {
+    driver.release(loader, loader.rackTarget);
+    loader.rackTarget = null;
+    loader.rackIndex++;
+  }
+
   const truckReady = (loader) => loader.viaConveyor || loader.gate.truck?.state === "docked";
 
   function updateLoader(loader, dt) {
@@ -386,18 +382,21 @@ export function createCustomLoaderFleet({
       // --- отгрузка: стеллаж → ворота (фура или лента отгрузки) ---
       case "toRack": {
         loader.meter.consume(dt, "work");
-        const target = loader.myRacks[loader.rackIndex % loader.myRacks.length];
+        const target = (loader.rackTarget ??= nextRack(loader));
         if (drivePath(loader, target, dt, speed)) arrive(loader, "atRackPickup");
         break;
       }
 
-      case "atRackPickup":
+      case "atRackPickup": {
         loader.meter.consume(dt, "work");
-        if (handle(loader, dt, rackLift(loader), () => true, () => attachCargo(loader))) {
-          loader.rackIndex++;
+        const hub = loader.rackTarget.hub;
+        // С транспортировщика снимают, только когда он стоит на месте с грузом.
+        if (handle(loader, dt, hub ? hub.lift : rackLift(loader), () => (hub ? hub.take() : true), () => attachCargo(loader))) {
+          doneAtRack(loader);
           loader.state = "toGateDrop";
         }
         break;
+      }
 
       case "toGateDrop":
         loader.meter.consume(dt, "work");
@@ -419,8 +418,10 @@ export function createCustomLoaderFleet({
               cyclesOut++;
             }
           )
-        )
+        ) {
+          driver.release(loader, loader.gateStop);
           loader.state = "toRack";
+        }
         break;
 
       // --- приёмка: ворота (фура или конец ленты приёмки) → стеллаж ---
@@ -443,29 +444,34 @@ export function createCustomLoaderFleet({
               if (loader.gate.truck) loader.gate.truck.exchanged++;
             }
           )
-        )
+        ) {
+          driver.release(loader, loader.gateStop);
           loader.state = "toRackDrop";
+        }
         break;
 
       case "toRackDrop": {
         loader.meter.consume(dt, "work");
-        const target = loader.myRacks[loader.rackIndex % loader.myRacks.length];
+        const target = (loader.rackTarget ??= nextRack(loader));
         if (drivePath(loader, target, dt, speed)) arrive(loader, "atRackDrop");
         break;
       }
 
-      case "atRackDrop":
+      case "atRackDrop": {
         loader.meter.consume(dt, "work");
+        const hub = loader.rackTarget.hub;
+        // На транспортировщик ставят, только когда он пустой стоит на месте.
         if (
-          handle(loader, dt, rackLift(loader), () => true, () => {
+          handle(loader, dt, hub ? hub.lift : rackLift(loader), () => (hub ? hub.put() : true), () => {
             detachCargo(loader);
             cyclesIn++;
           })
         ) {
-          loader.rackIndex++;
+          doneAtRack(loader);
           loader.state = "toGateEmpty";
         }
         break;
+      }
 
       default:
         break;
@@ -473,7 +479,7 @@ export function createCustomLoaderFleet({
   }
 
   function spawnTruckFor(gate) {
-    const model = makeTruck();
+    const model = truckFactory();
     const heading = headingZForward(gate.normal[0], gate.normal[1]); // кабина смотрит наружу — фура «пятится» к воротам
     const from = truckPointAt(gate, TRUCK_APPROACH_DISTANCE);
     const to = truckPointAt(gate, TRUCK_DOCK_DISTANCE);
@@ -567,7 +573,7 @@ export function createCustomLoaderFleet({
       movedPerHour,
       receivedPerHour: hours > 0 ? Math.round(cyclesIn / hours) : 0,
       shippedPerHour: hours > 0 ? Math.round(cyclesOut / hours) : 0,
-      avgRouteM: routeLegs ? Math.round((routeUnits / routeLegs) * metersPerUnit) : 0,
+      avgRouteM: driver.stats().routeLegs ? Math.round((driver.stats().routeUnits / driver.stats().routeLegs) * metersPerUnit) : 0,
       busyLoaders: loaders.filter((l) => l.state !== "idle").length,
     };
   }
@@ -576,6 +582,7 @@ export function createCustomLoaderFleet({
     cargoFactory.dispose();
 
     for (const loader of loaders) {
+      traffic.remove(loader);
       if (loader.cargoUnit) disposeTree(loader.cargoUnit);
       group.remove(loader.model.group);
       loader.model.dispose?.();

@@ -160,13 +160,13 @@ function segmentClear(nav, a, b, halfWidth) {
 // Путь в мировых точках от from до to (to — центр проезжей клетки или точка в ней).
 // Маршруты погрузчиков повторяются (ворота ↔ одни и те же стеллажи), поэтому
 // сглаженный путь кэшируется по клеткам начала и конца.
-export function findPath(nav, from, to, halfWidth = 0.9) {
+export function findPath(nav, from, to, halfWidth = 0.9, useCache = true) {
   const start = nearestWalkable(nav, cellOfPoint(nav, from));
   const goal = nearestWalkable(nav, cellOfPoint(nav, to));
   if (!start || !goal) return [to];
   nav.cache ??= new Map();
   const cacheKey = `${start.gx},${start.gz}>${goal.gx},${goal.gz}>${to.x.toFixed(2)},${to.z.toFixed(2)}`;
-  const cached = nav.cache.get(cacheKey);
+  const cached = useCache ? nav.cache.get(cacheKey) : null;
   if (cached) return cached.slice();
 
   const cells = findCellPath(nav, start, goal);
@@ -183,8 +183,10 @@ export function findPath(nav, from, to, halfWidth = 0.9) {
     smoothed.push(points[next]);
     anchor = next;
   }
-  if (nav.cache.size > 2000) nav.cache.clear();
-  nav.cache.set(cacheKey, smoothed);
+  if (useCache) {
+    if (nav.cache.size > 2000) nav.cache.clear();
+    nav.cache.set(cacheKey, smoothed);
+  }
   return smoothed.slice();
 }
 

@@ -286,8 +286,13 @@ export function createArmFleet({ group, zone, count, beltTexture, armProd, energ
 
     const dip = Math.cos(Math.PI * legPhase) ** 2;
 
-    arm.pivot.rotation.y = angle;
-    arm.claw.position.y = ARM_CARRY_Y + (ARM_PICKUP_Y - ARM_CARRY_Y) * dip;
+    if (arm.pose) {
+      // Модель с суставами (pickArmRobot.js): поза по обратной кинематике.
+      arm.pose(angle, dip);
+    } else {
+      arm.pivot.rotation.y = angle;
+      arm.claw.position.y = ARM_CARRY_Y + (ARM_PICKUP_Y - ARM_CARRY_Y) * dip;
+    }
 
     const boxes = arm.boxes;
     if (!boxes?.length) {

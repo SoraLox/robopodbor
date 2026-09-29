@@ -125,10 +125,13 @@ export function createConveyorFleet({ group, lines, throughputPerHour, beltTextu
   const hubs = {};
   for (const line of built) {
     if (line.gateId === undefined) continue;
-    // Погрузчик встаёт за концом ленты, в проходе у стеллажей.
+    // Лента упирается в торец стеллажей — погрузчик встаёт сбоку от её конца,
+    // вилами к паллете (P&D-точка), а не в стеллаж за лентой.
+    const at = { x: line.end.x - line.dir.x * PALLET_SIZE * 0.5, z: line.end.z - line.dir.z * PALLET_SIZE * 0.5 };
     const hub = (hubs[line.gateId] ??= {
-      x: line.end.x + line.dir.x * PALLET_SIZE,
-      z: line.end.z + line.dir.z * PALLET_SIZE,
+      x: at.x - line.dir.z * 4.2,
+      z: at.z + line.dir.x * 4.2,
+      face: at,
       lines: [],
     });
     hub.lines.push(line);

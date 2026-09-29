@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ArrowLeft, Check, X } from 'lucide-react';
 import { fleetKindOf } from '@domain/fleet';
-import { SLOT_KINDS, SLOTS, TRANSPORT_SLOTS, type SlotId } from '@domain/warehouseEconomics';
+import { isPassiveCarrier, SLOT_KINDS, SLOTS, TRANSPORT_SLOTS, type SlotId } from '@domain/warehouseEconomics';
 import { useScenarioVariants } from '@/api/queries';
 import type { Assignment, ScenarioVariant, SelectionItem, Solution } from '@/api/types';
 import { useWizardStore } from '@/app/store';
@@ -107,6 +107,15 @@ export function ScenarioComposer({
   };
   const inSlot = (slot: SlotId) => assignments.filter((a) => a.slot === slot && byId.has(a.solutionId));
 
+  const passive = (id: string) => {
+    const solution = byId.get(id);
+    return solution ? isPassiveCarrier(solution as never) : false;
+  };
+  // Лучший подходящий погрузчик (не транспортировщик) — в пару плоскому транспортировщику.
+  const bestLifter = () =>
+    rows.find(({ solution, item }) => fleetKindOf(solution) === 'loader' && !passive(solution.id) && item?.status !== 'excluded')
+      ?.solution.id;
+
   const add = (slot: SlotId, solutionId: string) => {
     const kind = kindOf(solutionId);
     let next = assignments.filter((a) => !(a.slot === slot && a.solutionId === solutionId));
@@ -122,7 +131,17 @@ export function ScenarioComposer({
       // Отбор, сортировка, уборка — один робот на этап.
       next = next.filter((a) => a.slot !== slot);
     }
-    setAssignments([...next, { slot, solutionId }]);
+    next = [...next, { slot, solutionId }];
+    // Плоский транспортировщик сам груз не берёт: без погрузчика на этапе — добавляем лучший.
+    const lifter = bestLifter();
+    if (
+      passive(solutionId) &&
+      lifter &&
+      !next.some((a) => a.slot === slot && kindOf(a.solutionId) === 'loader' && !passive(a.solutionId))
+    ) {
+      next.push({ slot, solutionId: lifter });
+    }
+    setAssignments(next);
   };
 
   const remove = (assignment: Assignment) => {
@@ -408,7 +427,7 @@ export function ScenarioComposer({
                             <span className="text-[#8E8E93]">Конвейер: </span>
                           ) : null}
                           <span className="font-medium text-foreground">{solution.name}</span>
-                          {!conveyor && carriers.length > 1 ? (
+                          {!conveyor && carriers.length > 1 && !carriers.some((c) => passive(c.solutionId)) ? (
                             <span className="text-[#8E8E93]"> · {Math.round((shares[i] ?? 0) * 100)}%</span>
                           ) : null}
                         </button>
@@ -425,7 +444,19 @@ export function ScenarioComposer({
                   })}
                 </ul>
               ) : null}
-              {transport && carriers.length === 2 ? (
+              {transport && carriers.some((a) => passive(a.solutionId)) ? (
+                <p
+                  className={cn(
+                    'mt-2 pl-[30px] text-[11.5px] leading-snug',
+                    carriers.some((a) => !passive(a.solutionId)) ? 'text-[#6E6E73]' : 'text-status-danger',
+                  )}
+                >
+                  {carriers.some((a) => !passive(a.solutionId))
+                    ? 'Транспортировщик везёт паллеты, погрузчик ставит их на него и снимает в стеллаж.'
+                    : 'Транспортировщик сам груз не берёт — добавьте погрузчик, иначе перегрузку считаем за операторами.'}
+                </p>
+              ) : null}
+              {transport && carriers.length === 2 && !carriers.some((a) => passive(a.solutionId)) ? (
                 <label className="mt-2 grid gap-1 pl-[30px] text-[11.5px] text-[#6E6E73]">
                   <span>
                     Поток: {byId.get(carriers[0]!.solutionId)?.name} {Math.round((shares[0] ?? 0.5) * 100)}% ·{' '}

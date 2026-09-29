@@ -17,11 +17,22 @@ const run = (ids: string[], assignments?: Parameters<typeof calculateEconomics>[
   });
 
 describe('сценарий склада: зоны и связи', () => {
-  it('погрузчик и AMR — оба в наборе, делят поток приёмки и отгрузки', () => {
+  it('AMR-платформа сама груз не берёт: везёт весь поток, погрузчик делает две перегрузки на паллету', () => {
     const result = run(['FL0002', 'AM0001']);
     const inbound = result.fleet!.filter((g) => g.slot === 'inbound');
     expect(inbound.map((g) => g.solutionId).sort()).toEqual(['AM0001', 'FL0002']);
-    expect(inbound.reduce((sum, g) => sum + g.share, 0)).toBeCloseTo(1);
+    const amr = inbound.find((g) => g.solutionId === 'AM0001')!;
+    const lifter = inbound.find((g) => g.solutionId === 'FL0002')!;
+    expect(amr.share).toBeCloseTo(1);
+    // Перегрузок вдвое больше, чем паллет, но на коротком плече.
+    expect(lifter.peakDemand).toBeCloseTo(amr.peakDemand * 2);
+    expect(lifter.routeM).toBeLessThan(amr.routeM!);
+    expect(result.assumptions.some((a) => /перегрузку .* делают погрузчики-роботы/.test(a))).toBe(true);
+    // Без погрузчика перегрузку делают операторы — часов на людях остаётся больше.
+    const alone = run(['AM0001']);
+    expect(alone.assumptions.some((a) => /делают операторы/.test(a))).toBe(true);
+    const remaining = (r: typeof result) => Number(/остаётся (\d+)% часов/.exec(r.assumptions.join(' '))?.[1] ?? 0);
+    expect(remaining(alone)).toBeGreaterThan(remaining(result));
   });
 
   it('роботов можно развести по связям: погрузчик на приёмке, AMR на отгрузке', () => {

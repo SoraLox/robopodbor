@@ -10,8 +10,11 @@ import { createArmFleet } from "./arms/armFleet.js";
 import { createStackerFleet } from "./arms/stackerFleet.js";
 import { makeArmRobot } from "./robots/armRobot.js";
 import { makeWeldArmRig } from "./robots/weldArmRobot.js";
+import { makePickArmRig, pickArmModel } from "./robots/pickArmRobot.js";
 import { createLoaderSystem } from "./loaders/loaderSystem.js";
 import { createCustomLoaderFleet } from "./loaders/customLoaderFleet.js";
+import { createShuttleFleet, planShuttleBays } from "./loaders/shuttleFleet.js";
+import { createTraffic } from "./loaders/driver.js";
 import { createStorageCubeFleet } from "./loaders/storageCubeFleet.js";
 import { createSorterFleet } from "./sorters/sorterFleet.js";
 import { createConveyorFleet } from "./conveyors/conveyorFleet.js";
@@ -36,7 +39,9 @@ const ARM_FACTORIES = { weldarm: makeWeldArmRig };
 const LOADER_FACTORIES = { transporter: makeTransporterRobot };
 
 const vacuumFactoryOf = (type) => VACUUM_FACTORIES[type] ?? makeVacuumRobot;
-const armFactoryOf = (type) => ARM_FACTORIES[type] ?? makeArmRobot;
+// Роборука по умолчанию — шестиосевой манипулятор пользователя (pick_arm.glb);
+// пока модель грузится — процедурная.
+const armFactoryOf = (type) => ARM_FACTORIES[type] ?? (pickArmModel.isReady() ? makePickArmRig : makeArmRobot);
 const loaderFactoryOf = (type) => LOADER_FACTORIES[type] ?? makeForkliftRobot;
 
 // Связка React ↔ Three.js: сборка сцены один раз, пересборка этажей и роботов при
@@ -299,6 +304,9 @@ export function useSimulation(cfg) {
             })
           : null;
       const pickingAvoid = pickingNet ? [...pickingNet.obstacles, ...armSlots.map(armRect)] : [];
+      // Мобильным роботам закрыты ленты связей и сеть отбора; реестр движения — общий на уровень.
+      const mobileBlocked = [...pickingAvoid, ...linkPlans.flatMap((plan) => plan.lines.map(lineRect))];
+      const traffic = createTraffic();
 
       // Сортировочная система и конвейерные линии — стационарные, строятся сразу.
       if (layout.useSorter && sorterCount > 0 && index === 0) {
@@ -350,39 +358,100 @@ export function useSimulation(cfg) {
             }
           }
           if (modelState !== "ready") continue;
-          link.carriers.forEach((carrier, i) => {
-            if (carrier.count <= 0) return;
+          const loaderParams = (carrier) => ({
+            group: level.loaderGroup,
+            shape,
+            capacityKg: carrier.capacityKg,
+            cargoWeightKg: loader.cargoWeightKg,
+            speedMps: carrier.speedMps,
+            metersPerUnit: chunkGrid.metersPerUnit,
+            cargo: loader.cargo,
+            energyProfile: carrier.energyProfile,
+            truckPayload: loader.truckPayload,
+            routeLengthM: link.effectiveRouteM,
+            gateIds,
+            direction,
+            robotFactory: loaderFactoryOf(carrier.model),
+            blockedRects: mobileBlocked,
+            traffic,
+          });
+          const transporters = link.carriers.filter((c) => c.model === "transporter" && c.count > 0);
+          const forklifts = link.carriers.filter((c) => c.model !== "transporter" && c.model !== "storagecube" && c.count > 0);
+          const cubes = link.carriers.filter((c) => c.model === "storagecube" && c.count > 0);
+          for (const carrier of cubes) {
             level.linkFleets.push({
               kind: "loader",
-              fleet:
-                carrier.model === "storagecube"
-                  ? createStorageCubeFleet({
-                      group: level.loaderGroup,
-                      gates,
-                      area: layout.free,
-                      count: carrier.count,
-                      towerCount: carrier.storageTowers,
-                      energyProfile: carrier.energyProfile,
-                    })
-                  : createCustomLoaderFleet({
-                      group: level.loaderGroup,
-                      shape,
-                      count: carrier.count,
-                      capacityKg: carrier.capacityKg,
-                      cargoWeightKg: loader.cargoWeightKg,
-                      speedMps: carrier.speedMps,
-                      metersPerUnit: chunkGrid.metersPerUnit,
-                      cargo: loader.cargo,
-                      energyProfile: carrier.energyProfile,
-                      truckPayload: loader.truckPayload,
-                      routeLengthM: link.effectiveRouteM,
-                      gateIds,
-                      direction,
-                      handoffs,
-                      showTrucks: i === 0,
-                      robotFactory: loaderFactoryOf(carrier.model),
-                      blockedRects: pickingAvoid,
-                    }),
+              fleet: createStorageCubeFleet({
+                group: level.loaderGroup,
+                gates,
+                area: layout.free,
+                count: carrier.count,
+                towerCount: carrier.storageTowers,
+                energyProfile: carrier.energyProfile,
+              }),
+            });
+          }
+          // Плоский транспортировщик сам груз не берёт: челнок между местом стоянки у
+          // ворот/ленты и местом в хранении, грузят и снимают погрузчики.
+          const firstHub = handoffs ? Object.values(handoffs)[0] : null;
+          const midGate = gates[Math.floor(gates.length / 2)];
+          const gatePoint = firstHub ?? {
+            x: midGate.worldCenter.x - midGate.normal[0] * 6,
+            z: midGate.worldCenter.z - midGate.normal[1] * 6,
+          };
+          const bays = transporters.length
+            ? planShuttleBays({
+                shape,
+                blockedRects: mobileBlocked,
+                gatePoint,
+                routeUnits: link.effectiveRouteM / Math.max(1e-6, chunkGrid.metersPerUnit),
+              })
+            : null;
+          if (bays) {
+            const haul = transporters[0];
+            const shuttle = createShuttleFleet({
+              group: level.loaderGroup,
+              shape,
+              bays,
+              count: transporters.reduce((sum, c) => sum + c.count, 0),
+              direction,
+              speedMps: haul.speedMps,
+              metersPerUnit: chunkGrid.metersPerUnit,
+              cargo: loader.cargo,
+              energyProfile: haul.energyProfile,
+              traffic,
+              blockedRects: mobileBlocked,
+              robotFactory: loaderFactoryOf("transporter"),
+            });
+            level.linkFleets.push({ kind: "shuttle", fleet: shuttle });
+            // Погрузчики: половина — у ворот/ленты (ставят на транспортировщик или снимают
+            // с него), половина — у хранения. Без погрузчиков в составе перегрузку делают
+            // операторы — в сцене по одному погрузчику на каждом конце.
+            const lift = forklifts[0] ?? { ...haul, model: undefined, speedMps: 2, capacityKg: 1000 };
+            const total = forklifts.reduce((sum, c) => sum + c.count, 0);
+            const gateSide = Math.max(1, Math.ceil(total / 2));
+            const rackSide = Math.max(1, total - gateSide);
+            level.linkFleets.push({
+              kind: "loader",
+              fleet: createCustomLoaderFleet({ ...loaderParams(lift), count: gateSide, handoffs, storageHub: shuttle.bayA, showTrucks: true }),
+            });
+            level.linkFleets.push({
+              kind: "loader",
+              fleet: createCustomLoaderFleet({
+                ...loaderParams(lift),
+                count: rackSide,
+                gateIds: [gates[0].id],
+                handoffs: { [gates[0].id]: shuttle.bayB },
+                rackNear: shuttle.bayB.park,
+                showTrucks: false,
+              }),
+            });
+            continue;
+          }
+          [...forklifts, ...transporters].forEach((carrier, i) => {
+            level.linkFleets.push({
+              kind: "loader",
+              fleet: createCustomLoaderFleet({ ...loaderParams(carrier), count: carrier.count, handoffs, showTrucks: i === 0 }),
             });
           });
         }
@@ -495,7 +564,8 @@ export function useSimulation(cfg) {
             truckPayload: loader.truckPayload,
             routeLengthM: loader.routeLengthM,
             robotFactory: loaderFactoryOf(loaderType),
-            blockedRects: pickingAvoid,
+            blockedRects: mobileBlocked,
+            traffic,
           });
         }
       }

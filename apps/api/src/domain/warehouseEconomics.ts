@@ -14,6 +14,7 @@ import type { CatalogSolution } from "./catalog.js";
 import {
   FLEET_LABEL,
   fleetKindOf,
+  fleetModelOf,
   fleetRobotOf,
   type FleetKind,
   type FleetRobot,
@@ -288,6 +289,18 @@ export interface Assignment {
   share?: number;
 }
 
+/**
+ * Плечо перегрузки в челночной схеме: погрузчик ставит паллету с фуры/ленты на
+ * транспортировщик или снимает с него в стеллаж — рядом со стоянкой, ~10 м
+ * (оценка команды, как и минимум последних метров ниже).
+ */
+export const TRANSFER_ROUTE_M = 10;
+
+/** Плоский транспортировщик (AMR-платформа без вил): сам груз не берёт — только везёт. */
+export function isPassiveCarrier(solution: CatalogSolution): boolean {
+  return fleetModelOf(solution, "loader") === "transporter";
+}
+
 /** Последние метры от конца конвейера до места на стеллаже: четверть пути, не меньше 10 м. */
 export function lastMileM(routeM: number): number {
   return Math.min(routeM, Math.max(10, Math.round(routeM * 0.25)));
@@ -342,6 +355,8 @@ export interface LinkPlan {
   carriers: FleetGroup[];
   /** Доля потока без робота — на людях. */
   manualShare: number;
+  /** Челночная схема: плоский транспортировщик везёт, перегружают погрузчики (или операторы — false). */
+  shuttle?: { lifters: boolean };
   /** Часов работы операторов в час: сейчас и после роботизации. */
   manualHoursBefore: number;
   manualHoursAfter: number;
@@ -414,6 +429,49 @@ export function buildScenarioFleet(
           })
         : null;
       if (conveyor) groups.push(conveyor);
+
+      // Челночная схема: плоский транспортировщик везёт весь поток по плечу связи,
+      // погрузчики только перегружают — на него у ворот/ленты и с него в стеллаж
+      // (две перегрузки на паллету по короткому плечу). Нет погрузчиков —
+      // перегрузку делают операторы.
+      const haulersA = carriersA.filter((a) => isPassiveCarrier(byId.get(a.solutionId)!));
+      if (haulersA.length) {
+        const liftersA = carriersA.filter((a) => !haulersA.includes(a));
+        const split = (list: Assignment[]) => {
+          const total = list.reduce((sum, a) => sum + (a.share ?? 1), 0) || 1;
+          return (a: Assignment) => (a.share ?? 1) / total;
+        };
+        const haulShare = split(haulersA);
+        const liftShare = split(liftersA);
+        const transfers = demand * 2;
+        const haulers = haulersA.map((a) =>
+          groupOf(byId.get(a.solutionId)!, "loader", slot, haulShare(a), demand * haulShare(a), p, costFactor, { routeM: effectiveRouteM }),
+        );
+        const lifters = liftersA.map((a) =>
+          groupOf(byId.get(a.solutionId)!, "loader", slot, liftShare(a), transfers * liftShare(a), p, costFactor, { routeM: TRANSFER_ROUTE_M }),
+        );
+        groups.push(...haulers, ...lifters);
+        const covered = (list: FleetGroup[]) => list.reduce((sum, g) => sum + (g.throughputPerRobot > 0 ? g.share : 0), 0);
+        const haulCovered = Math.min(1, covered(haulers));
+        const liftCovered = Math.min(1, covered(lifters));
+        const before = demand / manualForkliftRate({ ...p, routeLengthM: routeM });
+        const after =
+          (demand * (1 - haulCovered)) / manualForkliftRate({ ...p, routeLengthM: effectiveRouteM }) +
+          (transfers * (1 - liftCovered)) / manualForkliftRate({ ...p, routeLengthM: TRANSFER_ROUTE_M });
+        links.push({
+          slot,
+          flow: demand,
+          routeM,
+          effectiveRouteM,
+          conveyor,
+          carriers: [...haulers, ...lifters],
+          manualShare: Math.max(0, 1 - Math.min(haulCovered, liftCovered)),
+          manualHoursBefore: before,
+          manualHoursAfter: after,
+          shuttle: { lifters: lifters.length > 0 },
+        });
+        continue;
+      }
 
       // Доли: заданные — как есть (сумма не больше 1), остальным — поровну из остатка.
       const fixed = carriersA.filter((a) => a.share !== undefined);
@@ -633,7 +691,11 @@ export function laborAssumption(model: WarehouseModel): string {
       .map((l) => {
         const how = [
           l.conveyor ? `конвейер до последних ${l.effectiveRouteM} м` : "",
-          l.carriers.length ? `роботы везут ${Math.round((1 - l.manualShare) * 100)}% потока` : "",
+          l.shuttle
+            ? `транспортировщик везёт, перегрузку (2 на паллету, ~${TRANSFER_ROUTE_M} м) делают ${l.shuttle.lifters ? "погрузчики-роботы" : "операторы: сам транспортировщик груз не берёт"}`
+            : l.carriers.length
+              ? `роботы везут ${Math.round((1 - l.manualShare) * 100)}% потока`
+              : "",
         ]
           .filter(Boolean)
           .join(", ");

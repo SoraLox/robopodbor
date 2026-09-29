@@ -80,23 +80,34 @@ export function generateWarehouseScenarios(input: {
   // Транспорт приёмки и отгрузки.
   const transports: Transport[] = [];
   const conveyor = topOf("conveyor", 1)[0];
-  for (const role of ["fmr", "amr"] as const) {
-    const noun = role === "fmr" ? "погрузчики" : "AMR";
-    for (const id of topOf(role)) {
+  const lifters = topOf("fmr");
+  for (const id of lifters) {
+    transports.push({
+      id: `fmr-${id}`,
+      label: "Погрузчики",
+      flow: "Погрузчики возят паллеты от ворот до стеллажей и обратно.",
+      assignments: both(id),
+    });
+    if (conveyor) {
       transports.push({
-        id: `${role}-${id}`,
-        label: role === "fmr" ? "Погрузчики" : "AMR",
-        flow: `${noun[0]!.toUpperCase()}${noun.slice(1)} возят паллеты от ворот до стеллажей и обратно.`,
-        assignments: both(id),
+        id: `conveyor-fmr-${id}`,
+        label: "Конвейер + погрузчики",
+        flow: "Конвейер везёт паллеты от ворот до торца стеллажей, погрузчики — последние метры до ячейки.",
+        assignments: [...both(conveyor), ...both(id)],
       });
-      if (conveyor) {
-        transports.push({
-          id: `conveyor-${role}-${id}`,
-          label: `Конвейер + ${noun}`,
-          flow: `Конвейер везёт паллеты от ворот до торца стеллажей, ${noun} — последние метры до ячейки.`,
-          assignments: [...both(conveyor), ...both(id)],
-        });
-      }
+    }
+  }
+  // Плоский транспортировщик (AMR-платформа) сам груз не берёт — только в паре с
+  // погрузчиками: они ставят паллету на него и снимают в стеллаж (челночная схема).
+  const lifter = lifters[0];
+  if (lifter) {
+    for (const id of topOf("amr")) {
+      transports.push({
+        id: `shuttle-${id}`,
+        label: "Погрузчики + AMR",
+        flow: "AMR возят паллеты по длинному плечу от ворот до зоны хранения; погрузчики ставят паллету на AMR и снимают её в стеллаж.",
+        assignments: [...both(lifter), ...both(id)],
+      });
     }
   }
   const arms = topOf("arm");
