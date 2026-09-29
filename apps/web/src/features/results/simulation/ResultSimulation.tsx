@@ -15,6 +15,9 @@ import { buildAirportInput, hasAirportScene } from './airportInput';
 
 /** Столько башен СтойкаБокса помещает сцена (upstream loaders/storageCubeFleet.js MAX_TOWERS). */
 const MAX_TOWERS = 64;
+/** Пределы сцены аэропорта (см. AIRPORT_ASSUMPTIONS). */
+const AIRPORT_MAX_TRANSPORT = 16;
+const AIRPORT_MAX_GATES = 10;
 
 // three.js (~300 КБ gzip) грузится отдельным чанком: KPI и графики отчёта
 // показываются сразу, сцена догружается следом.
@@ -142,9 +145,22 @@ function AirportSimulation({ immersive, planned }: { immersive: boolean; planned
   if (models === 'error') return <Note fill={immersive}>Не удалось загрузить 3D-модели сцены.</Note>;
   if (models === 'loading') return <SceneFallback fill={immersive} />;
 
-  const note = input.substitutions.length
-    ? `Нет в карточке робота, взято у демо-робота: ${input.substitutions.map((item) => `${item.field} — ${item.value}`).join(', ')}.`
-    : null;
+  // Пределы сцены аэропорта (upstream AirportScene): расчёт ведётся по полному числу.
+  const limits = [
+    ...(input.transportCount > AIRPORT_MAX_TRANSPORT
+      ? [`по расчёту ${input.transportCount} транспортировщиков, в сцене ${AIRPORT_MAX_TRANSPORT}`]
+      : []),
+    ...(input.gatesCount > AIRPORT_MAX_GATES ? [`гейтов ${input.gatesCount}, в сцене ${AIRPORT_MAX_GATES}`] : []),
+  ];
+  const note =
+    [
+      input.substitutions.length
+        ? `Нет в карточке робота, взято у демо-робота: ${input.substitutions.map((item) => `${item.field} — ${item.value}`).join(', ')}.`
+        : '',
+      limits.length ? `${limits.join('; ')}.`.replace(/^./, (c) => c.toUpperCase()) : '',
+    ]
+      .filter(Boolean)
+      .join(' ') || null;
 
   return (
     <div className={immersive ? 'relative h-full w-full' : 'grid gap-3'}>
