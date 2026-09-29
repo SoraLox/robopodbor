@@ -61,6 +61,7 @@ export default function WarehouseScene({
   conveyorCount = 0,
   conveyorThroughput = 0,
   robotSizes,
+  transportLinks,
   cargoWeightKg,
   cargoLengthCm,
   cargoWidthCm,
@@ -146,6 +147,7 @@ export default function WarehouseScene({
     conveyorCount,
     conveyorThroughput,
     robotSizes,
+    transportLinks,
     energyProfiles,
     immersive,
     loader: {

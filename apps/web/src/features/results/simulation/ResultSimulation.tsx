@@ -280,6 +280,7 @@ function SimulationScene({ input, immersive }: { input: SimulationInput; immersi
         loaderThroughput={fleets.loader?.throughput ?? 0}
         storageTowers={fleets.loader?.storageTowers}
         robotSizes={input.robotSizes}
+        transportLinks={input.transportLinks}
         sorterCount={counts.sorter}
         sorterThroughput={fleets.sorter?.throughput ?? 0}
         conveyorCount={counts.conveyor}
@@ -290,7 +291,7 @@ function SimulationScene({ input, immersive }: { input: SimulationInput; immersi
         cargoHeightCm={params.cargoHeightCm}
         skuCount={params.skuCount}
         slotsPerLane={input.slotsPerLane}
-        routeLengthM={params.routeLengthM}
+        routeLengthM={input.checkRouteM}
         // Сцена проверяет парк на расчётной (пиковой) нагрузке, а не на средней.
         cargoPerHour={params.requiredLoadThroughput * params.peakLoadFactor}
         outboundPerHour={params.requiredOutboundThroughput * params.peakLoadFactor}

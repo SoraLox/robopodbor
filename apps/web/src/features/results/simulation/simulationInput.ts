@@ -164,6 +164,7 @@ export function buildSimulationInput(
   }
   // Один робот на нескольких связях (приёмка и отгрузка) — в сцене один флот вида:
   // число складывается, производительность — взвешенная по числу роботов.
+  const raw = fleet as Array<FleetGroup & { kind: SimRobotType }>;
   const groups: Array<FleetGroup & { kind: SimRobotType }> = [];
   for (const group of fleet as Array<FleetGroup & { kind: SimRobotType }>) {
     const same = groups.find((g) => g.kind === group.kind);
@@ -232,9 +233,67 @@ export function buildSimulationInput(
     };
   };
 
+  // Связи приёмки и отгрузки со своими флотами. Простой паллетный склад (одна
+  // модель погрузчиков, без конвейера, стандартная форма, по погрузчику на ворота) —
+  // прежним флотом Егора с полосами хранения; остальное — по связям.
+  const energyOfGroup = (group: FleetGroup) => ({
+    runtimeHours: group.autonomyHours ?? null,
+    chargeHours: group.chargeHours ?? null,
+    workPowerKw: group.workPowerKw,
+    idlePowerKw: group.idlePowerKw,
+  });
+  const transportGroups = raw.filter((g) => g.slot === 'inbound' || g.slot === 'outbound');
+  const carrierIds = new Set(transportGroups.filter((g) => g.kind === 'loader').map((g) => g.solutionId));
+  const simple =
+    !custom &&
+    !transportGroups.some((g) => g.kind === 'conveyor') &&
+    carrierIds.size <= 1 &&
+    !transportGroups.some((g) => g.model === 'storagecube') &&
+    (fleets.loader?.requiredCount ?? 0) <= sceneLayout.gates.length;
+  const transportLinks = simple
+    ? null
+    : (['inbound', 'outbound'] as const)
+        .map((slot) => {
+          const inSlot = transportGroups.filter((g) => g.slot === slot);
+          const conveyor = inSlot.find((g) => g.kind === 'conveyor');
+          const carriers = inSlot.filter((g) => g.kind === 'loader');
+          return {
+            slot,
+            effectiveRouteM: carriers[0]?.routeM ?? params.routeLengthM,
+            conveyor: conveyor
+              ? {
+                  count: conveyor.count,
+                  throughput: conveyor.throughputPerRobot,
+                  lineLengthM: conveyor.lineLengthM ?? params.routeLengthM,
+                  energyProfile: energyOfGroup(conveyor),
+                }
+              : null,
+            carriers: carriers.map((g) => ({
+              name: g.name,
+              model: g.model,
+              count: g.count,
+              speedMps: g.speedMps ?? 2,
+              capacityKg: g.capacityKg ?? 100,
+              lengthUnits: toUnits(g.footprint.lengthM),
+              storageTowers: g.storageTowers,
+              energyProfile: energyOfGroup(g),
+            })),
+          };
+        })
+        .filter((link) => link.conveyor || link.carriers.length);
+
+  // Путь транспорта для сверки: с конвейером — последние метры, без — весь путь.
+  const carriersOnLinks = (transportLinks ?? []).flatMap((link) => link.carriers.map((c) => ({ ...c, route: link.effectiveRouteM })));
+  const carrierTotal = carriersOnLinks.reduce((sum, c) => sum + c.count, 0);
+  const checkRouteM = carrierTotal
+    ? Math.round(carriersOnLinks.reduce((sum, c) => sum + c.route * c.count, 0) / carrierTotal)
+    : params.routeLengthM;
+
   return {
     shape,
     robotSizes,
+    transportLinks,
+    checkRouteM,
     params,
     robotTypes,
     workZoneShare,

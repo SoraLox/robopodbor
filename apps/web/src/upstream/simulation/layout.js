@@ -206,8 +206,8 @@ export function computeVacuumZoneAreaM2(layout, floorAreaM2) {
 // Конвейерные линии: от ворот вглубь склада, рядом с проёмом (не в нём — там
 // работают погрузчики и фуры). Линия тянется по проезжему полу до нужной длины,
 // стеллажа или зоны стационарного оборудования. На одни ворота — до трёх линий.
-export function computeConveyorLines(layout, shape, count, lengthUnits) {
-  const gates = layout.gates;
+export function computeConveyorLines(layout, shape, count, lengthUnits, gateSubset = null) {
+  const gates = gateSubset ?? layout.gates;
   if (!gates.length || count <= 0) return [];
   const nav = makeNavGrid(shape);
   const blocked = [layout.armZone, layout.sorterZone].filter(Boolean);
@@ -236,7 +236,28 @@ export function computeConveyorLines(layout, shape, count, lengthUnits) {
       if (!walkable(next) || inStation(next)) break;
       d += 1;
     }
-    if (d >= 6) lines.push({ start, end: { x: start.x + inward.x * d, z: start.z + inward.z * d } });
+    if (d >= 6) lines.push({ gateId: gate.id, start, end: { x: start.x + inward.x * d, z: start.z + inward.z * d } });
   }
   return lines;
+}
+
+// Ворота связей сценария: ворота выгрузки — приёмка, загрузки — отгрузка;
+// двусторонние (стандартная форма) делятся пополам вдоль стены: первая
+// половина — приёмка, вторая — отгрузка. Одни ворота на всё — общие.
+export function linkGatesOf(layout) {
+  const gates = [...layout.gates].sort((a, b) => a.worldCenter.x - b.worldCenter.x || a.worldCenter.z - b.worldCenter.z);
+  const inbound = gates.filter((g) => g.kind === "in").map((g) => g.id);
+  const outbound = gates.filter((g) => g.kind === "out").map((g) => g.id);
+  const generic = gates.filter((g) => g.kind !== "in" && g.kind !== "out").map((g) => g.id);
+  if (generic.length) {
+    const half = Math.ceil(generic.length / 2);
+    if (!inbound.length && !outbound.length && generic.length > 1) {
+      inbound.push(...generic.slice(0, half));
+      outbound.push(...generic.slice(half));
+    } else {
+      inbound.push(...generic);
+      outbound.push(...generic);
+    }
+  }
+  return { inbound: inbound.length ? inbound : outbound, outbound: outbound.length ? outbound : inbound };
 }

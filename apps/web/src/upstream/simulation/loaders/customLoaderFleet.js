@@ -121,8 +121,18 @@ export function createCustomLoaderFleet({
   truckPayload = 18,
   routeLengthM,
   robotFactory = makeForkliftRobot,
+  // Сценарий склада: связь приёмки или отгрузки.
+  //   gateIds — ворота этой связи (нет — все); direction — 'in' | 'out' для всех
+  //   погрузчиков флота; handoffs — концы конвейера у зоны хранения (по одному на
+  //   ворота): погрузчик берёт/сдаёт груз там, а не у фуры, и фуру не ждёт.
+  //   showTrucks — фуры у ворот рисует только один флот связи.
+  gateIds = null,
+  direction = null,
+  handoffs = null,
+  showTrucks = true,
 }) {
-  const gates = computeGateClusters(shape);
+  const allGates = computeGateClusters(shape);
+  const gates = gateIds ? allGates.filter((gate) => gateIds.includes(gate.id)) : allGates;
   for (const gate of gates) {
     gate.truck = null;
     gate.truckTimer = TRUCK_GAP_MIN_S + Math.random() * (TRUCK_GAP_MAX_S - TRUCK_GAP_MIN_S);
@@ -171,7 +181,10 @@ export function createCustomLoaderFleet({
     const gate = gates[index % gates.length];
     const slot = Math.floor(index / gates.length);
     const slots = Math.ceil((loaderCount - (index % gates.length)) / gates.length);
-    const gateStop = gateStopOf(gate, slot, slots);
+    const handoff = handoffs?.[gate.id];
+    const gateStop = handoff
+      ? { x: handoff.x + (slot - (slots - 1) / 2) * nav.cellSize * 0.5, z: handoff.z }
+      : gateStopOf(gate, slot, slots);
     const model = robotFactory();
 
     model.group.position.set(gateStop.x, 0, gateStop.z);
@@ -185,7 +198,9 @@ export function createCustomLoaderFleet({
       gateStop,
       // 'in' — выгрузка (ворота→стеллаж), иначе — загрузка (стеллаж→ворота). Двусторонние
       // ворота (стандартная форма) делят погрузчиков поровну на приёмку и отгрузку.
-      kind: gate.kind === "generic" ? (index % 2 === 0 ? "in" : "out") : gate.kind,
+      kind: direction ?? (gate.kind === "generic" ? (index % 2 === 0 ? "in" : "out") : gate.kind),
+      // У конца конвейера груз ждать не надо: его подаёт/забирает лента.
+      viaConveyor: Boolean(handoff),
       myRacks,
       rackIndex: myRacks.length ? Math.floor((slot * myRacks.length) / Math.max(1, slots)) : 0,
       path: null,
@@ -333,12 +348,12 @@ export function createCustomLoaderFleet({
 
       case "atGateDrop":
         loader.meter.consume(dt, "idle");
-        if (!loader.gate.truck || loader.gate.truck.state !== "docked") break; // ждём фуру
+        if (!loader.viaConveyor && (!loader.gate.truck || loader.gate.truck.state !== "docked")) break; // ждём фуру
 
         loader.timer += dt;
         if (loader.timer >= PAUSE_SECONDS) {
           detachCargo(loader);
-          loader.gate.truck.exchanged++;
+          if (loader.gate.truck) loader.gate.truck.exchanged++;
           cyclesOut++;
           loader.state = "toRack";
         }
@@ -355,12 +370,12 @@ export function createCustomLoaderFleet({
 
       case "atGatePickup":
         loader.meter.consume(dt, "idle");
-        if (!loader.gate.truck || loader.gate.truck.state !== "docked") break; // ждём фуру
+        if (!loader.viaConveyor && (!loader.gate.truck || loader.gate.truck.state !== "docked")) break; // ждём фуру
 
         loader.timer += dt;
         if (loader.timer >= PAUSE_SECONDS) {
           attachCargo(loader);
-          loader.gate.truck.exchanged++;
+          if (loader.gate.truck) loader.gate.truck.exchanged++;
           loader.state = "toRackDrop";
         }
         break;
@@ -444,7 +459,8 @@ export function createCustomLoaderFleet({
       }
     } else if (truck.state === "docked") {
       truck.timer += dt;
-      if (truck.exchanged >= truckPayload || truck.timer >= TRUCK_MAX_DOCKED_SECONDS) {
+      // С конвейером фуру разгружает/загружает лента — стоит минуту, погрузчики её не считают.
+      if (truck.exchanged >= truckPayload || truck.timer >= (handoffs ? 60 : TRUCK_MAX_DOCKED_SECONDS)) {
         truck.state = "leaving";
         truck.t = 0;
         truck.model.setDoors(0);
@@ -462,7 +478,7 @@ export function createCustomLoaderFleet({
   function step(dt) {
     simSeconds += dt;
     for (const loader of loaders) updateLoader(loader, dt);
-    for (const gate of gates) stepGateTruck(gate, dt);
+    if (showTrucks) for (const gate of gates) stepGateTruck(gate, dt);
   }
 
   function getStats() {

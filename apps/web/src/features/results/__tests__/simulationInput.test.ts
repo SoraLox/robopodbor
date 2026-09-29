@@ -76,3 +76,36 @@ describe('simulationInput', () => {
     expect(input.demand.vacuum).toBeGreaterThan(0);
   });
 });
+
+describe('сцена по связям сценария', () => {
+  const sceneWith = (ids: string[], assignments?: Parameters<typeof calculateEconomics>[0]['assignments']) => {
+    const fleet =
+      calculateEconomics({
+        objectType: 'warehouse',
+        parameters: {},
+        fields,
+        solution: byId(ids[0]!) as unknown as CatalogSolution,
+        solutions: ids.map((id) => byId(id) as unknown as CatalogSolution),
+        ...(assignments ? { assignments } : {}),
+      }).fleet ?? [];
+    return buildSimulationInput(fields, {}, fleet);
+  };
+
+  it('простой паллетный склад — прежним флотом с полосами хранения', () => {
+    expect(sceneWith(['FL0002']).transportLinks).toBeNull();
+  });
+
+  it('конвейер и два транспортных робота — по связям, погрузчики на последних метрах', () => {
+    const input = sceneWith(['CV0001', 'FL0002', 'AM0001'], [
+      { slot: 'inbound', solutionId: 'CV0001' },
+      { slot: 'inbound', solutionId: 'FL0002' },
+      { slot: 'inbound', solutionId: 'AM0001' },
+      { slot: 'outbound', solutionId: 'FL0002' },
+    ]);
+    const inbound = input.transportLinks!.find((l) => l.slot === 'inbound')!;
+    expect(inbound.conveyor).not.toBeNull();
+    expect(inbound.carriers.map((c) => c.name).sort()).toEqual([byId('AM0001').name, byId('FL0002').name].sort());
+    expect(inbound.effectiveRouteM).toBeLessThan(input.params.routeLengthM);
+    expect(input.transportLinks!.find((l) => l.slot === 'outbound')!.conveyor).toBeNull();
+  });
+});

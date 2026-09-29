@@ -15,7 +15,7 @@ import { createCustomLoaderFleet } from "./loaders/customLoaderFleet.js";
 import { createStorageCubeFleet } from "./loaders/storageCubeFleet.js";
 import { createSorterFleet } from "./sorters/sorterFleet.js";
 import { createConveyorFleet } from "./conveyors/conveyorFleet.js";
-import { computeConveyorLines } from "./layout.js";
+import { computeConveyorLines, linkGatesOf } from "./layout.js";
 import { makeForkliftRobot } from "./robots/forkliftRobot.js";
 import { makeTransporterRobot } from "./robots/transporterRobot.js";
 import { createWarehouseScene } from "./sceneSetup.js";
@@ -93,6 +93,8 @@ function disposeFleets(level) {
   level.loaderSystem = null;
   level.sorterFleet = null;
   level.conveyorFleet = null;
+  for (const item of level.linkFleets ?? []) item.fleet.dispose();
+  level.linkFleets = null;
 }
 
 // cfg — всё, что нужно сцене (см. WarehouseScene): состав роботов, площадь, счётчики,
@@ -123,6 +125,8 @@ export function useSimulation(cfg) {
     conveyorCount = 0,
     conveyorThroughput = 0,
     robotSizes,
+    // Сценарий склада: связи приёмки и отгрузки со своими флотами (см. simulationInput.ts).
+    transportLinks,
     energyProfiles,
     loader,
     immersive = false,
@@ -305,7 +309,73 @@ export function useSimulation(cfg) {
           energyProfile: energyProfiles.sorter ?? energyProfiles.arm,
         });
       }
-      if (layout.useConveyor && conveyorCount > 0 && index === 0) {
+      if (transportLinks && index === 0) {
+        // Связи сценария: у каждой — свои ворота, конвейер от ворот к зоне хранения
+        // (на отгрузке лента везёт обратно) и транспорт, который работает от конца
+        // ленты (последние метры) или от ворот до стеллажей.
+        const split = linkGatesOf(layout);
+        level.linkFleets = [];
+        for (const link of transportLinks) {
+          const gateIds = split[link.slot] ?? [];
+          const gates = layout.gates.filter((gate) => gateIds.includes(gate.id));
+          if (!gates.length) continue;
+          const direction = link.slot === "inbound" ? "in" : "out";
+          let handoffs = null;
+          if (link.conveyor) {
+            const lengthUnits = link.conveyor.lineLengthM / Math.max(1e-6, chunkGrid.metersPerUnit);
+            const lines = computeConveyorLines(layout, shape, link.conveyor.count, lengthUnits, gates).map((line) => ({ ...line, direction }));
+            level.linkFleets.push({
+              kind: "conveyor",
+              fleet: createConveyorFleet({
+                group: level.armGroup,
+                lines,
+                throughputPerHour: link.conveyor.throughput,
+                metersPerUnit: chunkGrid.metersPerUnit,
+                size: robotSizes?.conveyor ?? null,
+                beltTexture: st.beltTexture,
+                energyProfile: link.conveyor.energyProfile,
+              }),
+            });
+            handoffs = {};
+            for (const line of lines) if (!handoffs[line.gateId]) handoffs[line.gateId] = line.end;
+          }
+          if (modelState !== "ready") continue;
+          link.carriers.forEach((carrier, i) => {
+            if (carrier.count <= 0) return;
+            level.linkFleets.push({
+              kind: "loader",
+              fleet:
+                carrier.model === "storagecube"
+                  ? createStorageCubeFleet({
+                      group: level.loaderGroup,
+                      gates,
+                      area: layout.free,
+                      count: carrier.count,
+                      towerCount: carrier.storageTowers,
+                      energyProfile: carrier.energyProfile,
+                    })
+                  : createCustomLoaderFleet({
+                      group: level.loaderGroup,
+                      shape,
+                      count: carrier.count,
+                      capacityKg: carrier.capacityKg,
+                      cargoWeightKg: loader.cargoWeightKg,
+                      speedMps: carrier.speedMps,
+                      metersPerUnit: chunkGrid.metersPerUnit,
+                      cargo: loader.cargo,
+                      energyProfile: carrier.energyProfile,
+                      truckPayload: loader.truckPayload,
+                      routeLengthM: link.effectiveRouteM,
+                      gateIds,
+                      direction,
+                      handoffs,
+                      showTrucks: i === 0,
+                      robotFactory: scaledFactory(loaderFactoryOf(carrier.model), carrier.lengthUnits),
+                    }),
+            });
+          });
+        }
+      } else if (layout.useConveyor && conveyorCount > 0 && index === 0) {
         const lengthUnits = (loader.routeLengthM ?? 60) / Math.max(1e-6, chunkGrid.metersPerUnit);
         level.conveyorFleet = createConveyorFleet({
           group: level.armGroup,
@@ -334,6 +404,7 @@ export function useSimulation(cfg) {
             ...(level.armFleet?.obstacles ?? []),
             ...(level.sorterFleet?.obstacles ?? []),
             ...(level.conveyorFleet?.obstacles ?? []),
+            ...(level.linkFleets ?? []).flatMap((item) => (item.kind === "conveyor" ? item.fleet.obstacles : [])),
             ...rackObstacles,
           ],
           trail: { ctx: level.trailCtx, texture: level.trailTexture },
@@ -349,7 +420,7 @@ export function useSimulation(cfg) {
       //   своя форма — упрощённый маршрут в 2 плеча (customLoaderFleet.js),
       //     полноценные проезды для произвольного контура — вне рамок этого захода.
       // Всё — в тот же слот level.loaderSystem (общий интерфейс step/getStats/dispose).
-      if (useLoader && index === 0 && loaderCount > 0 && modelState === "ready") {
+      if (!transportLinks && useLoader && index === 0 && loaderCount > 0 && modelState === "ready") {
         if (loaderType === "storagecube") {
           level.loaderSystem = createStorageCubeFleet({
             group: level.loaderGroup,
@@ -419,6 +490,7 @@ export function useSimulation(cfg) {
     conveyorCount,
     conveyorThroughput,
     robotSizes,
+    transportLinks,
     energyProfiles,
     loader.capacityKg,
     loader.speedMps,
@@ -457,6 +529,7 @@ export function useSimulation(cfg) {
           level.loaderSystem?.step(dt);
           level.sorterFleet?.step(dt);
           level.conveyorFleet?.step(dt);
+          if (level.linkFleets) for (const item of level.linkFleets) item.fleet.step(dt);
         }
 
         executed++;

@@ -60,6 +60,8 @@ export function createConveyorFleet({ group, lines, throughputPerHour, beltTextu
 
     return {
       group: lineGroup,
+      // 'out' — отгрузка: груз едет от дальнего конца (хранение) к началу (ворота).
+      reverse: line.direction === "out",
       length,
       dir,
       start: line.start,
@@ -91,7 +93,7 @@ export function createConveyorFleet({ group, lines, throughputPerHour, beltTextu
       for (const unit of line.units) {
         unit.d = Math.min(unit.d + beltSpeed * dt, limit - (PALLET_SIZE + UNIT_GAP_UNITS));
         limit = unit.d;
-        unit.mesh.position.set(0, BELT_Y + 0.56, unit.d);
+        unit.mesh.position.set(0, BELT_Y + 0.56, line.reverse ? line.length - unit.d : unit.d);
       }
       // Дошла до конца — сдана на хранение.
       while (line.units.length && line.units[0].d >= line.length - PALLET_SIZE / 2) {

@@ -62,8 +62,12 @@ export function readStats(levels, floorIndex, zoneCells, simSeconds) {
   if (!level) return EMPTY_STATS;
 
   const meters = levels.flatMap((l) =>
-    [l.vacuumFleet, l.armFleet, l.loaderSystem, l.sorterFleet, l.conveyorFleet].flatMap((fleet) => fleet?.meters ?? [])
+    [l.vacuumFleet, l.armFleet, l.loaderSystem, l.sorterFleet, l.conveyorFleet, ...(l.linkFleets ?? []).map((item) => item.fleet)].flatMap(
+      (fleet) => fleet?.meters ?? []
+    )
   );
+  const linkLoaders = (level.linkFleets ?? []).filter((item) => item.kind === "loader").map((item) => item.fleet.getStats());
+  const linkConveyors = (level.linkFleets ?? []).filter((item) => item.kind === "conveyor").map((item) => item.fleet);
 
   return {
     coverage: level.vacuumFleet ? coveragePercent(level.grid, zoneCells) : 0,
@@ -71,11 +75,11 @@ export function readStats(levels, floorIndex, zoneCells, simSeconds) {
     simSeconds,
     energyKwh: meters.reduce((sum, meter) => sum + meter.gridKwh, 0),
     vacuum: level.vacuumFleet ? level.vacuumFleet.getStats() : EMPTY_VACUUM_STATS,
-    loader: level.loaderSystem ? level.loaderSystem.getStats() : EMPTY_LOADER_STATS,
+    loader: level.loaderSystem ? level.loaderSystem.getStats() : linkLoaders.length ? combineLoaderStats(linkLoaders) : EMPTY_LOADER_STATS,
     sorterItems: level.sorterFleet ? level.sorterFleet.getItemsDone() : 0,
     sorterSystems: level.sorterFleet ? level.sorterFleet.systemsShown : 0,
-    conveyorUnits: level.conveyorFleet ? level.conveyorFleet.getUnitsMoved() : 0,
-    conveyorLines: level.conveyorFleet ? level.conveyorFleet.meters.length : 0,
+    conveyorUnits: (level.conveyorFleet ? level.conveyorFleet.getUnitsMoved() : 0) + linkConveyors.reduce((sum, f) => sum + f.getUnitsMoved(), 0),
+    conveyorLines: (level.conveyorFleet ? level.conveyorFleet.meters.length : 0) + linkConveyors.reduce((sum, f) => sum + f.meters.length, 0),
   };
 }
 
@@ -102,4 +106,24 @@ export function formatSimTime(seconds) {
   const ss = String(Math.floor(seconds % 60)).padStart(2, "0");
 
   return hours > 0 ? `${hours}:${mm}:${ss}` : `${minutes}:${ss}`;
+}
+
+// Показатели нескольких флотов погрузчиков (связи сценария): потоки и циклы
+// складываются, средний маршрут — по числу циклов.
+export function combineLoaderStats(list) {
+  const sum = (key) => list.reduce((total, stats) => total + (stats[key] ?? 0), 0);
+  const cycles = sum("cycles");
+  return {
+    ...EMPTY_LOADER_STATS,
+    phase: "mixed",
+    cycles,
+    trucksAtGates: sum("trucksAtGates"),
+    receivedKg: sum("receivedKg"),
+    shippedKg: sum("shippedKg"),
+    movedPerHour: sum("movedPerHour"),
+    receivedPerHour: sum("receivedPerHour"),
+    shippedPerHour: sum("shippedPerHour"),
+    avgRouteM: cycles ? Math.round(list.reduce((total, stats) => total + (stats.avgRouteM ?? 0) * (stats.cycles ?? 0), 0) / cycles) : 0,
+    busyLoaders: sum("busyLoaders"),
+  };
 }
