@@ -4,6 +4,7 @@ import { Minus, Plus, X } from 'lucide-react';
 import type { Maturity, Solution } from '@/api/types';
 import { Button } from '@/components/ui/button';
 import { robotPhoto } from '@/features/objects/previewImages';
+import { FavoriteButton } from './FavoriteButton';
 import { categorize } from './solutionCategory';
 import { SOURCE_KIND_LABEL } from '@domain/catalog';
 import { provenanceTag, specGroups, withSourceRefs } from './solutionSpecs';
@@ -273,9 +274,15 @@ export function CatalogPreview({
           ) : null}
         </div>
 
-        <div className="flex-none border-t border-[#E5E5EA] p-3.5">
+        <div className="flex flex-none gap-2 border-t border-[#E5E5EA] p-3.5">
+          <FavoriteButton
+            variant="button"
+            solutionId={displayed.id}
+            solutionName={displayed.name}
+            className="flex-none rounded-[12px]"
+          />
           <Button
-            className="w-full rounded-[12px]"
+            className="min-w-0 flex-1 rounded-[12px]"
             size="sm"
             variant={compared ? 'outline' : 'default'}
             onClick={onToggleCompare}

@@ -1,12 +1,13 @@
-import { render, screen, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { solutions } from '@/mocks/fixtures';
+import { renderWithProviders } from '@/test/utils';
 import { CatalogPreview } from '@/features/catalog/CatalogPreview';
 import { categorize } from '@/features/catalog/solutionCategory';
 
 const byId = (id: string) => solutions.find((s) => s.id === id)!;
 const show = (id: string) =>
-  render(<CatalogPreview solution={byId(id)} open compared={false} onClose={vi.fn()} onToggleCompare={vi.fn()} />);
+  renderWithProviders(<CatalogPreview solution={byId(id)} open compared={false} onClose={vi.fn()} onToggleCompare={vi.fn()} />);
 
 describe('CatalogPreview', () => {
   it('показывает источники характеристик и неточные значения', () => {

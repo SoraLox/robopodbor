@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useLogout, useSession } from '@/api/auth';
-import { FileText, LogOut, ToggleLeft } from 'lucide-react';
+import { DatabaseZap, FileText, Heart, LogOut, UserRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MenuRow, MenuRowPlus } from './menuRow';
 
@@ -99,7 +99,7 @@ export function AccountMenu({ avatarClassName }: { avatarClassName?: string }) {
           <div className="flex flex-col gap-1 py-0.5">
             <MenuRow
               icon={FileText}
-              label="Расчёты"
+              label="Мои расчёты"
               to="/projects"
               active={pathname === '/projects'}
               onClick={() => setOpen(false)}
@@ -114,14 +114,30 @@ export function AccountMenu({ avatarClassName }: { avatarClassName?: string }) {
                 />
               }
             />
+            <MenuRow
+              icon={Heart}
+              label="Избранные роботы"
+              to="/favorites"
+              active={pathname === '/favorites'}
+              onClick={() => setOpen(false)}
+            />
+            {user.role === 'admin' ? (
+              <MenuRow
+                icon={DatabaseZap}
+                label="Редактор каталога"
+                to="/admin/catalog"
+                active={pathname === '/admin/catalog'}
+                onClick={() => setOpen(false)}
+              />
+            ) : null}
           </div>
 
           <div className="mx-1 my-1.5 h-px bg-accent-tint" />
 
           <div className="flex flex-col gap-1 py-0.5">
             <MenuRow
-              icon={ToggleLeft}
-              label="Настройки"
+              icon={UserRound}
+              label="Учётная запись"
               to="/settings"
               active={pathname === '/settings'}
               onClick={() => setOpen(false)}

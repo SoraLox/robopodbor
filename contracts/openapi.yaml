@@ -301,6 +301,80 @@ paths:
               schema: { $ref: '#/components/schemas/User' }
         '401':
           description: Сессии нет
+  /auth/profile:
+    patch:
+      operationId: updateProfile
+      summary: Изменить имя и организацию
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProfilePatch' }
+      responses:
+        '200':
+          description: Обновлённый пользователь
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '400': { description: Некорректные данные }
+        '401': { description: Требуется вход }
+  /auth/password:
+    post:
+      operationId: changePassword
+      summary: Сменить пароль
+      description: Нужен текущий пароль. Остальные сессии пользователя закрываются.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PasswordChange' }
+      responses:
+        '204': { description: Пароль изменён }
+        '400': { description: Неверный текущий пароль или слабый новый }
+        '401': { description: Требуется вход }
+  /auth/favorites:
+    get:
+      operationId: listFavorites
+      summary: Избранные роботы каталога
+      responses:
+        '200':
+          description: id решений каталога, последние добавленные — первыми
+          content:
+            application/json:
+              schema: { type: array, items: { type: string } }
+        '401': { description: Требуется вход }
+  /auth/favorites/{solutionId}:
+    put:
+      operationId: addFavorite
+      summary: Добавить робота в избранное
+      parameters:
+        - name: solutionId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Список избранного после изменения
+          content:
+            application/json:
+              schema: { type: array, items: { type: string } }
+        '401': { description: Требуется вход }
+        '404': { description: Решение не найдено }
+    delete:
+      operationId: removeFavorite
+      summary: Убрать робота из избранного
+      parameters:
+        - name: solutionId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Список избранного после изменения
+          content:
+            application/json:
+              schema: { type: array, items: { type: string } }
+        '401': { description: Требуется вход }
   /object-types/{slug}/parameters:
     get:
       operationId: getObjectParameters
@@ -739,6 +813,19 @@ components:
         role:
           type: string
           enum: [user, admin]
+        createdAt: { type: string, format: date-time, description: Дата регистрации. }
+        passwordChangedAt: { type: string, format: date-time, description: Когда последний раз меняли пароль. }
+    ProfilePatch:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        organization: { type: string, maxLength: 200 }
+    PasswordChange:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword: { type: string }
+        newPassword: { type: string, minLength: 6 }
     ParameterField:
       type: object
       required: [id, label, kind]

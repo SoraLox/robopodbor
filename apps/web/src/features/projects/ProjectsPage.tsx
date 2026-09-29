@@ -5,6 +5,7 @@ import {
   Copy,
   FilePenLine,
   FilePlus2,
+  GitCompareArrows,
   History,
   MoreHorizontal,
   Pencil,
@@ -24,6 +25,7 @@ import {
 import { api } from '@/api/client';
 import { useWizardStore } from '@/app/store';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { StatusBadge } from '@/shared/components';
 import { cn } from '@/lib/utils';
 import type { Maturity, Project } from '@/api/types';
@@ -486,9 +488,17 @@ function RowMenu({
   );
 }
 
+const COMPARE_LIMIT = 4;
+
+/** Сравнить можно только расчёт с результатом — у черновика без робота показателей нет. */
+const hasResult = (project: Project) => project.payback.trim() !== '' && project.payback !== '—';
+
 function ProjectRow({
   project,
   busy,
+  picked,
+  pickDisabled,
+  onPick,
   onOpenResults,
   onEditForm,
   onRename,
@@ -498,6 +508,9 @@ function ProjectRow({
 }: {
   project: Project;
   busy: BusyAction;
+  picked: boolean;
+  pickDisabled: boolean;
+  onPick: () => void;
   onOpenResults: () => void;
   onEditForm: () => void;
   onRename: () => void;
@@ -505,9 +518,18 @@ function ProjectRow({
   onCopy: () => void;
   onDelete: () => void;
 }) {
+  const comparable = hasResult(project);
   return (
-    <li className="border-b border-hairline last:border-b-0">
-      <div className="grid items-center gap-3 px-4 py-4 sm:grid-cols-[minmax(0,1fr)_7.5rem_2.75rem] sm:gap-4 sm:px-5">
+    <li className={cn('border-b border-hairline last:border-b-0', picked && 'bg-[#FAFAFA]')}>
+      <div className="grid items-center gap-3 px-4 py-4 sm:grid-cols-[1.25rem_minmax(0,1fr)_7.5rem_2.75rem] sm:gap-4 sm:px-5">
+        <Checkbox
+          checked={picked}
+          disabled={!comparable || pickDisabled}
+          onCheckedChange={onPick}
+          aria-label={comparable ? `Выбрать для сравнения: ${project.title}` : `${project.title}: нет результата для сравнения`}
+          title={comparable ? 'Выбрать для сравнения' : 'Нет результата расчёта — сравнивать нечего'}
+          className="size-[18px] border-[#C7C7CC]"
+        />
         <button
           type="button"
           onClick={onOpenResults}
@@ -577,9 +599,16 @@ export function ProjectsPage() {
   const [editing, setEditing] = useState<Editing | null>(null);
   const [viewing, setViewing] = useState<Viewing | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [picked, setPicked] = useState<string[]>([]);
 
   const draftReady = hasWizardDraft(objectType, parameters);
   const count = projects?.length ?? 0;
+  // Удалённые расчёты выпадают из выбора сами.
+  const selectedIds = picked.filter((id) => projects?.some((project) => project.id === id && hasResult(project)));
+  const togglePick = (id: string) =>
+    setPicked((current) =>
+      current.includes(id) ? current.filter((item) => item !== id) : current.length >= COMPARE_LIMIT ? current : [...current, id],
+    );
 
   useEffect(() => {
     if (!toast) return;
@@ -693,9 +722,26 @@ export function ProjectsPage() {
   return (
     <DashboardLayout>
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-[20px] font-semibold tracking-[-0.01em]">Расчёты</h1>
+        <div>
+          <h1 className="text-[20px] font-semibold tracking-[-0.01em]">Мои расчёты</h1>
+          <p className="mt-1 max-w-[62ch] text-[13px] text-muted-foreground">
+            Сохранённые расчёты окупаемости. Отметьте 2–{COMPARE_LIMIT} расчёта галочкой, чтобы сравнить показатели
+            бок о бок; меню «⋯» — результаты, параметры, история и копия.
+          </p>
+        </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="justify-center"
+            disabled={selectedIds.length < 2}
+            onClick={() => navigate(`/projects/compare?ids=${selectedIds.map(encodeURIComponent).join(',')}`)}
+          >
+            <GitCompareArrows className="size-4" strokeWidth={1.8} aria-hidden />
+            Сравнить{selectedIds.length ? ` (${selectedIds.length})` : ''}
+          </Button>
           {draftReady ? (
             <Button
               type="button"
@@ -765,6 +811,9 @@ export function ProjectsPage() {
                 key={project.id}
                 project={project}
                 busy={busyId === project.id ? busyAction : null}
+                picked={selectedIds.includes(project.id)}
+                pickDisabled={!selectedIds.includes(project.id) && selectedIds.length >= COMPARE_LIMIT}
+                onPick={() => togglePick(project.id)}
                 onOpenResults={() => void openResults(project.id)}
                 onEditForm={() => void editForm(project.id)}
                 onRename={() => {

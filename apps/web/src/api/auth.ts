@@ -59,6 +59,7 @@ export function useLogout() {
     onSuccess: () => {
       queryClient.setQueryData(authKeys.session, null);
       queryClient.removeQueries({ queryKey: ['projects'] });
+      queryClient.removeQueries({ queryKey: ['favorites'] });
     },
   });
 }

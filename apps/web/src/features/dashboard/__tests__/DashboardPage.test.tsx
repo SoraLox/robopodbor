@@ -11,8 +11,10 @@ describe('DashboardPage', () => {
     expect(screen.queryByText(/12 482|к прошлому месяцу/)).not.toBeInTheDocument();
   });
 
-  it('число роботов в подборе — из каталога', async () => {
+  it('показатели кабинета понятны без расчётов: сохранённые расчёты и избранные роботы', async () => {
     renderWithProviders(<DashboardPage />, { route: '/dashboard' });
-    expect(await screen.findByText('из 188 в каталоге')).toBeInTheDocument();
+    expect(await screen.findByText('Сохранённые расчёты')).toBeInTheDocument();
+    expect(screen.getByText('нажмите ♥ на карточке в каталоге')).toBeInTheDocument();
+    expect(screen.getByText('сохраните расчёт с экрана результатов')).toBeInTheDocument();
   });
 });

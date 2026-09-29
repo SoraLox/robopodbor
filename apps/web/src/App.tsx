@@ -17,6 +17,8 @@ const ResultsPage = lazy(() => import('@/features/results/ResultsPage'));
 const CatalogPage = lazy(() => import('@/features/catalog/CatalogPage'));
 const ComparePage = lazy(() => import('@/features/catalog/ComparePage'));
 const ProjectsPage = lazy(() => import('@/features/projects/ProjectsPage'));
+const CompareCalculationsPage = lazy(() => import('@/features/projects/CompareCalculationsPage'));
+const FavoritesPage = lazy(() => import('@/features/favorites/FavoritesPage'));
 const SettingsPage = lazy(() => import('@/features/settings/SettingsPage'));
 const MethodologyPage = lazy(() => import('@/features/methodology/MethodologyPage'));
 const PrivacyPage = lazy(() => import('@/features/legal/PrivacyPage'));
@@ -64,6 +66,22 @@ export function App() {
           element={
             <RequireAuth>
               <ProjectsPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/projects/compare"
+          element={
+            <RequireAuth>
+              <CompareCalculationsPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/favorites"
+          element={
+            <RequireAuth>
+              <FavoritesPage />
             </RequireAuth>
           }
         />

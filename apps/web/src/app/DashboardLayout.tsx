@@ -2,24 +2,32 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useSession } from '@/api/auth';
 import {
+  DatabaseZap,
   FileText,
+  Heart,
   Home,
   Info,
   Layers,
   LibraryBig,
   Menu,
-  ToggleLeft,
+  UserRound,
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MenuRowPlus, menuRowClassName } from './menuRow';
 
 const PRIMARY_NAV = [
-  { to: '/dashboard', label: 'Главная', icon: Home, end: true },
-  { to: '/projects', label: 'Расчёты', icon: FileText, plus: true },
+  { to: '/dashboard', label: 'Обзор', icon: Home, end: true },
+  { to: '/projects', label: 'Мои расчёты', icon: FileText, plus: true },
+  { to: '/favorites', label: 'Избранные роботы', icon: Heart },
   { to: '/catalog', label: 'Каталог решений', icon: Layers },
-  { to: '/admin', label: 'Справочники', icon: LibraryBig, adminOnly: true },
-  { to: '/settings', label: 'Настройки', icon: ToggleLeft },
+  { to: '/settings', label: 'Учётная запись', icon: UserRound },
+] as const;
+
+/** Только администратору: правка каталога и справочников. */
+const ADMIN_NAV = [
+  { to: '/admin/catalog', label: 'Редактор каталога', icon: DatabaseZap },
+  { to: '/admin', label: 'Справочники и журнал', icon: LibraryBig, end: true },
 ] as const;
 
 const SECONDARY_NAV = [
@@ -150,9 +158,8 @@ function Sidebar({
   onClose,
 }: { onNavigate?: () => void; onClose?: () => void } = {}) {
   const { data: user } = useSession();
-  const primary = PRIMARY_NAV.filter(
-    (item) => !('adminOnly' in item && item.adminOnly) || user?.role === 'admin',
-  );
+  const primary = PRIMARY_NAV;
+  const isAdmin = user?.role === 'admin';
 
   return (
     <div
@@ -210,6 +217,29 @@ function Sidebar({
             );
           })}
         </nav>
+
+        {isAdmin ? (
+          <>
+            <div className="mx-1 h-px bg-accent-tint" />
+            <nav aria-label="Администрирование" className="flex flex-col gap-0.5 py-1.5">
+              <div className="px-2.5 pb-1 pt-1 text-[11px] font-medium uppercase tracking-[0.06em] text-[#8E8E93]">
+                Администрирование
+              </div>
+              {ADMIN_NAV.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={'end' in item ? item.end : false}
+                  onClick={onNavigate}
+                  className={({ isActive }) => menuRowClassName(isActive)}
+                >
+                  <item.icon className="size-4 flex-none text-foreground" strokeWidth={1.75} aria-hidden />
+                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                </NavLink>
+              ))}
+            </nav>
+          </>
+        ) : null}
 
         <div className="mx-1 h-px bg-accent-tint" />
 

@@ -124,9 +124,10 @@ export function useSolutions(objectType?: string) {
   });
 }
 
-export function useProjects() {
+export function useProjects(enabled = true) {
   return useQuery({
     queryKey: queryKeys.projects,
+    enabled,
     queryFn: async (): Promise<Project[]> => {
       const { data, error } = await api.GET('/projects');
       if (error || !data) throw new Error('Не удалось загрузить расчёты');

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
 import { AppShell } from '@/app/AppShell';
 import { useSelection, useSolutions } from '@/api/queries';
@@ -35,10 +35,15 @@ const SELECTION_LABEL: Record<SelectionItem['status'], { label: string; classNam
 
 export function ComparePage() {
   const { data: solutions } = useSolutions();
-  const { comparedIds, objectType, parameters } = useWizardStore();
+  const { comparedIds: storeIds, objectType, parameters } = useWizardStore();
   const { data: selection } = useSelection(objectType, parameters);
+  // ?ids=a,b — сравнение из личного кабинета (избранные роботы); без него — отмеченные в каталоге.
+  const [searchParams] = useSearchParams();
+  const idsParam = searchParams.get('ids');
+  const fromFavorites = idsParam !== null;
+  const comparedIds = fromFavorites ? idsParam.split(',').filter(Boolean) : storeIds;
 
-  const picked = (solutions ?? []).filter((solution) => comparedIds.includes(solution.id));
+  const picked = comparedIds.flatMap((id) => (solutions ?? []).find((solution) => solution.id === id) ?? []);
   const specs = picked.map((solution) => specGroups(solution));
   const verdicts = picked.map((solution) => selection?.items.find((item) => item.solutionId === solution.id));
   const columns = `200px repeat(${picked.length}, minmax(0, 1fr))`;
@@ -54,7 +59,7 @@ export function ComparePage() {
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Button asChild variant="outline">
-            <Link to="/catalog">Вернуться в каталог</Link>
+            {fromFavorites ? <Link to="/favorites">К избранным роботам</Link> : <Link to="/catalog">Вернуться в каталог</Link>}
           </Button>
           <Button asChild>
             <Link to="/calculate/warehouse">

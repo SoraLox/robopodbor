@@ -24,6 +24,7 @@ const accounts = loadMap<Account>('accounts', [
         name: 'Смирнова О. П.',
         organization: 'Роботоподбор',
         role: 'admin',
+        createdAt: '2026-09-01T09:00:00.000Z',
       },
     },
   ],
@@ -37,6 +38,7 @@ const accounts = loadMap<Account>('accounts', [
         name: 'Крылов А. В.',
         organization: 'ООО «Волга-Логистик»',
         role: 'user',
+        createdAt: '2026-09-15T09:00:00.000Z',
       },
     },
   ],
@@ -56,6 +58,7 @@ export function createAccount(email: string, password: string, organization?: st
     email,
     name: email.split('@')[0] ?? email,
     role: 'user',
+    createdAt: new Date().toISOString(),
     ...(organization ? { organization } : {}),
   };
   accounts.set(email, { user, password });
@@ -87,6 +90,54 @@ export function userBySid(sid: string | undefined): User | null {
   if (!email) return null;
   return accounts.get(email)?.user ?? null;
 }
+
+/** Имя и организация — как PATCH /auth/profile на сервере. */
+export function updateProfile(email: string, patch: { name?: string; organization?: string }) {
+  const account = accounts.get(email);
+  if (!account) return null;
+  const { organization: _previous, ...rest } = account.user;
+  const organization = patch.organization !== undefined ? patch.organization.trim() : account.user.organization;
+  const user: User = {
+    ...rest,
+    ...(patch.name !== undefined ? { name: patch.name.trim() } : {}),
+    ...(organization ? { organization } : {}),
+  };
+  accounts.set(email, { ...account, user });
+  saveMap('accounts', accounts);
+  return user;
+}
+
+/** Смена пароля: null — пароль изменён, иначе текст ошибки. Прочие сессии закрываются. */
+export function changePassword(email: string, sid: string | undefined, current: string, next: string): string | null {
+  const account = accounts.get(email);
+  if (!account || account.password !== current) return 'Текущий пароль указан неверно';
+  if (next.length < 6) return 'Новый пароль — не короче 6 символов';
+  if (next === current) return 'Новый пароль совпадает с текущим';
+  accounts.set(email, { password: next, user: { ...account.user, passwordChangedAt: new Date().toISOString() } });
+  saveMap('accounts', accounts);
+  for (const [key, owner] of sessions) if (owner === email && key !== sid) sessions.delete(key);
+  persistSessions();
+  return null;
+}
+
+/** Избранные роботы: email → id решений, последние добавленные первыми. */
+const favorites = loadMap<string[]>('favorites');
+
+export const favoriteStore = {
+  list: (email: string) => favorites.get(email) ?? [],
+  add(email: string, id: string) {
+    const next = [id, ...(favorites.get(email) ?? []).filter((item) => item !== id)];
+    favorites.set(email, next);
+    saveMap('favorites', favorites);
+    return next;
+  },
+  remove(email: string, id: string) {
+    const next = (favorites.get(email) ?? []).filter((item) => item !== id);
+    favorites.set(email, next);
+    saveMap('favorites', favorites);
+    return next;
+  },
+};
 
 /** Проекты пользователя вместе с входными параметрами и сценариями. */
 const projects = loadMap<ProjectDetail>('projects');
