@@ -6,7 +6,7 @@
  * Принцип: число из паспорта или карточки — используем; нет числа — не выдумываем,
  * а берём явно названное допущение и выносим его в «Допущения» и предупреждение.
  */
-import { OBJECT_LABEL, type CatalogSolution } from "./catalog.js";
+import { OBJECT_LABEL, isTeamEstimate, type CatalogSolution } from "./catalog.js";
 import type { FleetKind, Substitution } from "./fleet.js";
 import { decodeLayoutCells, rackStorageOf, storageLevels } from "./warehouseLayout.js";
 import {
@@ -27,7 +27,7 @@ import {
   type WarehouseParams,
 } from "./warehouseEconomics.js";
 
-export const ECONOMICS_MODEL_VERSION = "economics-2026.09c";
+export const ECONOMICS_MODEL_VERSION = "economics-2026.09d";
 
 type Params = Record<string, string>;
 type Confidence = "confirmed" | "needs-review";
@@ -509,7 +509,8 @@ export function calculateEconomics(input: CalculationInput): CalculationOutput {
   // ─ Число роботов
   let count = 0;
   let basis = "";
-  const throughput = solution.throughput;
+  // Оценка команды не задаёт размер парка: считаем по скорости или по постам.
+  const throughput = isTeamEstimate(solution, "throughput") ? undefined : solution.throughput;
   const unit = solution.throughputUnit ?? "";
   const demand = profile?.demand;
   const demandPerDay = demand
@@ -682,6 +683,10 @@ export function calculateEconomics(input: CalculationInput): CalculationOutput {
   const firstYearSaving = effects[0] ?? 0;
   const opexPercent = baselineLaborYear > 0 ? (firstYearSaving / baselineLaborYear) * 100 : 0;
 
+  // Затраты из карточки: подтверждённые — «Каталог решений», оценки команды — требуют проверки.
+  const cardSource = (key: string) => (isTeamEstimate(solution, key) ? "Каталог: оценка по классу оборудования" : "Каталог решений");
+  const cardConfidence = (key: string): Confidence => (isTeamEstimate(solution, key) ? "needs-review" : "confirmed");
+
   // ─ Структура затрат (сценарий «Покупка», за горизонт)
   const residualTotal = Array.from({ length: horizon }, (_, i) => laborAt(i + 1, operatorsYear)).reduce((a, b) => a + b, 0);
   const capexLines = [
@@ -692,22 +697,27 @@ export function calculateEconomics(input: CalculationInput): CalculationOutput {
       confidence: (solution.fieldSources?.["costs.equipment"]?.confirmed === false ? "needs-review" : "confirmed") as Confidence,
     },
     ...(software > 0
-      ? [{ title: "Программное обеспечение", amount: software, source: "Каталог решений", confidence: "confirmed" as Confidence }]
+      ? [{
+          title: "Программное обеспечение",
+          amount: software,
+          source: cardSource("costs.software"),
+          confidence: cardConfidence("costs.software"),
+        }]
       : []),
     {
       title: implementationFromCard
         ? "Внедрение и интеграция"
         : `Внедрение, интеграция, зарядка — ${pct(NORMS.implementationShare)}% от оборудования`,
       amount: implementation,
-      source: implementationFromCard ? "Каталог решений" : "Оценка",
-      confidence: (implementationFromCard ? "confirmed" : "needs-review") as Confidence,
+      source: implementationFromCard ? cardSource("costs.implementation") : "Оценка",
+      confidence: (implementationFromCard ? cardConfidence("costs.implementation") : "needs-review") as Confidence,
     },
     { title: `Резерв ${pct(NORMS.reserveRatio)}%`, amount: reserve, source: "Методика", confidence: "needs-review" as Confidence },
     ...(core.purchase.replacementCapex > 0
       ? [{
           title: `Замена оборудования после ${fmt(lifespan)} лет`,
           amount: core.purchase.replacementCapex,
-          source: solution.lifespanYears ? "Каталог решений" : "Оценка",
+          source: solution.lifespanYears ? cardSource("lifespanYears") : "Оценка",
           confidence: "needs-review" as Confidence,
         }]
       : []),
@@ -716,8 +726,8 @@ export function calculateEconomics(input: CalculationInput): CalculationOutput {
     {
       title: serviceFromCard ? "Обслуживание" : `Обслуживание, ${pct(NORMS.serviceShare)}% цены в год`,
       amount: serviceYear * horizon,
-      source: serviceFromCard ? "Каталог решений" : "Отраслевой бенчмарк",
-      confidence: (serviceFromCard ? "confirmed" : "needs-review") as Confidence,
+      source: serviceFromCard ? cardSource("costs.maintenancePerYear") : "Отраслевой бенчмарк",
+      confidence: (serviceFromCard ? cardConfidence("costs.maintenancePerYear") : "needs-review") as Confidence,
     },
     {
       title: energyYear > 0 ? `Электроэнергия (${energyNote}, ${NORMS.tariffRubPerKwh} ₽/кВт·ч)` : "Электроэнергия — нет данных о мощности",
@@ -1025,6 +1035,9 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
   ];
 
   // ─ Структура затрат (покупка, за горизонт)
+  // Затраты из карточек: если хоть у одного робота это оценка команды — строка требует проверки.
+  const estimatedIn = (key: string) => groups.some((g) => isTeamEstimate(g.robot.solution, key));
+  const fromCards = (key: string) => (estimatedIn(key) ? "Каталог: оценка по классу оборудования" : "Каталог решений");
   const capexLines = [
     ...groups.map((g) => ({
       title: g.robot.solution.perMeter
@@ -1035,14 +1048,19 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
       confidence: (g.robot.solution.fieldSources?.["costs.equipment"]?.confirmed === false ? "needs-review" : "confirmed") as Confidence,
     })),
     ...(purchase.capexRaw.software > 0
-      ? [{ title: "Программное обеспечение", amount: purchase.capexRaw.software, source: "Каталог решений", confidence: "confirmed" as Confidence }]
+      ? [{
+          title: "Программное обеспечение",
+          amount: purchase.capexRaw.software,
+          source: fromCards("costs.software"),
+          confidence: (estimatedIn("costs.software") ? "needs-review" : "confirmed") as Confidence,
+        }]
       : []),
     {
       title: groups.every((g) => g.costs.implementationFromCard)
         ? "Внедрение и интеграция"
         : `Внедрение, интеграция, зарядка — ${pct(WAREHOUSE_NORMS.implementationShare)}% от оборудования`,
       amount: purchase.capexRaw.implementation,
-      source: groups.every((g) => g.costs.implementationFromCard) ? "Каталог решений" : "Оценка",
+      source: groups.every((g) => g.costs.implementationFromCard) ? fromCards("costs.implementation") : "Оценка",
       confidence: "needs-review" as Confidence,
     },
     { title: `Резерв ${pct(WAREHOUSE_NORMS.capexReserveRatio)}%`, amount: purchase.capexRaw.reserve, source: "Методика", confidence: "needs-review" as Confidence },
@@ -1057,8 +1075,8 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
     {
       title: groups.every((g) => g.costs.serviceFromCard) ? "Обслуживание" : `Обслуживание, ${pct(WAREHOUSE_NORMS.serviceShare)}% цены в год`,
       amount: purchase.service * horizon,
-      source: groups.every((g) => g.costs.serviceFromCard) ? "Каталог решений" : "Отраслевой бенчмарк",
-      confidence: (groups.every((g) => g.costs.serviceFromCard) ? "confirmed" : "needs-review") as Confidence,
+      source: groups.every((g) => g.costs.serviceFromCard) ? fromCards("costs.maintenancePerYear") : "Отраслевой бенчмарк",
+      confidence: (groups.every((g) => g.costs.serviceFromCard) && !estimatedIn("costs.maintenancePerYear") ? "confirmed" : "needs-review") as Confidence,
     },
     {
       title: `Электроэнергия (${WAREHOUSE_NORMS.tariffRubPerKwh} ₽/кВт·ч)`,

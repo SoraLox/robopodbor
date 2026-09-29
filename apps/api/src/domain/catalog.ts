@@ -106,6 +106,16 @@ export interface FieldProvenance {
   note?: string;
 }
 
+/**
+ * Значение поля — только оценка команды (catalogEstimates.ts), своего источника нет.
+ * Такие значения показываем с пометкой «допущение», но не даём им исключать решение
+ * из подбора или задавать размер парка вместо расчёта по объекту.
+ */
+export function isTeamEstimate(solution: Pick<CatalogSolution, "fieldSources">, key: string): boolean {
+  const sources = solution.fieldSources?.[key]?.sources;
+  return Boolean(sources?.length) && sources!.every((source) => source.kind === "team");
+}
+
 export const SOURCE_KIND_LABEL: Record<SourceKind, string> = {
   organizer: "материалы организатора",
   vendor: "производитель",

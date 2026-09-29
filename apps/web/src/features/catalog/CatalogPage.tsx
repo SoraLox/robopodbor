@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowUpRight, ChevronDown, ChevronRight, Search, SlidersHorizontal, X } from 'lucide-react';
 import { AppShell } from '@/app/AppShell';
 import { useSolutions } from '@/api/queries';
@@ -293,7 +293,9 @@ export function CatalogPage() {
   const [priceMax, setPriceMax] = useState('');
   const [detailedOpen, setDetailedOpen] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [previewId, setPreviewId] = useState<string | null>(null);
+  // ?robot=ID — ссылка на карточку робота (из избранного в личном кабинете).
+  const [searchParams] = useSearchParams();
+  const [previewId, setPreviewId] = useState<string | null>(() => searchParams.get('robot'));
 
   const rows = useMemo(() => solutions ?? [], [solutions]);
   const filterTree = useMemo(() => buildFilterTree(rows), [rows]);

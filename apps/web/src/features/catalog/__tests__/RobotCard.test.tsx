@@ -1,6 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { renderWithProviders } from '@/test/utils';
 import { solutions } from '@/mocks/fixtures';
 import { RobotCard } from '@/features/catalog/RobotCard';
 import { categorize } from '@/features/catalog/solutionCategory';
@@ -10,7 +11,7 @@ const byId = (id: string) => solutions.find((s) => s.id === id)!;
 describe('RobotCard', () => {
   it('показывает фото, если оно есть', () => {
     const solution = byId('AM0001');
-    render(
+    renderWithProviders(
       <RobotCard
         solution={solution}
         selected={false}
@@ -26,7 +27,7 @@ describe('RobotCard', () => {
   it('без фото — плейсхолдер категории', () => {
     const solution = solutions.find((s) => !s.photos?.length)!;
     const category = categorize(solution);
-    render(
+    renderWithProviders(
       <RobotCard
         solution={solution}
         selected={false}
@@ -44,7 +45,7 @@ describe('RobotCard', () => {
     const onOpenPreview = vi.fn();
     const onToggleCompare = vi.fn();
     const solution = byId('AM0001');
-    render(
+    renderWithProviders(
       <RobotCard
         solution={solution}
         selected={false}

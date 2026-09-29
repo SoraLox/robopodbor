@@ -548,10 +548,15 @@ export function AdminPage() {
   return (
     <DashboardLayout>
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-[20px] font-semibold tracking-[-0.01em]">Справочники</h1>
-        <Button asChild size="sm" variant="outline">
+        <div>
+          <h1 className="text-[20px] font-semibold tracking-[-0.01em]">Справочники и журнал</h1>
+          <p className="mt-1 text-[13px] text-muted-foreground">
+            Источники данных, нормативы расчёта и история правок. Роботы каталога правятся в редакторе каталога.
+          </p>
+        </div>
+        <Button asChild size="sm">
           <Link to="/admin/catalog">
-            Каталог решений
+            Редактор каталога решений
             <ArrowUpRight className="size-3.5" strokeWidth={2} />
           </Link>
         </Button>

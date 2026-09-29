@@ -6,7 +6,15 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
-      user?: { id: string; email: string; name: string; organization: string | null; role: "user" | "admin" };
+      user?: {
+        id: string;
+        email: string;
+        name: string;
+        organization: string | null;
+        role: "user" | "admin";
+        createdAt: Date;
+        passwordChangedAt: Date | null;
+      };
     }
   }
 }
@@ -25,7 +33,9 @@ export const attachSession = wrap(async (req, _res, next) => {
     where: { id: sid },
     select: {
       expiresAt: true,
-      user: { select: { id: true, email: true, name: true, organization: true, role: true } },
+      user: {
+        select: { id: true, email: true, name: true, organization: true, role: true, createdAt: true, passwordChangedAt: true },
+      },
     },
   });
   if (!session) return next();

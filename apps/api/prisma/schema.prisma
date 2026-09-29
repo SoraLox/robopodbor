@@ -31,6 +31,9 @@ model User {
   organization String?
   role         Role      @default(user)
   createdAt    DateTime  @default(now())
+  // Избранные роботы каталога (id решений) — сохраняются из каталога, сравниваются в кабинете.
+  favoriteSolutionIds String[] @default([])
+  passwordChangedAt   DateTime?
   sessions     Session[]
   projects     Project[]
 }

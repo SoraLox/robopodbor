@@ -16,6 +16,7 @@ import type {
   ObjectFit,
   SourceKind,
 } from "./catalog.js";
+import { applyEstimates } from "./catalogEstimates.js";
 
 type Flags = Record<string, boolean | null>;
 type Range = { min: number | null; max: number | null } | null;
@@ -107,6 +108,8 @@ export interface CatalogBuild {
   conflicts: string[];
   /** Какие пустые поля заполнили открытые источники. */
   researched: string[];
+  /** Сколько полей каждого решения заполнено оценками команды (catalogEstimates.ts). */
+  estimated: string[];
 }
 
 export const CATALOG_SCHEMA_MAJOR = "2";
@@ -678,6 +681,15 @@ export function buildCatalog(
     if (!solution.source?.includes("открытые источники")) solution.source = `${solution.source}; открытые источники`;
   }
 
+  // ─── Оценки команды ────────────────────────────────────────────────────────
+  // Последний слой: то, что осталось пустым после каталога, организатора и открытых
+  // источников, заполняем типовыми значениями класса с пометкой «допущение».
+  const estimated: string[] = [];
+  for (const solution of solutions) {
+    const fields = applyEstimates(solution);
+    if (fields.length) estimated.push(`${solution.id}: ${fields.length}`);
+  }
+
   const fitCounts: CatalogBuild["fit"] = {};
   for (const objectType of Object.keys(FIT_RULES)) {
     const count = (basis: ObjectFit) => solutions.filter((s) => s.objectFit?.[objectType] === basis).length;
@@ -691,6 +703,7 @@ export function buildCatalog(
     filled,
     conflicts,
     researched: [...researchedBy].map(([id, fields]) => `${id}: ${[...new Set(fields)].join(", ")}`),
+    estimated,
   };
 }
 

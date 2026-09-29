@@ -27,9 +27,8 @@ describe('CatalogPage — фильтры каталога роботов', () =>
 
     await user.click(screen.getAllByText('Подробные фильтры')[0]!);
     expect(screen.getAllByText('Зрелость').length).toBeGreaterThan(0);
-    expect(screen.queryByText('Доступность')).toBeNull();
-    // Достоверность у карточек разная (сортеры и конвейеры — оценки по открытым
-    // источникам, «требует проверки»), поэтому фильтр «Данные» есть и не пустой.
+    // Статус доступности заполнен у всех решений, достоверность различается — оба фильтра есть.
+    expect(screen.getAllByText('Доступность').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Данные').length).toBeGreaterThan(0);
   });
 });

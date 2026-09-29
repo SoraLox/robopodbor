@@ -27,6 +27,7 @@ import { ObjectParametersList } from './ObjectParametersList';
 import { parameterGroups as buildParameterGroups, type ObjectParameterGroup } from './objectParameters';
 import { ReportSections, type ReportSection } from './ReportCategory';
 import { ScenarioBars } from './ScenarioBars';
+import { SaveCalculationButton } from './SaveCalculationButton';
 import { SensitivityPanel } from './SensitivityPanel';
 import { SimulationCheck } from './SimulationCheck';
 import { ResultSimulation } from './simulation/ResultSimulation';
@@ -136,6 +137,8 @@ export function ResultsPage() {
             <div className="mx-auto flex h-full max-w-site items-end pb-5 sm:pb-6">
               <HeroMetrics
                 data={data}
+                objectType={objectType}
+                calculationId={calculationId}
                 intro={intro}
                 exporting={exporting}
                 onExport={runExport}
@@ -276,12 +279,16 @@ const SPEED_STEPS = [1, 2, 4, 8, 16, 32, 64, 128] as const;
 
 function HeroMetrics({
   data,
+  objectType,
+  calculationId,
   intro,
   exporting,
   onExport,
   onExportHover,
 }: {
   data: CalculationResult;
+  objectType: string;
+  calculationId: string;
   intro: ObjectIntro;
   exporting: 'pdf' | 'xlsx' | null;
   onExport: (kind: 'pdf' | 'xlsx') => void;
@@ -483,6 +490,9 @@ function HeroMetrics({
 
           <span className="mx-0.5 h-4 w-px flex-none bg-[#E5E5EA]" aria-hidden />
 
+          {calculationId !== 'demo' ? (
+            <SaveCalculationButton data={data} objectType={objectType} calculationId={calculationId} />
+          ) : null}
           <button
             type="button"
             className="flex h-8 flex-none items-center gap-1 rounded-[8px] bg-[#FEECEC] px-1.5 text-[#D32F2F] transition-colors hover:bg-[#FAD4D4] disabled:pointer-events-none disabled:opacity-40"

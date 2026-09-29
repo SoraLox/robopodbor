@@ -3,6 +3,7 @@ import type { Maturity, Solution } from '@/api/types';
 import { Checkbox } from '@/components/ui/checkbox';
 import { robotPhoto } from '@/features/objects/previewImages';
 import { cn } from '@/lib/utils';
+import { FavoriteButton } from './FavoriteButton';
 import { categorize } from './solutionCategory';
 
 const MATURITY_LABEL: Record<Maturity, string> = {
@@ -105,6 +106,10 @@ export function RobotCard({
                 : `Добавить ${solution.name} в сравнение`
             }
           />
+        </div>
+
+        <div className="absolute right-3 top-3">
+          <FavoriteButton solutionId={solution.id} solutionName={solution.name} />
         </div>
 
         {showPhoto ? (

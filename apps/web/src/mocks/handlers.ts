@@ -31,11 +31,14 @@ import {
 } from './fixtures';
 import {
   calculationStore,
+  changePassword,
   closeSession,
   createAccount,
+  favoriteStore,
   openSession,
   projectStore,
   summaryOf,
+  updateProfile,
   userBySid,
   verify,
 } from './db';
@@ -225,6 +228,46 @@ export const handlers = [
     const user = userBySid(sidOf(cookies));
     if (!user) return HttpResponse.json({ message: 'Нет сессии' }, { status: 401 });
     return HttpResponse.json(user);
+  }),
+
+  // ─── Личный кабинет ───────────────────────────────────────────────
+  http.patch('*/api/auth/profile', async ({ request, cookies }) => {
+    const user = userBySid(sidOf(cookies));
+    if (!user) return HttpResponse.json({ message: 'Требуется вход' }, { status: 401 });
+    const body = (await request.json()) as { name?: string; organization?: string };
+    if (body.name !== undefined && !body.name.trim()) {
+      return HttpResponse.json({ message: 'Некорректные данные: имя не может быть пустым' }, { status: 400 });
+    }
+    return HttpResponse.json(updateProfile(user.email, body));
+  }),
+
+  http.post('*/api/auth/password', async ({ request, cookies }) => {
+    const user = userBySid(sidOf(cookies));
+    if (!user) return HttpResponse.json({ message: 'Требуется вход' }, { status: 401 });
+    const body = (await request.json()) as { currentPassword?: string; newPassword?: string };
+    const problem = changePassword(user.email, sidOf(cookies), body.currentPassword ?? '', body.newPassword ?? '');
+    if (problem) return HttpResponse.json({ message: problem }, { status: 400 });
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.get('*/api/auth/favorites', ({ cookies }) => {
+    const user = userBySid(sidOf(cookies));
+    if (!user) return HttpResponse.json({ message: 'Требуется вход' }, { status: 401 });
+    return HttpResponse.json(favoriteStore.list(user.email));
+  }),
+
+  http.put('*/api/auth/favorites/:solutionId', ({ params, cookies }) => {
+    const user = userBySid(sidOf(cookies));
+    if (!user) return HttpResponse.json({ message: 'Требуется вход' }, { status: 401 });
+    const id = String(params.solutionId);
+    if (!catalog.has(id)) return HttpResponse.json({ message: 'Решение не найдено в каталоге' }, { status: 404 });
+    return HttpResponse.json(favoriteStore.add(user.email, id));
+  }),
+
+  http.delete('*/api/auth/favorites/:solutionId', ({ params, cookies }) => {
+    const user = userBySid(sidOf(cookies));
+    if (!user) return HttpResponse.json({ message: 'Требуется вход' }, { status: 401 });
+    return HttpResponse.json(favoriteStore.remove(user.email, String(params.solutionId)));
   }),
 
   // ─── Объекты ──────────────────────────────────────────────────────

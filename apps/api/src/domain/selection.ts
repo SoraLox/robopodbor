@@ -8,9 +8,9 @@
  *  - recommended  — ограничения проверены и выполняются.
  * Балл ранжирования раскладывается на критерии с весами (3.4.5).
  */
-import { MOBILE_TYPES, completenessOf, missingFields, type CatalogSolution } from "./catalog.js";
+import { MOBILE_TYPES, completenessOf, isTeamEstimate, missingFields, type CatalogSolution } from "./catalog.js";
 
-export const SELECTION_RULES_VERSION = "selection-2026.09d";
+export const SELECTION_RULES_VERSION = "selection-2026.09e";
 
 export type SelectionStatus = "recommended" | "needs-review" | "excluded";
 
@@ -137,6 +137,8 @@ function compare(
     ok: (need: number, have: number) => boolean;
     blocker: (need: string, have: string) => string;
     reason: (need: string, have: string) => string;
+    /** Значение решения — оценка команды: не исключает, а требует проверки. */
+    estimated?: boolean;
   },
 ) {
   if (opts.need === undefined) {
@@ -156,9 +158,16 @@ function compare(
   }
   const need = `${fmt(opts.need)} ${opts.unit}`.trim();
   const have = `${fmt(opts.have)} ${opts.unit}`.trim();
-  if (opts.ok(opts.need, opts.have)) check.reasons.push(opts.reason(need, have));
-  else check.blockers.push(opts.blocker(need, have));
+  if (opts.ok(opts.need, opts.have)) {
+    check.reasons.push(opts.reason(need, have));
+  } else if (opts.estimated) {
+    check.missing.push(`${opts.blocker(need, have)} — по оценке команды, уточнить у производителя`);
+    check.unresolved += 1;
+  } else {
+    check.blockers.push(opts.blocker(need, have));
+  }
 }
+
 
 export function evaluateSolution(
   solution: CatalogSolution,
@@ -203,6 +212,7 @@ export function evaluateSolution(
   } else if (load) {
     compare(check, {
       need: solution.payloadKg,
+      estimated: isTeamEstimate(solution, "payloadKg"),
       needLabel: "Грузоподъёмность",
       have: num(params, load.fieldId),
       haveLabel: load.label[0]!.toUpperCase() + load.label.slice(1),
@@ -218,6 +228,7 @@ export function evaluateSolution(
   if (mobile && aisle) {
     compare(check, {
       need: solution.minAisleWidthM,
+      estimated: isTeamEstimate(solution, "minAisleWidthM"),
       needLabel: "Минимальная ширина прохода",
       have: num(params, aisle.id),
       haveLabel: aisle.label[0]!.toUpperCase() + aisle.label.slice(1),
@@ -229,9 +240,11 @@ export function evaluateSolution(
     });
   }
 
-  if (solution.maxFloorDeviationMm !== undefined) {
+  // Ровность пола и высота потолков есть только в паспорте склада.
+  if (objectType === "warehouse" && solution.maxFloorDeviationMm !== undefined) {
     compare(check, {
       need: solution.maxFloorDeviationMm,
+      estimated: isTeamEstimate(solution, "maxFloorDeviationMm"),
       needLabel: "Допуск ровности пола",
       have: num(params, "wh_rovnost_pola"),
       haveLabel: "Ровность пола",
@@ -243,9 +256,10 @@ export function evaluateSolution(
     });
   }
 
-  if (solution.minCeilingHeightM !== undefined) {
+  if (objectType === "warehouse" && solution.minCeilingHeightM !== undefined) {
     compare(check, {
       need: solution.minCeilingHeightM,
+      estimated: isTeamEstimate(solution, "minCeilingHeightM"),
       needLabel: "Минимальная высота помещения",
       have: num(params, "wh_vysota_potolkov_zone_hraneniya"),
       haveLabel: "Высота потолков",
@@ -260,6 +274,7 @@ export function evaluateSolution(
   if (objectType === "airport" && solution.environment && solution.environment !== "indoor") {
     compare(check, {
       need: solution.minTempC,
+      estimated: isTeamEstimate(solution, "minTempC"),
       needLabel: "Нижняя рабочая температура",
       have: num(params, "ap_temperatura_neotaplivaemyh_zonah"),
       haveLabel: "Температура в неотапливаемых зонах",
@@ -273,6 +288,9 @@ export function evaluateSolution(
     if (certification) {
       if (solution.airsideCertified === true) {
         check.reasons.push(`Есть допуск к работе на перроне (${certification})`);
+      } else if (solution.airsideCertified === false && isTeamEstimate(solution, "airsideCertified")) {
+        check.missing.push(`Допуск к работе на перроне (${certification}) не заявлен — по оценке команды, уточнить у производителя`);
+        check.unresolved += 1;
       } else if (solution.airsideCertified === false) {
         check.blockers.push(`Нет допуска к работе на перроне (${certification})`);
       } else {
@@ -287,7 +305,10 @@ export function evaluateSolution(
     if (floors > 1) {
       const liftsApi = params.cl_elevator_bms_present === "yes";
       const ramps = params.cl_ramps_present === "yes";
-      if (solution.elevatorIntegration === false && !ramps) {
+      if (solution.elevatorIntegration === false && !ramps && isTeamEstimate(solution, "elevatorIntegration")) {
+        check.missing.push(`Интеграция с лифтами не заявлена (оценка команды), а маршрут проходит по ${fmt(floors)} этажам — уточнить у производителя`);
+        check.unresolved += 1;
+      } else if (solution.elevatorIntegration === false && !ramps) {
         check.blockers.push(`Нет интеграции с лифтами, а маршрут проходит по ${fmt(floors)} этажам`);
       } else if (solution.elevatorIntegration === undefined) {
         check.missing.push("Интеграция с лифтами: нет данных в карточке решения");
