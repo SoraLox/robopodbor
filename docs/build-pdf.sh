@@ -7,7 +7,7 @@ cd "$(dirname "$0")"
 CHROME="${CHROME:-/Applications/Google Chrome.app/Contents/MacOS/Google Chrome}"
 [ -x "$CHROME" ] || CHROME="$(command -v chromium || command -v google-chrome)"
 OUT="${1:-robopodbor-docs.pdf}"
-HTML="$(mktemp -t robopodbor-docs).html"
+HTML="$(mktemp -t robopodbor-docs.XXXXXX).html"
 
 {
   cat <<'HEAD'
