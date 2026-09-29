@@ -9,6 +9,7 @@ import { ROBOT_TITLES, PHASE_LABELS, formatHours, formatSimTime } from "./simSta
 import { Stat, RobotCountPanel, MapLegend, VerificationPanel } from "./SimPanels.jsx";
 import { ViewToolbar, FloorSwitcher, PlaybackControls } from "./SimControls.jsx";
 import { useSimPlaybackOptional } from "@/features/results/simulation/SimPlaybackContext";
+import { publishVerifyRows } from "@/features/results/simulation/simVerifyStore";
 
 // ============================================================
 // Управляемый (controlled) компонент: состав роботов, площадь, этажи, counts,
@@ -190,6 +191,13 @@ export default function WarehouseScene({
     inflowPerFloor: { inbound: cargoPerHour / floorsCount, outbound: outboundPerHour / floorsCount },
     routeLengthM,
   });
+
+  // Отчёт (immersive) показывает сверку своим разделом — отдаём ему строки.
+  useEffect(() => {
+    if (!immersive) return;
+    publishVerifyRows({ rows: verifyRows, simSeconds: stats.simSeconds });
+  });
+  useEffect(() => () => publishVerifyRows(null), []);
 
   const viewToolbar = (
     <ViewToolbar

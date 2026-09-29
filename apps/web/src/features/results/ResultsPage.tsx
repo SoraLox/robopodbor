@@ -6,6 +6,7 @@ import {
   ChevronUp,
   ClipboardList,
   GitCompareArrows,
+  Gauge,
   ListTree,
   Minus,
   Pause,
@@ -26,6 +27,7 @@ import { parameterGroups as buildParameterGroups, type ObjectParameterGroup } fr
 import { ReportSections, type ReportSection } from './ReportCategory';
 import { ScenarioBars } from './ScenarioBars';
 import { SensitivityPanel } from './SensitivityPanel';
+import { SimulationCheck } from './SimulationCheck';
 import { ResultSimulation } from './simulation/ResultSimulation';
 import { SIMULATION_ASSUMPTIONS } from './simulation/simulationInput';
 import { AIRPORT_ASSUMPTIONS } from './simulation/airportInput';
@@ -148,6 +150,7 @@ export function ResultsPage() {
         intro={intro}
         parameterGroups={parameterGroups}
         simulationAssumptions={objectType === 'airport' ? AIRPORT_ASSUMPTIONS : SIMULATION_ASSUMPTIONS}
+        showSimulationCheck={objectType !== 'airport'}
         previewId={previewId}
         onSelect={(id) => setPreviewId((current) => (current === id ? null : id))}
         onClosePreview={() => setPreviewId(null)}
@@ -161,10 +164,12 @@ function ReportBelowFold({
   intro,
   parameterGroups,
   simulationAssumptions,
+  showSimulationCheck,
   previewId,
   onSelect,
   onClosePreview,
 }: {
+  showSimulationCheck: boolean;
   data: CalculationResult;
   intro: ObjectIntro;
   parameterGroups: ObjectParameterGroup[];
@@ -196,6 +201,17 @@ function ReportBelowFold({
             summary: sensitivitySummary(data),
             icon: SlidersHorizontal,
             content: <SensitivityPanel factors={data.sensitivity} />,
+          } satisfies ReportSection,
+        ]
+      : []),
+    ...(showSimulationCheck
+      ? [
+          {
+            id: 'simulation-check',
+            title: 'Проверка симуляцией',
+            summary: 'Нужно · расчёт парка · что сделали роботы в сцене',
+            icon: Gauge,
+            content: <SimulationCheck />,
           } satisfies ReportSection,
         ]
       : []),
@@ -352,7 +368,22 @@ function HeroMetrics({
                   </div>
                 </div>
               ) : (
-                <div className="rounded-[12px] border border-dashed border-[#E5E5EA]" />
+                // Ни покупка, ни аренда не дешевле «Как есть» — говорим почему, а не оставляем пустую рамку.
+                <div className="flex min-h-0 min-w-0 flex-col justify-between rounded-[12px] border border-dashed border-[#D1D1D6] px-2.5 pb-2.5 pt-3.5">
+                  <div className="min-w-0">
+                    <div className="truncate text-[13px] font-semibold leading-tight text-foreground">Без рекомендации</div>
+                    <div className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-[#8E8E93]">
+                      {data.payback.note ?? 'Роботизация не дешевле текущего процесса'}
+                    </div>
+                  </div>
+                  <div className="mt-3 grid min-w-0 grid-cols-2 gap-2">
+                    <Metric label="CAPEX" value={data.capex.value} />
+                    <Metric
+                      label="TCO покупки"
+                      value={fmt(data.scenarios.find((scenario) => scenario.id === 'purchase')?.tco ?? data.totalTco)}
+                    />
+                  </div>
+                </div>
               )}
             </div>
           </div>
