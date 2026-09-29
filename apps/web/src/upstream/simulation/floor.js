@@ -28,10 +28,10 @@ function strokeRect(ctx, rect) {
 }
 
 // Площадки роборук — круглые, по одной под каждой роборукой.
-function drawArmPads(ctx, armZone, armCount) {
+function drawArmPads(ctx, armZone, armCount, armPitch) {
   ctx.fillStyle = activePalette().pad;
 
-  for (const slot of computeArmSlots(armZone, armCount)) {
+  for (const slot of computeArmSlots(armZone, armCount, armPitch)) {
     const center = toPx(slot.x, slot.z);
 
     ctx.beginPath();
@@ -273,7 +273,7 @@ export function drawFloorBase(ctx, { shape, layout, armCount, vacuumCount, chunk
     drawRackCells(ctx, shape);
     drawGateCells(ctx, shape);
   }
-  if (layout.armZone && armCount > 0) drawArmPads(ctx, layout.armZone, armCount);
+  if (layout.armZone && armCount > 0) drawArmPads(ctx, layout.armZone, armCount, layout.armPitch);
   if (layout.useVacuum) drawChargingStations(ctx, vacuumCount, layout.vacuumZone.xMin, layout.vacuumZone.dockZ);
 
   drawChunkGrid(ctx, chunkGrid);

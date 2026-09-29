@@ -1045,7 +1045,7 @@ components:
           items: { $ref: '#/components/schemas/FleetGroup' }
     FleetGroup:
       type: object
-      required: [kind, label, solutionId, name, count, throughputPerRobot, unit, peakDemand, workPowerKw, idlePowerKw, substitutions]
+      required: [kind, label, solutionId, name, count, throughputPerRobot, unit, peakDemand, workPowerKw, idlePowerKw, substitutions, footprint]
       properties:
         kind: { type: string, enum: [vacuum, arm, loader, sorter, conveyor] }
         label: { type: string }
@@ -1062,6 +1062,15 @@ components:
         chargeHours: { type: number }
         workPowerKw: { type: number }
         idlePowerKw: { type: number }
+        footprint:
+          type: object
+          description: Габарит робота в плане, м — из карточки или средний по отрасли (estimated).
+          required: [lengthM, widthM, estimated, basis]
+          properties:
+            lengthM: { type: number }
+            widthM: { type: number }
+            estimated: { type: boolean }
+            basis: { type: string }
         storageTowers:
           type: integer
           description: 'СтойкаБокс: башен в сетке — ёмкость хранения; роботы (count) — шаттлы.'

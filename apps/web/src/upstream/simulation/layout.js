@@ -30,7 +30,16 @@ export const MAX_VACUUM_COUNT = 8;
 export const MAX_LOADER_COUNT = GATE_XS.length; // пресет по умолчанию; для своей формы — layout.maxLoaderCount
 const ARM_ROW_PITCH_MIN = 21.4; // длина конвейера роборуки с запасом
 const ARM_COLUMN_PITCH_MIN = 14; // ширина роборуки с конвейерами + проезд пылесоса между колонками
-export const MAX_ARM_COUNT = 16;
+export const MAX_ARM_COUNT = 48;
+
+// Шаг мест роборук, ед. сцены. Без размеров — стилизованная модель Егора; с
+// размерами (robotSizes.arm из габарита ячейки в каталоге и масштаба склада) —
+// реальная ячейка плюс проход между ячейками.
+export function armPitchOf(robotSizes) {
+  const arm = robotSizes?.arm;
+  if (!arm) return { row: ARM_ROW_PITCH_MIN, column: ARM_COLUMN_PITCH_MIN };
+  return { row: arm.lengthUnits + robotSizes.aisleUnits, column: arm.widthUnits + robotSizes.aisleUnits };
+}
 
 export const ROBOT_TYPES = ["vacuum", "arm", "loader", "sorter", "conveyor"];
 
@@ -56,7 +65,7 @@ export function normalizeRobotTypes(types) {
 // buildDefaultShape() для стандартного прямоугольника); robotTypes — массив id
 // из ROBOT_TYPES; workZoneShare (0..1) — какая часть пола доступна роботам,
 // остальное — участок, где они не работают (оборудование, запретные зоны).
-export function computeLayout(shape, robotTypes, workZoneShare = 1) {
+export function computeLayout(shape, robotTypes, workZoneShare = 1, robotSizes) {
   const useVacuum = robotTypes.includes("vacuum");
   const useArm = robotTypes.includes("arm");
   const useLoader = robotTypes.includes("loader");
@@ -130,7 +139,8 @@ export function computeLayout(shape, robotTypes, workZoneShare = 1) {
     vacuumZone,
     armZone,
     sorterZone,
-    maxArmCount: maxArmCountOf(armWidth, workZMax - workZMin),
+    maxArmCount: maxArmCountOf(armWidth, workZMax - workZMin, armPitchOf(robotSizes)),
+    armPitch: armPitchOf(robotSizes),
     // На своей форме у ворот встают до трёх погрузчиков (customLoaderFleet.js LOADERS_PER_GATE).
     maxLoaderCount: Math.max(1, gates.length * (custom ? 3 : 1)),
     gates,
@@ -140,32 +150,41 @@ export function computeLayout(shape, robotTypes, workZoneShare = 1) {
   };
 }
 
-function maxArmCountOf(zoneWidth, zoneLength) {
-  const rows = Math.max(1, Math.floor(zoneLength / ARM_ROW_PITCH_MIN));
-  const columns = Math.max(1, Math.floor(zoneWidth / ARM_COLUMN_PITCH_MIN));
+function maxArmCountOf(zoneWidth, zoneLength, pitch) {
+  const rows = Math.max(1, Math.floor(zoneLength / pitch.row));
+  const columns = Math.max(1, Math.floor(zoneWidth / pitch.column));
   return Math.min(MAX_ARM_COUNT, rows * columns);
 }
 
 // Места роборук в зоне. Пока рук не больше, чем помещается в одну линию, они
 // стоят в ряд вдоль Z; когда больше — выстраиваются параллельными колонками
 // (рук в колонках поровну, внутри колонки — с равным шагом).
-export function computeArmSlots(zone, count) {
+export function computeArmSlots(zone, count, pitch = armPitchOf(null)) {
   const zoneLength = zone.zMax - zone.zMin;
-  const rowsMax = Math.max(1, Math.floor(zoneLength / ARM_ROW_PITCH_MIN));
-  const columnsMax = Math.max(1, Math.floor(zone.width / ARM_COLUMN_PITCH_MIN));
-  const columns = Math.min(columnsMax, Math.max(1, Math.ceil(count / rowsMax)));
-  const columnWidth = zone.width / columns;
+  const rowsMax = Math.max(1, Math.floor(zoneLength / pitch.row));
+  const columnsMax = Math.max(1, Math.floor(zone.width / pitch.column));
+  // Реальный габарит ячейки: компактный блок в центре зоны с проходами между
+  // ячейками, примерно квадратный. Стилизованная модель — как у Егора: колонки
+  // во всю зону, руки в колонке — с равным шагом по всей длине.
+  const real = pitch.row !== ARM_ROW_PITCH_MIN;
+  const columns = Math.min(
+    columnsMax,
+    Math.max(1, Math.ceil(count / rowsMax), real ? Math.ceil(Math.sqrt((count * pitch.row) / pitch.column)) : 1)
+  );
+  const columnWidth = real ? pitch.column : zone.width / columns;
+  const blockX = zone.xMin + (zone.width - columnWidth * columns) / 2;
 
   const slots = [];
 
   for (let c = 0; c < columns; c++) {
     const inColumn = Math.floor(count / columns) + (c < count % columns ? 1 : 0);
-    const rowSpacing = zoneLength / Math.max(1, inColumn);
+    const rowSpacing = real ? pitch.row : zoneLength / Math.max(1, inColumn);
+    const blockZ = real ? zone.zMin + (zoneLength - rowSpacing * inColumn) / 2 : zone.zMin;
 
     for (let r = 0; r < inColumn; r++) {
       slots.push({
-        x: zone.xMin + columnWidth * (c + 0.5),
-        z: zone.zMin + rowSpacing * (r + 0.5),
+        x: blockX + columnWidth * (c + 0.5),
+        z: blockZ + rowSpacing * (r + 0.5),
         padRadius: 0.46 * Math.min(columnWidth, rowSpacing),
       });
     }

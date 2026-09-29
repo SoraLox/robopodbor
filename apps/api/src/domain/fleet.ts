@@ -139,6 +139,57 @@ const UNIT_OF_KIND: Record<FleetKind, RegExp> = {
   conveyor: /паллет|поддон|короб|тар|ед|шт/i,
 };
 
+/** Габарит робота в плане, м: из карточки или средний по отрасли для такого вида. */
+export interface Footprint {
+  lengthM: number;
+  widthM: number;
+  /** true — габарита в карточке нет, взята оценка (basis объясняет какая). */
+  estimated: boolean;
+  basis: string;
+}
+
+/** Вылет руки из названия модели манипулятора: «А12-1450» → 1,45 м. */
+function armReachM(solution: Pick<CatalogSolution, "name">): number | null {
+  const match = solution.name.match(/[-‑–]\s*(\d{3,4})\b/);
+  const mm = match ? Number(match[1]) : NaN;
+  return mm >= 500 && mm <= 3500 ? mm / 1000 : null;
+}
+
+// Средние габариты по отрасли, м — по карточкам каталога с известными размерами
+// (уборщики FC0002/FC0006, AMR AM0001–AM0011, погрузчики FL0001–FL0003).
+const INDUSTRY_FOOTPRINT: Record<string, [number, number, string]> = {
+  vacuum: [0.9, 0.6, "средний габарит уборщиков каталога с известными размерами"],
+  loader: [2.0, 1.1, "средний габарит беспилотных погрузчиков каталога"],
+  transporter: [1.0, 0.65, "средний габарит AMR-платформ каталога"],
+  storagecube: [1.2, 0.8, "габарит шаттла под европаллету"],
+  sorter: [55, 6, "петля кросс-белт сортера ~120 м"],
+  conveyor: [1.2, 1.0, "секция паллетного конвейера под европаллету"],
+};
+
+export function footprintOf(solution: CatalogSolution, kind: FleetKind, model: string | undefined): Footprint {
+  const dims = solution.dimensions?.replace(/\s/g, "").match(/(\d+(?:[.,]\d+)?)[×x*](\d+(?:[.,]\d+)?)/i);
+  if (dims && /мм|mm/i.test(solution.dimensions ?? "")) {
+    const a = Number(dims[1]!.replace(",", ".")) / 1000;
+    const b = Number(dims[2]!.replace(",", ".")) / 1000;
+    if (a > 0 && b > 0) return { lengthM: Math.max(a, b), widthM: Math.min(a, b), estimated: false, basis: "габарит из карточки" };
+  }
+  if (kind === "arm") {
+    // Ячейка роборуки: круг вылета руки и ленты подачи/отвода по бокам.
+    const reach = armReachM(solution);
+    const r = reach ?? 1.5;
+    return {
+      lengthM: 2 * r + 0.8,
+      widthM: 2 * r,
+      estimated: true,
+      basis: reach
+        ? `ячейка по вылету руки ${reach} м из названия модели: 2 × вылет + ленты`
+        : "ячейка по среднему вылету манипулятора для паллетайзинга и пикинга — 1,5 м",
+    };
+  }
+  const [lengthM, widthM, basis] = INDUSTRY_FOOTPRINT[model ?? ""] ?? INDUSTRY_FOOTPRINT[kind] ?? [1, 1, "нет данных"];
+  return { lengthM, widthM, estimated: true, basis };
+}
+
 export interface Substitution {
   field: string;
   value: string;
@@ -161,6 +212,7 @@ export interface FleetRobot {
   /** Мобильный робот со скоростью — его цикл зависит от маршрута. */
   mobile: boolean;
   substitutions: Substitution[];
+  footprint: Footprint;
 }
 
 export function fleetRobotOf(solution: CatalogSolution, kind: FleetKind): FleetRobot {
@@ -215,5 +267,6 @@ export function fleetRobotOf(solution: CatalogSolution, kind: FleetKind): FleetR
     idlePowerKw,
     mobile: !stationary && speed !== null,
     substitutions,
+    footprint: footprintOf(solution, kind, model),
   };
 }

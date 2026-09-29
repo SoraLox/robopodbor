@@ -279,6 +279,7 @@ function SimulationScene({ input, immersive }: { input: SimulationInput; immersi
         loaderSpeedMps={fleets.loader?.speedMps ?? 2}
         loaderThroughput={fleets.loader?.throughput ?? 0}
         storageTowers={fleets.loader?.storageTowers}
+        robotSizes={input.robotSizes}
         sorterCount={counts.sorter}
         sorterThroughput={fleets.sorter?.throughput ?? 0}
         conveyorCount={counts.conveyor}

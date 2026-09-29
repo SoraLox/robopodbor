@@ -2,12 +2,13 @@ import { ARM_OBSTACLE_HALF_X, ARM_OBSTACLE_HALF_Z } from "./constants.js";
 
 // Роборуки стационарны, поэтому их препятствия можно посчитать один раз
 // при пересборке сцены — из их же положения в группе.
-export function computeArmObstacles(arms) {
+// scaleRatio — во сколько раз модель руки меньше стилизованной (реальный габарит ячейки).
+export function computeArmObstacles(arms, scaleRatio = 1) {
   return arms.map((a) => ({
     x: a.group.position.x,
     z: a.group.position.z,
-    halfX: ARM_OBSTACLE_HALF_X,
-    halfZ: ARM_OBSTACLE_HALF_Z,
+    halfX: ARM_OBSTACLE_HALF_X * scaleRatio,
+    halfZ: ARM_OBSTACLE_HALF_Z * scaleRatio,
   }));
 }
 

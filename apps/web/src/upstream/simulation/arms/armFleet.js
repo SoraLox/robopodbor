@@ -31,18 +31,28 @@ import { activePalette } from "../studioLook.js";
 // (конвейеры, захват/передача коробок, счётчик операций) подходит любой руке,
 // у которой есть {group, pivot, claw, boxes} — см. makeWeldArmRig.js для
 // альтернативы с настоящей моделью клешни.
-export function createArmFleet({ group, zone, count, beltTexture, armProd, energyProfile, robotFactory = makeArmRobot }) {
+export function createArmFleet({
+  group,
+  zone,
+  count,
+  beltTexture,
+  armProd,
+  energyProfile,
+  robotFactory = makeArmRobot,
+  modelScale = MODEL_SCALE,
+  pitch,
+}) {
   const cycleDuration = 1 / Math.max(armProd / 60, 0.001);
   const beltRate = 1.45 * Math.max(1, armProd / 15);
 
-  const slots = computeArmSlots(zone, count);
+  const slots = computeArmSlots(zone, count, pitch);
 
   const accents = activePalette().armAccents;
   const arms = slots.map((slot, i) => {
     const built = robotFactory(accents[i % accents.length], beltTexture);
 
     built.group.position.set(slot.x, 0, slot.z);
-    built.group.scale.setScalar(MODEL_SCALE);
+    built.group.scale.setScalar(modelScale);
     group.add(built.group);
 
     return { ...built, phase: Math.random(), transferBox: null, lastGoingRight: undefined };
@@ -52,7 +62,7 @@ export function createArmFleet({ group, zone, count, beltTexture, armProd, energ
   let opsDone = 0;
 
   // Роборуки стационарны — препятствия для объезда пылесосов считаются один раз.
-  const obstacles = computeArmObstacles(arms);
+  const obstacles = computeArmObstacles(arms, modelScale / MODEL_SCALE);
 
   // ----------------------------------------------------------
   // Конвейеры

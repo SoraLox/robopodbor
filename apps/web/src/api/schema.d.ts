@@ -817,6 +817,13 @@ export interface components {
             chargeHours?: number;
             workPowerKw: number;
             idlePowerKw: number;
+            /** @description Габарит робота в плане, м — из карточки или средний по отрасли (estimated). */
+            footprint: {
+                lengthM: number;
+                widthM: number;
+                estimated: boolean;
+                basis: string;
+            };
             /** @description СтойкаБокс: башен в сетке — ёмкость хранения; роботы (count) — шаттлы. */
             storageTowers?: number;
             /** @description Чего нет в карточке и что взято у демо-робота. */

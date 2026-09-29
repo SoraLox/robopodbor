@@ -60,6 +60,7 @@ export default function WarehouseScene({
   sorterThroughput = 0,
   conveyorCount = 0,
   conveyorThroughput = 0,
+  robotSizes,
   cargoWeightKg,
   cargoLengthCm,
   cargoWidthCm,
@@ -98,7 +99,10 @@ export default function WarehouseScene({
   const onToggleTopView =
     playback && immersive ? playback.toggleTopView : () => setLocalTopView((value) => !value);
 
-  const layout = useMemo(() => computeLayout(shape, robotTypes, workZoneShare), [shape, robotTypes, workZoneShare]);
+  const layout = useMemo(
+    () => computeLayout(shape, robotTypes, workZoneShare, robotSizes),
+    [shape, robotTypes, workZoneShare, robotSizes]
+  );
   const chunkGrid = useMemo(() => computeFloorChunks(floorAreaM2), [floorAreaM2]);
   const { useVacuum, useArm, useLoader } = layout;
 
@@ -141,6 +145,7 @@ export default function WarehouseScene({
     sorterThroughput,
     conveyorCount,
     conveyorThroughput,
+    robotSizes,
     energyProfiles,
     immersive,
     loader: {
