@@ -29,7 +29,7 @@ describe('путь погрузчика на своей форме склада'
     expect(path.at(-1)).toEqual(to);
     expect(pathIsClear(nav, from, path)).toBe(true);
     // Обходит через проходы: сначала справа (gx ≥ 20), потом слева (gx < 5).
-    expect(path.some((p) => cellOfPoint(nav, p).gx >= 20)).toBe(true);
+    expect(path.some((p: { x: number; z: number }) => cellOfPoint(nav, p).gx >= 20)).toBe(true);
   });
 
   it('не выходит за контур Г-образного склада', () => {
