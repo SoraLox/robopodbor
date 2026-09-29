@@ -13,6 +13,6 @@ describe('DashboardPage', () => {
 
   it('число роботов в подборе — из каталога', async () => {
     renderWithProviders(<DashboardPage />, { route: '/dashboard' });
-    expect(await screen.findByText('из 188 в каталоге')).toBeInTheDocument();
+    expect(await screen.findByText('из 192 в каталоге')).toBeInTheDocument();
   });
 });

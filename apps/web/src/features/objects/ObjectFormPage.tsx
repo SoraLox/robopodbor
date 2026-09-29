@@ -162,12 +162,9 @@ export function ObjectFormPage({ showTitleImport = true }: { showTitleImport?: b
 
   const issues = importFile.data ? [...(importFile.data.errors ?? []), ...(importFile.data.warnings ?? [])] : [];
 
-  const canSubmit =
-    Boolean(fields?.length) &&
-    (fields ?? []).every((field) => {
-      if (field.required === false) return true;
-      return !validate(field, values[field.id] ?? '');
-    });
+  // Кнопка не выключается из-за ошибок в полях: нажатие «Далее» подсвечивает
+  // неверные поля с объяснением (onSubmit), иначе непонятно, что исправить.
+  const canSubmit = Boolean(fields?.length);
 
   const importControl =
     showTitleImport && titleSlot
