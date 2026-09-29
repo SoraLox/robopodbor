@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { CatalogPage } from '@/features/catalog/CatalogPage';
 import { renderWithProviders } from '@/test/utils';
 
-// На странице 188 карточек: запросы по ролям обходят всё дерево доступности и
+// На странице 192 карточки: запросы по ролям обходят всё дерево доступности и
 // стоят секунды, поэтому ищем по подписям и тексту.
 describe('CatalogPage — фильтры каталога роботов', () => {
   it('весь каталог по категориям, поиск латиницей, без пустых фильтров', async () => {
@@ -27,8 +27,8 @@ describe('CatalogPage — фильтры каталога роботов', () =>
 
     await user.click(screen.getAllByText('Подробные фильтры')[0]!);
     expect(screen.getAllByText('Зрелость').length).toBeGreaterThan(0);
-    // Статус доступности заполнен у всех решений и подтверждённость различается — фильтры есть.
-    expect(screen.getByText('Доступность')).toBeInTheDocument();
-    expect(screen.getByText('Данные')).toBeInTheDocument();
+    // Статус доступности заполнен у всех решений, достоверность различается — оба фильтра есть.
+    expect(screen.getAllByText('Доступность').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Данные').length).toBeGreaterThan(0);
   });
 });
