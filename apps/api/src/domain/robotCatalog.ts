@@ -761,7 +761,14 @@ export function mergeCatalogVersion(existing: CatalogSolution | undefined, incom
   }
   const before = existing as unknown as Record<string, unknown>;
   // В базе пустой список хранится как [], в карточке каталога такого поля нет — это одно и то же.
-  const norm = (value: unknown) => JSON.stringify(value === undefined || (Array.isArray(value) && !value.length) ? null : value);
+  // Postgres хранит JSON-поля (costs, infrastructure, objectFit) с отсортированными ключами —
+  // порядок ключей не изменение, поэтому сравниваем с сортировкой.
+  const sorted = (_key: string, value: unknown) =>
+    value && typeof value === "object" && !Array.isArray(value)
+      ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)))
+      : value;
+  const norm = (value: unknown) =>
+    JSON.stringify(value === undefined || (Array.isArray(value) && !value.length) ? null : value, sorted);
   const changed = [...new Set([...Object.keys(before), ...Object.keys(next)])].filter(
     (key) => !IGNORED_IN_DIFF.has(key) && norm(before[key]) !== norm(next[key]),
   );

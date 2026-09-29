@@ -90,13 +90,12 @@ describe('станция приёмки', () => {
       shuttle.step(0.1);
       gateSide.step(0.1);
       rackSide.step(0.1);
-      if (i % 1500 === 0) console.log('T', i, (traffic.list() as any[]).map((a) => `${a.state}@${a.pos.x.toFixed(0)},${a.pos.z.toFixed(0)}${a.blocked ? '!' + (a.blockedBy ?? 'q') : ''}${a.hold ? 'H' : ''}${a.evade ? 'E' : ''}#${a.trafficId}`).join(' '));
       if (i % 5) continue;
       const agents = traffic.list() as Agent[];
       for (let a = 0; a < agents.length; a++) {
         const p = agents[a]!.pos;
         const c = cellOfPoint(nav, p) as { gx: number; gz: number };
-        if (cellAt(shape, c.gx, c.gz) === CELL.RACK) { inRack += 1; if (inRack < 4) console.log('RACK', i, (agents[a] as any).state, (agents[a] as any).trafficId, p.x.toFixed(1), p.z.toFixed(1), (agents[a] as any).evade ? 'E' : '', (agents[a] as any).legTarget && [(agents[a] as any).legTarget.x, (agents[a] as any).legTarget.z]); }
+        if (cellAt(shape, c.gx, c.gz) === CELL.RACK) inRack += 1;
         for (let b = a + 1; b < agents.length; b++) minGap = Math.min(minGap, Math.hypot(p.x - agents[b]!.pos.x, p.z - agents[b]!.pos.z));
       }
     }
