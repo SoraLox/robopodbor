@@ -121,13 +121,15 @@ function lineRects(line) {
 
 // Раскладка сети по местам рук. slots — места рук (computeArmSlots), gates —
 // ворота отгрузки, avoid — прямоугольники, через которые сборный конвейер не идёт.
-export function planPickingNetwork({ shape, slots, gates, avoid = [] }) {
+// reach — рука без своих лент (pick_arm.glb): подача и сборный конвейер идут по обе
+// стороны ряда рук на вылете руки; без него — процедурная рука со своими лентами.
+export function planPickingNetwork({ shape, slots, gates, avoid = [], reach = null }) {
   const nav = makeNavGrid(shape);
   const armRects = slots.map((slot) => ({
     x: slot.x,
     z: slot.z,
-    halfX: (ARM_BELT_X + 0.8) * S,
-    halfZ: ARM_BELT_HALF_LENGTH * S + TRUNK_OFFSET + TRUNK_WIDTH / 2,
+    halfX: reach ? 2.4 : (ARM_BELT_X + 0.8) * S,
+    halfZ: reach ? reach + 2.2 : ARM_BELT_HALF_LENGTH * S + TRUNK_OFFSET + TRUNK_WIDTH / 2,
   }));
 
   // Ряды рук — по одинаковой Z.
@@ -143,10 +145,10 @@ export function planPickingNetwork({ shape, slots, gates, avoid = [] }) {
   for (const members of rowsByZ.values()) {
     members.sort((a, b) => a.x - b.x);
     const z = members[0].z;
-    const feedZ = z + ARM_BELT_START_Z * S - TRUNK_OFFSET;
-    const takeZ = z + ARM_BELT_END_Z * S + TRUNK_OFFSET;
-    const inX = members.map((m) => m.x - ARM_BELT_X * S);
-    const outX = members.map((m) => m.x + ARM_BELT_X * S);
+    const feedZ = reach ? z - reach : z + ARM_BELT_START_Z * S - TRUNK_OFFSET;
+    const takeZ = reach ? z + reach : z + ARM_BELT_END_Z * S + TRUNK_OFFSET;
+    const inX = members.map((m) => (reach ? m.x : m.x - ARM_BELT_X * S));
+    const outX = members.map((m) => (reach ? m.x : m.x + ARM_BELT_X * S));
 
     // Подача: отвод от торца стеллажей (или от стены) к магистрали, дальше вдоль ряда.
     const xs = inX[0] - 3;

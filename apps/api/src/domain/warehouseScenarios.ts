@@ -30,6 +30,8 @@ export interface ScenarioVariant {
   highlights: string[];
   /** Больше всего экономии за горизонт. */
   best?: boolean;
+  /** Рекомендуемая схема приёмки: погрузчик → кольцевой конвейер → роборука → AMR → погрузчик → стеллаж. */
+  recommended?: boolean;
 }
 
 type Role = "fmr" | "amr" | "conveyor" | "arm" | "sorter" | "cleaner";
@@ -192,6 +194,30 @@ export function generateWarehouseScenarios(input: {
       }
     }
   }
+  // Рекомендуемая схема: погрузчик снимает груз с фуры и ставит на кольцевой
+  // конвейер, роборука перекладывает с конвейера на AMR (они ждут в очереди),
+  // AMR везёт к стеллажам, погрузчик ставит в ячейку. Отгрузка — погрузчики + AMR.
+  const amr = topOf("amr", 1)[0];
+  const lifter0 = lifters[0];
+  const recommended =
+    conveyor && lifter0 && amr && arms[0]
+      ? evaluate(
+          "Конвейер, роборуки и AMR",
+          [
+            "Погрузчик снимает груз с фуры и ставит на кольцевой конвейер, роборука перекладывает его на AMR, AMR везёт к стеллажам, погрузчик ставит в ячейку.",
+            "На отгрузке погрузчик ставит паллету на AMR, у ворот другой погрузчик грузит её в фуру.",
+          ],
+          [
+            { slot: "inbound", solutionId: conveyor },
+            { slot: "inbound", solutionId: lifter0 },
+            { slot: "inbound", solutionId: amr },
+            { slot: "outbound", solutionId: lifter0 },
+            { slot: "outbound", solutionId: amr },
+            { slot: "picking", solutionId: arms[0] },
+          ],
+        )
+      : null;
+  if (recommended) candidates.push(recommended);
   if (!candidates.length) return [];
 
   // Отбор вариантов с причиной. Окупаемые — с положительной экономикой за горизонт.
@@ -217,7 +243,8 @@ export function generateWarehouseScenarios(input: {
   const full = pickBy(candidates, (a, b) => a.slots > b.slots || (a.slots === b.slots && a.savingMln > b.savingMln));
   if (full && (!topSaving || full.slots > topSaving.slots)) mark(full, "Полная автоматизация");
 
-  const order = ["Больше всего экономии", "Быстрее окупается", "Меньше вложений", "Полная автоматизация"];
+  if (recommended) mark(recommended, "Рекомендуем");
+  const order = ["Рекомендуем", "Больше всего экономии", "Быстрее окупается", "Меньше вложений", "Полная автоматизация"];
   return [...chosen.values()]
     .sort((a, b) => order.indexOf(a.highlights[0]!) - order.indexOf(b.highlights[0]!))
     .map(({ candidate: c, highlights }, i) => {
@@ -242,6 +269,7 @@ export function generateWarehouseScenarios(input: {
         robots: c.robots,
         highlights,
         ...(c === topSaving ? { best: true } : {}),
+        ...(c === recommended ? { recommended: true } : {}),
       };
     });
 }

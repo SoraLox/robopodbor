@@ -899,6 +899,8 @@ export interface components {
             /** @description Чем вариант лучше остальных («Больше всего экономии», «Быстрее окупается»…). */
             highlights: string[];
             best?: boolean;
+            /** @description Рекомендуемая схема — фура → погрузчик → кольцевой конвейер → роборука → AMR → погрузчик → стеллаж. */
+            recommended?: boolean;
         };
         CalculationResult: {
             id: string;

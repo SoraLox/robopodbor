@@ -1144,6 +1144,9 @@ components:
           description: Чем вариант лучше остальных («Больше всего экономии», «Быстрее окупается»…).
           items: { type: string }
         best: { type: boolean }
+        recommended:
+          type: boolean
+          description: Рекомендуемая схема — фура → погрузчик → кольцевой конвейер → роборука → AMR → погрузчик → стеллаж.
     CalculationResult:
       type: object
       required:

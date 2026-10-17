@@ -14,7 +14,8 @@ import { makePickArmRig, pickArmModel } from "./robots/pickArmRobot.js";
 import { createLoaderSystem } from "./loaders/loaderSystem.js";
 import { createCustomLoaderFleet } from "./loaders/customLoaderFleet.js";
 import { blockedNav, createShuttleFleet, planShuttleBays } from "./loaders/shuttleFleet.js";
-import { createInboundStation, planInboundStation, stationObstacles } from "./arms/inboundStation.js";
+import { ARM_REACH, createInboundStation, planInboundStation, stationObstacles } from "./arms/inboundStation.js";
+import { createPickingLine } from "./arms/pickingLine.js";
 import { createCargoFactory } from "./loaders/cargo.js";
 import { createTraffic } from "./loaders/driver.js";
 import { createStorageCubeFleet } from "./loaders/storageCubeFleet.js";
@@ -310,6 +311,8 @@ export function useSimulation(cfg) {
       if (stationPlan) inboundPlan.lines = [];
       const armSlots =
         !stationPlan && useArm && armCount > 0 && armType !== "stacker" ? computeArmSlots(layout.armZone, armCount) : null;
+      // Рука пользователя загружена — участок отбора на общих лентах (без своих лент у руки).
+      const sharedBelts = modelState === "ready" && pickArmModel.isReady();
       const pickingNet =
         armSlots && index === 0 && layout.gates.length
           ? planPickingNetwork({
@@ -317,9 +320,15 @@ export function useSimulation(cfg) {
               slots: armSlots,
               gates: layout.gates.filter((gate) => linkGatesOf(layout).outbound.includes(gate.id)),
               avoid: linkPlans.flatMap((plan) => plan.lines.map(lineRect)),
+              reach: sharedBelts ? ARM_REACH : null,
             })
           : null;
-      const pickingAvoid = pickingNet ? [...pickingNet.obstacles, ...armSlots.map(armRect)] : [];
+      const pickingAvoid = pickingNet
+        ? [
+            ...pickingNet.obstacles,
+            ...armSlots.map((slot) => (sharedBelts ? { x: slot.x, z: slot.z, halfX: 2.4, halfZ: 2.4 } : armRect(slot))),
+          ]
+        : [];
       // Мобильным роботам закрыты ленты связей и сеть отбора; реестр движения — общий на уровень.
       const mobileBlocked = [
         ...pickingAvoid,
@@ -552,6 +561,16 @@ export function useSimulation(cfg) {
             armProd,
             energyProfile: energyProfiles.arm,
           });
+        } else if (sharedBelts && pickingNet) {
+          level.armFleet = createPickingLine({
+            group: level.armGroup,
+            net: pickingNet,
+            slots: armSlots,
+            rigFactory: makePickArmRig,
+            beltTexture: st.beltTexture,
+            opsPerMinute: armProd,
+            energyProfile: energyProfiles.arm,
+          });
         } else {
           level.armFleet = createArmFleet({
             group: level.armGroup,
@@ -647,7 +666,8 @@ export function useSimulation(cfg) {
       }
     });
 
-    drawFloorBase(st.floorCtx, { shape, layout, armCount, vacuumCount, chunkGrid, slotsPerLane: loader.slotsPerLane });
+    const padArms = st.levels[0]?.armFleet?.drawPads === false ? 0 : armCount;
+    drawFloorBase(st.floorCtx, { shape, layout, armCount: padArms, vacuumCount, chunkGrid, slotsPerLane: loader.slotsPerLane });
     st.floorTexture.needsUpdate = true;
 
     st.simAcc = 0;

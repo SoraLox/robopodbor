@@ -54,3 +54,28 @@ describe('сеть участка отбора', () => {
     expect(fleet.getDelivered()).toBeGreaterThan(fleet.getOpsDone() * 0.8);
   });
 });
+
+describe('участок отбора на общих лентах (рука без своих лент)', () => {
+  it('рука снимает коробку с подачи и ставит на сборный конвейер — коробки доезжают до ворот', async () => {
+    const { ARM_REACH } = await import('@/upstream/simulation/arms/inboundStation.js');
+    const { createPickingLine } = await import('@/upstream/simulation/arms/pickingLine.js');
+    const shape = withStandardRacks(buildDefaultShape() as never) as never;
+    const layout = computeLayout(shape, ['arm', 'loader'], 1) as never as { armZone: object; gates: Array<{ id: number }> };
+    const outbound = linkGatesOf(layout as never).outbound as number[];
+    const slots = computeArmSlots(layout.armZone as never, 3);
+    const net = planPickingNetwork({ shape, slots, gates: layout.gates.filter((g) => outbound.includes(g.id)) as never, reach: ARM_REACH });
+    const line = createPickingLine({
+      group: new THREE.Group(),
+      net,
+      slots,
+      rigFactory: () => ({ group: new THREE.Group(), claw: new THREE.Group(), pose: () => {} }),
+      beltTexture: null,
+      opsPerMinute: 6,
+      energyProfile: profile,
+    });
+    for (let i = 0; i < 6000; i += 1) line.step(0.1);
+    // 10 минут, 3 руки по 6 оп/мин — до 180 операций.
+    expect(line.getOpsDone()).toBeGreaterThan(100);
+    expect(line.getDelivered()).toBeGreaterThan(line.getOpsDone() * 0.8);
+  });
+});

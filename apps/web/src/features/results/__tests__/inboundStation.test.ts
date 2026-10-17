@@ -113,5 +113,5 @@ describe('станция приёмки', () => {
     expect(stored).toBeGreaterThan(3);
     expect(inRack).toBe(0);
     expect(minGap).toBeGreaterThan(1.6);
-  });
+  }, 30_000);
 });

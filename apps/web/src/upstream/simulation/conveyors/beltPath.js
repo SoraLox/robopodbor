@@ -91,15 +91,20 @@ export function createBeltPath({ group, points, closed = false, speed = 1.2, wid
     item.unit.rotation.set(0, p.heading, 0);
   }
 
-  // Поставить груз на ленту в точке d, если там есть окно.
-  function put(unit, d) {
+  // Есть ли окно на ленте в точке d.
+  function canPut(d) {
     const dd = wrap(d);
-    const free = items.every((o) => {
+    return items.every((o) => {
       let gap = Math.abs(o.d - dd);
       if (closed) gap = Math.min(gap, total - gap);
       return gap >= spacing;
     });
-    if (!free) return false;
+  }
+
+  // Поставить груз на ленту в точке d, если там есть окно.
+  function put(unit, d) {
+    const dd = wrap(d);
+    if (!canPut(dd)) return false;
     unit.removeFromParent();
     group.add(unit);
     const item = { unit, d: dd, held: null };
@@ -180,6 +185,7 @@ export function createBeltPath({ group, points, closed = false, speed = 1.2, wid
     at,
     project,
     put,
+    canPut,
     addPickPoint,
     step,
     dispose,

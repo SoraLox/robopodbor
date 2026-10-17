@@ -287,21 +287,26 @@ export function ScenarioComposer({
       <div
         key={variant.id}
         className={cn(
-          'min-w-0 rounded-[12px] border px-3 py-2.5',
-          selected ? 'border-foreground' : variant.best ? 'border-status-operation' : 'border-[#E5E5EA]',
+          'relative min-w-0 rounded-[12px] border px-3 py-2.5',
+          variant.recommended && 'mt-1.5 pt-3.5',
+          selected ? 'border-foreground' : variant.recommended ? 'border-status-operation' : 'border-[#E5E5EA]',
         )}
       >
+        {/* Рекомендуемый — как везде в продукте: зелёная рамка и плашка на ней. */}
+        {variant.recommended ? (
+          <span className="absolute -top-2 right-2.5 rounded-full bg-status-operation-tint px-2 py-0.5 text-[11px] font-semibold leading-none text-status-operation">
+            Рекомендуем
+          </span>
+        ) : null}
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <div className="flex flex-wrap gap-1">
-              {variant.highlights.map((text) => (
+              {variant.highlights.filter((text) => text !== 'Рекомендуем').map((text) => (
                 <span
                   key={text}
                   className={cn(
                     'rounded-full px-1.5 py-0.5 text-[10.5px] font-semibold leading-none',
-                    variant.best && text === variant.highlights[0]
-                      ? 'bg-status-operation-tint text-status-operation'
-                      : 'bg-[#F2F2F4] text-[#6E6E73]',
+                    'bg-[#F2F2F4] text-[#6E6E73]',
                   )}
                 >
                   {text}

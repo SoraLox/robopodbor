@@ -14,8 +14,9 @@ import { createArmUnit } from "./armUnit.js";
 //   w0+16  нижняя сторона — отсюда берут руки;
 //   +R     руки;  +R — стоянки транспортировщиков; дальше — их проезд.
 
-export const ARM_SCALE = 2.6; // рука крупнее — вровень с погрузчиком и стеллажом
-const R = 4.6; // от основания руки до ленты и до стоянки, мир
+export const ARM_SCALE = 3.4; // рука крупная — выше погрузчика, вровень со стеллажом
+export const ARM_REACH = 4.6; // от основания руки до ленты и до стоянки, мир
+const R = ARM_REACH;
 const ARM_PITCH = 9.5;
 const W_NORTH = 12;
 const W_SOUTH = 16;
@@ -165,6 +166,8 @@ export function createInboundStation({ group, plan, beltTexture, rigFactory, ops
   }
 
   return {
+    // Площадки старых рук на полу не рисуем: руки стоят у общих лент.
+    drawPads: false,
     step,
     dispose,
     drops,
