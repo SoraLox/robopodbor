@@ -4,6 +4,7 @@ import { largestFloorRect } from '@/upstream/simulation/shape/shapeGeometry.js';
 import { computeLayout } from '@/upstream/simulation/layout.js';
 import {
   DEFAULT_LAYOUT,
+  STANDARD_LAYOUT,
   decodeShape,
   encodeShape,
   layoutMetrics,
@@ -40,8 +41,10 @@ describe('планировка склада', () => {
     expect(cut.gatesIn).toBe(1);
   });
 
-  it('стандартная форма в расчёт не идёт, своя — формой и путём погрузчика', () => {
-    expect(layoutParameters(DEFAULT_LAYOUT, 20000)).toEqual({});
+  it('план идёт в расчёт всегда: не задан — стандартный, свой — формой и путём погрузчика', () => {
+    // Не задан — стандартная планировка с типовыми стеллажами (та, что в конструкторе).
+    expect(layoutParameters(null, 20000).wh_layout).toBe(STANDARD_LAYOUT);
+    expect(layoutParameters(DEFAULT_LAYOUT, 20000).wh_layout).toBe(DEFAULT_LAYOUT);
     const params = layoutParameters(encodeShape(lShape()), 20000);
     expect(params.wh_layout).toBeDefined();
     expect(Number(params.wh_route_length_m)).toBeGreaterThan(0);

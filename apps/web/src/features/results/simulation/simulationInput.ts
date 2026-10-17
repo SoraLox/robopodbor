@@ -14,7 +14,8 @@ import { MAX_VACUUM_COUNT, computeLayout } from '@/upstream/simulation/layout.js
 import { maxSorterCount } from '@/upstream/simulation/sorters/sorterFleet.js';
 import { buildDefaultShape } from '@/upstream/simulation/shape/shapeTypes.js';
 import { computeGateClusters } from '@/upstream/simulation/shape/shapeGeometry.js';
-import { decodeShape, layoutMetrics, rackStorage, withStandardRacks } from '@/features/objects/layout/warehouseLayout';
+import { layoutMetrics, layoutOrStandard, rackStorage } from '@/features/objects/layout/warehouseLayout';
+import { isDefaultShape } from '@/upstream/simulation/shape/shapeGeometry.js';
 
 /** Форма склада — стандартный прямоугольник upstream: своей формы в паспорте нет. */
 export const DEFAULT_SHAPE = buildDefaultShape();
@@ -145,7 +146,7 @@ export function buildSimulationInput(
   fields: ParameterField[],
   values: Record<string, string>,
   fleet: FleetGroup[],
-  /** Планировка из конструктора; нет — стандартный прямоугольник. */
+  /** Планировка из конструктора; нет — стандартная (прямоугольник с типовыми стеллажами). */
   layout?: string | null,
 ) {
   const merged = {
@@ -153,11 +154,13 @@ export function buildSimulationInput(
     ...values,
   };
   const params = toUpstreamParams(merged);
-  const custom = decodeShape(layout);
+  // План склада из мастера, не задан — стандартный (как в конструкторе). Сцена
+  // строит только то, что в плане: стеллажи сама не дорисовывает.
+  const custom = layoutOrStandard(layout);
   // Ярусы стеллажей в 3D — те же, что в расчёте ёмкости (потолок / высота паллеты).
-  if (custom) (custom as { rackTiers?: number }).rackTiers = rackStorage(custom, merged)?.levels;
-  const shape = custom ?? DEFAULT_SHAPE;
-  if (custom) {
+  (custom as { rackTiers?: number }).rackTiers = rackStorage(custom, merged)?.levels;
+  const shape = custom;
+  {
     // Контур — вся площадь склада: сцена масштабирует по площади всей сетки.
     const metrics = layoutMetrics(custom, params.floorAreaM2);
     params.floorAreaM2 = metrics.sceneAreaM2;
@@ -184,18 +187,17 @@ export function buildSimulationInput(
   // Связи приёмки и отгрузки со своими флотами. Простой паллетный склад (одна
   // модель погрузчиков, без конвейера, стандартная форма, по погрузчику на ворота) —
   // прежним флотом Егора с полосами хранения; остальное — по связям, на складе со
-  // стеллажами: нарисованными или стандартными (withStandardRacks).
+  // стеллажами из плана склада.
   const transportGroups = raw.filter((g) => g.slot === 'inbound' || g.slot === 'outbound');
   const carrierIds = new Set(transportGroups.filter((g) => g.kind === 'loader').map((g) => g.solutionId));
   const loaderTotal = transportGroups.filter((g) => g.kind === 'loader').reduce((sum, g) => sum + g.count, 0);
   const simple =
-    !custom &&
+    isDefaultShape(shape) &&
     !transportGroups.some((g) => g.kind === 'conveyor') &&
     carrierIds.size <= 1 &&
     !transportGroups.some((g) => g.model === 'storagecube') &&
     loaderTotal <= computeGateClusters(shape).length;
-  const sceneShape = simple ? shape : withStandardRacks(shape);
-  if (sceneShape !== shape) (sceneShape as { rackTiers?: number }).rackTiers = rackStorage(sceneShape, merged)?.levels;
+  const sceneShape = shape;
   const sceneLayout = computeLayout(sceneShape, robotTypes, workZoneShare);
   const maxOf: Record<SimRobotType, number> = {
     vacuum: MAX_VACUUM_COUNT,

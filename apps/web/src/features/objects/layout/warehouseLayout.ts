@@ -95,10 +95,11 @@ export function layoutMetrics(shape: Shape, areaM2: number): LayoutMetrics {
 
 /** Параметры расчёта, которые добавляет планировка: сама форма и путь погрузчика. */
 export function layoutParameters(layout: string | null, areaM2: number): Record<string, string> {
-  const shape = decodeShape(layout);
-  if (!shape || layout === DEFAULT_LAYOUT) return {};
+  // Планировки нет — значит стандартная (прямоугольник с типовыми стеллажами):
+  // расчёт и сцена строятся по одному и тому же плану.
+  const shape = layoutOrStandard(layout);
   return {
-    wh_layout: layout!,
+    wh_layout: encodeShape(shape),
     wh_route_length_m: String(layoutMetrics(shape, areaM2).routeLengthM),
   };
 }
@@ -150,4 +151,22 @@ export function withStandardRacks(shape: Shape): Shape {
     }
   }
   return next;
+}
+
+/** Стандартная планировка: прямоугольник с воротами и типовой расстановкой стеллажей. */
+export function standardLayoutShape(): Shape {
+  return withStandardRacks(buildDefaultShape() as Shape);
+}
+
+export const STANDARD_LAYOUT = encodeShape(standardLayoutShape());
+
+/** План склада из мастера; не задан — стандартный (то, что показывает конструктор). */
+export function layoutOrStandard(layout: string | null | undefined): Shape {
+  return decodeShape(layout) ?? standardLayoutShape();
+}
+
+/** Типовая расстановка стеллажей на текущем контуре: прежние стеллажи убираются. */
+export function typicalRacks(shape: Shape): Shape {
+  const cleared = { ...shape, cells: shape.cells.map((v) => (v === CELL.RACK ? CELL.FLOOR : v)) } as Shape;
+  return withStandardRacks(cleared);
 }

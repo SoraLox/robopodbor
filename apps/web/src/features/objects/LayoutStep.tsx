@@ -1,16 +1,18 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { AlertTriangle, RotateCcw } from 'lucide-react';
+import { AlertTriangle, LayoutGrid, RotateCcw } from 'lucide-react';
 import { useWizardStore } from '@/app/store';
-import { CELL, buildDefaultShape, cellAt, cloneShape, setCellAt } from '@/upstream/simulation/shape/shapeTypes.js';
+import { CELL, cellAt, cloneShape, setCellAt } from '@/upstream/simulation/shape/shapeTypes.js';
 import { computeGateClusters } from '@/upstream/simulation/shape/shapeGeometry.js';
 import {
-  DEFAULT_LAYOUT,
+  STANDARD_LAYOUT,
   areaOf,
   palletSlotsOf,
   rackStorage,
-  decodeShape,
   encodeShape,
+  layoutOrStandard,
+  standardLayoutShape,
+  typicalRacks,
   isGate,
   layoutMetrics,
   type Shape,
@@ -102,8 +104,10 @@ function draw(ctx: CanvasRenderingContext2D, shape: Shape) {
   }
 }
 
+// План не задан — стандартный: прямоугольник с типовой расстановкой стеллажей.
+// Сцена и расчёт строят ровно то, что здесь нарисовано, ничего не дорисовывая.
 function initialShape(layout: string | null): Shape {
-  return (decodeShape(layout) ?? (buildDefaultShape() as Shape));
+  return layoutOrStandard(layout);
 }
 
 const nf = new Intl.NumberFormat('ru-RU');
@@ -137,7 +141,7 @@ export function LayoutStep({ active }: { active: boolean }) {
   const storage = useMemo(() => rackStorage(draft, parameters), [draft, version, parameters]); // eslint-disable-line react-hooks/exhaustive-deps
   const passportSlots = palletSlotsOf(parameters);
   const stray = useMemo(() => strayGateCells(draft).size, [draft, version]); // eslint-disable-line react-hooks/exhaustive-deps
-  const isDefault = useMemo(() => encodeShape(draft) === DEFAULT_LAYOUT, [draft, version]); // eslint-disable-line react-hooks/exhaustive-deps
+  const isDefault = useMemo(() => encodeShape(draft) === STANDARD_LAYOUT, [draft, version]); // eslint-disable-line react-hooks/exhaustive-deps
   const canContinue = metrics.footprintCells > 0 && metrics.gates > 0;
 
   const lastCell = useRef<{ gx: number; gz: number } | null>(null);
@@ -203,7 +207,13 @@ export function LayoutStep({ active }: { active: boolean }) {
   };
 
   const reset = () => {
-    setDraft(buildDefaultShape() as Shape);
+    setDraft(standardLayoutShape());
+    setVersion((v) => v + 1);
+  };
+
+  // Типовые ряды стеллажей на текущем контуре (свои стеллажи заменяются).
+  const placeTypicalRacks = () => {
+    setDraft(typicalRacks(draft));
     setVersion((v) => v + 1);
   };
 
@@ -307,12 +317,24 @@ export function LayoutStep({ active }: { active: boolean }) {
 
           <button
             type="button"
+            onClick={placeTypicalRacks}
+            className="flex items-center justify-center gap-1.5 rounded-[10px] border border-[#E5E5EA] px-2.5 py-1.5 text-[12.5px] font-medium text-foreground hover:border-[#C7C7CC]"
+          >
+            <LayoutGrid className="size-3.5" strokeWidth={2} aria-hidden />
+            Типовая расстановка стеллажей
+          </button>
+          <p className="text-[11.5px] leading-snug text-[#8E8E93]">
+            Три двойных ряда с проходами; у ворот остаётся полоса под приёмку. Сцена и расчёт берут стеллажи только
+            отсюда — ничего не добавляют сами.
+          </p>
+          <button
+            type="button"
             onClick={reset}
             disabled={isDefault}
             className="flex items-center gap-1.5 self-start text-[12.5px] font-medium text-[#6E6E73] hover:text-foreground disabled:opacity-40"
           >
             <RotateCcw className="size-3.5" strokeWidth={2} aria-hidden />
-            Стандартный прямоугольник
+            Стандартная планировка
           </button>
         </div>
       </div>

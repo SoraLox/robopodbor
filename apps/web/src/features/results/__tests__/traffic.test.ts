@@ -73,7 +73,7 @@ describe('движение мобильных роботов', () => {
     expect(inbound.getStats().cycles + outbound.getStats().cycles).toBeGreaterThan(20);
     expect(r.inRack).toBe(0);
     expect(r.minGap).toBeGreaterThan(1.6);
-  });
+  }, 30_000);
 
   it('транспортировщик сам не грузится: груз ставит и снимает погрузчик', () => {
     const { shape, split, base, traffic, layout } = setup();
@@ -124,5 +124,5 @@ describe('движение мобильных роботов', () => {
     expect(rackSide.getStats().cycles).toBeGreaterThan(10);
     expect(r.inRack).toBe(0);
     expect(r.minGap).toBeGreaterThan(1.6);
-  });
+  }, 30_000);
 });

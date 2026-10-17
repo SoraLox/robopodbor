@@ -1,3 +1,4 @@
+import { DEFAULT_LAYOUT } from '@/features/objects/layout/warehouseLayout';
 import { describe, expect, it } from 'vitest';
 import { calculateEconomics } from '@domain/economics';
 import type { CatalogSolution } from '@domain/catalog';
@@ -82,6 +83,7 @@ describe('сцена по связям сценария', () => {
     ids: string[],
     assignments?: Parameters<typeof calculateEconomics>[0]['assignments'],
     parameters: Record<string, string> = {},
+    layout: string | null = null,
   ) => {
     const fleet =
       calculateEconomics({
@@ -92,13 +94,15 @@ describe('сцена по связям сценария', () => {
         solutions: ids.map((id) => byId(id) as unknown as CatalogSolution),
         ...(assignments ? { assignments } : {}),
       }).fleet ?? [];
-    return buildSimulationInput(fields, parameters, fleet);
+    return buildSimulationInput(fields, parameters, fleet, layout);
   };
 
   it('простой паллетный склад — прежним флотом с полосами хранения', () => {
-    // Погрузчиков не больше, чем ворот: по одному на ворота.
+    // Только если в плане явно голый прямоугольник без стеллажей и погрузчиков не больше, чем ворот.
     const small = { wh_obem_priemki: '300', wh_obem_otgruzki: '300' };
-    expect(sceneWith(['FL0002'], undefined, small).transportLinks).toBeNull();
+    expect(sceneWith(['FL0002'], undefined, small, DEFAULT_LAYOUT).transportLinks).toBeNull();
+    // Стандартный план (типовые стеллажи) — уже по связям.
+    expect(sceneWith(['FL0002'], undefined, small).transportLinks).not.toBeNull();
     // Больше, чем ворот, — уже по связям, до трёх на ворота.
     expect(sceneWith(['FL0002']).transportLinks).not.toBeNull();
   });
