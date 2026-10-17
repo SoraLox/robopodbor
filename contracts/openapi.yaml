@@ -1147,6 +1147,62 @@ components:
         recommended:
           type: boolean
           description: Рекомендуемая схема — фура → погрузчик → кольцевой конвейер → роборука → AMR → погрузчик → стеллаж.
+    Finance:
+      type: object
+      description: >-
+        Денежный поток покупки и инвестиционные показатели. Поток: год 0 — CAPEX;
+        годы 1…N — эффект минус замена оборудования; в последний год — остаточная
+        стоимость парка. ROI = (Σ эффектов + остаточная − Σ вложений) / Σ вложений.
+      required: [discountRatePct, npvMln, irrPct, roiPct, paybackYears, discountedPaybackYears, salvageMln, totalInvestmentMln, netBenefitMln, cashFlow]
+      properties:
+        discountRatePct: { type: number }
+        npvMln: { type: number }
+        irrPct: { type: number, nullable: true }
+        roiPct: { type: number, nullable: true }
+        paybackYears: { type: number, nullable: true }
+        discountedPaybackYears: { type: number, nullable: true }
+        salvageMln: { type: number }
+        totalInvestmentMln: { type: number }
+        netBenefitMln: { type: number }
+        cashFlow:
+          type: array
+          items:
+            type: object
+            required: [year, investmentMln, effectMln, salvageMln, netMln, cumulativeMln, cumulativeDiscountedMln]
+            properties:
+              year: { type: integer }
+              investmentMln: { type: number }
+              effectMln: { type: number }
+              salvageMln: { type: number }
+              netMln: { type: number }
+              cumulativeMln: { type: number }
+              cumulativeDiscountedMln: { type: number }
+    OpexLevers:
+      type: object
+      description: Что снизит OPEX — рычаги из структуры затрат расчёта.
+      required: [opexYearMln, parts, levers]
+      properties:
+        opexYearMln: { type: number }
+        parts:
+          type: array
+          items:
+            type: object
+            required: [id, label, amountMln]
+            properties:
+              id: { type: string }
+              label: { type: string }
+              amountMln: { type: number }
+        levers:
+          type: array
+          items:
+            type: object
+            required: [id, title, detail, savingMln, basis]
+            properties:
+              id: { type: string }
+              title: { type: string }
+              detail: { type: string }
+              savingMln: { type: number }
+              basis: { type: string, enum: [calculated, estimate] }
     CalculationResult:
       type: object
       required:
@@ -1155,6 +1211,8 @@ components:
           opexSaving, warning, assumptions, totalTco,
         ]
       properties:
+        finance: { $ref: '#/components/schemas/Finance' }
+        opexLevers: { $ref: '#/components/schemas/OpexLevers' }
         id: { type: string }
         objectTitle: { type: string }
         meta: { type: string }

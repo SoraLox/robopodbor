@@ -73,7 +73,9 @@ export function useObjectTypes() {
 /** Расчёт экономики по паспорту и выбранному решению; результат сохраняется на сервере. */
 export async function runCalculation(input: CalculationRequest): Promise<CalculationResult> {
   const { data, error } = await api.POST('/calculations', { body: input });
-  if (error || !data) throw new Error('Не удалось посчитать экономику');
+  // Причину от сервера показываем как есть — «не удалось» без причины не помогает.
+  const reason = (error as { message?: string } | undefined)?.message;
+  if (error || !data) throw new Error(reason ? `Не удалось посчитать экономику: ${reason}` : 'Не удалось посчитать экономику');
   return data;
 }
 

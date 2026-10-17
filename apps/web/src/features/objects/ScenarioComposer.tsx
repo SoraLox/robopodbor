@@ -111,11 +111,6 @@ export function ScenarioComposer({
     const solution = byId.get(id);
     return solution ? isPassiveCarrier(solution as never) : false;
   };
-  // Лучший подходящий погрузчик (не транспортировщик) — в пару плоскому транспортировщику.
-  const bestLifter = () =>
-    rows.find(({ solution, item }) => fleetKindOf(solution) === 'loader' && !passive(solution.id) && item?.status !== 'excluded')
-      ?.solution.id;
-
   const add = (slot: SlotId, solutionId: string) => {
     const kind = kindOf(solutionId);
     let next = assignments.filter((a) => !(a.slot === slot && a.solutionId === solutionId));
@@ -131,17 +126,9 @@ export function ScenarioComposer({
       // Отбор, сортировка, уборка — один робот на этап.
       next = next.filter((a) => a.slot !== slot);
     }
-    next = [...next, { slot, solutionId }];
-    // Плоский транспортировщик сам груз не берёт: без погрузчика на этапе — добавляем лучший.
-    const lifter = bestLifter();
-    if (
-      passive(solutionId) &&
-      lifter &&
-      !next.some((a) => a.slot === slot && kindOf(a.solutionId) === 'loader' && !passive(a.solutionId))
-    ) {
-      next.push({ slot, solutionId: lifter });
-    }
-    setAssignments(next);
+    // Добавляется ровно тот робот, которого выбрали. Транспортировщику без погрузчика
+    // этап сам подскажет, что перегрузку тогда считаем за операторами.
+    setAssignments([...next, { slot, solutionId }]);
   };
 
   const remove = (assignment: Assignment) => {

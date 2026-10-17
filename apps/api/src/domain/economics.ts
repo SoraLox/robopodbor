@@ -9,6 +9,11 @@
 import { OBJECT_LABEL, isTeamEstimate, type CatalogSolution } from "./catalog.js";
 import type { FleetKind, Substitution } from "./fleet.js";
 import { decodeLayoutCells, rackStorageOf, storageLevels } from "./warehouseLayout.js";
+import { analyzeInvestment, DEFAULT_DISCOUNT_RATE, financeOutput, replacementSchedule, type FinanceOutput } from "./finance.js";
+
+import { warehouseOpexLevers, type OpexLeversOutput } from "./opexLevers.js";
+
+const FIN_RATE = Math.round(DEFAULT_DISCOUNT_RATE * 100);
 import {
   DEMAND_UNIT,
   FLEET_LABEL,
@@ -92,6 +97,10 @@ export interface FleetOutput {
 }
 
 export interface CalculationOutput {
+  /** Денежный поток и инвестиционные показатели покупки (finance.ts). */
+  finance?: FinanceOutput;
+  /** Что снизит OPEX — рычаги из структуры затрат расчёта (opexLevers.ts). */
+  opexLevers?: OpexLeversOutput;
   objectTitle: string;
   meta: string;
   payback: Kpi;
@@ -386,6 +395,7 @@ interface Scenario {
   opexYear: number; // ₽ в первый год, без роста
   residualLaborYear: number; // ₽ в первый год, растёт с зарплатами
   replacementCapex: number; // ₽, повторная покупка за горизонт
+  salvage?: number; // ₽, остаточная стоимость на конец горизонта
 }
 
 interface Core {
@@ -426,7 +436,8 @@ function paybackYears(core: Core, scenario: Scenario): number | null {
 }
 
 function tcoOf(core: Core, scenario: Scenario): number {
-  let total = scenario.capex + scenario.replacementCapex;
+  // Остаточная стоимость парка на конец горизонта уменьшает стоимость владения.
+  let total = scenario.capex + scenario.replacementCapex - (scenario.salvage ?? 0);
   for (let year = 1; year <= core.horizon; year += 1) {
     total += scenario.opexYear + laborAt(year, scenario.residualLaborYear);
   }
@@ -620,7 +631,8 @@ export function calculateEconomics(input: CalculationInput): CalculationOutput {
 
   const lifespan = solution.lifespanYears ?? NORMS.lifespanYears;
   if (!solution.lifespanYears) assumptions.push(`Срок службы робота — ${NORMS.lifespanYears} лет (в карточке не указан).`);
-  const replacements = lifespan < horizon ? Math.floor((horizon - 1) / lifespan) : 0;
+  // Замена оборудования по сроку службы и остаточная стоимость парка на конец горизонта.
+  const schedule = replacementSchedule(equipment + software, horizon, lifespan);
 
   const raasYear = (unitPriceRub ?? 0) * NORMS.raasMonthlyShare * 12 * count;
 
@@ -631,24 +643,27 @@ export function calculateEconomics(input: CalculationInput): CalculationOutput {
       capex,
       opexYear: serviceYear + energyYear,
       residualLaborYear: operatorsYear,
-      replacementCapex: replacements * (equipment + software),
+      replacementCapex: schedule.replacementCapex,
+      salvage: schedule.salvage,
     },
     raas: {
       capex: implementation + implementation * NORMS.reserveRatio,
       opexYear: raasYear + energyYear,
       residualLaborYear: operatorsYear,
       replacementCapex: 0,
+      salvage: 0,
     },
   };
 
   const asIsTco = baselineTco(core);
   const purchaseTco = tcoOf(core, core.purchase);
   const raasTco = tcoOf(core, core.raas);
-  const purchasePayback = priceKnown ? paybackYears(core, core.purchase) : null;
-  const raasPayback = priceKnown ? paybackYears(core, core.raas) : null;
   const effects = yearlyEffects(core, core.purchase);
-  const netBenefit = effects.reduce((a, b) => a + b, 0) - capex - core.purchase.replacementCapex;
-  const roiPct = capex > 0 ? (netBenefit / capex) * 100 : null;
+  // ROI, окупаемость, NPV, IRR — по денежному потоку с заменой и остаточной стоимостью.
+  const finance = analyzeInvestment({ capex, effects, replacements: schedule.replacements, salvage: schedule.salvage });
+  const purchasePayback = priceKnown ? finance.paybackYears : null;
+  const raasPayback = priceKnown ? paybackYears(core, core.raas) : null;
+  const roiPct = capex > 0 ? finance.roiPct : null;
 
   const recommendedId = !priceKnown || baselineLaborYear === 0
     ? null
@@ -849,7 +864,8 @@ export function calculateEconomics(input: CalculationInput): CalculationOutput {
   }
 
   assumptions.push(
-    `Горизонт ${horizon} ${yearsUnit(horizon)}, рост зарплат ${pct(NORMS.wageGrowth)}% в год, без дисконтирования.`,
+    `Горизонт ${horizon} ${yearsUnit(horizon)}, рост зарплат ${pct(NORMS.wageGrowth)}% в год.`,
+    `ROI = (эффект за горизонт + остаточная стоимость парка − CAPEX − замена по сроку службы) / все вложения. Окупаемость — по реальным деньгам, без остаточной стоимости. NPV и дисконтированная окупаемость — по ставке ${FIN_RATE}% (оценка стоимости капитала; в паспорте ставки нет).`,
     `ФОТ = численность × з/п × 12 × коэффициент начислений ${payrollFactor}.`,
     `Режим работы: ${fmt(hoursPerDay)} ч в сутки, ${days} дн. в году.`,
     `RaaS: ${pct(NORMS.raasMonthlyShare)}% цены робота в месяц, сервис включён; внедрение оплачивается отдельно (оценка рынка).`,
@@ -875,7 +891,7 @@ export function calculateEconomics(input: CalculationInput): CalculationOutput {
     roi: {
       label: `ROI, ${horizon} ${yearsUnit(horizon)}`,
       value: roiPct === null || baselineLaborYear === 0 ? "—" : `${Math.round(roiPct)}%`,
-      note: `Чистая выгода ${fmt(mln(netBenefit))} млн ₽`,
+      note: `Чистая выгода ${fmt(mln(finance.netBenefit))} млн ₽ с учётом остаточной стоимости`,
       trend: roiPct !== null && roiPct > 0 ? "up" : "down",
     },
     opexSaving: {
@@ -894,6 +910,7 @@ export function calculateEconomics(input: CalculationInput): CalculationOutput {
     sensitivity,
     solutionId: solution.id,
     robots: { count, basis },
+    finance: priceKnown ? financeOutput(finance) : undefined,
   };
 }
 
@@ -1029,6 +1046,7 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
       : []),
     `Окупаемость = CAPEX / годовой эффект; эффект = экономия ФОТ − OPEX парка. ROI = эффект × ${horizon} ${yearsUnit(horizon)} / CAPEX.`,
     `TCO = CAPEX + замена оборудования по сроку службы − остаточная стоимость + (OPEX + оставшийся ФОТ) × горизонт.`,
+    `ROI = (эффект за горизонт + остаточная стоимость парка − CAPEX − замена по сроку службы) / все вложения. Окупаемость — по реальным деньгам, без остаточной стоимости. NPV и дисконтированная окупаемость — по ставке ${FIN_RATE}% (оценка стоимости капитала; в паспорте ставки нет).`,
     `Резерв CAPEX ${pct(WAREHOUSE_NORMS.capexReserveRatio)}%. Нет в карточке: внедрение ${pct(WAREHOUSE_NORMS.implementationShare)}% цены, сервис ${pct(WAREHOUSE_NORMS.serviceShare)}% цены в год, срок службы ${WAREHOUSE_NORMS.lifespanYears} лет, RaaS ${pct(WAREHOUSE_NORMS.raasMonthlyShare)}% цены в месяц.`,
     `Электроэнергия ${WAREHOUSE_NORMS.tariffRubPerKwh} ₽/кВт·ч, ${fmt(params.hoursPerDay)} ч в сутки, ${params.daysPerYear} дн. в году; батарейные роботы берут из сети на ${Math.round((1 / WAREHOUSE_NORMS.chargeEfficiency - 1) * 100)}% больше.`,
     ...(defaultsUsed.length ? [`Значения по умолчанию (в паспорте не введены): ${[...new Set(defaultsUsed)].join(", ")}.`] : []),
@@ -1219,7 +1237,7 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
     roi: {
       label: `ROI, ${horizon} ${yearsUnit(horizon)}`,
       value: purchase.roiPct === null || labor.savings === 0 ? "—" : `${Math.round(purchase.roiPct)}%`,
-      note: `Годовой эффект ${fmt(mln(effect))} млн ₽`,
+      note: `Годовой эффект ${fmt(mln(effect))} млн ₽, остаточная стоимость ${fmt(mln(purchase.residualValue))} млн ₽`,
       trend: purchase.roiPct !== null && purchase.roiPct > 0 ? "up" : "down",
     },
     opexSaving: {
@@ -1238,6 +1256,8 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
     sensitivity,
     solutionId: input.solution.id,
     robots: { count: Math.max(1, count), basis },
+    finance: purchase.capex > 0 ? financeOutput(purchase.finance) : undefined,
+    opexLevers: warehouseOpexLevers(model),
     fleet,
     scenario: {
       links: model.links.map((l) => ({

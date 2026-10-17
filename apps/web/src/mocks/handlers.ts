@@ -333,23 +333,29 @@ export const handlers = [
     if (!body.objectType || !body.solutionId) {
       return HttpResponse.json({ message: 'Некорректный запрос: нужны objectType и solutionId' }, { status: 400 });
     }
-    const solution = catalog.get(body.solutionId);
     const solutionIds = [
       ...new Set([body.solutionId, ...(body.solutionIds ?? []), ...(body.assignments ?? []).map((a) => a.solutionId)]),
     ];
-    const set = solutionIds.map((id) => catalog.get(id));
-    if (!solution || set.some((item) => !item)) {
-      return HttpResponse.json({ message: 'Решение не найдено в каталоге' }, { status: 404 });
+    // Как на сервере: роботов, которых нет в каталоге, пропускаем и пишем об этом.
+    const missing = solutionIds.filter((id) => !catalog.get(id));
+    const set = solutionIds.flatMap((id) => (catalog.get(id) ? [catalog.get(id)!] : []));
+    const solution = catalog.get(body.solutionId) ?? set[0];
+    if (!solution) {
+      return HttpResponse.json({ message: 'Выбранных роботов нет в каталоге — выберите их заново' }, { status: 404 });
     }
+    const assignments = body.assignments?.filter((a) => catalog.get(a.solutionId));
     const economics = calculateEconomics({
       objectType: body.objectType,
       parameters: body.parameters ?? {},
       fields: fieldsFor(body.objectType),
       solution: solution as unknown as CatalogSolution,
       solutions: set as unknown as CatalogSolution[],
-      ...(body.assignments ? { assignments: body.assignments } : {}),
+      ...(assignments?.length ? { assignments } : {}),
       ...(body.processes ? { processes: body.processes } : {}),
     });
+    if (missing.length) {
+      economics.assumptions.unshift(`Нет в каталоге, в расчёт не вошли: ${missing.join(', ')}. Выберите замену на шаге роботов.`);
+    }
     const stored = calculationStore.save({
       ...(economics as unknown as Omit<CalculationResult, 'id'>),
       solutionIds,

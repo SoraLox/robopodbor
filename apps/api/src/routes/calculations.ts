@@ -28,7 +28,7 @@ const requestSchema = z.object({
   parameters: z.record(z.string(), z.string().max(2000)).default({}),
   processes: z.array(z.string().max(40)).max(20).optional(),
   /** Набор роботов (по одному на флот склада); solutionId — главный из них. */
-  solutionIds: z.array(z.string().min(1).max(64)).max(8).optional(),
+  solutionIds: z.array(z.string().min(1).max(64)).max(20).optional(),
   /** Склад: какой робот в каком слоте сценария. */
   assignments: z
     .array(
@@ -62,19 +62,29 @@ router.post("/", wrap(async (req, res) => {
     prisma.catalogSolution.findMany({ where: { id: { in: solutionIds } } }),
     loadParameterFields(objectType),
   ]);
-  const row = rows.find((item) => item.id === solutionId);
-  if (!row || rows.length !== solutionIds.length) return res.status(404).json({ message: "Решение не найдено в каталоге" });
+  // Робота из сохранённого состава мастера могли убрать из каталога — считаем без
+  // него и пишем об этом в допущениях, а не роняем весь расчёт.
+  const known = new Set(rows.map((item) => item.id));
+  const missing = solutionIds.filter((id) => !known.has(id));
+  const row = rows.find((item) => item.id === solutionId) ?? rows[0];
+  if (!row) return res.status(404).json({ message: "Выбранных роботов нет в каталоге — выберите их заново" });
   if (fields.length === 0) return res.status(404).json({ message: "Тип объекта не найден" });
+  const presentAssignments = assignments?.filter((a) => known.has(a.solutionId));
 
   const economics = calculateEconomics({
     objectType,
     parameters,
     fields,
     solution: toSolutionDto(row),
-    solutions: solutionIds.map((id) => toSolutionDto(rows.find((item) => item.id === id)!)),
-    ...(assignments ? { assignments: assignments.map(({ share, ...rest }) => (share === undefined ? rest : { ...rest, share })) } : {}),
+    solutions: solutionIds.filter((id) => known.has(id)).map((id) => toSolutionDto(rows.find((item) => item.id === id)!)),
+    ...(presentAssignments?.length
+      ? { assignments: presentAssignments.map(({ share, ...rest }) => (share === undefined ? rest : { ...rest, share })) }
+      : {}),
     ...(processes ? { processes } : {}),
   });
+  if (missing.length) {
+    economics.assumptions.unshift(`Нет в каталоге, в расчёт не вошли: ${missing.join(", ")}. Выберите замену на шаге роботов.`);
+  }
   const dataVersion = await currentDataVersion();
   const saved = await prisma.calculation.create({
     data: {

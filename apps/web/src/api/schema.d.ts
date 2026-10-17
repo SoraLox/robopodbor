@@ -902,7 +902,47 @@ export interface components {
             /** @description Рекомендуемая схема — фура → погрузчик → кольцевой конвейер → роборука → AMR → погрузчик → стеллаж. */
             recommended?: boolean;
         };
+        /** @description Денежный поток покупки и инвестиционные показатели. Поток: год 0 — CAPEX; годы 1…N — эффект минус замена оборудования; в последний год — остаточная стоимость парка. ROI = (Σ эффектов + остаточная − Σ вложений) / Σ вложений. */
+        Finance: {
+            discountRatePct: number;
+            npvMln: number;
+            irrPct: number | null;
+            roiPct: number | null;
+            paybackYears: number | null;
+            discountedPaybackYears: number | null;
+            salvageMln: number;
+            totalInvestmentMln: number;
+            netBenefitMln: number;
+            cashFlow: {
+                year: number;
+                investmentMln: number;
+                effectMln: number;
+                salvageMln: number;
+                netMln: number;
+                cumulativeMln: number;
+                cumulativeDiscountedMln: number;
+            }[];
+        };
+        /** @description Что снизит OPEX — рычаги из структуры затрат расчёта. */
+        OpexLevers: {
+            opexYearMln: number;
+            parts: {
+                id: string;
+                label: string;
+                amountMln: number;
+            }[];
+            levers: {
+                id: string;
+                title: string;
+                detail: string;
+                savingMln: number;
+                /** @enum {string} */
+                basis: "calculated" | "estimate";
+            }[];
+        };
         CalculationResult: {
+            finance?: components["schemas"]["Finance"];
+            opexLevers?: components["schemas"]["OpexLevers"];
             id: string;
             objectTitle: string;
             meta: string;

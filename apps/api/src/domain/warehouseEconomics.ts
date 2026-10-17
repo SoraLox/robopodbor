@@ -11,6 +11,7 @@
  * стоимостью на конец горизонта.
  */
 import type { CatalogSolution } from "./catalog.js";
+import { analyzeInvestment, DEFAULT_DISCOUNT_RATE, replacementSchedule, type FinanceResult } from "./finance.js";
 import {
   FLEET_LABEL,
   fleetKindOf,
@@ -75,6 +76,8 @@ export interface WarehouseParams {
   /** Выработка отборщика, строк/ч·чел. */
   manualProductivity: number;
   horizonYears: number;
+  /** Ставка дисконтирования для NPV (доля); в паспорте нет — оценка DEFAULT_DISCOUNT_RATE. */
+  discountRate: number;
   budgetMln: number | undefined;
   availablePowerKw: number | undefined;
 }
@@ -117,6 +120,7 @@ export function warehouseParamsOf(values: Params): WarehouseParams {
     staffLossFactor: num("wh_koeffitsient_poter_rabochego_vremeni", 0) / 100,
     manualProductivity: num("wh_vyrabotka_otborschika", 0),
     horizonYears: Math.max(1, Math.round(num("wh_gorizont_rascheta_okupaemosti", 5))),
+    discountRate: num("wh_stavka_diskontirovaniya", DEFAULT_DISCOUNT_RATE * 100) / 100,
     budgetMln: numberOf(values.wh_planiruemyy_byudzhet_robotizatsiyu),
     availablePowerKw: numberOf(values.wh_moschnost_elektrosnabzheniya),
   };
@@ -243,7 +247,7 @@ function scaleCosts(costs: UnitCosts, factor: number): UnitCosts {
 }
 
 /** Электроэнергия за год, ₽: работа и простой с учётом загрузки, потери зарядки у батарейных. */
-function energyPerYear(robot: FleetRobot, count: number, p: WarehouseParams): number {
+export function energyPerYear(robot: FleetRobot, count: number, p: WarehouseParams): number {
   const hours = p.hoursPerDay * p.daysPerYear;
   const load = WAREHOUSE_NORMS.loadFactor;
   const usedKwh = (robot.workPowerKw * load + robot.idlePowerKw * (1 - load)) * hours;
@@ -510,7 +514,7 @@ export function buildFleet(solutions: CatalogSolution[], p: WarehouseParams, cos
 }
 
 // ─── Труд ───────────────────────────────────────────────────────────────
-interface Labor {
+export interface Labor {
   pickerCost: number;
   forkliftCost: number;
   baseline: number;
@@ -587,18 +591,10 @@ export interface WarehouseScenario {
   replacementCapex: number;
   residualValue: number;
   lifespanYears: number;
+  /** Денежный поток и инвестиционные показатели (finance.ts). */
+  finance: FinanceResult;
 }
 
-function tcoParts(capex: number, horizon: number, lifespan: number) {
-  let replacements = 0;
-  if (lifespan > 0 && lifespan < horizon) replacements = Math.floor((horizon - 1) / lifespan);
-  let residual = 0;
-  if (lifespan > 0) {
-    const yearsSinceLastPurchase = horizon - replacements * lifespan;
-    residual = capex * Math.max(0, 1 - yearsSinceLastPurchase / lifespan);
-  }
-  return { replacementCapex: replacements * capex, residualValue: residual };
-}
 
 export function buildWarehouseScenario(kind: "purchase" | "raas", p: WarehouseParams, groups: FleetGroup[], labor: Labor): WarehouseScenario {
   let equipment = 0;
@@ -626,8 +622,20 @@ export function buildWarehouseScenario(kind: "purchase" | "raas", p: WarehousePa
   const effect = labor.savings - opexPerYear;
   const horizon = p.horizonYears;
   const lifespanYears = spans.length ? spans.reduce((a, b) => a + b, 0) / spans.length : 0;
-  const { replacementCapex, residualValue } = kind === "raas" ? { replacementCapex: 0, residualValue: 0 } : tcoParts(capex, horizon, lifespanYears);
+  const schedule =
+    kind === "raas" ? { replacements: [], salvage: 0, replacementCapex: 0 } : replacementSchedule(capex, horizon, lifespanYears);
+  const { replacementCapex } = schedule;
+  const residualValue = schedule.salvage;
   const residualLabor = labor.baseline - labor.savings;
+  // ROI и окупаемость — по денежному потоку: вложения, замена по сроку службы и
+  // остаточная стоимость парка на конец горизонта (раньше ROI = эффект × горизонт / CAPEX).
+  const finance = analyzeInvestment({
+    capex,
+    effects: Array.from({ length: horizon }, () => effect),
+    replacements: schedule.replacements,
+    salvage: residualValue,
+    discountRate: p.discountRate,
+  });
   return {
     capex,
     capexRaw: { equipment, software, implementation, reserve },
@@ -636,13 +644,14 @@ export function buildWarehouseScenario(kind: "purchase" | "raas", p: WarehousePa
     energy,
     residualLabor,
     effect,
-    paybackYears: effect > 0 && capex > 0 ? capex / effect : null,
-    roiPct: capex > 0 ? ((effect * horizon) / capex) * 100 : null,
+    paybackYears: capex > 0 ? finance.paybackYears : null,
+    roiPct: finance.roiPct,
     // TCO Егора + ФОТ, который остаётся: так «Покупка» сравнима с «Как есть».
     tco: capex + replacementCapex - residualValue + (opexPerYear + residualLabor) * horizon,
     replacementCapex,
     residualValue,
     lifespanYears,
+    finance,
   };
 }
 

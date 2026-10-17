@@ -164,7 +164,7 @@ export function CalculatingStep({ active, revealed }: { active: boolean; reveale
   if (query.isError) {
     return (
       <p role="alert" className="pt-6 text-[13px] leading-snug text-[#8E8E93]">
-        Не удалось посчитать экономику.
+        {query.error instanceof Error ? query.error.message : 'Не удалось посчитать экономику.'}
       </p>
     );
   }

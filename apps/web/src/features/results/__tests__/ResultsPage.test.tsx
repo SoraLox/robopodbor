@@ -27,14 +27,15 @@ describe('ResultsPage', () => {
     );
 
     expect(screen.getByText(/3\.2/)).toBeInTheDocument();
-    expect(screen.getByText('Рекомендуем')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Сравнение решений/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Структура затрат/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Чувствительность/i })).toBeInTheDocument();
+    expect(screen.getAllByText('Рекомендуем').length).toBeGreaterThan(0);
+    // Экономика открыта сразу: сравнение сценариев и структура затрат — на панели.
+    expect(screen.getByRole('heading', { name: 'Экономика проекта' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Стоимость владения за горизонт/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Статьи затрат подробно/i })).toBeInTheDocument();
     expect(screen.getByTestId('visualization-slot')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /Сравнение решений/i }));
-    expect(await screen.findByRole('region', { name: /Сравнение решений/i })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Статьи затрат подробно/i }));
+    expect(await screen.findByRole('region', { name: /Статьи затрат подробно/i })).toBeInTheDocument();
   });
 
   it('берёт горизонт и заголовок из расчёта, а не из демо-описания', async () => {

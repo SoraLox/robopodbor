@@ -6,7 +6,6 @@ import {
   ChevronUp,
   SkipBack,
   ClipboardList,
-  GitCompareArrows,
   Gauge,
   ListTree,
   Minus,
@@ -16,7 +15,6 @@ import {
   RotateCcw,
   RotateCw,
   ScrollText,
-  SlidersHorizontal,
   TriangleAlert,
 } from 'lucide-react';
 import { useCalculation, useObjectParameters } from '@/api/queries';
@@ -26,9 +24,8 @@ import { CostBreakdown } from './CostBreakdown';
 import { ObjectParametersList } from './ObjectParametersList';
 import { parameterGroups as buildParameterGroups, type ObjectParameterGroup } from './objectParameters';
 import { ReportSections, type ReportSection } from './ReportCategory';
-import { ScenarioBars } from './ScenarioBars';
 import { SaveCalculationButton } from './SaveCalculationButton';
-import { SensitivityPanel } from './SensitivityPanel';
+import { EconomicsDashboard } from './charts/EconomicsDashboard';
 import { SimulationCheck } from './SimulationCheck';
 import { ResultSimulation } from './simulation/ResultSimulation';
 import { SIMULATION_ASSUMPTIONS } from './simulation/simulationInput';
@@ -184,30 +181,12 @@ function ReportBelowFold({
 }) {
   const sections: ReportSection[] = [
     {
-      id: 'compare',
-      title: 'Сравнение решений',
-      summary: compareSummary(data),
-      icon: GitCompareArrows,
-      content: <ScenarioBars scenarios={data.scenarios} />,
-    },
-    {
       id: 'costs',
-      title: 'Структура затрат',
+      title: 'Статьи затрат подробно',
       summary: `${fmt(data.totalTco)} млн ₽ за ${horizonOf(data)} · сценарий «Покупка»`,
       icon: ListTree,
       content: <CostBreakdown groups={data.costGroups} total={data.totalTco} />,
     },
-    ...(data.sensitivity?.length
-      ? [
-          {
-            id: 'sensitivity',
-            title: 'Чувствительность',
-            summary: sensitivitySummary(data),
-            icon: SlidersHorizontal,
-            content: <SensitivityPanel factors={data.sensitivity} />,
-          } satisfies ReportSection,
-        ]
-      : []),
     ...(showSimulationCheck
       ? [
           {
@@ -260,6 +239,7 @@ function ReportBelowFold({
   return (
     <div className="px-5 sm:px-8">
       <div className="mx-auto max-w-site py-12 sm:py-16">
+        <EconomicsDashboard data={data} />
         <ReportSections
           sections={sections}
           activeId={previewId}
@@ -589,17 +569,7 @@ function Metric({
   );
 }
 
-function compareSummary(data: CalculationResult): string {
-  const recommended = data.scenarios.find((scenario) => scenario.recommended);
-  if (!recommended) return `${data.scenarios.length} варианта · TCO за ${horizonOf(data)}`;
-  return `${recommended.title} · ${fmt(recommended.tco)} млн ₽`;
-}
 
-function sensitivitySummary(data: CalculationResult): string {
-  const top = data.sensitivity?.[0];
-  if (!top) return 'Влияние параметров на срок';
-  return `${top.label} · ±${Math.round(top.impact * 100)}% к сроку`;
-}
 
 function AssumptionBlock({ title, items }: { title: string; items: string[] }) {
   return (
