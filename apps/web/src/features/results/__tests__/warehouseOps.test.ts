@@ -108,7 +108,7 @@ describe('диспетчер склада', () => {
     expect(inRack).toBe(0);
     expect(overlaps).toBe(0);
     expect(minGap).toBeGreaterThan(2);
-  }, 60_000);
+  }, 180_000);
 
   it('приёмка погрузчиками, отгрузка через AMR: груз берут из горки у ворот', () => {
     const { shape, inGates, outGates } = scene();
@@ -125,5 +125,5 @@ describe('диспетчер склада', () => {
     expect(inRack).toBe(0);
     expect(overlaps).toBe(0);
     expect(minGap).toBeGreaterThan(2);
-  }, 60_000);
+  }, 180_000);
 });

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Camera,
@@ -17,7 +18,8 @@ import {
   ScrollText,
   TriangleAlert,
 } from 'lucide-react';
-import { useCalculation, useObjectParameters } from '@/api/queries';
+import { queryKeys, runCalculation, useCalculation, useObjectParameters } from '@/api/queries';
+import { areaOf, layoutParameters } from '@/features/objects/layout/warehouseLayout';
 import { useWizardStore } from '@/app/store';
 import { Button } from '@/components/ui/button';
 import { CostBreakdown } from './CostBreakdown';
@@ -27,11 +29,11 @@ import { ReportSections, type ReportSection } from './ReportCategory';
 import { SaveCalculationButton } from './SaveCalculationButton';
 import { EconomicsDashboard } from './charts/EconomicsDashboard';
 import { SimulationCheck } from './SimulationCheck';
-import { ResultSimulation } from './simulation/ResultSimulation';
+import { ResultSimulation, type AdjustFleet } from './simulation/ResultSimulation';
 import { SIMULATION_ASSUMPTIONS } from './simulation/simulationInput';
 import { AIRPORT_ASSUMPTIONS } from './simulation/airportInput';
 import { SimPlaybackProvider, useSimPlayback } from './simulation/SimPlaybackContext';
-import type { CalculationResult } from '@/api/types';
+import type { Assignment, CalculationResult } from '@/api/types';
 import { cn, fmt } from '@/lib/utils';
 
 // jspdf + xlsx + html2canvas — около 700 КБ, нужны только по клику «Скачать».
@@ -66,6 +68,7 @@ export function ResultsPage() {
   const parameterGroups = fields ? buildParameterGroups(fields, entered) : [];
   const [exporting, setExporting] = useState<'pdf' | 'xlsx' | null>(null);
   const [previewId, setPreviewId] = useState<string | null>(null);
+  const adjust = useFleetAdjust(data, objectType);
 
   const runExport = async (kind: 'pdf' | 'xlsx') => {
     if (!data) return;
@@ -127,8 +130,11 @@ export function ResultsPage() {
               immersive
               {...(data?.robots && data.solutionId ? { planned: { solutionId: data.solutionId, count: data.robots.count } } : {})}
               {...(data?.fleet ? { fleet: data.fleet } : {})}
+              onAdjustFleet={adjust.run}
+              adjusting={adjust.status !== null}
             />
           </div>
+          {adjust.status ? <AdjustOverlay text={adjust.status} /> : null}
 
           <div className="pointer-events-none absolute inset-0 z-20 px-5 sm:px-8">
             <div className="mx-auto flex h-full max-w-site items-end pb-5 sm:pb-6">
@@ -503,6 +509,73 @@ function HeroMetrics({
           </button>
 
         </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Поправка парка из рекомендаций сцены: тот же расчёт с ±1 роботом нужной роли.
+ * Экономика пересчитывается на сервере (новый расчёт), сцена — по новому парку:
+ * на время пересчёта она замирает под заставкой, потом заново раздаёт задания и
+ * маршруты всем роботам.
+ */
+function useFleetAdjust(data: CalculationResult | undefined, objectType: string) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const parameters = useWizardStore((s) => s.parameters);
+  const layout = useWizardStore((s) => s.layout);
+  const setAssignments = useWizardStore((s) => s.setAssignments);
+  const [status, setStatus] = useState<string | null>(null);
+
+  const run: AdjustFleet = async (role, delta) => {
+    if (!data?.solutionId || status) return;
+    const noun = role === 'amr' ? 'AMR' : 'погрузчик';
+    const base: Assignment[] = data.assignments?.length
+      ? data.assignments.map((a) => ({ ...a }))
+      : (data.fleet ?? []).map((g) => ({ slot: g.slot, solutionId: g.solutionId }));
+    // Группа роли: AMR — транспортировщик, погрузчик — остальные паллетные роботы;
+    // приёмка первой (самый большой поток).
+    const fits = (g: NonNullable<CalculationResult['fleet']>[number]) =>
+      g.kind === 'loader' && (role === 'amr' ? g.model === 'transporter' : g.model !== 'transporter' && g.model !== 'storagecube');
+    const order = ['inbound', 'outbound', 'picking', 'sorting', 'cleaning'];
+    const group = (data.fleet ?? []).filter(fits).sort((a, b) => order.indexOf(a.slot) - order.indexOf(b.slot))[0];
+    const target = group && base.find((a) => a.slot === group.slot && a.solutionId === group.solutionId);
+    if (!target) return;
+    target.extra = (target.extra ?? 0) + delta;
+    setStatus(delta > 0 ? `Пересчитываем экономику: +1 ${noun}…` : `Пересчитываем экономику: −1 ${noun}…`);
+    try {
+      const result = await runCalculation({
+        objectType,
+        solutionId: data.solutionId,
+        parameters: objectType === 'warehouse' ? { ...parameters, ...layoutParameters(layout, areaOf(parameters)) } : parameters,
+        ...(data.solutionIds?.length ? { solutionIds: data.solutionIds } : {}),
+        assignments: base,
+      });
+      queryClient.setQueryData(queryKeys.calculation(result.id), result);
+      setAssignments(base);
+      setStatus(
+        delta > 0
+          ? 'Добавляем нового робота на сцену — заново считаем задания и маршруты всем роботам'
+          : 'Убираем робота со сцены — заново считаем задания и маршруты всем роботам',
+      );
+      navigate(`/calculate/${objectType}/results/${result.id}`, { replace: true });
+      window.scrollTo({ top: 0 });
+      window.setTimeout(() => setStatus(null), 2200);
+    } catch {
+      setStatus(null);
+    }
+  };
+
+  return { run, status };
+}
+
+function AdjustOverlay({ text }: { text: string }) {
+  return (
+    <div className="absolute inset-0 z-30 grid place-items-center bg-white/55 backdrop-blur-[2px]" role="status" aria-live="polite">
+      <div className="flex max-w-[360px] items-center gap-3 rounded-[16px] border border-[#E5E5EA] bg-white px-4 py-3 shadow-[0_8px_28px_rgba(0,0,0,0.10)]">
+        <span className="size-5 flex-none animate-spin rounded-full border-2 border-[#E5E5EA] border-t-[#2F86F0]" aria-hidden />
+        <span className="text-[13px] leading-snug text-[#1D1D1F]">{text}</span>
       </div>
     </div>
   );

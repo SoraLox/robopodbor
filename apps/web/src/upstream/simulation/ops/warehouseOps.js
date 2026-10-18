@@ -717,11 +717,12 @@ export function createWarehouseOps({ group, armGroup, racks = null, picking = nu
   // Загрузка групп исполнителей: узкое место — занятая дольше всех.
   function bottleneck() {
     const groups = [];
-    const add = (label, pool) => pool.length && groups.push({ label, load: pool.reduce((s, x) => s + x.utilization(), 0) / pool.length });
-    add("погрузчики", pools.direct);
-    add("погрузчики у ворот", pools.gate);
-    add("погрузчики у стеллажей", pools.rack);
-    add("AMR", pools.amr);
+    const add = (label, role, pool) =>
+      pool.length && groups.push({ label, role, count: pool.length, load: pool.reduce((s, x) => s + x.utilization(), 0) / pool.length });
+    add("погрузчики", "forklift", pools.direct);
+    add("погрузчики у ворот", "forklift", pools.gate);
+    add("погрузчики у стеллажей", "forklift", pools.rack);
+    add("AMR", "amr", pools.amr);
     groups.sort((a, b) => b.load - a.load);
     return groups;
   }

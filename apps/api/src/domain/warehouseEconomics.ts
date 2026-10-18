@@ -291,7 +291,16 @@ export interface Assignment {
   solutionId: string;
   /** Доля потока слота (0..1); нет — поровну между роботами слота. Конвейеру не нужна. */
   share?: number;
+  /**
+   * Поправка пользователя к расчётному числу роботов (из симуляции: «узкое место —
+   * добавить одного», «простаивают — убрать»). Итог не меньше одного.
+   */
+  extra?: number;
 }
+
+/** Расчётное число роботов группы с поправкой пользователя. */
+const withExtra = (group: FleetGroup, a: Assignment): FleetGroup =>
+  a.extra ? { ...group, count: Math.max(1, group.count + Math.round(a.extra)) } : group;
 
 /**
  * Плечо перегрузки в челночной схеме: погрузчик ставит паллету с фуры/ленты на
@@ -428,9 +437,12 @@ export function buildScenarioFleet(
       const carriersA = inSlot.filter((a) => a !== conveyorA && fleetKindOf(byId.get(a.solutionId)!) !== "conveyor");
       const effectiveRouteM = conveyorA ? lastMileM(routeM) : routeM;
       const conveyor = conveyorA
-        ? groupOf(byId.get(conveyorA.solutionId)!, "conveyor", slot, 1, demand, p, costFactor, {
-            lineLengthM: Math.max(5, routeM - effectiveRouteM),
-          })
+        ? withExtra(
+            groupOf(byId.get(conveyorA.solutionId)!, "conveyor", slot, 1, demand, p, costFactor, {
+              lineLengthM: Math.max(5, routeM - effectiveRouteM),
+            }),
+            conveyorA,
+          )
         : null;
       if (conveyor) groups.push(conveyor);
 
@@ -449,10 +461,10 @@ export function buildScenarioFleet(
         const liftShare = split(liftersA);
         const transfers = demand * 2;
         const haulers = haulersA.map((a) =>
-          groupOf(byId.get(a.solutionId)!, "loader", slot, haulShare(a), demand * haulShare(a), p, costFactor, { routeM: effectiveRouteM }),
+          withExtra(groupOf(byId.get(a.solutionId)!, "loader", slot, haulShare(a), demand * haulShare(a), p, costFactor, { routeM: effectiveRouteM }), a),
         );
         const lifters = liftersA.map((a) =>
-          groupOf(byId.get(a.solutionId)!, "loader", slot, liftShare(a), transfers * liftShare(a), p, costFactor, { routeM: TRANSFER_ROUTE_M }),
+          withExtra(groupOf(byId.get(a.solutionId)!, "loader", slot, liftShare(a), transfers * liftShare(a), p, costFactor, { routeM: TRANSFER_ROUTE_M }), a),
         );
         groups.push(...haulers, ...lifters);
         const covered = (list: FleetGroup[]) => list.reduce((sum, g) => sum + (g.throughputPerRobot > 0 ? g.share : 0), 0);
@@ -484,7 +496,7 @@ export function buildScenarioFleet(
       const shareOf = (a: Assignment) =>
         a.share !== undefined ? (Math.max(0, a.share) / Math.max(1, fixedSum || 1)) * Math.min(1, fixedSum) : free ? (1 - fixedSum) / free : 0;
       const carriers = carriersA.map((a) =>
-        groupOf(byId.get(a.solutionId)!, "loader", slot, shareOf(a), demand * shareOf(a), p, costFactor, { routeM: effectiveRouteM }),
+        withExtra(groupOf(byId.get(a.solutionId)!, "loader", slot, shareOf(a), demand * shareOf(a), p, costFactor, { routeM: effectiveRouteM }), a),
       );
       groups.push(...carriers);
 
@@ -502,7 +514,7 @@ export function buildScenarioFleet(
     inSlot.forEach((a, i) => {
       const solution = byId.get(a.solutionId)!;
       const share = shares[i]! / total;
-      groups.push(groupOf(solution, fleetKindOf(solution)!, slot, share, demand * share, p, costFactor));
+      groups.push(withExtra(groupOf(solution, fleetKindOf(solution)!, slot, share, demand * share, p, costFactor), a));
     });
   }
   return { groups, links };

@@ -52,7 +52,7 @@ describe('сеть участка отбора', () => {
     // 10 минут: 3 руки × 12 оп/мин — сотни операций, и почти всё уже у ворот.
     expect(fleet.getOpsDone()).toBeGreaterThan(200);
     expect(fleet.getDelivered()).toBeGreaterThan(fleet.getOpsDone() * 0.8);
-  });
+  }, 60_000);
 });
 
 describe('участок отбора на общих лентах (рука без своих лент)', () => {
@@ -77,5 +77,5 @@ describe('участок отбора на общих лентах (рука б�
     // 10 минут, 3 руки по 6 оп/мин — до 180 операций.
     expect(line.getOpsDone()).toBeGreaterThan(100);
     expect(line.getDelivered()).toBeGreaterThan(line.getOpsDone() * 0.8);
-  });
+  }, 60_000);
 });

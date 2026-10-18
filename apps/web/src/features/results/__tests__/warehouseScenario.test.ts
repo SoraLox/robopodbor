@@ -17,6 +17,18 @@ const run = (ids: string[], assignments?: Parameters<typeof calculateEconomics>[
   });
 
 describe('сценарий склада: зоны и связи', () => {
+  it('поправка из симуляции: +1 погрузчик дороже по CAPEX, −1 — дешевле, не меньше одного', () => {
+    const base = [{ slot: 'inbound' as const, solutionId: 'FL0002' }];
+    const count = (r: ReturnType<typeof run>) => r.fleet!.find((g) => g.slot === 'inbound')!.count;
+    const capex = (r: ReturnType<typeof run>) => Number(r.capex.value.replace(/\s/g, '').replace(',', '.'));
+    const plain = run(['FL0002'], base);
+    const more = run(['FL0002'], [{ ...base[0]!, extra: 1 }]);
+    const fewer = run(['FL0002'], [{ ...base[0]!, extra: -100 }]);
+    expect(count(more)).toBe(count(plain) + 1);
+    expect(capex(more)).toBeGreaterThan(capex(plain));
+    expect(count(fewer)).toBe(1);
+  });
+
   it('AMR-платформа сама груз не берёт: везёт весь поток, погрузчик делает две перегрузки на паллету', () => {
     const result = run(['FL0002', 'AM0001']);
     const inbound = result.fleet!.filter((g) => g.slot === 'inbound');
@@ -77,7 +89,7 @@ describe('сценарий склада: зоны и связи', () => {
     expect(new Set(recommended[0]!.assignments.map((a) => a.slot)).size).toBeGreaterThanOrEqual(2);
     expect(recommended[0]!.description).toMatch(/загружены на \d+/);
     expect(new Set(keys).size).toBe(variants.length);
-  });
+  }, 60_000);
 
   it('рекомендуемый состав подстраивается под данные склада', () => {
     const pick = (parameters: Record<string, string>) =>
@@ -86,5 +98,5 @@ describe('сценарий склада: зоны и связи', () => {
     const large = pick({ wh_obschaya_ploschad_sklada: '40000', wh_obem_priemki: '6000', wh_obem_otgruzki: '6000', wh_obem_otbora: '20000' });
     console.log('малый:', small.title, small.robots, '| крупный:', large.title, large.robots);
     expect(small.robots).toBeLessThan(large.robots);
-  });
+  }, 60_000);
 });

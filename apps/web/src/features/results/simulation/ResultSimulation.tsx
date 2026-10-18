@@ -72,13 +72,18 @@ function SceneFallback({ fill }: { fill?: boolean }) {
 }
 
 type Planned = { solutionId: string; count: number };
+/** Поправка парка из рекомендаций сцены: роль и ±1 робот. */
+export type AdjustFleet = (role: 'forklift' | 'amr', delta: number) => void;
+type Adjust = { onAdjustFleet?: AdjustFleet; adjusting?: boolean };
 
 export function ResultSimulation({
   objectType = 'warehouse',
   immersive = false,
   planned,
   fleet,
-}: {
+  onAdjustFleet,
+  adjusting = false,
+}: Adjust & {
   /** Аэропорт — своя сцена upstream; остальные объекты — складская. */
   objectType?: string;
   immersive?: boolean;
@@ -88,7 +93,14 @@ export function ResultSimulation({
   fleet?: FleetGroup[];
 }) {
   if (objectType === 'airport') return <AirportSimulation immersive={immersive} {...(planned ? { planned } : {})} />;
-  return <WarehouseSimulation immersive={immersive} {...(fleet ? { fleet } : {})} />;
+  return (
+    <WarehouseSimulation
+      immersive={immersive}
+      {...(fleet ? { fleet } : {})}
+      {...(onAdjustFleet ? { onAdjustFleet } : {})}
+      adjusting={adjusting}
+    />
+  );
 }
 
 /** Сцена аэропорта upstream: транспортировка груза и багажа между бортом и депо. */
@@ -184,7 +196,12 @@ function AirportSimulation({ immersive, planned }: { immersive: boolean; planned
   );
 }
 
-function WarehouseSimulation({ immersive, fleet }: { immersive: boolean; fleet?: FleetGroup[] }) {
+function WarehouseSimulation({
+  immersive,
+  fleet,
+  onAdjustFleet,
+  adjusting,
+}: Adjust & { immersive: boolean; fleet?: FleetGroup[] }) {
   const parameters = useWizardStore((s) => s.parameters);
   const selectedId = useWizardStore((s) => s.solutionId);
   const fleetIds = useWizardStore((s) => s.fleetIds);
@@ -231,11 +248,18 @@ function WarehouseSimulation({ immersive, fleet }: { immersive: boolean; fleet?:
       key={`${layout ?? 'default'}:${input.robotTypes.join(',')}:${JSON.stringify(input.params)}:${groups.map((g) => `${g.solutionId}×${g.count}`).join(',')}`}
       input={input}
       immersive={immersive}
+      {...(onAdjustFleet ? { onAdjustFleet } : {})}
+      adjusting={Boolean(adjusting)}
     />
   );
 }
 
-function SimulationScene({ input, immersive }: { input: SimulationInput; immersive: boolean }) {
+function SimulationScene({
+  input,
+  immersive,
+  onAdjustFleet,
+  adjusting,
+}: Adjust & { input: SimulationInput; immersive: boolean }) {
   const { params, fleets } = input;
   const [counts, setCounts] = useState<Record<SimRobotType, number>>({
     vacuum: fleets.vacuum?.recommendedCount ?? 0,
@@ -296,6 +320,8 @@ function SimulationScene({ input, immersive }: { input: SimulationInput; immersi
         onManualArmCountChange={setCount('arm')}
         onManualLoaderCountChange={setCount('loader')}
         immersive={immersive}
+        onAdjustFleet={onAdjustFleet ?? null}
+        adjusting={Boolean(adjusting)}
       />
     </Suspense>
   );

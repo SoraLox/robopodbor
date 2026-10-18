@@ -1116,6 +1116,7 @@ components:
         slot: { $ref: '#/components/schemas/SlotId' }
         solutionId: { type: string }
         share: { type: number, description: 'Доля потока слота 0..1; нет — поровну.' }
+        extra: { type: integer, description: 'Поправка к расчётному числу роботов группы (+1 — добавить, −1 — убрать); итог не меньше одного.' }
     ScenarioVariant:
       type: object
       required: [id, title, description, assignments, solutionIds, capexMln, paybackYears, roiPct, effectMlnPerYear, tcoMln, savingMln, horizonYears, robots, highlights]

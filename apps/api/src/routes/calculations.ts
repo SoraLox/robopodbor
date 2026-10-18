@@ -36,6 +36,7 @@ const requestSchema = z.object({
         slot: z.enum(["inbound", "outbound", "picking", "sorting", "cleaning"]),
         solutionId: z.string().min(1).max(64),
         share: z.number().min(0).max(1).optional(),
+        extra: z.number().int().min(-50).max(50).optional(),
       }),
     )
     .max(20)
@@ -78,7 +79,7 @@ router.post("/", wrap(async (req, res) => {
     solution: toSolutionDto(row),
     solutions: solutionIds.filter((id) => known.has(id)).map((id) => toSolutionDto(rows.find((item) => item.id === id)!)),
     ...(presentAssignments?.length
-      ? { assignments: presentAssignments.map(({ share, ...rest }) => (share === undefined ? rest : { ...rest, share })) }
+      ? { assignments: presentAssignments.map(({ share, extra, ...rest }) => ({ ...rest, ...(share === undefined ? {} : { share }), ...(extra ? { extra } : {}) })) }
       : {}),
     ...(processes ? { processes } : {}),
   });

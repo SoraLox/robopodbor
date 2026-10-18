@@ -880,6 +880,8 @@ export interface components {
             solutionId: string;
             /** @description Доля потока слота 0..1; нет — поровну. */
             share?: number;
+            /** @description Поправка к расчётному числу роботов группы (+1 — добавить, −1 — убрать); итог не меньше одного. */
+            extra?: number;
         };
         ScenarioVariant: {
             id: string;
