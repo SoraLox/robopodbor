@@ -2,8 +2,8 @@ import * as THREE from "three";
 import { PALETTE } from "../constants.js";
 
 // Одна грузовая единица: поддон с ящиком. Размеры ящика берутся из габаритов
-// единицы (см), цвет — из SKU: у разных товарных позиций разные цвета (различаются
-// первые SKU_COLORS.length). Единицы ставятся друг на друга в два слоя.
+// единицы (см). Вид у всех единиц один — гофрокороб с обвязкой: тот же груз в
+// фуре, в горке у ворот, на вилах, на AMR и на полке стеллажа.
 const PALLET_HEIGHT = 0.35;
 const PALLET_OVERHANG = 0.1; // поддон чуть шире ящика
 const UNIT_GAP = 0.02;
@@ -12,10 +12,12 @@ const UNIT_GAP = 0.02;
 // неё; пределы — чтобы единица помещалась в полосу (3,8) и в ячейку (2,4).
 const CM_TO_XZ = 0.0213;
 const CM_TO_Y = 0.013;
+// Ящик не выше яруса стеллажа (1,9) вместе с поддоном.
+const MAX_CRATE_HEIGHT = 1.35;
 const MAX_ACROSS = 3.2;
 const MAX_ALONG = 2.2;
 
-export const SKU_COLORS = [0xd9a45b, 0xc85e70, 0x5d9e96, 0x8b78c7, 0xe5a13f, 0x6f9bd1, 0xa3b565, 0xd98a5b];
+export const CARGO_CRATE_COLOR = 0xdb9a55;
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
@@ -27,7 +29,8 @@ const strapMaterial = new THREE.MeshStandardMaterial({ color: PALETTE.cargoStrap
 // warehouseAdapter.js laborSavingsFractionOf — доля негабарита ограничивает
 // экономию труда независимо от пропускной способности).
 const oversizedStrapMaterial = new THREE.MeshStandardMaterial({ color: 0xe07a2b, flatShading: true, roughness: 0.6 });
-const crateMaterials = SKU_COLORS.map((color) => new THREE.MeshStandardMaterial({ color, flatShading: true, roughness: 0.6 }));
+export const crateMaterial = new THREE.MeshStandardMaterial({ color: CARGO_CRATE_COLOR, flatShading: true, roughness: 0.6 });
+export { palletMaterial, strapMaterial };
 
 // Фабрика грузовых единиц под заданные габариты и число SKU. Начало координат
 // каждой единицы — центр основания поддона на полу. oversizedSharePct — доля
@@ -37,7 +40,7 @@ const crateMaterials = SKU_COLORS.map((color) => new THREE.MeshStandardMaterial(
 export function createCargoFactory({ lengthCm = 120, widthCm = 80, heightCm = 100, skuCount = 1, oversizedSharePct = 0 } = {}) {
   const across = clamp(lengthCm * CM_TO_XZ, 0.8, MAX_ACROSS);
   const along = clamp(widthCm * CM_TO_XZ, 0.8, MAX_ALONG);
-  const crateHeight = clamp(heightCm * CM_TO_Y, 0.4, 2.2);
+  const crateHeight = clamp(heightCm * CM_TO_Y, 0.4, MAX_CRATE_HEIGHT);
 
   const oversizedAcross = clamp(across * 1.2, 0.8, MAX_ACROSS);
   const oversizedAlong = clamp(along * 1.2, 0.8, MAX_ALONG);
@@ -82,6 +85,7 @@ export function createCargoFactory({ lengthCm = 120, widthCm = 80, heightCm = 10
     // не ломалась (масштаб негабарита выражен только в ширине/длине).
     unitHeight: PALLET_HEIGHT + crateHeight + UNIT_GAP,
     depth: along + PALLET_OVERHANG,
+    width: across + PALLET_OVERHANG,
 
     // sku — номер товарной позиции; без него позиции чередуются по кругу.
     // oversized — форсировать статус явно; без него решает доля oversizedSharePct.
@@ -91,7 +95,7 @@ export function createCargoFactory({ lengthCm = 120, widthCm = 80, heightCm = 10
       const pallet = new THREE.Mesh(oversized ? oversizedPalletGeometry : palletGeometry, palletMaterial);
       pallet.position.y = PALLET_HEIGHT / 2;
 
-      const crate = new THREE.Mesh(oversized ? oversizedCrateGeometry : crateGeometry, crateMaterials[sku % crateMaterials.length]);
+      const crate = new THREE.Mesh(oversized ? oversizedCrateGeometry : crateGeometry, crateMaterial);
       crate.position.y = PALLET_HEIGHT + crateHeight / 2;
 
       const strap = new THREE.Mesh(

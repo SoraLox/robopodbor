@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { PALETTE } from "./constants.js";
 import { CELL, cellAt, cellWorldOrigin } from "./shape/shapeTypes.js";
+import { CARGO_CRATE_COLOR } from "./loaders/cargo.js";
 
 // Клетки-стеллажи, нарисованные в конструкторе формы склада (CELL.RACK),
 // раньше были только плоской меткой на полу (floor.js/drawRackCells) — по
@@ -15,6 +16,8 @@ const MAX_TIERS = 5;
 let TIERS = DEFAULT_TIERS;
 const TIER_HEIGHT = 1.9;
 const SHELF_THICKNESS = 0.12;
+const PALLET_H = 0.35;
+const CRATE_H = 1.2;
 
 // Материалы и геометрии — свои на каждый вызов createRacks (а не общие на
 // модуль), потому что возвращённую группу диспоузят через disposeTree при
@@ -23,9 +26,10 @@ const SHELF_THICKNESS = 0.12;
 function buildMaterials() {
   return {
     frame: new THREE.MeshStandardMaterial({ color: PALETTE.storage, flatShading: true, roughness: 0.6 }),
-    goods: [PALETTE.crateA, PALETTE.crateB, PALETTE.crateC].map(
-      (color) => new THREE.MeshStandardMaterial({ color, flatShading: true, roughness: 0.6 })
-    ),
+    // Груз на полках — тот же вид, что у паллет, которые возят роботы.
+    crate: new THREE.MeshStandardMaterial({ color: CARGO_CRATE_COLOR, flatShading: true, roughness: 0.6 }),
+    pallet: new THREE.MeshStandardMaterial({ color: PALETTE.cargoPallet, flatShading: true, roughness: 0.85 }),
+    strap: new THREE.MeshStandardMaterial({ color: PALETTE.cargoStrap, flatShading: true, roughness: 0.7 }),
   };
 }
 
@@ -57,14 +61,26 @@ function buildRackUnit(size, seed, materials, geometries, edges) {
   }
 
   // Не все ярусы заняты — читается как настоящий рабочий склад, а не забитая
-  // декорация.
+  // декорация. Паллета помечена клеткой и ярусом: диспетчер склада заменяет её
+  // своими паллетами, которые ставят и снимают роботы.
   for (let tier = 0; tier < TIERS; tier++) {
     if ((seed + tier) % 3 === 2) continue;
-
-    const goods = new THREE.Mesh(geometries.goods, materials.goods[(seed + tier) % materials.goods.length]);
-    goods.position.set(0, tier * TIER_HEIGHT + SHELF_THICKNESS / 2 + (TIER_HEIGHT * 0.55) / 2, 0);
-    goods.castShadow = true;
-    goods.receiveShadow = true;
+    const goods = new THREE.Group();
+    const y0 = tier * TIER_HEIGHT + SHELF_THICKNESS / 2;
+    const parts = [
+      [geometries.pallet, materials.pallet, PALLET_H / 2],
+      [geometries.crate, materials.crate, PALLET_H + CRATE_H / 2],
+      [geometries.strap, materials.strap, PALLET_H + CRATE_H / 2],
+    ];
+    for (const [geometry, material, y] of parts) {
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.y = y;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      goods.add(mesh);
+    }
+    goods.position.y = y0;
+    goods.userData.rackGoods = { tier };
     group.add(goods);
   }
 
@@ -81,7 +97,9 @@ export function createRacks(shape) {
   const geometries = {
     post: new THREE.BoxGeometry(POST_SIZE, TIERS * TIER_HEIGHT, POST_SIZE),
     shelf: new THREE.BoxGeometry(shape.cellSize, SHELF_THICKNESS, shape.cellSize),
-    goods: new THREE.BoxGeometry(half * 0.85, TIER_HEIGHT * 0.55, half * 0.85),
+    pallet: new THREE.BoxGeometry(Math.min(2.7, half * 1.8), PALLET_H, Math.min(1.9, half * 1.3)),
+    crate: new THREE.BoxGeometry(Math.min(2.6, half * 1.75), CRATE_H, Math.min(1.8, half * 1.25)),
+    strap: new THREE.BoxGeometry(Math.min(2.64, half * 1.77), 0.18, Math.min(1.84, half * 1.27)),
   };
 
   let seed = 0;
@@ -100,6 +118,7 @@ export function createRacks(shape) {
       });
       const origin = cellWorldOrigin(gx, gz);
       unit.position.set(origin.x + shape.cellSize / 2, 0, origin.z + shape.cellSize / 2);
+      unit.userData.rackCell = { gx, gz };
       group.add(unit);
     }
   }

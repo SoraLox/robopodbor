@@ -42,7 +42,7 @@ const unitVec = (from, to) => {
   return { x: dx / l, z: dz / l };
 };
 
-export function createWarehouseOps({ group, armGroup, shape, metersPerUnit, blockedRects, cargo, cargoWeightKg, truckPayload, beltTexture, links, factories }) {
+export function createWarehouseOps({ group, armGroup, racks = null, shape, metersPerUnit, blockedRects, cargo, cargoWeightKg, truckPayload, beltTexture, links, factories }) {
   const nav = blockedNav(shape, blockedRects);
   let simSeconds = 0;
   const clock = () => simSeconds;
@@ -128,15 +128,43 @@ export function createWarehouseOps({ group, armGroup, shape, metersPerUnit, bloc
   for (const y of yards) for (const b of y.bays) for (const s of b.sideSpots.values()) reservedPoints.push(s.pose);
 
   // ─── Ячейки ─────────────────────────────────────────────────────────────
-  const cells = collectStorage(shape, nav, allGates, null)
-    .filter((p) => p.face && !reservedPoints.some((r) => Math.hypot(r.x - p.x, r.z - p.z) < 3.5))
-    .map((p, i) => {
-      const c = cellOfPoint(nav, p);
-      return { id: i + 1, gx: c.gx, gz: c.gz, face: p.face, spot: forkSpot(p.face, p, c), stored: Math.random() < CELL_STOCK, reserved: false, tier: i % 3 };
-    })
-    .filter((c) => passable(c.gx, c.gz));
+  const tiers = Math.max(1, Math.round(shape.rackTiers ?? 3));
+  const cells = [];
+  for (const p of collectStorage(shape, nav, allGates, null)) {
+    if (!p.face || reservedPoints.some((r) => Math.hypot(r.x - p.x, r.z - p.z) < 3.5)) continue;
+    const c = cellOfPoint(nav, p);
+    if (!passable(c.gx, c.gz)) continue;
+    const rack = cellOfPoint(nav, p.face);
+    const spot = forkSpot(p.face, p, c);
+    for (let tier = 0; tier < tiers; tier++) {
+      cells.push({ id: cells.length + 1, gx: c.gx, gz: c.gz, rack, face: p.face, spot, stored: Math.random() < CELL_STOCK, reserved: false, tier, unit: null });
+    }
+  }
   const cellLabel = (cell) => `ячейка ${cell.id}`;
-  const shelfPose = (cell) => ({ x: cell.face.x, y: cell.tier * RACK_TIER + 0.14, z: cell.face.z, rotY: cell.spot.pose.heading });
+  const shelfPose = (cell) => ({ x: cell.face.x, y: cell.tier * RACK_TIER + 0.06, z: cell.face.z, rotY: cell.spot.pose.heading });
+  // Полки, которыми управляет диспетчер: нарисованный груз прячем, вместо него —
+  // настоящие паллеты (их ставят и снимают роботы).
+  const hiddenGoods = [];
+  if (racks) {
+    const managed = new Set(cells.map((c) => `${c.rack.gx},${c.rack.gz}`));
+    for (const unit of racks.children) {
+      const rc = unit.userData.rackCell;
+      if (!rc || !managed.has(`${rc.gx},${rc.gz}`)) continue;
+      for (const goods of unit.children) {
+        if (!goods.userData.rackGoods || !goods.visible) continue;
+        goods.visible = false;
+        hiddenGoods.push(goods);
+      }
+    }
+  }
+  const shelve = (cell, unit) => {
+    const p = shelfPose(cell);
+    unit.position.set(p.x, p.y, p.z);
+    unit.rotation.y = p.rotY;
+    group.add(unit);
+    cell.unit = unit;
+  };
+  for (const cell of cells) if (cell.stored) shelve(cell, cargoFactory.create());
   const distTo = (cell, p) => Math.hypot(cell.spot.pose.x - p.x, cell.spot.pose.z - p.z);
 
   const pickCell = (near, wantStored) => {
@@ -318,14 +346,12 @@ export function createWarehouseOps({ group, armGroup, shape, metersPerUnit, bloc
     lift: cell.tier * RACK_TIER + 0.3,
     label: cellLabel(cell),
     take: () => {
+      // Паллета стоит на полке — оттуда её и снимают вилы.
+      if (!cell.unit) shelve(cell, cargoFactory.create());
+      const unit = cell.unit;
+      cell.unit = null;
       cell.stored = false;
       cell.reserved = false;
-      // Паллета стоит на полке — оттуда её и снимают вилы.
-      const unit = cargoFactory.create();
-      const p = shelfPose(cell);
-      unit.position.set(p.x, p.y, p.z);
-      unit.rotation.y = p.rotY;
-      group.add(unit);
       return unit;
     },
   });
@@ -334,8 +360,9 @@ export function createWarehouseOps({ group, armGroup, shape, metersPerUnit, bloc
     lift: cell.tier * RACK_TIER + 0.3,
     label: cellLabel(cell),
     put: (unit) => {
-      // Паллета плавно уходит на полку и становится частью стеллажа.
-      tweens.move(unit, group, shelfPose(cell), 0.8, { onDone: () => unit.removeFromParent() });
+      // Паллета плавно уходит на полку и остаётся там до отгрузки.
+      tweens.move(unit, group, shelfPose(cell), 0.8);
+      cell.unit = unit;
       cell.stored = true;
       cell.reserved = false;
       return true;
@@ -723,6 +750,8 @@ export function createWarehouseOps({ group, armGroup, shape, metersPerUnit, bloc
       for (const b of belts) b.dispose();
       for (const y of yards) y.dispose();
       for (const run of linkRuns) for (const arm of run.arms ?? []) armGroup.remove(arm.rig.group);
+      for (const cell of cells) cell.unit?.removeFromParent();
+      for (const goods of hiddenGoods) goods.visible = true;
       cargoFactory.dispose();
     },
   };

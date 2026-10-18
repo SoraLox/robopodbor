@@ -385,6 +385,7 @@ export function useSimulation(cfg) {
         const ops = createWarehouseOps({
           group: level.loaderGroup,
           armGroup: level.armGroup,
+          racks: level.racks,
           shape,
           metersPerUnit: chunkGrid.metersPerUnit,
           blockedRects: mobileBlocked,

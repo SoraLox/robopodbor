@@ -1,14 +1,14 @@
 import { makeTruck } from "../robots/truckRobot.js";
 import { createMaterializeFade } from "../sceneUtils.js";
-import { cellCenter, cellOfPoint } from "../loaders/gridPath.js";
+import { cellCenter, cellOfPoint, isWalkable } from "../loaders/gridPath.js";
 
 // Ворота связи: фура и «горка» груза перед проёмом.
 //   Приёмка: фура встаёт к воротам, коробки по одной вылетают из неё и ложатся
 //   горкой перед входом; погрузчики разбирают горку. Пустая фура уезжает.
 //   Отгрузка: погрузчики ставят паллеты в горку у ворот; пришедшая фура забирает
 //   их по одной; полная — уезжает.
-// Горка занимает одну клетку у проёма: 3 × 2 места в 2 яруса; погрузчик подъезжает
-// к ней из соседней клетки со стороны склада, вилами к нужному столбику.
+// Горка — две клетки сразу за проёмом: в каждой 2 паллеты вглубь × 2 яруса;
+// погрузчик подъезжает из соседней клетки со стороны склада, вилами к столбику.
 
 const DOCK = 3.2;
 const APPROACH = 16;
@@ -16,8 +16,6 @@ const DRIVE_S = 3.5;
 const GAP_MIN = 3;
 const GAP_MAX = 6;
 const FADE = 1.2;
-const PILE_SIDE = [-1.3, 0, 1.3]; // столбики горки поперёк проёма
-const PILE_DEPTH = [-0.6, 0.6]; // ряды горки
 const UNLOAD_EVERY_S = 1.4; // одна коробка из фуры / в фуру
 const FLY_S = 0.9;
 
@@ -34,29 +32,47 @@ export function createTruckYard({ group, gates, payload, direction, nav, reach, 
   const bays = gates.map((gate, i) => {
     const inward = { x: -gate.normal[0], z: -gate.normal[1] };
     const along = { x: Math.abs(gate.normal[1]), z: Math.abs(gate.normal[0]) };
-    // Клетка горки — вторая от стены; центр горки — центр клетки.
-    const pileCell = cellOfPoint(nav, at(gate, -nav.cellSize * 1.5));
-    const center = cellCenter(nav, pileCell.gx, pileCell.gz);
-    const point = (depth, side) => ({ x: center.x + inward.x * depth + along.x * side, z: center.z + inward.z * depth + along.z * side });
+    const step = { gx: Math.round(along.x), gz: Math.round(along.z) };
+    // Горка — сразу за проёмом: первая клетка внутри и соседняя вдоль стены
+    // (к центру ворот). В каждой клетке — столбик: 2 паллеты вглубь × 2 яруса.
+    const first = cellOfPoint(nav, at(gate, -nav.cellSize * 0.5));
+    const c0 = cellCenter(nav, first.gx, first.gz);
+    const toGate = (gate.worldCenter.x - c0.x) * along.x + (gate.worldCenter.z - c0.z) * along.z;
+    const sides = toGate >= 0 ? [1, -1] : [-1, 1];
+    const free = (c) => isWalkable(nav, c.gx, c.gz);
+    const second = sides.map((d) => ({ gx: first.gx + step.gx * d, gz: first.gz + step.gz * d })).find(free);
+    const columns = [first, ...(second ? [second] : [])].filter(free);
+    const heading = Math.atan2(gate.normal[0], gate.normal[1]);
+    const rowGap = (cargoFactory.depth ?? 1.8) / 2 + 0.06;
     const slots = [];
-    for (let layer = 0; layer < 2; layer++) {
-      for (const depth of PILE_DEPTH) {
-        for (const side of PILE_SIDE) {
-          const p = point(depth, side);
-          slots.push({ x: p.x, y: layer * unitHeight, z: p.z, side, layer, unit: null, reserved: false, ready: false });
+    const sideSpots = new Map();
+    columns.forEach((cell, col) => {
+      const center = cellCenter(nav, cell.gx, cell.gz);
+      // Погрузчик — в соседней клетке со стороны склада, вилами к ближнему ряду.
+      const front = { x: center.x + inward.x * rowGap, z: center.z + inward.z * rowGap };
+      sideSpots.set(col, {
+        gx: cell.gx + Math.round(inward.x),
+        gz: cell.gz + Math.round(inward.z),
+        pose: { x: front.x + inward.x * reach, z: front.z + inward.z * reach, heading },
+      });
+      for (let layer = 0; layer < 2; layer++) {
+        for (const depth of [rowGap, -rowGap]) {
+          slots.push({
+            x: center.x + inward.x * depth,
+            y: layer * unitHeight,
+            z: center.z + inward.z * depth,
+            side: col,
+            layer,
+            unit: null,
+            reserved: false,
+            ready: false,
+            front: depth > 0,
+            spot: sideSpots.get(col),
+          });
         }
       }
-    }
-    const heading = Math.atan2(gate.normal[0], gate.normal[1]);
-    // У каждого столбика — своя поза: погрузчик в соседней клетке, вилы напротив столбика.
-    const standCell = { gx: pileCell.gx + Math.round(inward.x), gz: pileCell.gz + Math.round(inward.z) };
-    const spotOf = (side) => {
-      const front = point(PILE_DEPTH[1], side);
-      return { gx: standCell.gx, gz: standCell.gz, pose: { x: front.x + inward.x * reach, z: front.z + inward.z * reach, heading } };
-    };
-    const sideSpots = new Map(PILE_SIDE.map((side) => [side, spotOf(side)]));
-    for (const s of slots) s.spot = sideSpots.get(s.side);
-    const pileCells = [[pileCell.gx, pileCell.gz]];
+    });
+    const pileCells = columns.map((c) => [c.gx, c.gz]);
     return {
       gate,
       label: `горка у ворот ${gate.id + 1}`,
@@ -79,10 +95,32 @@ export function createTruckYard({ group, gates, payload, direction, nav, reach, 
     bay.truck = { model, from, to, state: "arriving", t: 0, pallets: inbound ? payload : 0, fade: createMaterializeFade(model.group, FADE) };
   }
 
-  const freeSlot = (bay) => bay.slots.find((s) => !s.unit && !s.reserved && (s.layer === 0 || bay.slots.some((b) => b.layer === 0 && !b.reserved && b.unit && Math.hypot(b.x - s.x, b.z - s.z) < 0.1)));
-  // Груз в горке, который можно взять: верхний ярус первым.
-  const covered = (bay, s) => bay.slots.some((o) => o.layer > s.layer && (o.unit || o.reserved) && Math.hypot(o.x - s.x, o.z - s.z) < 0.1);
-  const topUnit = (bay) => [...bay.slots].sort((a, b) => b.layer - a.layer).find((s) => s.unit && s.ready && !s.reserved && !covered(bay, s)) ?? null;
+  // Горка разбирается и собирается по-честному: верхний ярус — первым, дальний ряд
+  // доступен со стороны склада, только когда ближний ряд столбика пуст (и наоборот
+  // со стороны фуры).
+  const busy = (s) => s.unit || s.reserved;
+  const sameColumn = (a, b) => a.side === b.side;
+  const below = (bay, s) => bay.slots.find((o) => o.layer === s.layer - 1 && o.front === s.front && sameColumn(o, s));
+  const covered = (bay, s) => bay.slots.some((o) => o.layer > s.layer && o.front === s.front && sameColumn(o, s) && busy(o));
+  const rowEmpty = (bay, s, front) => !bay.slots.some((o) => o.front === front && sameColumn(o, s) && busy(o));
+  const supported = (bay, s) => s.layer === 0 || Boolean(below(bay, s)?.unit && !below(bay, s)?.reserved);
+  const byLayer = (list, dir) => [...list].sort((a, b) => dir * (a.layer - b.layer));
+  // Куда положить. Фура — от проёма: сначала дальний (у ворот) ряд; погрузчик —
+  // дальний ряд только через пустой ближний.
+  const freeSlot = (bay, fromTruck) => {
+    const ok = (s) =>
+      !busy(s) &&
+      supported(bay, s) &&
+      (fromTruck || (s.front ? !bay.slots.some((o) => !o.front && sameColumn(o, s) && o.reserved) : rowEmpty(bay, s, true)));
+    return byLayer(bay.slots.filter((s) => !s.front && ok(s)), 1)[0] ?? byLayer(bay.slots.filter((s) => s.front && ok(s)), 1)[0] ?? null;
+  };
+  // Что взять. Погрузчик — ближний ряд сверху; фура — дальний ряд сверху.
+  const takeable = (bay, fromTruck) => {
+    const ok = (s) => s.unit && s.ready && !s.reserved && !covered(bay, s);
+    const near = bay.slots.filter((s) => s.front !== fromTruck && ok(s));
+    const far = bay.slots.filter((s) => s.front === fromTruck && ok(s) && rowEmpty(bay, s, !fromTruck));
+    return byLayer(near, -1)[0] ?? byLayer(far, -1)[0] ?? null;
+  };
   const doorPoint = (bay) => ({ ...at(bay.gate, 1.5), y: 1.2 });
 
   function stepTruck(bay, dt) {
@@ -109,7 +147,7 @@ export function createTruckYard({ group, gates, payload, direction, nav, reach, 
         bay.unloadTimer = UNLOAD_EVERY_S;
         if (inbound && truck.pallets > 0) {
           // Коробка вылетает из фуры и ложится в горку.
-          const slot = freeSlot(bay);
+          const slot = freeSlot(bay, true);
           if (slot) {
             const unit = cargoFactory.create();
             const door = doorPoint(bay);
@@ -127,7 +165,7 @@ export function createTruckYard({ group, gates, payload, direction, nav, reach, 
           }
         } else if (!inbound && truck.pallets < payload) {
           // Паллета из горки улетает в фуру.
-          const slot = topUnit(bay);
+          const slot = takeable(bay, true);
           if (slot) {
             const unit = slot.unit;
             slot.unit = null;
@@ -168,7 +206,7 @@ export function createTruckYard({ group, gates, payload, direction, nav, reach, 
     // Приёмка: горка, где есть груз для нового задания (закрепляется за ним).
     claimUnit() {
       for (const bay of bays) {
-        const slot = topUnit(bay);
+        const slot = takeable(bay, false);
         if (slot) {
           slot.reserved = true;
           return { bay, slot };
@@ -187,7 +225,7 @@ export function createTruckYard({ group, gates, payload, direction, nav, reach, 
     // Отгрузка: место в горке под паллету задания.
     claimSlot() {
       for (const bay of bays) {
-        const slot = freeSlot(bay);
+        const slot = freeSlot(bay, false);
         if (slot) {
           slot.reserved = true;
           return { bay, slot };
