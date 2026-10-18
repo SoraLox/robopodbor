@@ -2,7 +2,6 @@ import { vacuumModel } from "./vacuumRobot.js";
 import { forkliftModel } from "./forkliftRobot.js";
 import { truckModel } from "./truckRobot.js";
 import { transporterModel } from "./transporterRobot.js";
-import { floorWasherModel } from "./floorWasherRobot.js";
 import { weldArmModel } from "./weldArmRobot.js";
 import { storageCubeModel } from "./storageCubeRobot.js";
 import { stackerModel } from "./stackerRobot.js";
@@ -15,7 +14,6 @@ const MODELS = [
   forkliftModel,
   truckModel,
   transporterModel,
-  floorWasherModel,
   weldArmModel,
   storageCubeModel,
   stackerModel,

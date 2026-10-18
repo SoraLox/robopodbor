@@ -5,7 +5,6 @@ import { drawFloorBase } from "./floor.js";
 import { areRobotModelsReady, loadRobotModels } from "./robots/models.js";
 import { createVacuumFleet } from "./vacuums/vacuumFleet.js";
 import { makeVacuumRobot } from "./robots/vacuumRobot.js";
-import { makeFloorWasherRobot } from "./robots/floorWasherRobot.js";
 import { createArmFleet } from "./arms/armFleet.js";
 import { createStackerFleet } from "./arms/stackerFleet.js";
 import { makeArmRobot } from "./robots/armRobot.js";
@@ -39,11 +38,9 @@ import { FLOOR_PITCH } from "./floorLevel.js";
 // решения (identification.type) — реальные модели пользователя как
 // альтернативы процедурным (ТЗ 4.2.6-в-миниатюре: сцена не должна знать про
 // конкретные id каталога, только про эти три фабрики на тип).
-const VACUUM_FACTORIES = { washer: makeFloorWasherRobot };
 const ARM_FACTORIES = { weldarm: makeWeldArmRig };
 const LOADER_FACTORIES = { transporter: makeTransporterRobot };
 
-const vacuumFactoryOf = (type) => VACUUM_FACTORIES[type] ?? makeVacuumRobot;
 // Роборука по умолчанию — шестиосевой манипулятор пользователя (pick_arm.glb);
 // пока модель грузится — процедурная.
 const armFactoryOf = (type) => ARM_FACTORIES[type] ?? makeArmRobot;
@@ -610,7 +607,7 @@ export function useSimulation(cfg) {
           ],
           trail: { ctx: level.trailCtx, texture: level.trailTexture },
           grid: level.grid,
-          robotFactory: vacuumFactoryOf(vacuumType),
+          robotFactory: makeVacuumRobot,
         });
       }
 

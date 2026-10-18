@@ -307,7 +307,7 @@ function HeroMetrics({
     'grid size-8 flex-none place-items-center rounded-[10px] border border-foreground bg-white text-foreground';
 
   return (
-    <div className="pointer-events-auto relative w-full max-w-[520px]">
+    <div className="pointer-events-auto relative w-full max-w-[640px]">
       {/* Свернуть/развернуть — ярлык на верхнем крае, а не 17-я кнопка в полосе инструментов
           (там она не помещалась и уезжала за край). */}
       <button
@@ -393,7 +393,9 @@ function HeroMetrics({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5">
+        {/* Управление сценой, скорость и выгрузка — всегда одной строкой; на узком
+            экране строка прокручивается, а не переносится. */}
+        <div className="flex flex-nowrap items-center gap-0.5 overflow-x-auto px-2 py-1.5 [scrollbar-width:none]">
           <button
             type="button"
             onClick={toggleTopView}
