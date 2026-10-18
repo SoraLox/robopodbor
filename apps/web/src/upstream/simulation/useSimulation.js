@@ -18,6 +18,8 @@ import { ARM_REACH, createInboundStation, planInboundStation, stationObstacles }
 import { createPickingLine } from "./arms/pickingLine.js";
 import { createCargoFactory } from "./loaders/cargo.js";
 import { createTraffic } from "./loaders/driver.js";
+import { createWarehouseOps } from "./ops/warehouseOps.js";
+import { makeTruck } from "./robots/truckRobot.js";
 import { createStorageCubeFleet } from "./loaders/storageCubeFleet.js";
 import { createSorterFleet } from "./sorters/sorterFleet.js";
 import { createConveyorFleet } from "./conveyors/conveyorFleet.js";
@@ -91,6 +93,7 @@ const armRect = (slot) => ({
 });
 
 function disposeFleets(level) {
+  level.ops = null;
   level.armFleet?.dispose();
   level.vacuumFleet?.dispose();
   level.loaderSystem?.dispose();
@@ -349,7 +352,62 @@ export function useSimulation(cfg) {
           energyProfile: energyProfiles.sorter ?? energyProfiles.arm,
         });
       }
-      if (transportLinks && index === 0) {
+      const usesCube = transportLinks?.some((l) => l.carriers.some((c) => c.model === "storagecube"));
+      if (transportLinks && index === 0 && modelState === "ready" && !usesCube) {
+        // Диспетчер склада (ops/warehouseOps.js): каждая паллета — задание с
+        // маршрутом; исполнители (погрузчики, AMR, руки станции) работают по заданиям.
+        const opsLinks = linkPlans
+          .filter((plan) => plan.gates.length)
+          .map(({ link, gates, lines }) => {
+            const lifts = link.carriers.filter((c) => c.model !== "transporter" && c.count > 0);
+            const haulers = link.carriers.filter((c) => c.model === "transporter" && c.count > 0);
+            const sum = (list) => list.reduce((total, c) => total + c.count, 0);
+            const mid = gates[Math.floor(gates.length / 2)];
+            const bays = haulers.length
+              ? planShuttleBays({
+                  shape,
+                  blockedRects: mobileBlocked,
+                  gatePoint: { x: mid.worldCenter.x - mid.normal[0] * 6, z: mid.worldCenter.z - mid.normal[1] * 6 },
+                  routeUnits: link.effectiveRouteM / Math.max(1e-6, chunkGrid.metersPerUnit),
+                  avoid: stationPlan ? [...stationPlan.holds, ...stationPlan.arms.map((a) => a.park)] : [],
+                })
+              : null;
+            return {
+              slot: link.slot,
+              gates,
+              forklifts: lifts.length ? { ...lifts[0], count: sum(lifts) } : null,
+              amrs: haulers.length ? { ...haulers[0], count: sum(haulers) } : null,
+              conveyor: link.conveyor && lines.length ? { lines } : null,
+              station: link.slot === "inbound" && stationPlan ? { plan: stationPlan, armProd, energyProfile: energyProfiles.arm } : null,
+              bays,
+            };
+          });
+        const ops = createWarehouseOps({
+          group: level.loaderGroup,
+          armGroup: level.armGroup,
+          shape,
+          metersPerUnit: chunkGrid.metersPerUnit,
+          traffic,
+          blockedRects: mobileBlocked,
+          cargo: loader.cargo,
+          cargoWeightKg: loader.cargoWeightKg,
+          truckPayload: loader.truckPayload,
+          beltTexture: st.beltTexture,
+          links: opsLinks,
+          factories: {
+            forklift: (model) => loaderFactoryOf(model),
+            transporter: loaderFactoryOf("transporter"),
+            truck: makeTruck,
+            arm: makePickArmRig,
+          },
+        });
+        level.ops = ops;
+        level.linkFleets = [{ kind: "loader", fleet: ops }];
+        // Руки станции работают внутри диспетчера; здесь — только их счётчик для панелей.
+        if (stationPlan) {
+          level.armFleet = { step() {}, dispose() {}, getOpsDone: ops.getOpsDone, meters: [], obstacles: ops.obstacles, drawPads: false };
+        }
+      } else if (transportLinks && index === 0) {
         // Связи сценария: у каждой — свои ворота, конвейер от ворот к зоне хранения
         // (на отгрузке лента везёт обратно) и транспорт, который работает от конца
         // ленты (последние метры) или от ворот до стеллажей.

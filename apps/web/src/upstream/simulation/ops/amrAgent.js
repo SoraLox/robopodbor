@@ -10,7 +10,7 @@ export function createAmrAgent({ group, driver, traffic, robotFactory, start, ho
   const model = robotFactory();
   model.group.position.set(start.x, 0, start.z);
   group.add(model.group);
-  const label = createLabel(model.group, { height: 4.2 });
+  const label = createLabel(model.group, { height: 5 });
   const agent = {
     name,
     model,

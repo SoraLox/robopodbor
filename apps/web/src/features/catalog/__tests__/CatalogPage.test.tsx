@@ -31,5 +31,5 @@ describe('CatalogPage — фильтры каталога роботов', () =>
     expect(screen.getAllByText('Доступность').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Данные').length).toBeGreaterThan(0);
     // 192 карточки в jsdom: один прогон ~8 с, под общей нагрузкой — вдвое дольше.
-  }, 30_000);
+  }, 60_000);
 });

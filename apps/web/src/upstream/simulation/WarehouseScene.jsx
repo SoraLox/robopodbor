@@ -211,6 +211,27 @@ export default function WarehouseScene({
     />
   );
 
+  // Задания диспетчера — что происходит на складе прямо сейчас.
+  const jobsPanel = stats.jobs ? (
+    <div className="pointer-events-none absolute left-3 top-3 z-10 min-w-[220px] rounded-[12px] border border-[#E5E5EA] bg-white/95 px-3 py-2.5 text-[12px] shadow-[0_4px_16px_rgba(0,0,0,0.06)]">
+      <div className="mb-1.5 text-[11.5px] font-semibold text-[#1D1D1F]">Задания</div>
+      <div className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 tabular-nums">
+        <span className="text-[#6E6E73]">Принято паллет</span>
+        <span className="text-right font-medium text-[#1D1D1F]">{stats.jobs.doneIn}</span>
+        <span className="text-[#6E6E73]">Отгружено паллет</span>
+        <span className="text-right font-medium text-[#1D1D1F]">{stats.jobs.doneOut}</span>
+        <span className="text-[#6E6E73]">В работе</span>
+        <span className="text-right font-medium text-[#1D1D1F]">{stats.jobs.inFlight}</span>
+      </div>
+      {stats.jobs.bottleneck ? (
+        <div className="mt-1.5 border-t border-[#F2F2F4] pt-1.5 text-[11.5px] leading-snug text-[#6E6E73]">
+          Узкое место: <span className="font-medium text-[#1D1D1F]">{stats.jobs.bottleneck}</span> — заняты{" "}
+          {stats.jobs.bottleneckLoad}% времени
+        </div>
+      ) : null}
+    </div>
+  ) : null;
+
   const liveStats = (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
       {useVacuum && <Stat label="Отполировано" value={`${stats.coverage.toFixed(1)}%`} />}
@@ -309,6 +330,7 @@ export default function WarehouseScene({
     return (
       <div className="relative h-full w-full overflow-hidden" style={SCENE_SHELL}>
         <div ref={mountRef} className="absolute inset-0 z-[1] overflow-hidden" />
+        {jobsPanel}
 
         {modelState === "error" && (
           <p className="absolute left-3 top-3 z-10 rounded-lg border border-[#E8E8E8] bg-white px-3 py-2 text-xs font-semibold text-[#9C3B3B] shadow-sm">

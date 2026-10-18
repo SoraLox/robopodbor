@@ -80,6 +80,20 @@ export function readStats(levels, floorIndex, zoneCells, simSeconds) {
     sorterSystems: level.sorterFleet ? level.sorterFleet.systemsShown : 0,
     conveyorUnits: (level.conveyorFleet ? level.conveyorFleet.getUnitsMoved() : 0) + linkConveyors.reduce((sum, f) => sum + f.getUnitsMoved(), 0),
     conveyorLines: (level.conveyorFleet ? level.conveyorFleet.meters.length : 0) + linkConveyors.reduce((sum, f) => sum + f.meters.length, 0),
+    jobs: level.ops ? jobsOf(level.ops) : null,
+  };
+}
+
+// Задания диспетчера: сколько паллет принято/отгружено, сколько в работе и узкое место.
+function jobsOf(ops) {
+  const snap = ops.snapshot();
+  const top = ops.bottleneck()[0];
+  return {
+    doneIn: snap.doneIn,
+    doneOut: snap.doneOut,
+    inFlight: snap.inFlight,
+    bottleneck: top ? top.label : "",
+    bottleneckLoad: top ? Math.round(top.load * 100) : 0,
   };
 }
 

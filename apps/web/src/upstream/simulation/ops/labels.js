@@ -5,7 +5,7 @@ import * as THREE from "three";
 const W = 512;
 const H = 96;
 
-export function createLabel(parent, { height = 6.5, scale = 7.2 } = {}) {
+export function createLabel(parent, { height = 7.5, scale = 15 } = {}) {
   const canvas = typeof document !== "undefined" ? document.createElement("canvas") : null;
   const ctx = canvas?.getContext?.("2d") ?? null;
   if (canvas) {
