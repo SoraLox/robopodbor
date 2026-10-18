@@ -91,7 +91,15 @@ export function createDriver({ nav, traffic }) {
     }
     const path = findPath(nav, agent.pos, agent.legTarget, 0.9, false);
     for (const k of closed) nav.walkable[k] = 1;
-    if (path.length) agent.path = keepRight(agent.pos, path);
+    if (path.length) {
+      const shifted = keepRight(agent.pos, path);
+      if (!clearLine(agent.pos, shifted[0], 0.9)) {
+        const c = cellOfPoint(nav, agent.pos);
+        const half = nav.cellSize / 2;
+        shifted.unshift({ x: c.gx * nav.cellSize - (nav.n * nav.cellSize) / 2 + half, z: c.gz * nav.cellSize - (nav.n * nav.cellSize) / 2 + half });
+      }
+      agent.path = shifted;
+    }
   }
 
   function step(agent, target, dt, speed) {
@@ -199,27 +207,43 @@ export function createDriver({ nav, traffic }) {
     return null;
   }
 
+  // Путь от текущей точки: робот после объезда или правой полосы стоит не в
+  // центре клетки — прямой отрезок до первой точки пути мог задеть угол
+  // стеллажа. Тогда сначала — в центр своей клетки.
+  function routeFrom(agent, target, useCache = true) {
+    const path = keepRight(agent.pos, findPath(nav, agent.pos, target, 0.9, useCache));
+    if (path.length && !clearLine(agent.pos, path[0], 0.9)) {
+      const c = cellOfPoint(nav, agent.pos);
+      const half = nav.cellSize / 2;
+      path.unshift({ x: c.gx * nav.cellSize - (nav.n * nav.cellSize) / 2 + half, z: c.gz * nav.cellSize - (nav.n * nav.cellSize) / 2 + half });
+    }
+    return path;
+  }
+
   // Правостороннее движение: промежуточные точки пути сдвинуты вправо по ходу —
   // встречные расходятся бортами, а не упираются лоб в лоб. Конечная точка — как есть.
   const LANE = 1.8;
   function keepRight(from, path) {
     const out = [];
     let prev = from;
-    let prevShifted = from;
     for (let i = 0; i < path.length; i++) {
       const p = path[i];
-      if (i === path.length - 1) {
-        out.push(p);
-        break;
+      const last = out.length ? out[out.length - 1] : from;
+      let point = p;
+      if (i < path.length - 1) {
+        const dx = p.x - prev.x;
+        const dz = p.z - prev.z;
+        const length = Math.hypot(dx, dz) || 1;
+        // Правая сторона при курсе (dx, dz) в системе сцены: (−dz, dx).
+        const shifted = { x: p.x - (dz / length) * LANE, z: p.z + (dx / length) * LANE };
+        if (clearLine(last, shifted, 1.0)) point = shifted;
       }
-      const dx = p.x - prev.x;
-      const dz = p.z - prev.z;
-      const length = Math.hypot(dx, dz) || 1;
-      // Правая сторона при курсе (dx, dz) в системе сцены: (−dz, dx).
-      const shifted = { x: p.x - (dz / length) * LANE, z: p.z + (dx / length) * LANE };
-      const ok = clearLine(prevShifted, shifted, 1.0);
-      out.push(ok ? shifted : p);
-      prevShifted = ok ? shifted : p;
+      // Каждый отрезок пути — по проезжим клеткам: не вышло со сдвигом — без сдвига
+      // и у предыдущей точки тоже (исходный путь проверен сглаживанием).
+      if (point === p && out.length && out[out.length - 1] !== path[i - 1] && !clearLine(last, p, 0.9)) {
+        out[out.length - 1] = path[i - 1];
+      }
+      out.push(point);
       prev = p;
     }
     return out;
@@ -242,7 +266,7 @@ export function createDriver({ nav, traffic }) {
     agent.evade = null;
     agent.yieldTo = null;
     agent.evadeCooldown = 3;
-    if (agent.legTarget) agent.path = keepRight(agent.pos, findPath(nav, agent.pos, agent.legTarget, 0.9, false));
+    if (agent.legTarget) agent.path = routeFrom(agent, agent.legTarget, false);
     return false;
   }
 
@@ -274,10 +298,17 @@ export function createDriver({ nav, traffic }) {
   function move(agent, target, dt, speed) {
     if (agent.legTarget !== target) {
       agent.legTarget = target;
-      agent.path = keepRight(agent.pos, findPath(nav, agent.pos, target));
+      agent.path = routeFrom(agent, target);
       agent.replanned = false;
       routeUnits += pathLength(agent.pos, agent.path);
       routeLegs += 1;
+    }
+    // Пути нет (проезд закрыт) — стоим и в следующий раз строим заново.
+    if (!agent.path.length && Math.hypot(target.x - agent.pos.x, target.z - agent.pos.z) > ARRIVE_EPS * 2) {
+      agent.legTarget = null;
+      agent.blocked = true;
+      agent.waited = (agent.waited ?? 0) + dt;
+      return false;
     }
     while (agent.path.length) {
       if (!step(agent, agent.path[0], dt, speed)) return false;

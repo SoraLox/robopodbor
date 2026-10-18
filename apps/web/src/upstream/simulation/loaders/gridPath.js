@@ -170,7 +170,9 @@ export function findPath(nav, from, to, halfWidth = 0.9, useCache = true) {
   if (cached) return cached.slice();
 
   const cells = findCellPath(nav, start, goal);
-  if (!cells) return [to];
+  // Пути нет (закрыт стоящими роботами при перестройке) — не едем напрямик сквозь
+  // стеллажи: пустой путь, робот ждёт и пробует снова.
+  if (!cells) return [];
 
   const origin = cellCenter(nav, start.gx, start.gz);
   const points = [origin, ...cells.slice(1, -1).map((c) => cellCenter(nav, c.gx, c.gz)), to];

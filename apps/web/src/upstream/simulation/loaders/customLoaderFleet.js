@@ -48,7 +48,7 @@ function lerp(a, b, t) {
 // Места хранения: у каждого стеллажа — клетка подъезда (проезжий сосед,
 // ближайший к воротам), погрузчик встаёт там и поворачивается к стеллажу.
 // Раньше целью был центр клетки стеллажа — погрузчик въезжал в сам стеллаж.
-function collectStorage(shape, nav, gates, routeUnits) {
+export function collectStorage(shape, nav, gates, routeUnits) {
   const places = [];
   const gateCells = gates.map((gate) => cellOfPoint(nav, gate.worldCenter));
   const toGate = (gx, gz) => Math.min(...gateCells.map((c) => Math.abs(c.gx - gx) + Math.abs(c.gz - gz)));

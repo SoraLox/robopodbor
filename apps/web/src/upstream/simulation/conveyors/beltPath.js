@@ -102,12 +102,14 @@ export function createBeltPath({ group, points, closed = false, speed = 1.2, wid
   }
 
   // Поставить груз на ленту в точке d, если там есть окно.
-  function put(unit, d) {
+  // meta — задание, к которому относится груз (диспетчер, ops/): точки отбора
+  // останавливают только «свои» грузы.
+  function put(unit, d, meta = null) {
     const dd = wrap(d);
     if (!canPut(dd)) return false;
     unit.removeFromParent();
     group.add(unit);
-    const item = { unit, d: dd, held: null };
+    const item = { unit, d: dd, held: null, meta };
     items.push(item);
     place(item);
     return true;
@@ -152,7 +154,7 @@ export function createBeltPath({ group, points, closed = false, speed = 1.2, wid
         if (pick.item) continue;
         let ahead = pick.d - from;
         if (closed) ahead = ((ahead % total) + total) % total;
-        if (ahead >= -1e-6 && ahead <= travel + 1e-6 && pick.ready()) {
+        if (ahead >= -1e-6 && ahead <= travel + 1e-6 && pick.ready(item)) {
           to = from + ahead;
           item.held = pick;
           pick.item = item;
@@ -192,10 +194,14 @@ export function createBeltPath({ group, points, closed = false, speed = 1.2, wid
     obstacles,
     items: () => items,
     // Конец открытой ленты: груз, доехавший до конца (сборный конвейер → ворота).
-    takeAtEnd() {
+    // match(meta) — только груз нужного задания.
+    takeAtEnd(match = null) {
       if (closed) return null;
-      const item = items.find((i) => i.d >= total - 1e-3);
+      const item = items.find((i) => i.d >= total - 1e-3 && (!match || match(i.meta)));
       return item ? remove(item) : null;
+    },
+    atEnd(match = null) {
+      return items.some((i) => i.d >= total - 1e-3 && (!match || match(i.meta)));
     },
     getMoved: () => moved,
   };
