@@ -19,7 +19,8 @@ const CLEARANCE = 1.4; // на сколько выше точки груз не�
 const ease = (t) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
 const yawOf = (dir) => Math.atan2(-dir.z, dir.x);
 
-export function createArmUnit({ rig, scale, from, to, opsPerMinute, energyProfile, itemHeight }) {
+// tweens (ops/tweens.js) — плавный подхват присосками; без него — мгновенно.
+export function createArmUnit({ rig, scale, from, to, opsPerMinute, energyProfile, itemHeight, tweens = null }) {
   const cycle = 60 / Math.max(0.5, opsPerMinute);
   const tSwing = cycle * SWING_SHARE;
   const tLift = cycle * LIFT_SHARE;
@@ -47,9 +48,13 @@ export function createArmUnit({ rig, scale, from, to, opsPerMinute, energyProfil
   function grab() {
     unit = from.pick.take();
     if (!unit) return false;
+    // Присоски — на верхе груза, груз висит под ними.
+    if (tweens) {
+      tweens.move(unit, rig.claw, { x: 0, y: -itemHeight / scale, z: 0, rotY: 0 }, 0.35);
+      return true;
+    }
     unit.removeFromParent();
     rig.claw.add(unit);
-    // Присоски — на верхе груза, груз висит под ними.
     unit.position.set(0, -itemHeight / scale, 0);
     unit.rotation.set(0, 0, 0);
     unit.scale.setScalar(1 / scale);
@@ -57,8 +62,10 @@ export function createArmUnit({ rig, scale, from, to, opsPerMinute, energyProfil
   }
 
   function release() {
-    rig.claw.remove(unit);
-    unit.scale.setScalar(1);
+    if (!tweens) {
+      rig.claw.remove(unit);
+      unit.scale.setScalar(1);
+    }
     to.put(unit);
     unit = null;
     ops += 1;

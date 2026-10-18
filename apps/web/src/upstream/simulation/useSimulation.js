@@ -387,7 +387,6 @@ export function useSimulation(cfg) {
           armGroup: level.armGroup,
           shape,
           metersPerUnit: chunkGrid.metersPerUnit,
-          traffic,
           blockedRects: mobileBlocked,
           cargo: loader.cargo,
           cargoWeightKg: loader.cargoWeightKg,

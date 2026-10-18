@@ -1,25 +1,30 @@
 import { createEnergyMeter } from "../energy.js";
-import { FORK_CARRY_LIFT, FORK_LIFT_SPEED, LOAD_SLOWDOWN } from "../constants.js";
+import { FORK_CARRY_LIFT, FORK_LIFT_SPEED } from "../constants.js";
 import { createLabel } from "./labels.js";
+import { createMover } from "./mover.js";
 
 // Погрузчик-исполнитель: сам ничего не решает. Без задания стоит на своём месте;
-// диспетчер даёт задание «забрать здесь → поставить там»:
-//   едет к точке забора → поднимает вилы → ждёт, пока груз можно взять → берёт →
-//   опускает вилы → едет к точке сдачи → поднимает вилы → ждёт, пока можно
-//   поставить → ставит → докладывает диспетчеру.
+// диспетчер даёт задание «забрать здесь → поставить там».
+//   Едет по забронированному пути (mover.js) и встаёт точно в позу точки — вилами
+//   к грузу → поднимает вилы до высоты груза → ждёт, пока груз можно взять →
+//   груз плавно переходит на вилы → вилы — в транспортное положение → едет к точке
+//   сдачи → вилы на высоту места → ставит (точка сама плавно принимает груз).
 // Работа вилами — HANDLING_S, как в расчёте (половина цикла 25 с — у каждой точки).
 
 const HANDLING_S = 12.5;
+const TRANSFER_S = 0.7;
 
-export function createForkliftAgent({ group, driver, traffic, robotFactory, start, home, speedUnits, loadRatio, energyProfile, name, rehome = null }) {
+export function createForkliftAgent({ id, group, planner, nav, clock, tweens, robotFactory, start, home, speedUnits, energyProfile, name }) {
   const model = robotFactory();
-  model.group.position.set(start.x, 0, start.z);
+  model.group.position.set(start.pose.x, 0, start.pose.z);
+  model.group.rotation.y = start.pose.heading;
   group.add(model.group);
   const label = createLabel(model.group);
   const agent = {
+    id,
     name,
     model,
-    pos: { x: start.x, z: start.z, heading: 0 },
+    pos: { x: start.pose.x, z: start.pose.z, heading: start.pose.heading },
     home,
     state: "idle",
     task: null,
@@ -32,7 +37,7 @@ export function createForkliftAgent({ group, driver, traffic, robotFactory, star
     busySeconds: 0,
     seconds: 0,
   };
-  traffic.add(agent);
+  const mover = createMover({ planner, nav, agent, speedUnits, clock });
   label.set(`${name} · свободен`, "idle");
 
   function moveFork(dt) {
@@ -43,56 +48,44 @@ export function createForkliftAgent({ group, driver, traffic, robotFactory, star
     return Math.abs(agent.forkTarget - agent.forkLift) < 1e-3;
   }
 
-  // Операция у точки: вилы на высоту → (готово? → действие) → вилы в транспортное.
+  // Операция у точки: вилы на высоту → (готово? → передача груза) → вилы в транспортное.
   function handle(dt, lift, tryAct) {
+    agent.timer += dt;
     if (!agent.acted) {
       agent.forkTarget = lift;
       const raised = moveFork(dt);
-      agent.timer += dt;
       if (!raised || agent.timer < HANDLING_S / 2) return false;
       if (!tryAct()) return false;
       agent.acted = true;
+      agent.actedAt = agent.timer;
     }
+    // Пока груз переходит — вилы стоят.
+    if (agent.timer - agent.actedAt < TRANSFER_S) return false;
     agent.forkTarget = agent.cargo ? FORK_CARRY_LIFT : 0;
-    agent.timer += dt;
     return moveFork(dt) && agent.timer >= HANDLING_S;
-  }
-
-  function attach(unit) {
-    agent.cargo = unit;
-    unit.removeFromParent();
-    unit.position.set(0, 0, 0);
-    unit.rotation.set(0, 0, 0);
-    model.carry.add(unit);
   }
 
   function assign(task) {
     agent.task = task;
     agent.state = "toPick";
-    agent.timer = 0;
-    agent.acted = false;
+    mover.goTo(task.pick.spot);
   }
 
   function step(dt) {
     agent.seconds += dt;
+    mover.step(dt);
     const task = agent.task;
-    const speed = speedUnits * (agent.cargo ? 1 - LOAD_SLOWDOWN * loadRatio : 1);
     if (agent.state !== "idle") agent.busySeconds += dt;
     switch (agent.state) {
       case "idle":
-        agent.meter.consume(dt, "idle");
+        agent.meter.consume(dt, mover.moving() ? "work" : "idle");
         label.set(`${name} · свободен`, "idle");
-        // Свободный робот кому-то мешает проехать — переезжает на другое место ожидания.
-        if (agent.yieldTo && rehome) {
-          agent.yieldTo = null;
-          agent.home = rehome(agent.home);
-        }
-        if (Math.hypot(agent.pos.x - agent.home.x, agent.pos.z - agent.home.z) > 0.5) driver.drive(agent, agent.home, dt, speedUnits);
+        if (!mover.moving() && !mover.at(agent.home)) mover.goTo(agent.home);
         break;
       case "toPick":
         agent.meter.consume(dt, "work");
-        label.set(`${name} · еду: ${task.pick.label}`);
-        if (driver.drive(agent, task.pick.spot, dt, speed)) {
+        label.set(mover.phase() === "waitPlan" ? `${name} · жду проезда` : `${name} · еду: ${task.pick.label}`, mover.phase() === "waitPlan" ? "wait" : "neutral");
+        if (mover.at(task.pick.spot)) {
           agent.state = "picking";
           agent.timer = 0;
           agent.acted = false;
@@ -106,19 +99,20 @@ export function createForkliftAgent({ group, driver, traffic, robotFactory, star
           handle(dt, task.pick.lift, () => {
             const unit = task.pick.take();
             if (!unit) return false;
-            attach(unit);
+            agent.cargo = unit;
+            tweens.move(unit, model.carry, { x: 0, y: 0, z: 0, rotY: 0 }, TRANSFER_S);
             return true;
           })
         ) {
-          driver.release(agent, task.pick.spot);
           agent.state = "toDrop";
+          mover.goTo(task.drop.spot);
         }
         break;
       }
       case "toDrop":
         agent.meter.consume(dt, "work");
-        label.set(`${name} · везу ${task.jobLabel} → ${task.drop.label}`);
-        if (driver.drive(agent, task.drop.spot, dt, speed)) {
+        label.set(mover.phase() === "waitPlan" ? `${name} · жду проезда` : `${name} · везу ${task.jobLabel} → ${task.drop.label}`, mover.phase() === "waitPlan" ? "wait" : "neutral");
+        if (mover.at(task.drop.spot)) {
           agent.state = "dropping";
           agent.timer = 0;
           agent.acted = false;
@@ -130,15 +124,11 @@ export function createForkliftAgent({ group, driver, traffic, robotFactory, star
         label.set(waiting ? `${name} · жду: ${task.drop.waitLabel ?? task.drop.label}` : `${name} · ставлю: ${task.drop.label}`, waiting ? "wait" : "neutral");
         if (
           handle(dt, task.drop.lift, () => {
-            const unit = agent.cargo;
-            if (!task.drop.put(unit)) return false;
-            // Груз теперь у точки сдачи (лента, AMR) или убран (ячейка, фура).
-            if (unit.parent === model.carry) model.carry.remove(unit);
+            if (!task.drop.put(agent.cargo)) return false;
             agent.cargo = null;
             return true;
           })
         ) {
-          driver.release(agent, task.drop.spot);
           agent.task = null;
           agent.state = "idle";
           task.onDone?.();
@@ -158,7 +148,6 @@ export function createForkliftAgent({ group, driver, traffic, robotFactory, star
     status: () => label.text(),
     utilization: () => (agent.seconds ? agent.busySeconds / agent.seconds : 0),
     dispose() {
-      traffic.remove(agent);
       label.dispose();
       group.remove(model.group);
       model.dispose?.();

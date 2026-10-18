@@ -85,8 +85,21 @@ export function createBeltPath({ group, points, closed = false, speed = 1.2, wid
     return best;
   };
 
-  function place(item) {
+  // Поставленный груз «въезжает» на ленту с того места, где его отпустили.
+  const ENTER_S = 0.6;
+  function place(item, dt = 0) {
     const p = at(item.d);
+    if (item.enter && item.enter.k < 1) {
+      item.enter.k = Math.min(1, item.enter.k + dt / ENTER_S);
+      const k = item.enter.k < 0.5 ? 2 * item.enter.k ** 2 : 1 - (-2 * item.enter.k + 2) ** 2 / 2;
+      item.unit.position.set(
+        item.enter.x + (p.x - item.enter.x) * k,
+        item.enter.y + (BELT_TOP - item.enter.y) * k,
+        item.enter.z + (p.z - item.enter.z) * k,
+      );
+      item.unit.rotation.set(0, item.enter.rot + Math.atan2(Math.sin(p.heading - item.enter.rot), Math.cos(p.heading - item.enter.rot)) * k, 0);
+      return;
+    }
     item.unit.position.set(p.x, BELT_TOP, p.z);
     item.unit.rotation.set(0, p.heading, 0);
   }
@@ -107,9 +120,10 @@ export function createBeltPath({ group, points, closed = false, speed = 1.2, wid
   function put(unit, d, meta = null) {
     const dd = wrap(d);
     if (!canPut(dd)) return false;
-    unit.removeFromParent();
-    group.add(unit);
-    const item = { unit, d: dd, held: null, meta };
+    // Сохраняем положение в мире — груз въезжает на ленту, а не прыгает.
+    group.updateMatrixWorld(true);
+    group.attach(unit);
+    const item = { unit, d: dd, held: null, meta, enter: { x: unit.position.x, y: unit.position.y, z: unit.position.z, rot: unit.rotation.y, k: 0 } };
     items.push(item);
     place(item);
     return true;
@@ -143,7 +157,10 @@ export function createBeltPath({ group, points, closed = false, speed = 1.2, wid
     // Порядок: от головы колонны к хвосту — хвост упирается в голову.
     const order = [...items].sort((a, b) => gapAhead(b) - gapAhead(a));
     for (const item of order) {
-      if (item.held) continue;
+      if (item.held) {
+        place(item, dt);
+        continue;
+      }
       const room = gapAhead(item) - spacing;
       let travel = Math.max(0, Math.min(speed * dt, room));
       if (!closed) travel = Math.min(travel, total - item.d);
@@ -162,7 +179,7 @@ export function createBeltPath({ group, points, closed = false, speed = 1.2, wid
         }
       }
       item.d = wrap(to);
-      place(item);
+      place(item, dt);
     }
   }
 

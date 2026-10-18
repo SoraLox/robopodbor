@@ -3,8 +3,7 @@ import * as THREE from 'three';
 import { CELL, cellAt } from '@/upstream/simulation/shape/shapeTypes.js';
 import { standardLayoutShape } from '@/features/objects/layout/warehouseLayout';
 import { computeLayout, linkGatesOf } from '@/upstream/simulation/layout.js';
-import { blockedNav, planShuttleBays } from '@/upstream/simulation/loaders/shuttleFleet.js';
-import { createTraffic } from '@/upstream/simulation/loaders/driver.js';
+import { blockedNav } from '@/upstream/simulation/loaders/shuttleFleet.js';
 import { cellOfPoint, makeNavGrid } from '@/upstream/simulation/loaders/gridPath.js';
 import { planInboundStation, stationObstacles } from '@/upstream/simulation/arms/inboundStation.js';
 import { createWarehouseOps } from '@/upstream/simulation/ops/warehouseOps.js';
@@ -28,15 +27,41 @@ function scene() {
   const outGates = layout.gates.filter((g) => split.outbound.includes(g.id));
   const plan = planInboundStation({ nav: blockedNav(shape, []), gates: inGates, armCount: 4 })!;
   const blocked = stationObstacles(plan);
-  const g = outGates[0]!;
-  const outBays = planShuttleBays({
-    shape,
-    blockedRects: blocked,
-    gatePoint: { x: g.worldCenter.x - g.normal[0]! * 6, z: g.worldCenter.z - g.normal[1]! * 6 },
-    routeUnits: 30,
-    avoid: [...plan.holds, ...plan.arms.map((a) => a.park), plan.rackBay.park],
-  })!;
-  return { shape, plan, blocked, inGates, outGates, outBays };
+  return { shape, plan, blocked, inGates, outGates };
+}
+
+type Ops = ReturnType<typeof createWarehouseOps>;
+type Res = { t0: number; t1: number; id: number };
+
+// Час работы: шаги по 0,1 с; следим, чтобы роботы не сближались и не заезжали в стеллажи.
+function runHour(ops: Ops, shape: never) {
+  const nav = makeNavGrid(shape);
+  let minGap = Infinity;
+  let inRack = 0;
+  for (let i = 0; i < 36000; i += 1) {
+    ops.step(0.1);
+    if (i % 10) continue;
+    const agents = ops.agents() as Array<{ pos: { x: number; z: number } }>;
+    for (let a = 0; a < agents.length; a++) {
+      const p = agents[a]!.pos;
+      const c = cellOfPoint(nav, p) as { gx: number; gz: number };
+      if (cellAt(shape, c.gx, c.gz) === CELL.RACK) inRack += 1;
+      for (let b = a + 1; b < agents.length; b++) minGap = Math.min(minGap, Math.hypot(p.x - agents[b]!.pos.x, p.z - agents[b]!.pos.z));
+    }
+  }
+  // Брони планировщика: ни одна клетка не занята двумя роботами одновременно.
+  let overlaps = 0;
+  for (const list of (ops.planner.table as Map<number, Res[]>).values()) {
+    for (let a = 0; a < list.length; a++) {
+      for (let b = a + 1; b < list.length; b++) {
+        if (list[a]!.id !== list[b]!.id && list[a]!.t0 < list[b]!.t1 && list[b]!.t0 < list[a]!.t1) overlaps += 1;
+      }
+    }
+  }
+  const snap = ops.snapshot();
+  console.log('приёмка', snap.doneIn, 'отгрузка', snap.doneOut, 'в работе', snap.inFlight, 'руки', ops.getOpsDone(), { minGap, inRack, overlaps });
+  console.log('загрузка', ops.bottleneck().map((g) => `${g.label} ${Math.round(g.load * 100)}%`).join('; '));
+  return { snap, minGap, inRack, overlaps };
 }
 
 describe('диспетчер склада', () => {
@@ -46,51 +71,53 @@ describe('диспетчер склада', () => {
     seed = (seed * 16807) % 2147483647;
     return (seed - 1) / 2147483646;
   };
-  it('станция приёмки и отгрузка через AMR: каждая паллета идёт по своему маршруту', () => {
-    const { shape, plan, blocked, inGates, outGates, outBays } = scene();
-    const traffic = createTraffic();
-    const forklifts = { count: 4, speedMps: 2, capacityKg: 1000, energyProfile: profile };
-    const amrs = { count: 4, speedMps: 1.8, energyProfile: profile };
+  const forklifts = { count: 4, speedMps: 2, capacityKg: 1000, energyProfile: profile };
+  const amrs = { count: 4, speedMps: 1.8, energyProfile: profile };
+  const base = (shape: never, blockedRects: unknown[]) => ({
+    group: new THREE.Group(),
+    armGroup: new THREE.Group(),
+    shape,
+    metersPerUnit: 1.41,
+    blockedRects,
+    cargo,
+    cargoWeightKg: 500,
+    truckPayload: 12,
+    beltTexture: null,
+    factories,
+  });
+
+  it('станция приёмки и отгрузка через AMR: маршруты расписаны, роботы не встречаются', () => {
+    const { shape, plan, blocked, inGates, outGates } = scene();
     const ops = createWarehouseOps({
-      group: new THREE.Group(),
-      armGroup: new THREE.Group(),
-      shape,
-      metersPerUnit: 1.41,
-      traffic,
-      blockedRects: blocked,
-      cargo,
-      cargoWeightKg: 500,
-      truckPayload: 12,
-      beltTexture: null,
-      factories,
+      ...base(shape, blocked),
       links: [
         { slot: 'inbound', gates: inGates, forklifts, amrs, station: { plan, armProd: 6, energyProfile: profile } },
-        { slot: 'outbound', gates: outGates, forklifts, amrs, bays: outBays },
+        { slot: 'outbound', gates: outGates, forklifts, amrs },
       ],
     });
-    const nav = makeNavGrid(shape);
-    let minGap = Infinity;
-    let inRack = 0;
-    for (let i = 0; i < 36000; i += 1) {
-      ops.step(0.1);
-      if (i % 10) continue;
-      const agents = traffic.list() as Array<{ pos: { x: number; z: number } }>;
-      for (let a = 0; a < agents.length; a++) {
-        const p = agents[a]!.pos;
-        const c = cellOfPoint(nav, p) as { gx: number; gz: number };
-        if (cellAt(shape, c.gx, c.gz) === CELL.RACK) inRack += 1;
-        for (let b = a + 1; b < agents.length; b++) minGap = Math.min(minGap, Math.hypot(p.x - agents[b]!.pos.x, p.z - agents[b]!.pos.z));
-      }
-    }
-    const snap = ops.snapshot();
-    console.log('приёмка', snap.doneIn, 'отгрузка', snap.doneOut, 'в работе', snap.inFlight, 'руки', ops.getOpsDone(), { minGap, inRack });
-    console.log('загрузка', ops.bottleneck().map((g) => `${g.label} ${Math.round(g.load * 100)}%`).join('; '));
-    console.log(snap.agents.join(' | '));
-    // Час работы: обе стороны выполняют задания, ничего не стоит намертво.
-    expect(snap.doneIn).toBeGreaterThan(15);
-    expect(snap.doneOut).toBeGreaterThan(10);
+    const { snap, minGap, inRack, overlaps } = runHour(ops, shape);
+    expect(snap.doneIn).toBeGreaterThan(30);
+    expect(snap.doneOut).toBeGreaterThan(15);
     expect(ops.getOpsDone()).toBeGreaterThanOrEqual(snap.doneIn);
     expect(inRack).toBe(0);
-    expect(minGap).toBeGreaterThan(1.6);
+    expect(overlaps).toBe(0);
+    expect(minGap).toBeGreaterThan(2);
+  }, 60_000);
+
+  it('приёмка погрузчиками, отгрузка через AMR: груз берут из горки у ворот', () => {
+    const { shape, inGates, outGates } = scene();
+    const ops = createWarehouseOps({
+      ...base(shape, []),
+      links: [
+        { slot: 'inbound', gates: inGates, forklifts },
+        { slot: 'outbound', gates: outGates, forklifts, amrs },
+      ],
+    });
+    const { snap, minGap, inRack, overlaps } = runHour(ops, shape);
+    expect(snap.doneIn).toBeGreaterThan(30);
+    expect(snap.doneOut).toBeGreaterThan(15);
+    expect(inRack).toBe(0);
+    expect(overlaps).toBe(0);
+    expect(minGap).toBeGreaterThan(2);
   }, 60_000);
 });
