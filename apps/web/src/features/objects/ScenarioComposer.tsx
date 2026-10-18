@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ArrowLeft, Check, X } from 'lucide-react';
-import { fleetKindOf } from '@domain/fleet';
+import { fleetKindOf, fleetModelOf } from '@domain/fleet';
 import { isPassiveCarrier, SLOT_KINDS, SLOTS, TRANSPORT_SLOTS, type SlotId } from '@domain/warehouseEconomics';
 import { useScenarioVariants } from '@/api/queries';
 import type { Assignment, ScenarioVariant, SelectionItem, Solution } from '@/api/types';
@@ -127,9 +127,22 @@ export function ScenarioComposer({
       next = next.filter((a) => a.slot !== slot);
     }
     // Добавляется ровно тот робот, которого выбрали. Транспортировщику без погрузчика
-    // этап сам подскажет, что перегрузку тогда считаем за операторами.
+    // этап сам подскажет и предложит подходящий погрузчик одной кнопкой.
     setAssignments([...next, { slot, solutionId }]);
   };
+
+  // Транспортировщик без погрузчика: подходящий погрузчик — лучший по подбору.
+  const lifterFor = (slot: SlotId) =>
+    rows.find((row) => {
+      const id = row.solution.id;
+      return (
+        row.item?.status !== 'excluded' &&
+        kindOf(id) === 'loader' &&
+        !passive(id) &&
+        fleetModelOf(row.solution as never, 'loader') !== 'storagecube' &&
+        !inSlot(slot).some((a) => a.solutionId === id)
+      );
+    })?.solution ?? null;
 
   const remove = (assignment: Assignment) => {
     setAssignments(
@@ -437,16 +450,26 @@ export function ScenarioComposer({
                 </ul>
               ) : null}
               {transport && carriers.some((a) => passive(a.solutionId)) ? (
-                <p
-                  className={cn(
-                    'mt-2 pl-[30px] text-[11.5px] leading-snug',
-                    carriers.some((a) => !passive(a.solutionId)) ? 'text-[#6E6E73]' : 'text-status-danger',
-                  )}
-                >
-                  {carriers.some((a) => !passive(a.solutionId))
-                    ? 'Транспортировщик везёт паллеты, погрузчик ставит их на него и снимает в стеллаж.'
-                    : 'Транспортировщик сам груз не берёт — добавьте погрузчик, иначе перегрузку считаем за операторами.'}
-                </p>
+                carriers.some((a) => !passive(a.solutionId)) ? (
+                  <p className="mt-2 pl-[30px] text-[11.5px] leading-snug text-[#6E6E73]">
+                    Транспортировщик везёт паллеты, погрузчик ставит их на него и снимает в стеллаж.
+                  </p>
+                ) : (
+                  <div className="mt-2 grid gap-1.5 pl-[30px]">
+                    <p className="text-[11.5px] leading-snug text-status-danger">
+                      Транспортировщик сам груз не берёт — нужен погрузчик, иначе перегрузку считаем за операторами.
+                    </p>
+                    {lifterFor(slot) ? (
+                      <button
+                        type="button"
+                        onClick={() => add(slot, lifterFor(slot)!.id)}
+                        className="justify-self-start rounded-[8px] bg-foreground px-2.5 py-1.5 text-[12px] font-medium text-white hover:opacity-90"
+                      >
+                        Добавить погрузчик: {lifterFor(slot)!.name}
+                      </button>
+                    ) : null}
+                  </div>
+                )
               ) : null}
               {transport && carriers.length === 2 && !carriers.some((a) => passive(a.solutionId)) ? (
                 <label className="mt-2 grid gap-1 pl-[30px] text-[11.5px] text-[#6E6E73]">

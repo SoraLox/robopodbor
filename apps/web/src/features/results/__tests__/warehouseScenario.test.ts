@@ -69,14 +69,22 @@ describe('сценарий склада: зоны и связи', () => {
     // У каждого варианта — причина выбора, разные составы.
     for (const v of variants) expect(v.highlights.length).toBeGreaterThan(0);
     const keys = variants.map((v) => v.assignments.map((a) => `${a.slot}:${a.solutionId}`).sort().join('|'));
-    // Рекомендуемая схема: погрузчик → кольцевой конвейер → роборука → AMR → погрузчик → стеллаж.
+    // Рекомендуем — первым, один, подобран под склад: роботы на нескольких
+    // участках и загружены (в описании — насколько).
     const recommended = variants.filter((v) => v.recommended);
     expect(recommended).toHaveLength(1);
     expect(variants[0]!.recommended).toBe(true);
-    const kinds = (slot: string) => recommended[0]!.assignments.filter((a) => a.slot === slot).map((a) => a.solutionId);
-    expect(kinds('inbound').some((id) => id.startsWith('CV'))).toBe(true);
-    expect(kinds('inbound').length).toBe(3);
-    expect(kinds('picking')).toHaveLength(1);
+    expect(new Set(recommended[0]!.assignments.map((a) => a.slot)).size).toBeGreaterThanOrEqual(2);
+    expect(recommended[0]!.description).toMatch(/загружены на \d+/);
     expect(new Set(keys).size).toBe(variants.length);
+  });
+
+  it('рекомендуемый состав подстраивается под данные склада', () => {
+    const pick = (parameters: Record<string, string>) =>
+      generateWarehouseScenarios({ parameters, fields, solutions: solutions as unknown as CatalogSolution[] }).find((v) => v.recommended)!;
+    const small = pick({ wh_obschaya_ploschad_sklada: '3000', wh_obem_priemki: '200', wh_obem_otgruzki: '200', wh_obem_otbora: '500' });
+    const large = pick({ wh_obschaya_ploschad_sklada: '40000', wh_obem_priemki: '6000', wh_obem_otgruzki: '6000', wh_obem_otbora: '20000' });
+    console.log('малый:', small.title, small.robots, '| крупный:', large.title, large.robots);
+    expect(small.robots).toBeLessThan(large.robots);
   });
 });

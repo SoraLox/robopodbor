@@ -30,7 +30,7 @@ export interface ScenarioVariant {
   highlights: string[];
   /** Больше всего экономии за горизонт. */
   best?: boolean;
-  /** Рекомендуемая схема приёмки: погрузчик → кольцевой конвейер → роборука → AMR → погрузчик → стеллаж. */
+  /** Рекомендуем: под данные склада — больше экономии при загруженных роботах (никто не простаивает). */
   recommended?: boolean;
 }
 
@@ -130,6 +130,10 @@ export function generateWarehouseScenarios(input: {
     savingMln: number;
     horizonYears: number;
     robots: number;
+    /** Загрузка групп роботов: спрос / (число × производительность), 0..1. */
+    minLoad: number;
+    maxLoad: number;
+    avgLoad: number;
   }
 
   const num = (text: string) => Number(text.replace(/\s/g, "").replace(",", ".").replace("%", "").replace("−", "-"));
@@ -145,6 +149,13 @@ export function generateWarehouseScenarios(input: {
       assignments,
     });
     const tco = (id: string) => result.scenarios.find((s) => s.id === id)?.tco ?? 0;
+    // Насколько загружен каждый робот: парк считается под спрос, но округление вверх
+    // и минимум «один робот» оставляют простой — его и сравниваем между составами.
+    const loads = (result.fleet ?? []).map((g) => ({
+      count: g.count,
+      load: Math.min(1, g.peakDemand / Math.max(1e-9, g.count * g.throughputPerRobot)),
+    }));
+    const robotsTotal = loads.reduce((sum, g) => sum + g.count, 0) || 1;
     const purchase = tco("purchase") || result.totalTco;
     return {
       key: assignments.map((a) => `${a.slot}:${a.solutionId}`).sort().join("|"),
@@ -160,6 +171,9 @@ export function generateWarehouseScenarios(input: {
       savingMln: Math.round((tco("as-is") - purchase) * 10) / 10,
       horizonYears: Number(/\d+/.exec(result.roi.label)?.[0] ?? 7),
       robots: result.robots.count,
+      minLoad: loads.length ? Math.min(...loads.map((g) => g.load)) : 0,
+      maxLoad: loads.length ? Math.max(...loads.map((g) => g.load)) : 0,
+      avgLoad: loads.reduce((sum, g) => sum + g.load * g.count, 0) / robotsTotal,
     };
   };
 
@@ -175,7 +189,11 @@ export function generateWarehouseScenarios(input: {
           if (arm) {
             assignments.push({ slot: "picking" as SlotId, solutionId: arm });
             parts.push("роборуки");
-            flow.push("Роборуки собирают заказы: товар приходит к ним по конвейеру из хранения, отобранное уходит к воротам отгрузки.");
+            flow.push(
+              transport?.id.startsWith("shuttle")
+                ? "Роборуки на станции отбора: погрузчик и AMR привозят паллету со стеллажа и ставят кучкой у руки, рука перекладывает коробки на ленту, лента уходит в зону упаковки."
+                : "Роборуки на станции отбора: погрузчик привозит паллету со стеллажа и ставит кучкой у руки, рука перекладывает коробки на ленту, лента уходит в зону упаковки.",
+            );
           }
           if (withSorter && sorter) {
             assignments.push({ slot: "sorting", solutionId: sorter });
@@ -194,30 +212,6 @@ export function generateWarehouseScenarios(input: {
       }
     }
   }
-  // Рекомендуемая схема: погрузчик снимает груз с фуры и ставит на кольцевой
-  // конвейер, роборука перекладывает с конвейера на AMR (они ждут в очереди),
-  // AMR везёт к стеллажам, погрузчик ставит в ячейку. Отгрузка — погрузчики + AMR.
-  const amr = topOf("amr", 1)[0];
-  const lifter0 = lifters[0];
-  const recommended =
-    conveyor && lifter0 && amr && arms[0]
-      ? evaluate(
-          "Конвейер, роборуки и AMR",
-          [
-            "Погрузчик снимает груз с фуры и ставит на кольцевой конвейер, роборука перекладывает его на AMR, AMR везёт к стеллажам, погрузчик ставит в ячейку.",
-            "На отгрузке погрузчик ставит паллету на AMR, у ворот другой погрузчик грузит её в фуру.",
-          ],
-          [
-            { slot: "inbound", solutionId: conveyor },
-            { slot: "inbound", solutionId: lifter0 },
-            { slot: "inbound", solutionId: amr },
-            { slot: "outbound", solutionId: lifter0 },
-            { slot: "outbound", solutionId: amr },
-            { slot: "picking", solutionId: arms[0] },
-          ],
-        )
-      : null;
-  if (recommended) candidates.push(recommended);
   if (!candidates.length) return [];
 
   // Отбор вариантов с причиной. Окупаемые — с положительной экономикой за горизонт.
@@ -232,6 +226,16 @@ export function generateWarehouseScenarios(input: {
     entry.highlights.push(highlight);
     chosen.set(candidate.key, entry);
   };
+  // Рекомендуем — не фиксированный состав, а лучший под данные этого склада:
+  // окупаемый, с роботами на двух и более участках, где ни одна группа роботов не
+  // простаивает (загрузка каждой не ниже половины), и с наибольшей экономией с
+  // поправкой на загрузку парка.
+  const loaded = (min: number) => pool.filter((c) => c.slots >= 2 && c.minLoad >= min);
+  const eligible = [loaded(0.5), loaded(0.35), pool].find((list) => list.length) ?? pool;
+  const recommended = pickBy(eligible, (a, b) => {
+    const score = (c: Candidate) => c.savingMln * (0.5 + 0.5 * c.avgLoad);
+    return score(a) > score(b) || (score(a) === score(b) && a.slots > b.slots);
+  });
   const topSaving = pickBy(pool, (a, b) => a.savingMln > b.savingMln);
   mark(topSaving, "Больше всего экономии");
   mark(
@@ -253,10 +257,17 @@ export function generateWarehouseScenarios(input: {
         c.savingMln > 0
           ? ""
           : `За ${c.horizonYears} ${yearsUnit(c.horizonYears)} не окупается: роботы дороже замещаемого труда на ${fmt(-c.savingMln)} млн ₽.`;
+      const pct = (x: number) => Math.round(x * 100);
+      const load =
+        c === recommended
+          ? c.minLoad === c.maxLoad
+            ? `Подобран под ваш склад: роботы загружены на ${pct(c.minLoad)}%.`
+            : `Подобран под ваш склад: роботы загружены на ${pct(c.minLoad)}–${pct(c.maxLoad)}%, лишних нет.`
+          : "";
       return {
         id: `v${i + 1}`,
         title: c.title,
-        description: [...c.flow, verdict].filter(Boolean).join(" "),
+        description: [load, ...c.flow, verdict].filter(Boolean).join(" "),
         assignments: c.assignments,
         solutionIds: [...new Set(c.assignments.map((a) => a.solutionId))],
         capexMln: c.capexMln,
