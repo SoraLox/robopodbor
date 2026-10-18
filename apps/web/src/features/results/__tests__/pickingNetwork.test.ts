@@ -57,7 +57,7 @@ describe('сеть участка отбора', () => {
 
 describe('участок отбора на общих лентах (рука без своих лент)', () => {
   it('рука снимает коробку с подачи и ставит на сборный конвейер — коробки доезжают до ворот', async () => {
-    const { ARM_REACH } = await import('@/upstream/simulation/arms/inboundStation.js');
+    const { ARM_REACH } = await import('@/upstream/simulation/arms/armConstants.js');
     const { createPickingLine } = await import('@/upstream/simulation/arms/pickingLine.js');
     const shape = withStandardRacks(buildDefaultShape() as never) as never;
     const layout = computeLayout(shape, ['arm', 'loader'], 1) as never as { armZone: object; gates: Array<{ id: number }> };

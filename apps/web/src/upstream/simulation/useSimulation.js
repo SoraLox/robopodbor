@@ -14,9 +14,9 @@ import { makePickArmRig, pickArmModel } from "./robots/pickArmRobot.js";
 import { createLoaderSystem } from "./loaders/loaderSystem.js";
 import { createCustomLoaderFleet } from "./loaders/customLoaderFleet.js";
 import { blockedNav, createShuttleFleet, planShuttleBays } from "./loaders/shuttleFleet.js";
-import { ARM_REACH, createInboundStation, planInboundStation, stationObstacles } from "./arms/inboundStation.js";
+import { ARM_REACH } from "./arms/armConstants.js";
+import { pickStationObstacles, planPickStation } from "./arms/pickStation.js";
 import { createPickingLine } from "./arms/pickingLine.js";
-import { createCargoFactory } from "./loaders/cargo.js";
 import { createTraffic } from "./loaders/driver.js";
 import { createWarehouseOps } from "./ops/warehouseOps.js";
 import { makeTruck } from "./robots/truckRobot.js";
@@ -299,19 +299,21 @@ export function useSimulation(cfg) {
             return { link, gateIds, gates, direction, lines };
           })
         : [];
-      // Рекомендуемая схема приёмки: конвейер + транспортировщики на приёмке и роборуки —
-      // станция у ворот (arms/inboundStation.js) вместо линий от ворот и участка отбора.
-      const inboundPlan = linkPlans.find((plan) => plan.link.slot === "inbound");
+      // Роборуки при диспетчере склада — станция отбора у глухой стены
+      // (arms/pickStation.js): склад привозит паллету кучкой к руке, рука
+      // перекладывает коробки на ленту, лента уходит в проём в стене.
+      const usesCube = transportLinks?.some((l) => l.carriers.some((c) => c.model === "storagecube"));
       const wantStation =
-        inboundPlan?.link.conveyor &&
-        inboundPlan.link.carriers.some((c) => c.model === "transporter" && c.count > 0) &&
+        transportLinks &&
+        index === 0 &&
+        !usesCube &&
         useArm &&
         armCount > 0 &&
         armType !== "stacker" &&
         modelState === "ready" &&
         pickArmModel.isReady();
-      const stationPlan = wantStation ? planInboundStation({ nav: blockedNav(shape, []), gates: inboundPlan.gates, armCount }) : null;
-      if (stationPlan) inboundPlan.lines = [];
+      const stationNav = wantStation ? blockedNav(shape, linkPlans.flatMap((plan) => plan.lines.map(lineRect))) : null;
+      const stationPlan = wantStation ? planPickStation({ nav: stationNav, shape, gates: layout.gates, armCount, toward: { x: Math.sin(st.cameraState.theta), z: Math.cos(st.cameraState.theta) } }) : null;
       const armSlots =
         !stationPlan && useArm && armCount > 0 && armType !== "stacker" ? computeArmSlots(layout.armZone, armCount) : null;
       // Рука пользователя загружена — участок отбора на общих лентах (без своих лент у руки).
@@ -336,7 +338,7 @@ export function useSimulation(cfg) {
       const mobileBlocked = [
         ...pickingAvoid,
         ...linkPlans.flatMap((plan) => plan.lines.map(lineRect)),
-        ...(stationPlan ? stationObstacles(stationPlan) : []),
+        ...(stationPlan ? pickStationObstacles(stationPlan, stationNav) : []),
       ];
       const traffic = createTraffic();
 
@@ -352,7 +354,6 @@ export function useSimulation(cfg) {
           energyProfile: energyProfiles.sorter ?? energyProfiles.arm,
         });
       }
-      const usesCube = transportLinks?.some((l) => l.carriers.some((c) => c.model === "storagecube"));
       if (transportLinks && index === 0 && modelState === "ready" && !usesCube) {
         // Диспетчер склада (ops/warehouseOps.js): каждая паллета — задание с
         // маршрутом; исполнители (погрузчики, AMR, руки станции) работают по заданиям.
@@ -369,7 +370,7 @@ export function useSimulation(cfg) {
                   blockedRects: mobileBlocked,
                   gatePoint: { x: mid.worldCenter.x - mid.normal[0] * 6, z: mid.worldCenter.z - mid.normal[1] * 6 },
                   routeUnits: link.effectiveRouteM / Math.max(1e-6, chunkGrid.metersPerUnit),
-                  avoid: stationPlan ? [...stationPlan.holds, ...stationPlan.arms.map((a) => a.park)] : [],
+                  avoid: [],
                 })
               : null;
             return {
@@ -378,7 +379,6 @@ export function useSimulation(cfg) {
               forklifts: lifts.length ? { ...lifts[0], count: sum(lifts) } : null,
               amrs: haulers.length ? { ...haulers[0], count: sum(haulers) } : null,
               conveyor: link.conveyor && lines.length ? { lines } : null,
-              station: link.slot === "inbound" && stationPlan ? { plan: stationPlan, armProd, energyProfile: energyProfiles.arm } : null,
               bays,
             };
           });
@@ -386,6 +386,7 @@ export function useSimulation(cfg) {
           group: level.loaderGroup,
           armGroup: level.armGroup,
           racks: level.racks,
+          picking: stationPlan ? { plan: stationPlan, armProd, energyProfile: energyProfiles.arm } : null,
           shape,
           metersPerUnit: chunkGrid.metersPerUnit,
           blockedRects: mobileBlocked,
@@ -463,62 +464,6 @@ export function useSimulation(cfg) {
             traffic,
           });
           const transporters = link.carriers.filter((c) => c.model === "transporter" && c.count > 0);
-          if (link.slot === "inbound" && stationPlan) {
-            // Станция: погрузчики от фур ставят груз на карусель, руки — с карусели на
-            // транспортировщиков, те везут к стеллажам, погрузчики ставят в стеллаж.
-            const lifts = link.carriers.filter((c) => c.model !== "transporter" && c.model !== "storagecube" && c.count > 0);
-            const lift = lifts[0] ?? { ...transporters[0], model: undefined, speedMps: 2, capacityKg: 1000 };
-            const liftTotal = lifts.reduce((sum, c) => sum + c.count, 0);
-            const rackBays = { b: stationPlan.rackBay };
-            if (rackBays) {
-              const probe = createCargoFactory(loader.cargo);
-              const itemHeight = probe.unitHeight;
-              probe.dispose();
-              const shuttle = createShuttleFleet({
-                group: level.loaderGroup,
-                shape,
-                bays: { loads: stationPlan.arms.map((a) => a.park), holds: stationPlan.holds, b: rackBays.b },
-                count: transporters.reduce((sum, c) => sum + c.count, 0),
-                direction: "in",
-                speedMps: transporters[0].speedMps,
-                metersPerUnit: chunkGrid.metersPerUnit,
-                cargo: loader.cargo,
-                energyProfile: transporters[0].energyProfile,
-                traffic,
-                blockedRects: mobileBlocked,
-                robotFactory: loaderFactoryOf("transporter"),
-              });
-              level.linkFleets.push({ kind: "shuttle", fleet: shuttle });
-              level.armFleet = createInboundStation({
-                group: level.armGroup,
-                plan: stationPlan,
-                beltTexture: st.beltTexture,
-                rigFactory: makePickArmRig,
-                opsPerMinute: armProd,
-                energyProfile: energyProfiles.arm,
-                itemHeight,
-                loadBays: shuttle.loadBays,
-              });
-              const gateSide = Math.max(1, Math.ceil(liftTotal / 2));
-              const rackSide = Math.max(1, liftTotal - gateSide);
-              level.linkFleets.push({
-                kind: "loader",
-                fleet: createCustomLoaderFleet({ ...loaderParams(lift), count: gateSide, handoffs: null, storageHub: level.armFleet.drops, showTrucks: true }),
-              });
-              level.linkFleets.push({
-                kind: "loader",
-                fleet: createCustomLoaderFleet({
-                  ...loaderParams(lift),
-                  count: rackSide,
-                  gateIds: [gates[0].id],
-                  handoffs: { [gates[0].id]: shuttle.bayB },
-                  rackNear: shuttle.bayB.park,
-                  showTrucks: false,
-                }),
-              });
-              continue;
-            }
-          }
           const forklifts = link.carriers.filter((c) => c.model !== "transporter" && c.model !== "storagecube" && c.count > 0);
           const cubes = link.carriers.filter((c) => c.model === "storagecube" && c.count > 0);
           for (const carrier of cubes) {

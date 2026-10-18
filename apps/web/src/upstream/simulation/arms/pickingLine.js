@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { createBeltPath, BELT_TOP } from "../conveyors/beltPath.js";
 import { createArmUnit } from "./armUnit.js";
-import { ARM_REACH, ARM_SCALE } from "./inboundStation.js";
+import { ARM_REACH, ARM_SCALE } from "./armConstants.js";
 import { activePalette } from "../studioLook.js";
 
 // Участок отбора с роборуками без своих лент (pick_arm.glb): по одну сторону

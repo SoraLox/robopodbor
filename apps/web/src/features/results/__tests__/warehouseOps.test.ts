@@ -5,7 +5,7 @@ import { standardLayoutShape } from '@/features/objects/layout/warehouseLayout';
 import { computeLayout, linkGatesOf } from '@/upstream/simulation/layout.js';
 import { blockedNav } from '@/upstream/simulation/loaders/shuttleFleet.js';
 import { cellOfPoint, makeNavGrid } from '@/upstream/simulation/loaders/gridPath.js';
-import { planInboundStation, stationObstacles } from '@/upstream/simulation/arms/inboundStation.js';
+import { pickStationObstacles, planPickStation } from '@/upstream/simulation/arms/pickStation.js';
 import { createWarehouseOps } from '@/upstream/simulation/ops/warehouseOps.js';
 
 type Gate = { id: number; worldCenter: { x: number; z: number }; normal: number[] };
@@ -25,8 +25,9 @@ function scene() {
   const split = linkGatesOf(layout as never) as { inbound: number[]; outbound: number[] };
   const inGates = layout.gates.filter((g) => split.inbound.includes(g.id));
   const outGates = layout.gates.filter((g) => split.outbound.includes(g.id));
-  const plan = planInboundStation({ nav: blockedNav(shape, []), gates: inGates, armCount: 4 })!;
-  const blocked = stationObstacles(plan);
+  const nav = blockedNav(shape, []);
+  const plan = planPickStation({ nav, shape, gates: layout.gates, armCount: 3 })!;
+  const blocked = pickStationObstacles(plan, nav);
   return { shape, plan, blocked, inGates, outGates };
 }
 
@@ -59,7 +60,7 @@ function runHour(ops: Ops, shape: never) {
     }
   }
   const snap = ops.snapshot();
-  console.log('приёмка', snap.doneIn, 'отгрузка', snap.doneOut, 'в работе', snap.inFlight, 'руки', ops.getOpsDone(), { minGap, inRack, overlaps });
+  console.log('приёмка', snap.doneIn, 'отгрузка', snap.doneOut, 'отбор', snap.donePick, 'коробок', snap.cartons, 'в работе', snap.inFlight, { minGap, inRack, overlaps });
   console.log('загрузка', ops.bottleneck().map((g) => `${g.label} ${Math.round(g.load * 100)}%`).join('; '));
   return { snap, minGap, inRack, overlaps };
 }
@@ -86,19 +87,24 @@ describe('диспетчер склада', () => {
     factories,
   });
 
-  it('станция приёмки и отгрузка через AMR: маршруты расписаны, роботы не встречаются', () => {
+  it('приёмка и отгрузка через AMR, отбор роборуками: маршруты расписаны, роботы не встречаются', () => {
     const { shape, plan, blocked, inGates, outGates } = scene();
     const ops = createWarehouseOps({
       ...base(shape, blocked),
       links: [
-        { slot: 'inbound', gates: inGates, forklifts, amrs, station: { plan, armProd: 6, energyProfile: profile } },
+        { slot: 'inbound', gates: inGates, forklifts, amrs },
         { slot: 'outbound', gates: outGates, forklifts, amrs },
       ],
+      picking: { plan, armProd: 6, energyProfile: profile },
     });
     const { snap, minGap, inRack, overlaps } = runHour(ops, shape);
     expect(snap.doneIn).toBeGreaterThan(30);
     expect(snap.doneOut).toBeGreaterThan(15);
-    expect(ops.getOpsDone()).toBeGreaterThanOrEqual(snap.doneIn);
+    // Руки разбирают кучки: паллеты приезжают, коробки уходят по ленте в стену.
+    expect(snap.donePick).toBeGreaterThan(3);
+    expect(snap.cartons).toBeGreaterThan(30);
+    // Общие пулы: никто не простаивает больше половины времени.
+    for (const g of ops.bottleneck()) expect(g.load).toBeGreaterThan(0.5);
     expect(inRack).toBe(0);
     expect(overlaps).toBe(0);
     expect(minGap).toBeGreaterThan(2);

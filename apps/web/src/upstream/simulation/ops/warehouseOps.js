@@ -4,7 +4,8 @@ import { collectStorage } from "../loaders/customLoaderFleet.js";
 import { createCargoFactory } from "../loaders/cargo.js";
 import { createBeltPath, BELT_TOP } from "../conveyors/beltPath.js";
 import { createArmUnit } from "../arms/armUnit.js";
-import { ARM_REACH, ARM_SCALE, DECK_HEIGHT } from "../arms/inboundStation.js";
+import { ARM_SCALE, DECK_HEIGHT } from "../arms/armConstants.js";
+import { createPickStation } from "../arms/pickStation.js";
 import { createTruckYard } from "./trucks.js";
 import { createForkliftAgent } from "./forkliftAgent.js";
 import { createAmrAgent } from "./amrAgent.js";
@@ -17,11 +18,14 @@ import { createTweens } from "./tweens.js";
 //   приёмка «погрузчики»:        горка у ворот → погрузчик → ячейка
 //   приёмка «конвейер»:          горка → погрузчик → лента → погрузчик → ячейка
 //   приёмка «погрузчики + AMR»:  горка → погрузчик → AMR → погрузчик → ячейка
-//   приёмка «станция»:           горка → погрузчик → карусель → рука → AMR → погрузчик → ячейка
 //   отгрузка — обратно: из ячейки в горку у ворот, из горки груз уходит в фуру.
+//   отбор (роборуки):            ячейка → погрузчик → AMR → погрузчик → кучка у руки
+//                                → рука по коробке на ленту → лента в проём в стене.
 //
 // Груз «вытягивают»: задание создаётся, только когда за ним закреплены исполнители
-// следующих шагов (рука, AMR), ячейка и точки передачи. Маршруты строит
+// следующих шагов (AMR, кучка руки), ячейка и точки передачи. Пулы исполнителей
+// общие на все связи: свободный робот берёт работу там, где она есть, — пока у
+// одной связи очередь, у другой никто не простаивает. Маршруты строит
 // планировщик с бронированием (planner.js): каждый путь прокладывается с учётом
 // уже забронированных путей и стоянок остальных роботов, поэтому роботы едут
 // по расписанию и не встречаются.
@@ -42,7 +46,7 @@ const unitVec = (from, to) => {
   return { x: dx / l, z: dz / l };
 };
 
-export function createWarehouseOps({ group, armGroup, racks = null, shape, metersPerUnit, blockedRects, cargo, cargoWeightKg, truckPayload, beltTexture, links, factories }) {
+export function createWarehouseOps({ group, armGroup, racks = null, picking = null, shape, metersPerUnit, blockedRects, cargo, cargoWeightKg, truckPayload, beltTexture, links, factories }) {
   const nav = blockedNav(shape, blockedRects);
   let simSeconds = 0;
   const clock = () => simSeconds;
@@ -123,9 +127,9 @@ export function createWarehouseOps({ group, armGroup, racks = null, shape, meter
 
   const reservedPoints = [];
   for (const l of links) {
-    if (l.station) reservedPoints.push(...l.station.plan.arms.map((a) => a.park), ...l.station.plan.drops.map((d) => d.stand));
   }
   for (const y of yards) for (const b of y.bays) for (const s of b.sideSpots.values()) reservedPoints.push(s.pose);
+  if (picking) for (const a of picking.plan.arms) reservedPoints.push(a.fork, a.amr);
 
   // ─── Ячейки ─────────────────────────────────────────────────────────────
   const tiers = Math.max(1, Math.round(shape.rackTiers ?? 3));
@@ -261,12 +265,14 @@ export function createWarehouseOps({ group, armGroup, racks = null, shape, meter
   let serial = 0;
   let doneIn = 0;
   let doneOut = 0;
+  let donePick = 0;
   let agentSerial = 0;
   const forklifts = [];
   const amrs = [];
-  const armUnits = [];
   const belts = [];
   const linkRuns = [];
+  // Общие пулы: погрузчики «от ворот до ячейки», у ворот, у стеллажей; AMR.
+  const pools = { direct: [], gate: [], rack: [], amr: [] };
 
   const makeForklifts = (spec, count, anchor, prefix) =>
     Array.from({ length: Math.max(1, count) }, () => {
@@ -314,6 +320,7 @@ export function createWarehouseOps({ group, armGroup, racks = null, shape, meter
     pool
       .filter((f) => f.isIdle())
       .sort((a, b) => Math.hypot(a.agent.pos.x - point.x, a.agent.pos.z - point.z) - Math.hypot(b.agent.pos.x - point.x, b.agent.pos.z - point.z))[0] ?? null;
+  const anyForklifts = () => [...pools.direct, ...pools.gate, ...pools.rack];
 
   const newJob = (kind, run) => {
     serial += 1;
@@ -324,6 +331,7 @@ export function createWarehouseOps({ group, armGroup, racks = null, shape, meter
   const finish = (job) => {
     jobs.splice(jobs.indexOf(job), 1);
     if (job.kind === "in") doneIn += 1;
+    else if (job.kind === "pick") donePick += 1;
     else doneOut += 1;
   };
 
@@ -368,6 +376,25 @@ export function createWarehouseOps({ group, armGroup, racks = null, shape, meter
       return true;
     },
   });
+  // Погрузчик снимает паллету с AMR на стоянке.
+  const amrTake = (amr, spot, label, onTaken = () => {}) => ({
+    spot,
+    lift: DECK_HEIGHT,
+    label,
+    waitLabel: `${amr.agent.name} с грузом`,
+    take: () => {
+      if (!amr.waitingUnload()) return null;
+      onTaken();
+      return amr.unload();
+    },
+  });
+  const amrPut = (amr, spot, label) => ({
+    spot,
+    lift: DECK_HEIGHT,
+    label,
+    waitLabel: `${amr.agent.name} на стоянке`,
+    put: (unit) => (amr.waitingLoad() ? amr.load(unit) : false),
+  });
   const beltNext = (job, lane, drop, onDone) => ({
     jobLabel: job.label,
     pick: {
@@ -385,6 +412,7 @@ export function createWarehouseOps({ group, armGroup, racks = null, shape, meter
     onDone,
   });
   const beltDrop = (job, lane) => ({ spot: lane.inSpot, lift: BELT_TOP, label: "лента", waitLabel: "место на ленте", put: (unit) => lane.belt.put(unit, 0, { job }) });
+  const amrOnTheWay = (amr) => () => amr.agent.state === "toUnload" || amr.agent.state === "waitUnload";
 
   // ─── Связи ──────────────────────────────────────────────────────────────
   links.forEach((link, li) => {
@@ -394,16 +422,15 @@ export function createWarehouseOps({ group, armGroup, racks = null, shape, meter
     const inside = { x: gateAnchor.x - link.gates[0].normal[0] * 18, z: gateAnchor.z - link.gates[0].normal[1] * 18 };
     const n = link.forklifts?.count ?? 0;
     const fSpec = link.forklifts ?? { speedMps: 2, capacityKg: 1000 };
-    const prefix = link.forklifts ? (inbound ? "П" : "О") : "Оператор ";
+    const prefix = link.forklifts ? "П" : "Оператор ";
     let scheme = "direct";
-    if (link.station && inbound) scheme = "station";
-    else if (link.amrs) scheme = "shuttle";
+    if (link.amrs) scheme = "shuttle";
     else if (link.conveyor?.lines.length) scheme = "belt";
     const run = { link, scheme, yard, inbound };
     linkRuns.push(run);
 
     if (scheme === "direct") {
-      run.pool = makeForklifts(fSpec, n, inside, prefix);
+      pools.direct.push(...makeForklifts(fSpec, n, inside, prefix));
       return;
     }
     // Погрузчики делятся: у ворот (горка ↔ лента/AMR) и у стеллажей (лента/AMR ↔ ячейка).
@@ -411,23 +438,32 @@ export function createWarehouseOps({ group, armGroup, racks = null, shape, meter
     const rackN = Math.max(1, n - gateN);
 
     if (scheme === "shuttle") {
-      // У каждых ворот — своя стоянка AMR за горкой; погрузчик между горкой и AMR,
-      // вилами к платформе.
+      // У каждых ворот — по две стоянки AMR за горкой (пока один AMR ждёт погрузчика,
+      // второй уже едет); погрузчик — между горкой и AMR, вилами к платформе.
       run.gateBays = new Map(
         link.gates.map((g) => {
           const inward = { x: -g.normal[0], z: -g.normal[1] };
-          const amrSpot = spotAt({ x: g.worldCenter.x + inward.x * 24, z: g.worldCenter.z + inward.z * 24, heading: Math.atan2(inward.z, -inward.x) });
-          const park = cellCenter(nav, amrSpot.gx, amrSpot.gz);
-          amrSpot.pose = { x: park.x, z: park.z, heading: amrSpot.pose.heading };
-          const standCell = cellOfPoint(nav, { x: park.x - inward.x * nav.cellSize, z: park.z - inward.z * nav.cellSize });
-          const liftSpot = passable(standCell.gx, standCell.gz) ? forkSpot(park, { x: park.x - inward.x, z: park.z - inward.z }, standCell) : forkSpot(park, { x: park.x - inward.x, z: park.z - inward.z });
-          reservedPoints.push(park, liftSpot.pose);
-          return [g.id, { job: null, label: `стоянка у ворот ${g.id + 1}`, park, amrSpot, liftSpot }];
+          const along = { x: Math.abs(g.normal[1]), z: Math.abs(g.normal[0]) };
+          const bays = [];
+          for (const side of [0, 1, -1]) {
+            if (bays.length >= 2) break;
+            const p = { x: g.worldCenter.x + inward.x * 24 + along.x * side * nav.cellSize, z: g.worldCenter.z + inward.z * 24 + along.z * side * nav.cellSize };
+            const amrSpot = spotAt({ ...p, heading: Math.atan2(inward.z, -inward.x) });
+            if (bays.some((b) => b.amrSpot.gx === amrSpot.gx && b.amrSpot.gz === amrSpot.gz)) continue;
+            const park = cellCenter(nav, amrSpot.gx, amrSpot.gz);
+            amrSpot.pose = { x: park.x, z: park.z, heading: amrSpot.pose.heading };
+            const standCell = cellOfPoint(nav, { x: park.x - inward.x * nav.cellSize, z: park.z - inward.z * nav.cellSize });
+            if (!passable(standCell.gx, standCell.gz)) continue;
+            const liftSpot = forkSpot(park, { x: park.x - inward.x, z: park.z - inward.z }, standCell);
+            reservedPoints.push(park, liftSpot.pose);
+            bays.push({ job: null, label: `стоянка у ворот ${g.id + 1}`, park, amrSpot, liftSpot });
+          }
+          return [g.id, bays];
         }),
       );
     }
 
-    run.gatePool = makeForklifts(fSpec, gateN, inside, prefix);
+    pools.gate.push(...makeForklifts(fSpec, gateN, inside, prefix));
 
     if (scheme === "belt") {
       run.belts = link.conveyor.lines.map((line) => {
@@ -439,82 +475,104 @@ export function createWarehouseOps({ group, armGroup, racks = null, shape, meter
         const standOf = (p) => forkSpot(p, { x: p.x - d.z * 6, z: p.z + d.x * 6 });
         return { belt, inSpot: standOf(points[0]), outSpot: standOf(points[1]), capacity: Math.max(2, Math.floor(belt.total / 3.2) - 1), load: 0 };
       });
-      run.rackPool = makeForklifts(fSpec, rackN, run.belts[0].outSpot.pose, prefix);
+      pools.rack.push(...makeForklifts(fSpec, rackN, run.belts[0].outSpot.pose, prefix));
       return;
     }
 
-    if (scheme === "shuttle") {
-      run.amrs = makeAmrs(link.amrs, link.amrs.count, inside);
-      run.rackPool = makeForklifts(fSpec, rackN, rackBays[0]?.park ?? inside, prefix);
-      return;
-    }
+    pools.amr.push(...makeAmrs(link.amrs, link.amrs.count, inside));
+    pools.rack.push(...makeForklifts(fSpec, rackN, rackBays[0]?.park ?? inside, prefix));
+  });
 
-    // Станция приёмки: карусель, руки и стоянки AMR под руками.
-    const plan = link.station.plan;
-    run.amrs = makeAmrs(link.amrs, link.amrs.count, plan.arms[0].park);
-    run.rackPool = makeForklifts(fSpec, rackN, rackBays[0]?.park ?? plan.rackBay.park, prefix);
-    const carousel = createBeltPath({ group: armGroup, points: plan.loop, closed: true, speed: 1.4, width: 3, spacing: 3.4, beltTexture });
-    belts.push(carousel);
-    run.carousel = carousel;
-    run.drops = plan.drops.map((drop) => ({ d: carousel.project(drop.at), spot: forkSpot(drop.at, drop.stand), gateId: drop.gateId }));
-    run.arms = plan.arms.map((spot, k) => {
-      const rig = factories.arm();
-      rig.group.position.set(spot.base.x, 0, spot.base.z);
-      rig.group.scale.setScalar(ARM_SCALE);
-      armGroup.add(rig.group);
-      // AMR встаёт ровно туда, куда рука опускает груз, вдоль карусели.
-      const n2 = plan.dirToPark;
-      const amrSpot = spotAt({ x: spot.park.x, z: spot.park.z, heading: Math.atan2(-n2.z, n2.x) });
-      const arm = { id: k + 1, job: null, amrSpot, label: `рука ${k + 1}`, rig };
-      let unit = null;
-      // Рука останавливает только «свой» груз — за которым её закрепили.
-      const pick = carousel.addPickPoint(carousel.project(spot.pick), (item) => item.meta?.job === arm.job && (unit?.readyToPick() ?? false));
-      unit = createArmUnit({
-        rig,
-        scale: ARM_SCALE,
-        tweens,
-        from: { dir: plan.dirToBelt, radius: ARM_REACH, height: () => BELT_TOP + cargoFactory.unitHeight, pick },
-        to: {
-          dir: plan.dirToPark,
-          radius: ARM_REACH,
-          height: () => DECK_HEIGHT + cargoFactory.unitHeight,
-          // Ставит, только когда AMR этого задания пустой стоит под рукой.
-          ready: () => Boolean(arm.job?.amr?.waitingLoad()),
-          put: (load) => {
-            const job = arm.job;
-            if (!job?.amr.load(load)) return false;
-            arm.job = null;
-            return true;
-          },
-        },
-        opsPerMinute: link.station.armProd,
-        energyProfile: link.station.energyProfile,
-        itemHeight: cargoFactory.unitHeight,
-      });
-      armUnits.push(unit);
-      return arm;
+  // ─── Станция отбора роборуками ──────────────────────────────────────────
+  let station = null;
+  if (picking) {
+    station = createPickStation({
+      group: armGroup,
+      plan: picking.plan,
+      beltTexture,
+      rigFactory: factories.arm,
+      armScale: ARM_SCALE,
+      createArmUnit,
+      tweens,
+      cargoFactory,
+      opsPerMinute: picking.armProd,
+      energyProfile: picking.energyProfile,
     });
+    const along = picking.plan.along;
+    for (const arm of station.arms) {
+      const { heap, fork, amr } = arm.spot;
+      const forkCell = { gx: fork.gx, gz: fork.gz };
+      arm.heapSpot = forkSpot(heap, fork, forkCell);
+      arm.amrTakeSpot = forkSpot(amr, fork, forkCell);
+      arm.amrSpot = { gx: amr.gx, gz: amr.gz, pose: { x: amr.x, z: amr.z, heading: Math.atan2(along.x, along.z) } };
+    }
+  }
+  const heapDrop = (arm) => ({
+    spot: arm.heapSpot,
+    lift: 0.05,
+    label: `кучка у руки ${arm.id}`,
+    put: (unit) => station.placeHeap(arm, unit),
   });
 
   // ─── Диспетчер: запуск заданий и раздача шагов ──────────────────────────
   function dispatch() {
+    if (station) dispatchPick();
     for (const run of linkRuns) {
       if (run.inbound) dispatchIn(run);
       else dispatchOut(run);
-      // Погрузчики второго плеча — для заданий, которые уже в пути.
-      for (const job of jobs) {
-        if (job.run !== run || !job.next || job.nextAssigned || !job.nextReady()) continue;
-        const f = nearestIdle(job.nextPool, job.next.pick.spot.pose);
-        if (!f) continue;
-        job.nextAssigned = true;
-        f.assign(job.next);
+    }
+    // Вторые плечи заданий, которые уже в пути.
+    for (const job of jobs) {
+      if (!job.next || job.nextAssigned || !job.nextReady()) continue;
+      const f = nearestIdle(job.nextPool, job.next.pick.spot.pose);
+      if (!f) continue;
+      job.nextAssigned = true;
+      f.assign(job.next);
+    }
+  }
+
+  // Отбор: свободной кучке руки — паллету со стеллажа.
+  function dispatchPick() {
+    for (const arm of station.arms) {
+      if (arm.heap.reserved || arm.heap.unit) continue;
+      if (pools.amr.length && pools.rack.length) {
+        const amr = pools.amr.find((a) => a.isIdle());
+        const picked = amr && pickCellWithBay(arm.spot.fork, true);
+        const f = picked && nearestIdle(pools.rack, picked.cell.spot.pose);
+        if (!f) return;
+        const { cell, bay: rackBay } = picked;
+        const job = newJob("pick", null);
+        cell.reserved = true;
+        rackBay.job = job;
+        arm.heap.reserved = true;
+        amr.assign({
+          jobLabel: job.label,
+          load: { spot: rackBay.amrSpot, label: rackBay.label, waitLabel: "погрузчик поставит груз" },
+          unload: { spot: arm.amrSpot, label: arm.label, waitLabel: "погрузчик снимет груз" },
+          onLoaded: () => {
+            rackBay.job = null;
+          },
+        });
+        f.assign({ jobLabel: job.label, pick: cellTake(cell), drop: amrPut(amr, rackBay.liftSpot, rackBay.label) });
+        job.next = { jobLabel: job.label, pick: amrTake(amr, arm.amrTakeSpot, arm.label), drop: heapDrop(arm), onDone: () => finish(job) };
+        job.nextPool = anyForklifts();
+        job.nextReady = amrOnTheWay(amr);
+        continue;
       }
+      // Без AMR — погрузчик везёт паллету со стеллажа прямо к руке.
+      const cell = pickCell(arm.spot.fork, true);
+      const f = cell && nearestIdle(anyForklifts(), cell.spot.pose);
+      if (!f) return;
+      const job = newJob("pick", null);
+      cell.reserved = true;
+      arm.heap.reserved = true;
+      f.assign({ jobLabel: job.label, pick: cellTake(cell), drop: heapDrop(arm), onDone: () => finish(job) });
     }
   }
 
   function dispatchIn(run) {
     const { yard } = run;
-    const pool = run.scheme === "direct" ? run.pool : run.gatePool;
+    const pool = run.scheme === "direct" ? pools.direct : pools.gate;
     if (!pool.some((f) => f.isIdle())) return;
 
     if (run.scheme === "direct") {
@@ -539,82 +597,56 @@ export function createWarehouseOps({ group, armGroup, racks = null, shape, meter
       lane.load += 1;
       f.assign({ jobLabel: job.label, pick: pileTake(yard, claim), drop: beltDrop(job, lane) });
       job.next = beltNext(job, lane, cellPut(cell), () => finish(job));
-      job.nextPool = run.rackPool;
+      job.nextPool = pools.rack;
       // Погрузчика у стеллажей зовём, когда паллета подъезжает к концу ленты.
       job.nextReady = () => lane.belt.items().some((i) => i.meta?.job === job && i.d > lane.belt.total - 12);
       return;
     }
 
-    // Нужен свободный AMR (для станции — и свободная рука).
-    const amr = run.amrs.find((a) => a.isIdle());
+    // Челнок: горка → погрузчик → AMR у ворот → AMR у прохода → погрузчик → ячейка.
+    const amr = pools.amr.find((a) => a.isIdle());
     if (!amr) return;
-    const arm = run.scheme === "station" ? run.arms.find((a) => !a.job) : null;
-    if (run.scheme === "station" && !arm) return;
-    const claimProbe = yard.bays.find((b) => b.slots.some((s) => s.unit && s.ready && !s.reserved));
-    if (!claimProbe) return;
-    const gateBay = run.scheme === "station" ? null : run.gateBays.get(claimProbe.gate.id);
-    if (gateBay?.job) return;
-    const picked = pickCellWithBay(arm ? arm.amrSpot.pose : gateBay.park, false);
+    const probe = yard.bays.find((b) => b.slots.some((s) => s.unit && s.ready && !s.reserved));
+    const gateBay = probe && run.gateBays.get(probe.gate.id)?.find((b) => !b.job);
+    if (!gateBay) return;
+    const picked = pickCellWithBay(gateBay.park, false);
     const claim = picked && yard.claimUnit();
     if (!claim) return;
     const f = nearestIdle(pool, claim.slot.spot.pose);
     const { cell, bay: rackBay } = picked;
     const job = newJob("in", run);
-    job.amr = amr;
     cell.reserved = true;
     rackBay.job = job;
-    if (gateBay) gateBay.job = job;
+    gateBay.job = job;
     amr.assign({
       jobLabel: job.label,
-      load: arm ? { spot: arm.amrSpot, label: arm.label, waitLabel: `${arm.label} поставит груз` } : { spot: gateBay.amrSpot, label: gateBay.label, waitLabel: "погрузчик поставит груз" },
+      load: { spot: gateBay.amrSpot, label: gateBay.label, waitLabel: "погрузчик поставит груз" },
       unload: { spot: rackBay.amrSpot, label: rackBay.label, waitLabel: "погрузчик снимет груз" },
       onLoaded: () => {
-        if (gateBay) gateBay.job = null;
+        gateBay.job = null;
       },
     });
-    if (arm) {
-      arm.job = job;
-      const drop = run.drops.find((d) => d.gateId === claim.bay.gate.id) ?? run.drops[0];
-      f.assign({
-        jobLabel: job.label,
-        pick: pileTake(yard, claim),
-        drop: { spot: drop.spot, lift: BELT_TOP, label: "карусель", waitLabel: "место на карусели", put: (unit) => run.carousel.put(unit, drop.d, { job }) },
-      });
-    } else {
-      f.assign({
-        jobLabel: job.label,
-        pick: pileTake(yard, claim),
-        drop: { spot: gateBay.liftSpot, lift: DECK_HEIGHT, label: gateBay.label, waitLabel: `${amr.agent.name} на стоянке`, put: (unit) => (amr.waitingLoad() ? amr.load(unit) : false) },
-      });
-    }
+    f.assign({ jobLabel: job.label, pick: pileTake(yard, claim), drop: amrPut(amr, gateBay.liftSpot, gateBay.label) });
     job.next = {
       jobLabel: job.label,
-      pick: {
-        spot: rackBay.liftSpot,
-        lift: DECK_HEIGHT,
-        label: rackBay.label,
-        waitLabel: `${amr.agent.name} с ${job.label}`,
-        take: () => {
-          if (!amr.waitingUnload()) return null;
-          rackBay.job = null;
-          return amr.unload();
-        },
-      },
+      pick: amrTake(amr, rackBay.liftSpot, rackBay.label, () => {
+        rackBay.job = null;
+      }),
       drop: cellPut(cell),
       onDone: () => finish(job),
     };
-    job.nextPool = run.rackPool;
+    job.nextPool = pools.rack;
     // Погрузчика у стеллажей зовём, когда AMR с паллетой уже едет к стоянке.
-    job.nextReady = () => amr.agent.state === "toUnload" || amr.agent.state === "waitUnload";
+    job.nextReady = amrOnTheWay(amr);
   }
 
   function dispatchOut(run) {
     const { yard } = run;
     if (run.scheme === "direct") {
-      const cell = run.pool.some((f) => f.isIdle()) && pickCell(run.link.gates[0].worldCenter, true);
+      const cell = pools.direct.some((f) => f.isIdle()) && pickCell(run.link.gates[0].worldCenter, true);
       const claim = cell && yard.claimSlot();
       if (!claim) return;
-      const f = nearestIdle(run.pool, cell.spot.pose);
+      const f = nearestIdle(pools.direct, cell.spot.pose);
       const job = newJob("out", run);
       cell.reserved = true;
       f.assign({ jobLabel: job.label, pick: cellTake(cell), drop: pilePut(yard, claim), onDone: () => finish(job) });
@@ -623,7 +655,7 @@ export function createWarehouseOps({ group, armGroup, racks = null, shape, meter
     if (run.scheme === "belt") {
       const lane = run.belts.filter((b) => b.load < b.capacity).sort((a, b) => a.load - b.load)[0];
       const cell = lane && pickCell(lane.inSpot.pose, true);
-      const f = cell && nearestIdle(run.rackPool, cell.spot.pose);
+      const f = cell && nearestIdle(pools.rack, cell.spot.pose);
       const claim = f && yard.claimSlot();
       if (!claim) return;
       const job = newJob("out", run);
@@ -631,22 +663,21 @@ export function createWarehouseOps({ group, armGroup, racks = null, shape, meter
       lane.load += 1;
       f.assign({ jobLabel: job.label, pick: cellTake(cell), drop: beltDrop(job, lane) });
       job.next = beltNext(job, lane, pilePut(yard, claim), () => finish(job));
-      job.nextPool = run.gatePool;
+      job.nextPool = pools.gate;
       job.nextReady = () => lane.belt.items().some((i) => i.meta?.job === job && i.d > lane.belt.total - 12);
       return;
     }
-    // Отгрузка через AMR: ячейка → AMR у прохода → AMR у ворот → горка у ворот.
+    // Челнок: ячейка → AMR у прохода → AMR у ворот → горка у ворот.
     const gate = yard.bays.find((b) => b.slots.some((s) => !s.unit && !s.reserved))?.gate;
-    const gateBay = gate && run.gateBays.get(gate.id);
-    if (!gateBay || gateBay.job) return;
-    const amr = run.amrs.find((a) => a.isIdle());
+    const gateBay = gate && run.gateBays.get(gate.id)?.find((b) => !b.job);
+    if (!gateBay) return;
+    const amr = pools.amr.find((a) => a.isIdle());
     const picked = amr && pickCellWithBay(gateBay.park, true);
-    const f = picked && nearestIdle(run.rackPool, picked.cell.spot.pose);
+    const f = picked && nearestIdle(pools.rack, picked.cell.spot.pose);
     const claim = f && yard.claimSlot();
     if (!claim) return;
     const { cell, bay: rackBay } = picked;
     const job = newJob("out", run);
-    job.amr = amr;
     cell.reserved = true;
     rackBay.job = job;
     gateBay.job = job;
@@ -658,29 +689,17 @@ export function createWarehouseOps({ group, armGroup, racks = null, shape, meter
         rackBay.job = null;
       },
     });
-    f.assign({
-      jobLabel: job.label,
-      pick: cellTake(cell),
-      drop: { spot: rackBay.liftSpot, lift: DECK_HEIGHT, label: rackBay.label, waitLabel: `${amr.agent.name} на стоянке`, put: (unit) => (amr.waitingLoad() ? amr.load(unit) : false) },
-    });
+    f.assign({ jobLabel: job.label, pick: cellTake(cell), drop: amrPut(amr, rackBay.liftSpot, rackBay.label) });
     job.next = {
       jobLabel: job.label,
-      pick: {
-        spot: gateBay.liftSpot,
-        lift: DECK_HEIGHT,
-        label: gateBay.label,
-        waitLabel: `${amr.agent.name} с ${job.label}`,
-        take: () => {
-          if (!amr.waitingUnload()) return null;
-          gateBay.job = null;
-          return amr.unload();
-        },
-      },
+      pick: amrTake(amr, gateBay.liftSpot, gateBay.label, () => {
+        gateBay.job = null;
+      }),
       drop: pilePut(yard, claim),
       onDone: () => finish(job),
     };
-    job.nextPool = run.gatePool;
-    job.nextReady = () => amr.agent.state === "toUnload" || amr.agent.state === "waitUnload";
+    job.nextPool = pools.gate;
+    job.nextReady = amrOnTheWay(amr);
   }
 
   // ─── Кадр ───────────────────────────────────────────────────────────────
@@ -689,32 +708,30 @@ export function createWarehouseOps({ group, armGroup, racks = null, shape, meter
     dispatch();
     for (const y of yards) y.step(dt);
     for (const b of belts) b.step(dt);
-    for (const a of armUnits) a.step(dt);
+    station?.step(dt);
     for (const f of forklifts) f.step(dt);
     for (const a of amrs) a.step(dt);
     tweens.step(dt);
   }
 
-  // Узкое место: группа исполнителей, занятая дольше всех.
+  // Загрузка групп исполнителей: узкое место — занятая дольше всех.
   function bottleneck() {
     const groups = [];
-    for (const run of linkRuns) {
-      const name = run.inbound ? "приёмка" : "отгрузка";
-      const add = (label, pool) => pool?.length && groups.push({ label: `${label} (${name})`, load: pool.reduce((s, x) => s + x.utilization(), 0) / pool.length });
-      add("погрузчики", run.pool);
-      add("погрузчики у ворот", run.gatePool);
-      add("погрузчики у стеллажей", run.rackPool);
-      add("AMR", run.amrs);
-    }
+    const add = (label, pool) => pool.length && groups.push({ label, load: pool.reduce((s, x) => s + x.utilization(), 0) / pool.length });
+    add("погрузчики", pools.direct);
+    add("погрузчики у ворот", pools.gate);
+    add("погрузчики у стеллажей", pools.rack);
+    add("AMR", pools.amr);
     groups.sort((a, b) => b.load - a.load);
     return groups;
   }
 
   function getStats() {
     const hours = simSeconds / 3600;
+    const done = doneIn + doneOut + donePick;
     return {
       phase: "mixed",
-      cycles: doneIn + doneOut,
+      cycles: done,
       storedKg: 0,
       fillPercent: Math.round((cells.filter((c) => c.stored).length / Math.max(1, cells.length)) * 100),
       dockUnits: 0,
@@ -723,10 +740,10 @@ export function createWarehouseOps({ group, armGroup, racks = null, shape, meter
       trucksIn: 0,
       trucksOut: 0,
       receivedKg: Math.round(doneIn * cargoWeightKg),
-      shippedKg: Math.round(doneOut * cargoWeightKg),
-      movedPerHour: hours > 0 ? Math.round((doneIn + doneOut) / hours) : 0,
+      shippedKg: Math.round((doneOut + donePick) * cargoWeightKg),
+      movedPerHour: hours > 0 ? Math.round(done / hours) : 0,
       receivedPerHour: hours > 0 ? Math.round(doneIn / hours) : 0,
-      shippedPerHour: hours > 0 ? Math.round(doneOut / hours) : 0,
+      shippedPerHour: hours > 0 ? Math.round((doneOut + donePick) / hours) : 0,
       avgRouteM: 0,
       busyLoaders: forklifts.filter((f) => !f.isIdle()).length + amrs.filter((a) => !a.isIdle()).length,
     };
@@ -739,17 +756,24 @@ export function createWarehouseOps({ group, armGroup, racks = null, shape, meter
     planner,
     agents: () => [...forklifts, ...amrs].map((x) => x.agent),
     // Задания в работе и что делают исполнители — для панели «Задания».
-    snapshot: () => ({ inFlight: jobs.length, doneIn, doneOut, agents: [...forklifts, ...amrs].map((x) => x.status()) }),
-    getOpsDone: () => armUnits.reduce((s, a) => s + a.getOps(), 0),
-    meters: [...forklifts.map((f) => f.agent.meter), ...amrs.map((a) => a.agent.meter), ...armUnits.map((a) => a.meter)],
-    obstacles: belts.flatMap((b) => b.obstacles),
-    armsShown: armUnits.length,
+    snapshot: () => ({
+      inFlight: jobs.length,
+      doneIn,
+      doneOut,
+      donePick,
+      cartons: station?.shipped() ?? 0,
+      agents: [...forklifts, ...amrs].map((x) => x.status()),
+    }),
+    getOpsDone: () => station?.getOps() ?? 0,
+    meters: [...forklifts.map((f) => f.agent.meter), ...amrs.map((a) => a.agent.meter), ...(station?.meters ?? [])],
+    obstacles: [...belts.flatMap((b) => b.obstacles), ...(station?.obstacles ?? [])],
+    armsShown: station?.arms.length ?? 0,
     dispose() {
       for (const f of forklifts) f.dispose();
       for (const a of amrs) a.dispose();
       for (const b of belts) b.dispose();
       for (const y of yards) y.dispose();
-      for (const run of linkRuns) for (const arm of run.arms ?? []) armGroup.remove(arm.rig.group);
+      station?.dispose();
       for (const cell of cells) cell.unit?.removeFromParent();
       for (const goods of hiddenGoods) goods.visible = true;
       cargoFactory.dispose();
