@@ -225,14 +225,14 @@ export function LayoutStep({ active }: { active: boolean }) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex min-h-0 flex-1 gap-6">
-        <div className="flex min-h-0 flex-1 items-start justify-center">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 sm:flex-row sm:gap-6">
+        <div className="flex min-h-[160px] min-w-0 flex-1 items-start justify-center sm:min-h-0">
           <canvas
             ref={canvasRef}
             width={draft.gridSize * PX}
             height={draft.gridSize * PX}
             aria-label="План склада: сетка для рисования контура, ворот и стеллажей"
-            className="aspect-square h-full max-h-full max-w-full cursor-crosshair touch-none rounded-[12px] border border-[#E5E5EA]"
+            className="max-h-full max-w-full cursor-crosshair touch-none rounded-[12px] border border-[#E5E5EA]"
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
@@ -240,7 +240,7 @@ export function LayoutStep({ active }: { active: boolean }) {
           />
         </div>
 
-        <div className="flex w-[300px] flex-none flex-col gap-3 overflow-y-auto">
+        <div className="flex max-h-[45%] min-w-0 flex-col gap-3 overflow-y-auto pr-2 sm:max-h-none sm:w-[300px] sm:flex-none">
           <p className="text-[12.5px] leading-snug text-[#6E6E73]">
             Контур — вся площадь склада из паспорта, {nf.format(areaM2)} м². Ворота ставьте на край контура.
           </p>

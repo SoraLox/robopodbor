@@ -286,7 +286,12 @@ export function WizardCard({
 
   return (
     <WizardCompanionContext.Provider value={companion}>
-    <div className="flex h-[calc(100dvh-3.5rem)] flex-col items-center justify-center overflow-x-hidden bg-white px-4 py-8">
+    {/*
+      overflow-clip, а не hidden: hidden-контейнер остаётся прокручиваемым, и focus()
+      на вкладке сдвигал его вбок к невидимому содержимому (неактивные шаги, закрытое
+      превью) — на узком экране карточка уезжала влево и обрезала заголовок.
+    */}
+    <div className="flex h-[calc(100dvh-3.5rem)] flex-col items-center justify-center overflow-x-clip bg-white px-4 py-8">
       <div className="flex w-full max-w-full items-stretch justify-center">
         <div
           className="relative flex max-w-full motion-reduce:!transition-none"
@@ -319,7 +324,7 @@ export function WizardCard({
           style={{ width, maxWidth: 'calc(100vw - 2rem)', height }}
         >
           <CardSurface />
-          <div data-flip-clip className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[20px]">
+          <div data-flip-clip className="relative flex min-h-0 flex-1 flex-col overflow-clip rounded-[20px]">
           <div className="flex flex-none items-center justify-between px-7 pt-5">
             <button
               type="button"
@@ -355,7 +360,7 @@ export function WizardCard({
             </div>
           </div>
 
-          <div data-flip-clip className={cn('flex min-h-0 flex-1 flex-col overflow-hidden px-7 pb-3 pt-3', bodyClassName)}>
+          <div data-flip-clip className={cn('flex min-h-0 flex-1 flex-col overflow-clip px-7 pb-3 pt-3', bodyClassName)}>
             {title ? (
               <header className="flex flex-none items-start justify-between gap-3">
                 <div data-flip="left" className="min-w-0 flex-1">
