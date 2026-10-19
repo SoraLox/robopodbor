@@ -17,6 +17,26 @@ const SUGGESTED = [
   'Что будет, если вырастут зарплаты?',
 ];
 
+type AskBody = { question: string; history: Turn[]; context: EconomicsContext };
+
+// На GitHub Pages своего сервера нет: вопрос идёт посреднику с ключом Groq
+// (workers/economics-assistant, адрес — VITE_ASSISTANT_URL при сборке).
+// Иначе — в наш API (/api/assistant/economics).
+const ASSISTANT_URL = import.meta.env.VITE_ASSISTANT_URL as string | undefined;
+
+async function askAssistant(body: AskBody): Promise<{ reply: { answer: string } | null; status: number }> {
+  if (ASSISTANT_URL) {
+    const response = await fetch(ASSISTANT_URL, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    return { reply: response.ok ? ((await response.json()) as { answer: string }) : null, status: response.status };
+  }
+  const { data, response } = await api.POST('/assistant/economics', { body });
+  return { reply: data ?? null, status: response.status };
+}
+
 /** Цифры расчёта для помощника — только то, что видно в отчёте. */
 export function economicsContextOf(data: CalculationResult): EconomicsContext | null {
   const f = data.finance;
@@ -83,11 +103,9 @@ export function EconomicsAssistant({ data }: { data: CalculationResult }) {
     setTurns((list) => [...list, { role: 'user', text }]);
     setPending(true);
     try {
-      const { data: reply, error: failed, response } = await api.POST('/assistant/economics', {
-        body: { question: text, history, context },
-      });
-      if (failed || !reply) {
-        setError(response.status === 429 ? 'Слишком много вопросов подряд — попробуйте через несколько минут.' : 'Не удалось получить ответ — попробуйте ещё раз.');
+      const { reply, status } = await askAssistant({ question: text, history, context });
+      if (!reply) {
+        setError(status === 429 ? 'Слишком много вопросов подряд — попробуйте через несколько минут.' : 'Не удалось получить ответ — попробуйте ещё раз.');
         return;
       }
       setTurns((list) => [...list, { role: 'assistant', text: reply.answer }]);

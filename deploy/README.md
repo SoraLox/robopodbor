@@ -52,6 +52,8 @@ ssh -i deploy/robopodbor_deploy_key <user>@<host> 'echo ok'
 (рядом с `docker-compose.yml`) добавить строку `GROQ_API_KEY=gsk_…` — ключ из
 https://console.groq.com/keys. Без ключа чат отвечает встроенным помощником по
 цифрам расчёта. Локально ключ лежит в `apps/api/.env` (файл не в git).
+На GitHub Pages сервера нет — там чат ходит в посредника на Cloudflare Workers,
+см. `workers/economics-assistant/README.md`.
 
 ## 4. Доступ по SSH к самому Sourcecraft (git push/pull по SSH)
 

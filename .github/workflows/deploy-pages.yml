@@ -96,6 +96,9 @@ jobs:
           # API; не задан — работает на встроенных моках, как раньше.
           VITE_API_URL: ${{ vars.API_URL }}
           VITE_ENABLE_MOCKS: ${{ vars.API_URL && 'false' || 'true' }}
+          # Посредник чата по экономике с ключом Groq (workers/economics-assistant):
+          # Settings → Variables → ASSISTANT_URL. Не задан — встроенный помощник.
+          VITE_ASSISTANT_URL: ${{ vars.ASSISTANT_URL }}
         run: npm run build
 
       - uses: actions/configure-pages@v5

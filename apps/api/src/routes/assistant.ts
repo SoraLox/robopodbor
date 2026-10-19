@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { z } from "zod";
 import { wrap } from "../asyncHandler.js";
 import { askGroq, localAnswer, type EconomicsContext } from "../domain/economicsAssistant.js";
+import { assistantRequestSchema } from "../domain/assistantRequest.js";
 
 /**
  * POST /api/assistant/economics — вопрос по экономике расчёта. Цифры расчёта
@@ -10,34 +10,6 @@ import { askGroq, localAnswer, type EconomicsContext } from "../domain/economics
  * при сбое — встроенные ответы. Одинаковые вопросы по одному расчёту — из кеша.
  */
 const router = Router();
-
-const num = z.number().finite();
-const contextSchema = z.object({
-  objectTitle: z.string().max(200).optional(),
-  meta: z.string().max(400).optional(),
-  horizonYears: num,
-  capexMln: num,
-  totalInvestmentMln: num,
-  effectYearMln: num,
-  paybackYears: num.nullable(),
-  discountedPaybackYears: num.nullable(),
-  npvMln: num,
-  irrPct: num.nullable(),
-  roiPct: num.nullable(),
-  discountRatePct: num,
-  salvageMln: num,
-  netBenefitMln: num,
-  opexYearMln: num.optional(),
-  robots: z.array(z.object({ name: z.string().max(120), count: num, slot: z.string().max(20) })).max(30),
-  costGroups: z.array(z.object({ title: z.string().max(120), amountMln: num })).max(30),
-  levers: z.array(z.object({ title: z.string().max(160), savingMln: num })).max(20),
-  sensitivity: z.array(z.object({ title: z.string().max(160), low: z.string().max(40), high: z.string().max(40) })).max(20),
-});
-const bodySchema = z.object({
-  question: z.string().trim().min(1).max(500),
-  history: z.array(z.object({ role: z.enum(["user", "assistant"]), text: z.string().max(2000) })).max(12).default([]),
-  context: contextSchema,
-});
 
 // Не больше 20 вопросов за 10 минут с одного адреса: ответ модели платный.
 const WINDOW_MS = 10 * 60 * 1000;
@@ -73,7 +45,7 @@ function remember(key: string, answer: string) {
 router.post(
   "/economics",
   wrap(async (req, res) => {
-    const parsed = bodySchema.safeParse(req.body);
+    const parsed = assistantRequestSchema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: "Некорректный вопрос" });
       return;
