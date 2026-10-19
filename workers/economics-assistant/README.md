@@ -15,6 +15,10 @@ npx wrangler secret put GROQ_API_KEY
 npx wrangler deploy                # напечатает адрес https://robopodbor-assistant.<аккаунт>.workers.dev
 ```
 
+Опубликован: `https://robopodbor-assistant.robopodbor.workers.dev/economics`
+(переменная `ASSISTANT_URL` в репозитории уже задана). Сменить ключ Groq:
+`npx wrangler secret put GROQ_API_KEY` — пересобирать сайт не нужно.
+
 Затем в GitHub: Settings → Secrets and variables → Actions → Variables →
 `ASSISTANT_URL` = `https://robopodbor-assistant.<аккаунт>.workers.dev/economics`
 и перезапустить workflow «Deploy to GitHub Pages». Сайт будет спрашивать посредника.
