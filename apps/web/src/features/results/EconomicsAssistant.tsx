@@ -42,7 +42,12 @@ export function economicsContextOf(data: CalculationResult): EconomicsContext | 
     robots: (data.fleet ?? []).map((g) => ({ name: g.name, count: g.count, slot: g.slot })),
     costGroups: data.costGroups.map((g) => ({ title: g.title, amountMln: g.amount })),
     levers: (data.opexLevers?.levers ?? []).map((l) => ({ title: l.title, savingMln: l.savingMln })),
-    sensitivity: (data.sensitivity ?? []).map((s) => ({ title: s.label, low: s.low ?? '', high: s.high ?? '' })),
+    // Края подписаны явно: у зарплат «быстрее» — при +20%, у цены роботов — при −20%.
+    sensitivity: (data.sensitivity ?? []).map((s) => {
+      const [fast, slow] = s.direction === 'down' ? ['+20%', '−20%'] : ['−20%', '+20%'];
+      return { title: s.label.replace(/, ±20%$/, ''), low: `при ${fast}: ${s.low ?? '—'}`, high: `при ${slow}: ${s.high ?? '—'}` };
+    }),
+    ...(data.opexLevers ? { opexYearMln: data.opexLevers.opexYearMln } : {}),
   };
 }
 

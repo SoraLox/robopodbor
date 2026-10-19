@@ -132,7 +132,7 @@ export interface paths {
         put?: never;
         /**
          * Вопрос помощнику по экономике расчёта
-         * @description Ответ простым языком по цифрам расчёта (контекст — с клиента). С ключом ANTHROPIC_API_KEY отвечает модель Claude, без ключа — встроенный помощник (src/domain/economicsAssistant.ts). Не больше 20 вопросов за 10 минут с адреса.
+         * @description Ответ простым языком по цифрам расчёта (контекст — с клиента). С ключом GROQ_API_KEY отвечает модель на Groq (openai/gpt-oss-120b, при лимите — openai/gpt-oss-20b), без ключа или при сбое — встроенный помощник (src/domain/economicsAssistant.ts). Не больше 20 вопросов за 10 минут с адреса.
          */
         post: operations["askEconomics"];
         delete?: never;
@@ -668,6 +668,8 @@ export interface components {
             discountRatePct: number;
             salvageMln: number;
             netBenefitMln: number;
+            /** @description OPEX роботов в год, млн ₽. */
+            opexYearMln?: number;
             robots: {
                 name: string;
                 count: number;
@@ -1539,7 +1541,7 @@ export interface operations {
                     "application/json": {
                         answer: string;
                         /**
-                         * @description ai — модель Claude, local — встроенный помощник.
+                         * @description ai — языковая модель на Groq, local — встроенный помощник.
                          * @enum {string}
                          */
                         source: "ai" | "local";

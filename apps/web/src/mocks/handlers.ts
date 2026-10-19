@@ -1,4 +1,4 @@
-import { http, HttpResponse } from 'msw';
+import { bypass, http, HttpResponse } from 'msw';
 import {
   buildTaxonomy,
   changedFields,
@@ -368,8 +368,15 @@ export const handlers = [
     return HttpResponse.json(stored, { status: 201 });
   }),
 
-  // Помощник по экономике: в моках — встроенные ответы по цифрам расчёта.
+  // Помощник по экономике: если рядом поднят настоящий API — вопрос уходит туда
+  // (там модель на Groq); нет сервера (статический хостинг) — встроенные ответы.
   http.post('*/api/assistant/economics', async ({ request }) => {
+    try {
+      const real = await fetch(bypass(request.clone()));
+      if (real.ok) return HttpResponse.json(await real.json());
+    } catch {
+      // Сервера нет — отвечаем сами.
+    }
     const body = (await request.json()) as { question?: string; context?: EconomicsContext };
     if (!body.question?.trim() || !body.context) return HttpResponse.json({ message: 'Некорректный вопрос' }, { status: 400 });
     return HttpResponse.json({ answer: localAnswer(body.question, body.context), source: 'local' });

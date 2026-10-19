@@ -71,6 +71,8 @@ services:
       NODE_ENV: production
       # nginx — один прокси; с Caddy перед ним (профиль tls) — два.
       TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:-1}
+      # Ключ Groq для чата «Спросить про экономику»; без него — встроенный помощник.
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
     # Наружу порт не публикуется: весь трафик идёт через nginx (rate limit, сжатие).
     # Для отладки: docker compose run --service-ports или override-файл с ports.
     expose:

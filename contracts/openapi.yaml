@@ -147,7 +147,8 @@ paths:
       summary: Вопрос помощнику по экономике расчёта
       description: >
         Ответ простым языком по цифрам расчёта (контекст — с клиента). С ключом
-        ANTHROPIC_API_KEY отвечает модель Claude, без ключа — встроенный помощник
+        GROQ_API_KEY отвечает модель на Groq (openai/gpt-oss-120b, при лимите —
+        openai/gpt-oss-20b), без ключа или при сбое — встроенный помощник
         (src/domain/economicsAssistant.ts). Не больше 20 вопросов за 10 минут с адреса.
       security: []
       requestBody:
@@ -179,7 +180,7 @@ paths:
                 required: [answer, source]
                 properties:
                   answer: { type: string }
-                  source: { type: string, enum: [ai, local], description: 'ai — модель Claude, local — встроенный помощник.' }
+                  source: { type: string, enum: [ai, local], description: 'ai — языковая модель на Groq, local — встроенный помощник.' }
         '400': { description: Некорректный вопрос }
         '429': { description: Слишком много вопросов }
   /calculations/{calculationId}:
@@ -855,6 +856,7 @@ components:
         discountRatePct: { type: number }
         salvageMln: { type: number }
         netBenefitMln: { type: number }
+        opexYearMln: { type: number, description: 'OPEX роботов в год, млн ₽.' }
         robots:
           type: array
           items: { type: object, required: [name, count, slot], properties: { name: { type: string }, count: { type: number }, slot: { type: string } } }
