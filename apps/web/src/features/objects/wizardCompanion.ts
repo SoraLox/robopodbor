@@ -3,9 +3,15 @@ import { createContext, useContext, useLayoutEffect, useState } from 'react';
 export const WizardCompanionContext = createContext<{
   setCompanionOpen: (open: boolean) => void;
   setRailOpen: (open: boolean) => void;
+  /** Ширина рейки слева: узкая (категории) или панель примеров планировки. */
+  setRailWidth: (width: number) => void;
+  /** Рейка помещается сбоку от карточки (на узком экране — нет). */
+  railFits: boolean;
 }>({
   setCompanionOpen: () => {},
   setRailOpen: () => {},
+  setRailWidth: () => {},
+  railFits: false,
 });
 
 /** Превью / рейка сообщают карточке, что открыты: группа центрируется сдвигом. */

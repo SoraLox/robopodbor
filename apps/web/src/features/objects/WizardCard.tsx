@@ -234,10 +234,10 @@ export function WizardCard({
   const renderedWidth = useRef(0);
   const [companionOpen, setCompanionOpen] = useState(false);
   const [railOpen, setRailOpen] = useState(false);
+  const [railWidth, setRailWidth] = useState(WIZARD_WIDTH_RAIL);
   const [viewportWidth, setViewportWidth] = useState(() =>
     typeof window === 'undefined' ? 1280 : window.innerWidth,
   );
-  const companion = useMemo(() => ({ setCompanionOpen, setRailOpen }), []);
 
   useLayoutEffect(() => {
     const sync = () => {
@@ -275,10 +275,14 @@ export function WizardCard({
   }, [width]);
 
   const previewSpan = WIZARD_WIDTH_PREVIEW + COMPANION_GAP_PX;
-  const railSpan = WIZARD_WIDTH_RAIL + COMPANION_GAP_PX;
+  const railSpan = railWidth + COMPANION_GAP_PX;
   const pad = 2 * 16;
   const previewSideBySide = viewportWidth - pad >= width + previewSpan + (railOpen ? railSpan : 0);
   const railSideBySide = viewportWidth - pad >= width + railSpan;
+  const companion = useMemo(
+    () => ({ setCompanionOpen, setRailOpen, setRailWidth, railFits: railSideBySide }),
+    [railSideBySide],
+  );
   // Центр всей композиции (рейка | карточка | превью), не только основной карточки.
   const leftSpan = railOpen && railSideBySide ? railSpan : 0;
   const rightSpan = companionOpen && previewSideBySide ? previewSpan : 0;

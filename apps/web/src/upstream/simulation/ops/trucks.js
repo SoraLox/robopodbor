@@ -204,8 +204,8 @@ export function createTruckYard({ group, gates, payload, direction, nav, reach, 
       for (const bay of bays) stepTruck(bay, dt);
     },
     // Приёмка: горка, где есть груз для нового задания (закрепляется за ним).
-    claimUnit() {
-      for (const bay of bays) {
+    claimUnit(only = null) {
+      for (const bay of only ? [only] : bays) {
         const slot = takeable(bay, false);
         if (slot) {
           slot.reserved = true;
@@ -223,8 +223,8 @@ export function createTruckYard({ group, gates, payload, direction, nav, reach, 
       return unit;
     },
     // Отгрузка: место в горке под паллету задания.
-    claimSlot() {
-      for (const bay of bays) {
+    claimSlot(only = null) {
+      for (const bay of only ? [only] : bays) {
         const slot = freeSlot(bay, false);
         if (slot) {
           slot.reserved = true;

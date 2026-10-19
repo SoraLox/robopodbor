@@ -18,6 +18,7 @@ import {
   type Shape,
 } from '@/features/objects/layout/warehouseLayout';
 import { cn } from '@/lib/utils';
+import { LayoutPresets } from './LayoutPresets';
 
 /**
  * Шаг мастера «Планировка» (только склад): контур здания пиксель-артом по сетке,
@@ -217,6 +218,11 @@ export function LayoutStep({ active }: { active: boolean }) {
     setVersion((v) => v + 1);
   };
 
+  const applyPreset = (shape: Shape) => {
+    setDraft(shape);
+    setVersion((v) => v + 1);
+  };
+
   const goNext = () => {
     if (!canContinue) return;
     setLayout(isDefault ? null : encodeShape(cloneShape(draft) as Shape));
@@ -224,7 +230,8 @@ export function LayoutStep({ active }: { active: boolean }) {
   };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <LayoutPresets open={active} draft={draft} onPick={applyPreset} />
       <div className="flex min-h-0 flex-1 flex-col gap-4 sm:flex-row sm:gap-6">
         <div className="flex min-h-[160px] min-w-0 flex-1 items-start justify-center sm:min-h-0">
           <canvas

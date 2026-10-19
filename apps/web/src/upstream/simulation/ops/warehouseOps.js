@@ -178,25 +178,27 @@ export function createWarehouseOps({ group, armGroup, racks = null, picking = nu
     return pool[Math.floor(Math.random() * Math.min(6, pool.length))];
   };
 
-  // Стоянки AMR у стеллажей — на внешних концах проходов, в боковых коридорах
-  // вне блока стеллажей: AMR — в коридоре, погрузчик — в крайней клетке прохода,
-  // вилами к AMR. За паллетой закрепляется стоянка у прохода её ячейки.
+  // Стоянки AMR у стеллажей — за внешними концами проходов, в боковых коридорах
+  // вне блока стеллажей: AMR — в первой клетке без стеллажей по бокам (не в
+  // поперечном проезде внутри блока), погрузчик — в клетке перед ней, вилами к AMR.
+  // За паллетой закрепляется стоянка у прохода её ячейки.
   const rackBays = [];
   {
-    let rackMinX = Infinity;
-    let rackMaxX = -Infinity;
-    for (let gz = 0; gz < nav.n; gz++) {
-      for (let gx = 0; gx < nav.n; gx++) {
-        if (shape.cells[gz * shape.gridSize + gx] === 3) {
-          rackMinX = Math.min(rackMinX, gx);
-          rackMaxX = Math.max(rackMaxX, gx);
-        }
-      }
-    }
+    const isRack = (gx, gz) => gx >= 0 && gz >= 0 && gx < nav.n && gz < nav.n && shape.cells[gz * shape.gridSize + gx] === 3;
     const byRow = new Map();
     for (const cell of cells) {
       if (!byRow.has(cell.gz)) byRow.set(cell.gz, []);
       byRow.get(cell.gz).push(cell);
+    }
+    // Границы блока стеллажей по x: стоянки только снаружи (не в поперечном проезде).
+    let blockMin = Infinity;
+    let blockMax = -Infinity;
+    for (let gz = 0; gz < nav.n; gz++) {
+      for (let gx = 0; gx < nav.n; gx++) {
+        if (!isRack(gx, gz)) continue;
+        blockMin = Math.min(blockMin, gx);
+        blockMax = Math.max(blockMax, gx);
+      }
     }
     for (const [gz, row] of byRow) {
       const xs = [...new Set(row.map((c) => c.gx))].sort((a, b) => a - b);
@@ -208,13 +210,24 @@ export function createWarehouseOps({ group, armGroup, racks = null, picking = nu
       }
       for (const run of runs) {
         if (run.length < 3) continue;
-        for (const [endX, outX] of [
-          [run[0], run[0] - 1],
-          [run[run.length - 1], run[run.length - 1] + 1],
+        for (const [end, dir] of [
+          [run[0], -1],
+          [run[run.length - 1], 1],
         ]) {
-          if (!passable(outX, gz) || (outX >= rackMinX && outX <= rackMaxX)) continue;
+          // Наружу от конца прохода — до клетки без стеллажей сверху и снизу.
+          let outX = null;
+          for (let k = 1; k <= 3; k++) {
+            const x = end + dir * k;
+            if (!passable(x, gz)) break;
+            if (!isRack(x, gz - 1) && !isRack(x, gz + 1)) {
+              outX = x;
+              break;
+            }
+          }
+          if (outX === null || (outX >= blockMin && outX <= blockMax)) continue;
+          const standX = outX - dir;
           const park = cellCenter(nav, outX, gz);
-          const stand = cellCenter(nav, endX, gz);
+          const stand = cellCenter(nav, standX, gz);
           if (reservedPoints.some((r) => Math.hypot(r.x - park.x, r.z - park.z) < 4)) continue;
           const toPark = unitVec(stand, park);
           rackBays.push({
@@ -225,7 +238,7 @@ export function createWarehouseOps({ group, armGroup, racks = null, picking = nu
             park,
             // AMR вдоль прохода — платформа напротив вил.
             amrSpot: { gx: outX, gz, pose: { x: park.x, z: park.z, heading: Math.atan2(toPark.z, -toPark.x) } },
-            liftSpot: forkSpot(park, stand, { gx: endX, gz }),
+            liftSpot: forkSpot(park, stand, { gx: standX, gz }),
           });
         }
       }
@@ -324,10 +337,12 @@ export function createWarehouseOps({ group, armGroup, racks = null, picking = nu
 
   const newJob = (kind, run) => {
     serial += 1;
-    const job = { id: serial, kind, label: `№${serial}`, run };
+    const job = { id: serial, kind, label: `№${serial}`, run, legs: [] };
     jobs.push(job);
     return job;
   };
+  // Плечо погрузчика: назначается, как только готово (ready) и есть свободный из пула.
+  const leg = (job, task, pool, ready = () => true) => job.legs.push({ task, pool, ready, assigned: false });
   const finish = (job) => {
     jobs.splice(jobs.indexOf(job), 1);
     if (job.kind === "in") doneIn += 1;
@@ -445,22 +460,44 @@ export function createWarehouseOps({ group, armGroup, racks = null, picking = nu
           const inward = { x: -g.normal[0], z: -g.normal[1] };
           const along = { x: Math.abs(g.normal[1]), z: Math.abs(g.normal[0]) };
           const bays = [];
+          // Стоянка — на первом свободном расстоянии от ворот за горкой: AMR и
+          // погрузчик на проходимых клетках, не у стеллажей (не в узком проходе).
+          const nearRack = (c) =>
+            [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dz]) => shape.cells[(c.gz + dz) * shape.gridSize + c.gx + dx] === 3);
           for (const side of [0, 1, -1]) {
             if (bays.length >= 2) break;
-            const p = { x: g.worldCenter.x + inward.x * 24 + along.x * side * nav.cellSize, z: g.worldCenter.z + inward.z * 24 + along.z * side * nav.cellSize };
-            const amrSpot = spotAt({ ...p, heading: Math.atan2(inward.z, -inward.x) });
-            if (bays.some((b) => b.amrSpot.gx === amrSpot.gx && b.amrSpot.gz === amrSpot.gz)) continue;
-            const park = cellCenter(nav, amrSpot.gx, amrSpot.gz);
-            amrSpot.pose = { x: park.x, z: park.z, heading: amrSpot.pose.heading };
-            const standCell = cellOfPoint(nav, { x: park.x - inward.x * nav.cellSize, z: park.z - inward.z * nav.cellSize });
-            if (!passable(standCell.gx, standCell.gz)) continue;
-            const liftSpot = forkSpot(park, { x: park.x - inward.x, z: park.z - inward.z }, standCell);
-            reservedPoints.push(park, liftSpot.pose);
-            bays.push({ job: null, label: `стоянка у ворот ${g.id + 1}`, park, amrSpot, liftSpot });
+            for (let d = 3 * nav.cellSize; d <= 8 * nav.cellSize; d += nav.cellSize) {
+              const p = { x: g.worldCenter.x + inward.x * d + along.x * side * nav.cellSize, z: g.worldCenter.z + inward.z * d + along.z * side * nav.cellSize };
+              const parkCell = cellOfPoint(nav, p);
+              const standCell = cellOfPoint(nav, { x: p.x - inward.x * nav.cellSize, z: p.z - inward.z * nav.cellSize });
+              if (!passable(parkCell.gx, parkCell.gz) || !passable(standCell.gx, standCell.gz)) continue;
+              if (nearRack(parkCell) || nearRack(standCell)) continue;
+              // Не на месте погрузчика у горки и не на других стоянках.
+              const taken = (c) => {
+                const cc = cellCenter(nav, c.gx, c.gz);
+                return reservedPoints.some((r) => Math.hypot(r.x - cc.x, r.z - cc.z) < nav.cellSize * 0.75);
+              };
+              if (taken(parkCell) || taken(standCell)) continue;
+              if (bays.some((b) => b.amrSpot.gx === parkCell.gx && b.amrSpot.gz === parkCell.gz)) break;
+              const park = cellCenter(nav, parkCell.gx, parkCell.gz);
+              const amrSpot = { gx: parkCell.gx, gz: parkCell.gz, pose: { x: park.x, z: park.z, heading: Math.atan2(inward.z, -inward.x) } };
+              const liftSpot = forkSpot(park, { x: park.x - inward.x, z: park.z - inward.z }, standCell);
+              reservedPoints.push(park, liftSpot.pose);
+              bays.push({ job: null, label: `стоянка у ворот ${g.id + 1}`, park, amrSpot, liftSpot });
+              break;
+            }
           }
           return [g.id, bays];
         }),
       );
+      // Воротам без места под стоянку — стоянки ближайших ворот этой связи.
+      for (const g of link.gates) {
+        if (run.gateBays.get(g.id).length) continue;
+        const donor = link.gates
+          .filter((o) => run.gateBays.get(o.id).length)
+          .sort((a, b) => Math.hypot(a.worldCenter.x - g.worldCenter.x, a.worldCenter.z - g.worldCenter.z) - Math.hypot(b.worldCenter.x - g.worldCenter.x, b.worldCenter.z - g.worldCenter.z))[0];
+        if (donor) run.gateBays.set(g.id, run.gateBays.get(donor.id));
+      }
     }
 
     pools.gate.push(...makeForklifts(fSpec, gateN, inside, prefix));
@@ -517,17 +554,22 @@ export function createWarehouseOps({ group, armGroup, racks = null, picking = nu
   // ─── Диспетчер: запуск заданий и раздача шагов ──────────────────────────
   function dispatch() {
     if (station) dispatchPick();
-    for (const run of linkRuns) {
+    // Общие пулы делятся честно: первым робота получает участок, у которого
+    // сейчас меньше заданий в работе, — приёмка не забирает всех у отгрузки.
+    const active = (run) => jobs.reduce((n, j) => n + (j.run === run ? 1 : 0), 0);
+    for (const run of [...linkRuns].sort((a, b) => active(a) - active(b))) {
       if (run.inbound) dispatchIn(run);
       else dispatchOut(run);
     }
-    // Вторые плечи заданий, которые уже в пути.
+    // Плечи погрузчиков в заданиях, которые уже идут: старые задания — первыми.
     for (const job of jobs) {
-      if (!job.next || job.nextAssigned || !job.nextReady()) continue;
-      const f = nearestIdle(job.nextPool, job.next.pick.spot.pose);
-      if (!f) continue;
-      job.nextAssigned = true;
-      f.assign(job.next);
+      for (const l of job.legs) {
+        if (l.assigned || !l.ready()) continue;
+        const f = nearestIdle(l.pool, l.task.pick.spot.pose);
+        if (!f) continue;
+        l.assigned = true;
+        f.assign(l.task);
+      }
     }
   }
 
@@ -538,8 +580,7 @@ export function createWarehouseOps({ group, armGroup, racks = null, picking = nu
       if (pools.amr.length && pools.rack.length) {
         const amr = pools.amr.find((a) => a.isIdle());
         const picked = amr && pickCellWithBay(arm.spot.fork, true);
-        const f = picked && nearestIdle(pools.rack, picked.cell.spot.pose);
-        if (!f) return;
+        if (!picked) return;
         const { cell, bay: rackBay } = picked;
         const job = newJob("pick", null);
         cell.reserved = true;
@@ -553,10 +594,8 @@ export function createWarehouseOps({ group, armGroup, racks = null, picking = nu
             rackBay.job = null;
           },
         });
-        f.assign({ jobLabel: job.label, pick: cellTake(cell), drop: amrPut(amr, rackBay.liftSpot, rackBay.label) });
-        job.next = { jobLabel: job.label, pick: amrTake(amr, arm.amrTakeSpot, arm.label), drop: heapDrop(arm), onDone: () => finish(job) };
-        job.nextPool = anyForklifts();
-        job.nextReady = amrOnTheWay(amr);
+        leg(job, { jobLabel: job.label, pick: cellTake(cell), drop: amrPut(amr, rackBay.liftSpot, rackBay.label) }, pools.rack);
+        leg(job, { jobLabel: job.label, pick: amrTake(amr, arm.amrTakeSpot, arm.label), drop: heapDrop(arm), onDone: () => finish(job) }, anyForklifts(), amrOnTheWay(amr));
         continue;
       }
       // Без AMR — погрузчик везёт паллету со стеллажа прямо к руке.
@@ -573,7 +612,8 @@ export function createWarehouseOps({ group, armGroup, racks = null, picking = nu
   function dispatchIn(run) {
     const { yard } = run;
     const pool = run.scheme === "direct" ? pools.direct : pools.gate;
-    if (!pool.some((f) => f.isIdle())) return;
+    // Челнок стартует с AMR, погрузчики подхватят плечи; остальным нужен погрузчик сразу.
+    if (run.scheme !== "shuttle" && !pool.some((f) => f.isIdle())) return;
 
     if (run.scheme === "direct") {
       const cell = pickCell(run.link.gates[0].worldCenter, false);
@@ -596,23 +636,20 @@ export function createWarehouseOps({ group, armGroup, racks = null, picking = nu
       cell.reserved = true;
       lane.load += 1;
       f.assign({ jobLabel: job.label, pick: pileTake(yard, claim), drop: beltDrop(job, lane) });
-      job.next = beltNext(job, lane, cellPut(cell), () => finish(job));
-      job.nextPool = pools.rack;
-      // Погрузчика у стеллажей зовём, когда паллета подъезжает к концу ленты.
-      job.nextReady = () => lane.belt.items().some((i) => i.meta?.job === job && i.d > lane.belt.total - 12);
+      leg(job, beltNext(job, lane, cellPut(cell), () => finish(job)), pools.rack, () => lane.belt.items().some((i) => i.meta?.job === job && i.d > lane.belt.total - 12));
       return;
     }
 
     // Челнок: горка → погрузчик → AMR у ворот → AMR у прохода → погрузчик → ячейка.
     const amr = pools.amr.find((a) => a.isIdle());
     if (!amr) return;
-    const probe = yard.bays.find((b) => b.slots.some((s) => s.unit && s.ready && !s.reserved));
-    const gateBay = probe && run.gateBays.get(probe.gate.id)?.find((b) => !b.job);
+    // Горка с грузом у ворот, где есть свободная стоянка AMR.
+    const pile = yard.bays.find((b) => b.slots.some((s) => s.unit && s.ready && !s.reserved) && run.gateBays.get(b.gate.id)?.some((g) => !g.job));
+    const gateBay = pile && run.gateBays.get(pile.gate.id).find((b) => !b.job);
     if (!gateBay) return;
     const picked = pickCellWithBay(gateBay.park, false);
-    const claim = picked && yard.claimUnit();
+    const claim = picked && yard.claimUnit(pile);
     if (!claim) return;
-    const f = nearestIdle(pool, claim.slot.spot.pose);
     const { cell, bay: rackBay } = picked;
     const job = newJob("in", run);
     cell.reserved = true;
@@ -626,18 +663,15 @@ export function createWarehouseOps({ group, armGroup, racks = null, picking = nu
         gateBay.job = null;
       },
     });
-    f.assign({ jobLabel: job.label, pick: pileTake(yard, claim), drop: amrPut(amr, gateBay.liftSpot, gateBay.label) });
-    job.next = {
+    leg(job, { jobLabel: job.label, pick: pileTake(yard, claim), drop: amrPut(amr, gateBay.liftSpot, gateBay.label) }, pool);
+    leg(job, {
       jobLabel: job.label,
       pick: amrTake(amr, rackBay.liftSpot, rackBay.label, () => {
         rackBay.job = null;
       }),
       drop: cellPut(cell),
       onDone: () => finish(job),
-    };
-    job.nextPool = pools.rack;
-    // Погрузчика у стеллажей зовём, когда AMR с паллетой уже едет к стоянке.
-    job.nextReady = amrOnTheWay(amr);
+    }, pools.rack, amrOnTheWay(amr));
   }
 
   function dispatchOut(run) {
@@ -662,19 +696,16 @@ export function createWarehouseOps({ group, armGroup, racks = null, picking = nu
       cell.reserved = true;
       lane.load += 1;
       f.assign({ jobLabel: job.label, pick: cellTake(cell), drop: beltDrop(job, lane) });
-      job.next = beltNext(job, lane, pilePut(yard, claim), () => finish(job));
-      job.nextPool = pools.gate;
-      job.nextReady = () => lane.belt.items().some((i) => i.meta?.job === job && i.d > lane.belt.total - 12);
+      leg(job, beltNext(job, lane, pilePut(yard, claim), () => finish(job)), pools.gate, () => lane.belt.items().some((i) => i.meta?.job === job && i.d > lane.belt.total - 12));
       return;
     }
     // Челнок: ячейка → AMR у прохода → AMR у ворот → горка у ворот.
-    const gate = yard.bays.find((b) => b.slots.some((s) => !s.unit && !s.reserved))?.gate;
-    const gateBay = gate && run.gateBays.get(gate.id)?.find((b) => !b.job);
+    const pile = yard.bays.find((b) => b.slots.some((s) => !s.unit && !s.reserved) && run.gateBays.get(b.gate.id)?.some((g) => !g.job));
+    const gateBay = pile && run.gateBays.get(pile.gate.id).find((b) => !b.job);
     if (!gateBay) return;
     const amr = pools.amr.find((a) => a.isIdle());
     const picked = amr && pickCellWithBay(gateBay.park, true);
-    const f = picked && nearestIdle(pools.rack, picked.cell.spot.pose);
-    const claim = f && yard.claimSlot();
+    const claim = picked && yard.claimSlot(pile);
     if (!claim) return;
     const { cell, bay: rackBay } = picked;
     const job = newJob("out", run);
@@ -689,17 +720,15 @@ export function createWarehouseOps({ group, armGroup, racks = null, picking = nu
         rackBay.job = null;
       },
     });
-    f.assign({ jobLabel: job.label, pick: cellTake(cell), drop: amrPut(amr, rackBay.liftSpot, rackBay.label) });
-    job.next = {
+    leg(job, { jobLabel: job.label, pick: cellTake(cell), drop: amrPut(amr, rackBay.liftSpot, rackBay.label) }, pools.rack);
+    leg(job, {
       jobLabel: job.label,
       pick: amrTake(amr, gateBay.liftSpot, gateBay.label, () => {
         gateBay.job = null;
       }),
       drop: pilePut(yard, claim),
       onDone: () => finish(job),
-    };
-    job.nextPool = pools.gate;
-    job.nextReady = amrOnTheWay(amr);
+    }, pools.gate, amrOnTheWay(amr));
   }
 
   // ─── Кадр ───────────────────────────────────────────────────────────────

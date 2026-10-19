@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { CELL, cellAt } from '@/upstream/simulation/shape/shapeTypes.js';
-import { standardLayoutShape } from '@/features/objects/layout/warehouseLayout';
+import { WAREHOUSE_PRESETS, standardLayoutShape } from '@/features/objects/layout/warehouseLayout';
 import { computeLayout, linkGatesOf } from '@/upstream/simulation/layout.js';
 import { blockedNav } from '@/upstream/simulation/loaders/shuttleFleet.js';
 import { cellOfPoint, makeNavGrid } from '@/upstream/simulation/loaders/gridPath.js';
@@ -19,15 +19,14 @@ const factories = {
   arm: () => ({ group: new THREE.Group(), claw: new THREE.Group(), pose: () => {} }),
 };
 
-function scene() {
-  const shape = standardLayoutShape() as never;
+function scene(shape: never = standardLayoutShape() as never) {
   const layout = computeLayout(shape, ['loader', 'arm'], 1) as never as { gates: Gate[] };
   const split = linkGatesOf(layout as never) as { inbound: number[]; outbound: number[] };
   const inGates = layout.gates.filter((g) => split.inbound.includes(g.id));
   const outGates = layout.gates.filter((g) => split.outbound.includes(g.id));
   const nav = blockedNav(shape, []);
   const plan = planPickStation({ nav, shape, gates: layout.gates, armCount: 3 })!;
-  const blocked = pickStationObstacles(plan, nav);
+  const blocked = plan ? pickStationObstacles(plan, nav) : [];
   return { shape, plan, blocked, inGates, outGates };
 }
 
@@ -35,11 +34,11 @@ type Ops = ReturnType<typeof createWarehouseOps>;
 type Res = { t0: number; t1: number; id: number };
 
 // Час работы: шаги по 0,1 с; следим, чтобы роботы не сближались и не заезжали в стеллажи.
-function runHour(ops: Ops, shape: never) {
+function runHour(ops: Ops, shape: never, steps = 36000) {
   const nav = makeNavGrid(shape);
   let minGap = Infinity;
   let inRack = 0;
-  for (let i = 0; i < 36000; i += 1) {
+  for (let i = 0; i < steps; i += 1) {
     ops.step(0.1);
     if (i % 10) continue;
     const agents = ops.agents() as Array<{ pos: { x: number; z: number } }>;
@@ -126,4 +125,27 @@ describe('диспетчер склада', () => {
     expect(overlaps).toBe(0);
     expect(minGap).toBeGreaterThan(2);
   }, 180_000);
+
+  // Примеры складов из конструктора: на каждом — приёмка, отгрузка и отбор
+  // работают, роботы не встречаются и не заезжают в стеллажи.
+  for (const preset of WAREHOUSE_PRESETS) {
+    it(`пример «${preset.title}»: склад работает`, () => {
+      const { shape, plan, blocked, inGates, outGates } = scene(preset.build() as never);
+      expect(inGates.length + outGates.length).toBeGreaterThan(0);
+      const ops = createWarehouseOps({
+        ...base(shape, plan ? blocked : []),
+        links: [
+          ...(inGates.length ? [{ slot: 'inbound', gates: inGates, forklifts, amrs }] : []),
+          ...(outGates.length ? [{ slot: 'outbound', gates: outGates, forklifts, amrs }] : []),
+        ],
+        picking: plan ? { plan, armProd: 6, energyProfile: profile } : null,
+      });
+      const { snap, minGap, inRack, overlaps } = runHour(ops, shape, 12000);
+      console.log(preset.title, 'станция отбора:', Boolean(plan), snap.agents.join(' | '));
+      expect(snap.doneIn + snap.doneOut + snap.donePick).toBeGreaterThan(5);
+      expect(inRack).toBe(0);
+      expect(overlaps).toBe(0);
+      expect(minGap).toBeGreaterThan(2);
+    }, 180_000);
+  }
 });

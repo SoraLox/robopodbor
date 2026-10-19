@@ -49,8 +49,11 @@ function CategoryRail({
   onSelect: (id: string) => void;
 }) {
   const [height, setHeight] = useState(wizardCardHeightPx);
-  const { setRailOpen } = useWizardCompanion();
+  const { setRailOpen, setRailWidth } = useWizardCompanion();
   const entered = useWizardEnter(open, setRailOpen);
+  useLayoutEffect(() => {
+    if (open) setRailWidth(WIZARD_WIDTH_RAIL);
+  }, [open, setRailWidth]);
 
   useLayoutEffect(() => {
     const sync = () => setHeight(wizardCardHeightPx());
@@ -60,7 +63,7 @@ function CategoryRail({
   }, []);
 
   return (
-    <div aria-hidden={!open} inert={open ? undefined : true}>
+    <div aria-hidden={!open} inert={open ? undefined : true} className="absolute right-0 top-0">
       <aside
         aria-label="Категории автоматизации"
         className="relative flex flex-col overflow-hidden rounded-[20px] border border-[#E5E5EA] bg-white motion-reduce:!transition-none"

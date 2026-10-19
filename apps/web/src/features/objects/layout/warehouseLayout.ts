@@ -170,3 +170,125 @@ export function typicalRacks(shape: Shape): Shape {
   const cleared = { ...shape, cells: shape.cells.map((v) => (v === CELL.RACK ? CELL.FLOOR : v)) } as Shape;
   return withStandardRacks(cleared);
 }
+
+// ─── Примеры складов для конструктора ──────────────────────────────────────
+// Типичные планировки на той же сетке 25 × 25: контур, ворота выгрузки и
+// загрузки, ряды двойных стеллажей с проходами. Пользователь берёт пример и
+// правит под себя; сцена и расчёт строят ровно нарисованное.
+
+export interface WarehousePreset {
+  id: string;
+  title: string;
+  /** Что это за склад — одной фразой. */
+  description: string;
+  /** Что покажет симуляция на этой планировке. */
+  shows: string;
+  build: () => Shape;
+}
+
+type Rect = [x0: number, z0: number, x1: number, z1: number];
+
+function presetShape(floor: Rect[], gates: Array<{ cell: number; cells: Array<[number, number]> }>, racks: Rect[], gaps: number[] = []): Shape {
+  const shape = makeEmptyShape(GRID_SIZE) as Shape;
+  const n = shape.gridSize;
+  const fill = ([x0, z0, x1, z1]: Rect, value: number, skip: (gx: number) => boolean = () => false) => {
+    for (let gz = z0; gz <= z1; gz += 1) {
+      for (let gx = x0; gx <= x1; gx += 1) if (!skip(gx)) shape.cells[gz * n + gx] = value;
+    }
+  };
+  for (const rect of floor) fill(rect, CELL.FLOOR);
+  for (const rect of racks) fill(rect, CELL.RACK, (gx) => gaps.includes(gx));
+  for (const gate of gates) for (const [gx, gz] of gate.cells) shape.cells[gz * n + gx] = gate.cell;
+  return shape;
+}
+
+// Ворота шириной в три клетки вдоль стены: по x на строке z или по z на столбце x.
+const gateX = (cell: number, z: number, ...starts: number[]) =>
+  starts.map((x) => ({ cell, cells: [x, x + 1, x + 2].map((gx) => [gx, z] as [number, number]) }));
+const gateZ = (cell: number, x: number, ...starts: number[]) =>
+  starts.map((z) => ({ cell, cells: [z, z + 1, z + 2].map((gz) => [x, gz] as [number, number]) }));
+// Двойные ряды стеллажей вдоль x: строки z и z+1.
+const rows = (x0: number, x1: number, ...zs: number[]): Rect[] => zs.map((z) => [x0, z, x1, z + 1]);
+
+export const WAREHOUSE_PRESETS: WarehousePreset[] = [
+  {
+    id: 'dc',
+    title: 'Распределительный центр',
+    description: 'Пять двусторонних ворот на одной стене, три двойных ряда стеллажей, зона приёмки у ворот.',
+    shows: 'Полный цикл: фуры, горки у ворот, погрузчики и AMR до стеллажей и обратно.',
+    build: standardLayoutShape,
+  },
+  {
+    id: 'crossdock',
+    title: 'Кросс-док',
+    description: 'Выгрузка с одной стороны, загрузка с противоположной, хранения почти нет — груз идёт насквозь.',
+    shows: 'Сквозной поток: паллеты из фуры почти сразу уходят в другую фуру через буферный ряд.',
+    build: () =>
+      presetShape(
+        [[0, 4, 24, 20]],
+        [...gateX(CELL.GATE_IN, 4, 2, 8, 14, 20), ...gateX(CELL.GATE_OUT, 20, 2, 8, 14, 20)],
+        rows(4, 20, 11),
+        [12],
+      ),
+  },
+  {
+    id: 'l-shape',
+    title: 'Г-образный склад',
+    description: 'Два крыла: приёмка в верхнем, отгрузка в нижнем, стеллажи в обоих.',
+    shows: 'Длинные маршруты с поворотом: видно, как планировщик разводит роботов в узком месте.',
+    build: () =>
+      presetShape(
+        [
+          [0, 0, 24, 11],
+          [0, 12, 11, 24],
+        ],
+        [...gateX(CELL.GATE_IN, 0, 3, 9, 15), ...gateX(CELL.GATE_OUT, 24, 2, 7)],
+        [...rows(14, 22, 5, 8), ...rows(2, 9, 14, 17)],
+      ),
+  },
+  {
+    id: 'narrow',
+    title: 'Узкий длинный склад',
+    description: 'Ворота вдоль длинной стены, два длинных ряда стеллажей с поперечными проездами.',
+    shows: 'Плотное движение в одном проезде: роботы ждут друг друга по расписанию, а не сталкиваются.',
+    build: () =>
+      presetShape(
+        [[0, 6, 24, 18]],
+        [...gateX(CELL.GATE_IN, 6, 2, 7), ...gateX(CELL.GATE_OUT, 6, 15, 20)],
+        rows(2, 22, 12, 16),
+        [8, 16],
+      ),
+  },
+  {
+    id: 'storage',
+    title: 'Высотное хранение',
+    description: 'Пять двойных рядов стеллажей, узкие проходы, двое ворот приёмки и двое отгрузки.',
+    shows: 'Максимум паллетомест: погрузчики у стеллажей заняты сильнее всех — узкое место видно в «Заданиях».',
+    build: () =>
+      presetShape(
+        [[0, 0, 24, 24]],
+        [...gateX(CELL.GATE_IN, 0, 3, 8), ...gateX(CELL.GATE_OUT, 0, 14, 19)],
+        rows(2, 22, 6, 10, 14, 18, 22),
+        [12],
+      ),
+  },
+  {
+    id: 'fulfillment',
+    title: 'Фулфилмент e-commerce',
+    description: 'Приёмка с запада, отгрузка с востока, стеллажи в верхней половине, внизу — зона отбора.',
+    shows: 'Станция отбора у глухой стены: роборуки разбирают паллеты по коробкам, лента уходит в стену.',
+    build: () =>
+      presetShape(
+        [[0, 0, 24, 24]],
+        [...gateZ(CELL.GATE_IN, 0, 3, 9), ...gateZ(CELL.GATE_OUT, 24, 3, 9)],
+        rows(5, 19, 4, 8, 12),
+        [12],
+      ),
+  },
+];
+
+/** Пример, с которым совпадает планировка (или null — своя). */
+export function presetOf(shape: Shape): WarehousePreset | null {
+  const code = encodeShape(shape);
+  return WAREHOUSE_PRESETS.find((preset) => encodeShape(preset.build()) === code) ?? null;
+}
