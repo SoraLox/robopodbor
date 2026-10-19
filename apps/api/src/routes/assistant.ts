@@ -54,10 +54,10 @@ router.post(
       res.status(429).json({ error: "Слишком много вопросов подряд — попробуйте через несколько минут" });
       return;
     }
-    const { question, history, context } = parsed.data;
+    const { question, history, context, details } = parsed.data;
     const key = process.env.GROQ_API_KEY;
     // Первый вопрос без истории по тем же цифрам — частый (готовые вопросы): из кеша.
-    const cacheKey = history.length ? null : `${question.toLowerCase()}|${JSON.stringify(context)}`;
+    const cacheKey = history.length ? null : `${question.toLowerCase()}|${JSON.stringify(context)}|${details ?? ""}`;
     const cached = cacheKey ? cache.get(cacheKey) : undefined;
     if (cached) {
       res.json({ answer: cached, source: "ai" });
@@ -65,7 +65,7 @@ router.post(
     }
     if (key) {
       try {
-        const { answer } = await askGroq(question, history, context as EconomicsContext, key);
+        const { answer } = await askGroq(question, history, context as EconomicsContext, key, details);
         if (cacheKey) remember(cacheKey, answer);
         res.json({ answer, source: "ai" });
         return;
@@ -73,7 +73,7 @@ router.post(
         console.error("[assistant] Groq недоступен, отвечаем встроенным помощником:", error instanceof Error ? error.message : error);
       }
     }
-    res.json({ answer: localAnswer(question, context as EconomicsContext), source: "local" });
+    res.json({ answer: localAnswer(question, context as EconomicsContext, details), source: "local" });
   }),
 );
 

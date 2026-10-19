@@ -377,9 +377,9 @@ export const handlers = [
     } catch {
       // Сервера нет — отвечаем сами.
     }
-    const body = (await request.json()) as { question?: string; context?: EconomicsContext };
+    const body = (await request.json()) as { question?: string; context?: EconomicsContext; details?: string };
     if (!body.question?.trim() || !body.context) return HttpResponse.json({ message: 'Некорректный вопрос' }, { status: 400 });
-    return HttpResponse.json({ answer: localAnswer(body.question, body.context), source: 'local' });
+    return HttpResponse.json({ answer: localAnswer(body.question, body.context, body.details), source: 'local' });
   }),
   http.post('*/api/calculations/scenarios', async ({ request }) => {
     const body = (await request.json()) as { objectType?: string; parameters?: Record<string, string> };

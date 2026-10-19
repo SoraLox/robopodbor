@@ -1528,6 +1528,8 @@ export interface operations {
                         text: string;
                     }[];
                     context: components["schemas"]["EconomicsContext"];
+                    /** @description Досье расчёта текстом: паспорт склада, парк, статьи затрат, денежный поток, допущения. */
+                    details?: string;
                 };
             };
         };

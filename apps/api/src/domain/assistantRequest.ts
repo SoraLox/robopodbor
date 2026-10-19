@@ -30,4 +30,6 @@ export const assistantRequestSchema = z.object({
   question: z.string().trim().min(1).max(500),
   history: z.array(z.object({ role: z.enum(["user", "assistant"]), text: z.string().max(2000) })).max(12).default([]),
   context: contextSchema,
+  /** Досье расчёта: паспорт склада, парк, статьи затрат, денежный поток, допущения. */
+  details: z.string().max(16000).optional(),
 });

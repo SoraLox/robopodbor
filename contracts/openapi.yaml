@@ -170,6 +170,7 @@ paths:
                       role: { type: string, enum: [user, assistant] }
                       text: { type: string, maxLength: 2000 }
                 context: { $ref: '#/components/schemas/EconomicsContext' }
+                details: { type: string, maxLength: 16000, description: 'Досье расчёта текстом: паспорт склада, парк, статьи затрат, денежный поток, допущения.' }
       responses:
         '200':
           description: Ответ

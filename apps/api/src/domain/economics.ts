@@ -1044,7 +1044,7 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
     ...(groups.some((g) => g.kind === "vacuum")
       ? [`Уборка: активная зона ${fmt(params.activeAreaM2)} м² за одну смену ${params.hoursPerShift} ч.`]
       : []),
-    `Окупаемость = CAPEX / годовой эффект; эффект = экономия ФОТ − OPEX парка. ROI = эффект × ${horizon} ${yearsUnit(horizon)} / CAPEX.`,
+    `Эффект = экономия ФОТ − OPEX парка. Окупаемость — год, когда накопленный эффект покроет вложения (CAPEX и замену по сроку службы). ROI = (эффект за ${horizon} ${yearsUnit(horizon)} + остаточная стоимость − все вложения) / все вложения. NPV и IRR — по денежному потоку со ставкой дисконтирования.`,
     `TCO = CAPEX + замена оборудования по сроку службы − остаточная стоимость + (OPEX + оставшийся ФОТ) × горизонт.`,
     `ROI = (эффект за горизонт + остаточная стоимость парка − CAPEX − замена по сроку службы) / все вложения. Окупаемость — по реальным деньгам, без остаточной стоимости. NPV и дисконтированная окупаемость — по ставке ${FIN_RATE}% (оценка стоимости капитала; в паспорте ставки нет).`,
     `Резерв CAPEX ${pct(WAREHOUSE_NORMS.capexReserveRatio)}%. Нет в карточке: внедрение ${pct(WAREHOUSE_NORMS.implementationShare)}% цены, сервис ${pct(WAREHOUSE_NORMS.serviceShare)}% цены в год, срок службы ${WAREHOUSE_NORMS.lifespanYears} лет, RaaS ${pct(WAREHOUSE_NORMS.raasMonthlyShare)}% цены в месяц.`,

@@ -163,7 +163,7 @@ export function ResultsPage() {
         onSelect={(id) => setPreviewId((current) => (current === id ? null : id))}
         onClosePreview={() => setPreviewId(null)}
       />
-      <EconomicsAssistant data={data} />
+      <EconomicsAssistant data={data} parameters={parameterGroups} />
     </div>
   );
 }

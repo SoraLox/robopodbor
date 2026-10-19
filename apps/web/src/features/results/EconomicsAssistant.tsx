@@ -4,6 +4,7 @@ import { api } from '@/api/client';
 import type { CalculationResult } from '@/api/types';
 import type { components } from '@/api/schema';
 import { cn } from '@/lib/utils';
+import type { ObjectParameterGroup } from './objectParameters';
 
 type EconomicsContext = components['schemas']['EconomicsContext'];
 type Turn = { role: 'user' | 'assistant'; text: string };
@@ -17,7 +18,7 @@ const SUGGESTED = [
   'Что будет, если вырастут зарплаты?',
 ];
 
-type AskBody = { question: string; history: Turn[]; context: EconomicsContext };
+type AskBody = { question: string; history: Turn[]; context: EconomicsContext; details?: string };
 
 // На GitHub Pages своего сервера нет: вопрос идёт посреднику с ключом Groq
 // (workers/economics-assistant, адрес — VITE_ASSISTANT_URL при сборке).
@@ -35,6 +36,79 @@ async function askAssistant(body: AskBody): Promise<{ reply: { answer: string } 
   }
   const { data, response } = await api.POST('/assistant/economics', { body });
   return { reply: data ?? null, status: response.status };
+}
+
+const MAX_DETAILS = 14000;
+const m1 = (x: number) => x.toLocaleString('ru-RU', { maximumFractionDigits: 1 });
+const SLOT_TITLE: Record<string, string> = { inbound: 'приёмка', outbound: 'отгрузка', picking: 'отбор', sorting: 'сортировка', cleaning: 'уборка' };
+
+/**
+ * Досье расчёта для помощника — всё, что есть в отчёте: паспорт склада, парк,
+ * связи, статьи затрат построчно, сценарии, денежный поток по годам, рычаги OPEX
+ * и допущения. Помощник отвечает по нему и не переспрашивает то, что уже есть.
+ */
+export function dossierOf(data: CalculationResult, parameters: ObjectParameterGroup[]): string {
+  const out: string[] = [];
+  const section = (title: string, lines: string[]) => {
+    if (lines.length) out.push(`${title}:`, ...lines.map((l) => `- ${l}`), '');
+  };
+  section(
+    'ПАСПОРТ СКЛАДА (введено пользователем или по умолчанию)',
+    parameters.flatMap((g) =>
+      g.items.map((i) => `${g.title.toLowerCase()} / ${i.label}: ${i.value}${i.unit ? ` ${i.unit}` : ''}${i.byDefault ? ' (по умолчанию)' : ''}`),
+    ),
+  );
+  section(
+    'ПАРК РОБОТОВ',
+    (data.fleet ?? []).map(
+      (g) =>
+        `${g.name} — ${g.count} шт., участок «${SLOT_TITLE[g.slot] ?? g.slot}», доля потока ${Math.round(g.share * 100)}%; ` +
+        `производительность ${m1(g.throughputPerRobot)} ${g.unit} на робота, пиковый спрос ${m1(g.peakDemand)} ${g.unit}` +
+        `${g.routeM ? `, путь ${Math.round(g.routeM)} м` : ''}${g.speedMps ? `, скорость ${g.speedMps} м/с` : ''}` +
+        `${g.capacityKg ? `, грузоподъёмность ${g.capacityKg} кг` : ''}; мощность ${g.workPowerKw} кВт в работе / ${g.idlePowerKw} кВт в простое` +
+        `${g.substitutions.length ? `; оценки вместо данных каталога: ${g.substitutions.map((x) => `${x.field} = ${x.value}`).join(', ')}` : ''}`,
+    ),
+  );
+  if (data.robots) out.push(`Как посчитано число роботов: ${data.robots.basis}`, '');
+  section(
+    'ПОТОКИ ПО УЧАСТКАМ',
+    (data.scenario?.links ?? []).map(
+      (l) =>
+        `${l.label}: ${m1(l.flowPerHour)} паллет/ч, путь ${Math.round(l.routeM)} м (робот едет ${Math.round(l.effectiveRouteM)} м), вручную остаётся ${Math.round(l.manualShare * 100)}%`,
+    ),
+  );
+  out.push(`CAPEX: ${data.capex.value} млн ₽ — ${data.capex.label}${data.capex.note ? ` (${data.capex.note})` : ''}`);
+  out.push(`Окупаемость: ${data.payback.value} — ${data.payback.label}${data.payback.note ? ` (${data.payback.note})` : ''}`);
+  out.push(`ROI: ${data.roi.value} — ${data.roi.label}`);
+  out.push(`Экономия OPEX: ${data.opexSaving.percent} — ${data.opexSaving.meta}`, '');
+  section(
+    `СТАТЬИ СТОИМОСТИ ВЛАДЕНИЯ ЗА ГОРИЗОНТ (всего ${m1(data.totalTco)} млн ₽)`,
+    data.costGroups.flatMap((g) => [
+      `${g.title}: ${m1(g.amount)} млн ₽ (${Math.round(g.share)}%)`,
+      ...g.lines.map((l) => `  · ${l.title}: ${m1(l.amount)} млн ₽ — ${l.source}`),
+    ]),
+  );
+  section(
+    'СЦЕНАРИИ (стоимость владения за горизонт)',
+    data.scenarios.map((sc) => `${sc.title}${sc.recommended ? ' (рекомендуем)' : ''}: ${m1(sc.tco)} млн ₽, ${sc.delta}; ${sc.subtitle}${sc.detail ? `; ${sc.detail}` : ''}`),
+  );
+  section(
+    'ДЕНЕЖНЫЙ ПОТОК ПО ГОДАМ, млн ₽ (вложения / экономия / остаточная / итог года / накопленный)',
+    (data.finance?.cashFlow ?? []).map(
+      (y) => `год ${y.year}: ${m1(y.investmentMln)} / ${m1(y.effectMln)} / ${m1(y.salvageMln)} / ${m1(y.netMln)} / ${m1(y.cumulativeMln)}`,
+    ),
+  );
+  if (data.opexLevers) {
+    section(`OPEX РОБОТОВ ${m1(data.opexLevers.opexYearMln)} млн ₽ в год, состав`, data.opexLevers.parts.map((p) => `${p.label}: ${m1(p.amountMln)} млн ₽`));
+    section(
+      'РЫЧАГИ СНИЖЕНИЯ OPEX',
+      data.opexLevers.levers.map((l) => `${l.title} — до ${m1(l.savingMln)} млн ₽/год (${l.basis === 'calculated' ? 'расчёт' : 'оценка'}): ${l.detail}`),
+    );
+  }
+  section('ДОПУЩЕНИЯ РАСЧЁТА', data.assumptions);
+  if (data.warning) out.push(`Предупреждение: ${data.warning}`);
+  const text = out.join('\n').trim();
+  return text.length > MAX_DETAILS ? `${text.slice(0, MAX_DETAILS - 20)}\n…(сокращено)` : text;
 }
 
 /** Цифры расчёта для помощника — только то, что видно в отчёте. */
@@ -75,8 +149,9 @@ export function economicsContextOf(data: CalculationResult): EconomicsContext | 
  * «Спросить про экономику»: плавающая кнопка и чат. Ответы — по цифрам этого
  * расчёта, простыми словами (сервер: модель Claude или встроенный помощник).
  */
-export function EconomicsAssistant({ data }: { data: CalculationResult }) {
+export function EconomicsAssistant({ data, parameters }: { data: CalculationResult; parameters: ObjectParameterGroup[] }) {
   const context = economicsContextOf(data);
+  const details = dossierOf(data, parameters);
   const [open, setOpen] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState('');
@@ -103,7 +178,7 @@ export function EconomicsAssistant({ data }: { data: CalculationResult }) {
     setTurns((list) => [...list, { role: 'user', text }]);
     setPending(true);
     try {
-      const { reply, status } = await askAssistant({ question: text, history, context });
+      const { reply, status } = await askAssistant({ question: text, history, context, details });
       if (!reply) {
         setError(status === 429 ? 'Слишком много вопросов подряд — попробуйте через несколько минут.' : 'Не удалось получить ответ — попробуйте ещё раз.');
         return;

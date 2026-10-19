@@ -56,15 +56,15 @@ export default {
     }
     const parsed = assistantRequestSchema.safeParse(await request.json().catch(() => null));
     if (!parsed.success) return json({ message: "Некорректный вопрос" }, 400, cors);
-    const { question, history, context } = parsed.data;
+    const { question, history, context, details } = parsed.data;
     if (env.GROQ_API_KEY) {
       try {
-        const { answer } = await askGroq(question, history, context as EconomicsContext, env.GROQ_API_KEY);
+        const { answer } = await askGroq(question, history, context as EconomicsContext, env.GROQ_API_KEY, details);
         return json({ answer, source: "ai" }, 200, cors);
       } catch (error) {
         console.error("Groq недоступен:", error instanceof Error ? error.message : error);
       }
     }
-    return json({ answer: localAnswer(question, context as EconomicsContext), source: "local" }, 200, cors);
+    return json({ answer: localAnswer(question, context as EconomicsContext, details), source: "local" }, 200, cors);
   },
 };
