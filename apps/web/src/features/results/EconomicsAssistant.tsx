@@ -78,6 +78,19 @@ export function dossierOf(data: CalculationResult, parameters: ObjectParameterGr
     ),
   );
   out.push(`CAPEX: ${data.capex.value} млн ₽ — ${data.capex.label}${data.capex.note ? ` (${data.capex.note})` : ''}`);
+  // Разбивка CAPEX — только разовые вложения: строки группы CAPEX без замены по
+  // сроку службы и остаточной стоимости (они в группе стоимости владения).
+  const capexGroup = data.costGroups.find((g) => /capex/i.test(g.title));
+  const capexLines = (capexGroup?.lines ?? []).filter((l) => l.amount > 0 && !/остаточ|замен/i.test(l.title));
+  if (capexLines.length) {
+    const sum = capexLines.reduce((total, l) => total + l.amount, 0);
+    section(
+      `РАЗБИВКА CAPEX — разовые вложения (сумма строк ${m1(sum)} млн ₽ = CAPEX ${data.capex.value} млн ₽ с округлением)`,
+      capexLines.map((l) => `${l.title}: ${m1(l.amount)} млн ₽`),
+    );
+    const extra = (capexGroup?.lines ?? []).filter((l) => /остаточ|замен/i.test(l.title));
+    if (extra.length) section('ВНЕ CAPEX, НО В СТОИМОСТИ ВЛАДЕНИЯ', extra.map((l) => `${l.title}: ${m1(l.amount)} млн ₽`));
+  }
   out.push(`Окупаемость: ${data.payback.value} — ${data.payback.label}${data.payback.note ? ` (${data.payback.note})` : ''}`);
   out.push(`ROI: ${data.roi.value} — ${data.roi.label}`);
   out.push(`Экономия OPEX: ${data.opexSaving.percent} — ${data.opexSaving.meta}`, '');
