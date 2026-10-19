@@ -24,7 +24,7 @@ export function EconomicsStory({ data }: { data: CalculationResult }) {
   if (!f) return null;
   const horizon = f.cashFlow.length - 1;
   const effect = f.cashFlow.find((row) => row.year === 1)?.effectMln ?? 0;
-  const robots = (data.fleet ?? []).reduce((sum, g) => sum + g.count, 0) || data.robots.count;
+  const robots = (data.fleet ?? []).reduce((sum, g) => sum + g.count, 0) || (data.robots?.count ?? 0);
   const pays = f.paybackYears !== null;
   const perRuble = f.roiPct === null ? null : 1 + f.roiPct / 100;
 

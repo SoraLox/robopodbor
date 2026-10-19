@@ -37,6 +37,9 @@ const SCENE_SHELL = {
   fontFamily: "'Baloo 2', ui-rounded, 'Segoe UI Rounded', sans-serif",
 };
 
+/**
+ * @param {{ onAdjustFleet?: ((role: 'forklift' | 'amr', delta: number) => void) | null, adjusting?: boolean, [key: string]: any }} props
+ */
 export default function WarehouseScene({
   onAdjustFleet = null,
   adjusting = false,
