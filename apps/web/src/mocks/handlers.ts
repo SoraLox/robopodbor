@@ -14,6 +14,7 @@ import { DEFAULT_MODEL_VERSION } from '@domain/versions';
 import { selectSolutions } from '@domain/selection';
 import { ECONOMICS_MODEL_VERSION, calculateEconomics } from '@domain/economics';
 import { generateWarehouseScenarios } from '@domain/warehouseScenarios';
+import { localAnswer, type EconomicsContext } from '@domain/economicsAssistant';
 import {
   buildCatalog,
   mergeCatalogVersion,
@@ -367,6 +368,12 @@ export const handlers = [
     return HttpResponse.json(stored, { status: 201 });
   }),
 
+  // Помощник по экономике: в моках — встроенные ответы по цифрам расчёта.
+  http.post('*/api/assistant/economics', async ({ request }) => {
+    const body = (await request.json()) as { question?: string; context?: EconomicsContext };
+    if (!body.question?.trim() || !body.context) return HttpResponse.json({ message: 'Некорректный вопрос' }, { status: 400 });
+    return HttpResponse.json({ answer: localAnswer(body.question, body.context), source: 'local' });
+  }),
   http.post('*/api/calculations/scenarios', async ({ request }) => {
     const body = (await request.json()) as { objectType?: string; parameters?: Record<string, string> };
     if (body.objectType !== 'warehouse') {

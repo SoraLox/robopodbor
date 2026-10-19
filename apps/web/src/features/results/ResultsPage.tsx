@@ -28,6 +28,7 @@ import { parameterGroups as buildParameterGroups, type ObjectParameterGroup } fr
 import { ReportSections, type ReportSection } from './ReportCategory';
 import { SaveCalculationButton } from './SaveCalculationButton';
 import { EconomicsDashboard } from './charts/EconomicsDashboard';
+import { EconomicsAssistant } from './EconomicsAssistant';
 import { SimulationCheck } from './SimulationCheck';
 import { ResultSimulation, type AdjustFleet } from './simulation/ResultSimulation';
 import { SIMULATION_ASSUMPTIONS } from './simulation/simulationInput';
@@ -162,6 +163,7 @@ export function ResultsPage() {
         onSelect={(id) => setPreviewId((current) => (current === id ? null : id))}
         onClosePreview={() => setPreviewId(null)}
       />
+      <EconomicsAssistant data={data} />
     </div>
   );
 }

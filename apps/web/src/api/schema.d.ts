@@ -121,6 +121,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/assistant/economics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Вопрос помощнику по экономике расчёта
+         * @description Ответ простым языком по цифрам расчёта (контекст — с клиента). С ключом ANTHROPIC_API_KEY отвечает модель Claude, без ключа — встроенный помощник (src/domain/economicsAssistant.ts). Не больше 20 вопросов за 10 минут с адреса.
+         */
+        post: operations["askEconomics"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/calculations/{calculationId}": {
         parameters: {
             query?: never;
@@ -632,6 +652,41 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description Цифры расчёта для помощника по экономике. */
+        EconomicsContext: {
+            objectTitle?: string;
+            meta?: string;
+            horizonYears: number;
+            capexMln: number;
+            totalInvestmentMln: number;
+            effectYearMln: number;
+            paybackYears: number | null;
+            discountedPaybackYears: number | null;
+            npvMln: number;
+            irrPct: number | null;
+            roiPct: number | null;
+            discountRatePct: number;
+            salvageMln: number;
+            netBenefitMln: number;
+            robots: {
+                name: string;
+                count: number;
+                slot: string;
+            }[];
+            costGroups: {
+                title: string;
+                amountMln: number;
+            }[];
+            levers: {
+                title: string;
+                savingMln: number;
+            }[];
+            sensitivity: {
+                title: string;
+                low: string;
+                high: string;
+            }[];
+        };
         Credentials: {
             /** Format: email */
             email: string;
@@ -1447,6 +1502,59 @@ export interface operations {
             };
             /** @description Некорректный запрос */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    askEconomics: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    question: string;
+                    history?: {
+                        /** @enum {string} */
+                        role: "user" | "assistant";
+                        text: string;
+                    }[];
+                    context: components["schemas"]["EconomicsContext"];
+                };
+            };
+        };
+        responses: {
+            /** @description Ответ */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        answer: string;
+                        /**
+                         * @description ai — модель Claude, local — встроенный помощник.
+                         * @enum {string}
+                         */
+                        source: "ai" | "local";
+                    };
+                };
+            };
+            /** @description Некорректный вопрос */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Слишком много вопросов */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };

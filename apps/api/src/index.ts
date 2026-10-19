@@ -8,6 +8,7 @@ import { attachSession, startSessionSweeper } from "./middleware/auth.js";
 import { requestLog } from "./requestLog.js";
 import authRouter from "./routes/auth.js";
 import calculationsRouter from "./routes/calculations.js";
+import assistantRouter from "./routes/assistant.js";
 import adminRouter from "./routes/admin.js";
 import catalogRouter from "./routes/catalog.js";
 import projectsRouter from "./routes/projects.js";
@@ -44,6 +45,7 @@ app.use(attachSession);
 app.use("/api/auth", authRouter);
 app.use("/api/projects", projectsRouter);
 app.use("/api/calculations", calculationsRouter);
+app.use("/api/assistant", assistantRouter);
 app.use("/api", catalogRouter);
 app.use("/api", adminRouter);
 

@@ -19,29 +19,29 @@ export function FinanceKpis({ finance, horizon }: { finance: Finance; horizon: n
     {
       label: 'NPV',
       value: `${mlnText(finance.npvMln)} млн ₽`,
-      note: `Чистая приведённая стоимость по ставке ${mlnText(finance.discountRatePct)}%`,
+      note: `Сколько проект заработает в сегодняшних деньгах: будущие рубли пересчитаны по ставке ${mlnText(finance.discountRatePct)}%`,
       tone: finance.npvMln >= 0 ? 'good' : 'bad',
     },
     {
       label: 'IRR',
       value: finance.irrPct === null ? '—' : `${Math.round(finance.irrPct)}%`,
-      note: 'Внутренняя норма доходности',
+      note: 'Доходность проекта в % годовых — сравните со ставкой кредита или вклада',
     },
     {
       label: `ROI за ${horizon} ${yearsWord(horizon)}`,
       value: finance.roiPct === null ? '—' : `${finance.roiPct}%`,
-      note: 'С остаточной стоимостью, на все вложения',
+      note: 'Чистая прибыль на каждый вложенный рубль, с учётом стоимости роботов на конец срока',
       tone: (finance.roiPct ?? 0) >= 0 ? 'good' : 'bad',
     },
     {
       label: 'Вложения',
       value: `${mlnText(finance.totalInvestmentMln)} млн ₽`,
-      note: 'CAPEX и замена по сроку службы',
+      note: 'Покупка и внедрение роботов (CAPEX) плюс замена по сроку службы',
     },
     {
       label: 'Остаточная стоимость',
       value: `${mlnText(finance.salvageMln)} млн ₽`,
-      note: `Парк на конец ${horizon}-го года`,
+      note: `Сколько будут стоить роботы на конец ${horizon}-го года: их можно продать или работать дальше`,
     },
   ];
   const payback = finance.paybackYears;
@@ -58,7 +58,7 @@ export function FinanceKpis({ finance, horizon }: { finance: Finance; horizon: n
         <div className="mt-2 text-[12px] leading-snug text-[#8E8E93]">
           {payback === null
             ? 'За горизонт расчёта не окупается'
-            : `Дисконтированная — ${finance.discountedPaybackYears === null ? 'за горизонтом' : `${mlnText(finance.discountedPaybackYears)} ${yearsWord(finance.discountedPaybackYears)}`}`}
+            : `Через столько лет вложения вернутся из экономии. С учётом стоимости денег — ${finance.discountedPaybackYears === null ? 'за горизонтом расчёта' : `${mlnText(finance.discountedPaybackYears)} ${yearsWord(finance.discountedPaybackYears)}`}`}
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">

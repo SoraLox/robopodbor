@@ -141,6 +141,47 @@ paths:
                 type: array
                 items: { $ref: '#/components/schemas/ScenarioVariant' }
         '400': { description: Некорректный запрос }
+  /assistant/economics:
+    post:
+      operationId: askEconomics
+      summary: Вопрос помощнику по экономике расчёта
+      description: >
+        Ответ простым языком по цифрам расчёта (контекст — с клиента). С ключом
+        ANTHROPIC_API_KEY отвечает модель Claude, без ключа — встроенный помощник
+        (src/domain/economicsAssistant.ts). Не больше 20 вопросов за 10 минут с адреса.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [question, context]
+              properties:
+                question: { type: string, maxLength: 500 }
+                history:
+                  type: array
+                  maxItems: 12
+                  items:
+                    type: object
+                    required: [role, text]
+                    properties:
+                      role: { type: string, enum: [user, assistant] }
+                      text: { type: string, maxLength: 2000 }
+                context: { $ref: '#/components/schemas/EconomicsContext' }
+      responses:
+        '200':
+          description: Ответ
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [answer, source]
+                properties:
+                  answer: { type: string }
+                  source: { type: string, enum: [ai, local], description: 'ai — модель Claude, local — встроенный помощник.' }
+        '400': { description: Некорректный вопрос }
+        '429': { description: Слишком много вопросов }
   /calculations/{calculationId}:
     get:
       operationId: getCalculation
@@ -795,6 +836,37 @@ components:
       name: sid
       description: httpOnly-cookie сессии, выдаётся при входе и регистрации.
   schemas:
+    EconomicsContext:
+      type: object
+      description: Цифры расчёта для помощника по экономике.
+      required: [horizonYears, capexMln, totalInvestmentMln, effectYearMln, paybackYears, discountedPaybackYears, npvMln, irrPct, roiPct, discountRatePct, salvageMln, netBenefitMln, robots, costGroups, levers, sensitivity]
+      properties:
+        objectTitle: { type: string }
+        meta: { type: string }
+        horizonYears: { type: number }
+        capexMln: { type: number }
+        totalInvestmentMln: { type: number }
+        effectYearMln: { type: number }
+        paybackYears: { type: number, nullable: true }
+        discountedPaybackYears: { type: number, nullable: true }
+        npvMln: { type: number }
+        irrPct: { type: number, nullable: true }
+        roiPct: { type: number, nullable: true }
+        discountRatePct: { type: number }
+        salvageMln: { type: number }
+        netBenefitMln: { type: number }
+        robots:
+          type: array
+          items: { type: object, required: [name, count, slot], properties: { name: { type: string }, count: { type: number }, slot: { type: string } } }
+        costGroups:
+          type: array
+          items: { type: object, required: [title, amountMln], properties: { title: { type: string }, amountMln: { type: number } } }
+        levers:
+          type: array
+          items: { type: object, required: [title, savingMln], properties: { title: { type: string }, savingMln: { type: number } } }
+        sensitivity:
+          type: array
+          items: { type: object, required: [title, low, high], properties: { title: { type: string }, low: { type: string }, high: { type: string } } }
     Credentials:
       type: object
       required: [email, password]

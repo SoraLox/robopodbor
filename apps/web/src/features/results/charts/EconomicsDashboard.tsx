@@ -1,10 +1,11 @@
 import type { CalculationResult } from '@/api/types';
 import { CashFlowChart } from './CashFlowChart';
+import { EconomicsStory } from './EconomicsStory';
 import { CostStructureChart, FinanceKpis, OpexLeversChart, SensitivityTornado, TcoCompareChart } from './EconomicsCharts';
 
 /**
  * Экономика проекта — открыта сразу под сценой, без кликов по категориям:
- * главный показатель и плитки, денежный поток по годам, сравнение сценариев,
+ * сначала коротко и без терминов, затем главный показатель и плитки, денежный поток по годам, сравнение сценариев,
  * структура стоимости владения, рычаги OPEX и чувствительность.
  */
 export function EconomicsDashboard({ data }: { data: CalculationResult }) {
@@ -19,6 +20,7 @@ export function EconomicsDashboard({ data }: { data: CalculationResult }) {
         </h2>
         <span className="text-[12.5px] text-[#8E8E93]">{data.meta}</span>
       </div>
+      <EconomicsStory data={data} />
       {finance ? <FinanceKpis finance={finance} horizon={horizon} /> : null}
       {finance ? <CashFlowChart finance={finance} /> : null}
       <div className="grid gap-3 lg:grid-cols-2">
