@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import { calculateEconomics } from '@domain/economics';
 import type { CatalogSolution } from '@domain/catalog';
 import { useObjectParameters, useSolutions } from '@/api/queries';
@@ -57,16 +57,87 @@ function Note({ children, fill }: { children: string; fill?: boolean }) {
   );
 }
 
-function SceneFallback({ fill }: { fill?: boolean }) {
+/**
+ * Общий старт ползунка — чтобы StrictMode-remount не начинал анимацию с нуля.
+ * Сцену монтируем только после onDone (не под invisible — иначе WebGL с нулевым размером).
+ */
+let sceneBarStartedAt = 0;
+const SCENE_BAR_MS = 1400;
+
+function sceneBarValue(now: number, finish: boolean) {
+  if (!sceneBarStartedAt) sceneBarStartedAt = now;
+  const t = Math.min(1, (now - sceneBarStartedAt) / SCENE_BAR_MS);
+  const eased = 1 - (1 - t) ** 3;
+  return finish ? eased : Math.min(eased, 0.9);
+}
+
+/** Фейковый ползунок: один проход с инерцией; у 90% ждёт ready, потом доезжает до 100%. */
+function SceneFallback({
+  fill,
+  finish = true,
+  onDone,
+}: {
+  fill?: boolean;
+  finish?: boolean;
+  onDone?: () => void;
+}) {
+  const [shown, setShown] = useState(() => sceneBarValue(performance.now(), finish));
+  const finishRef = useRef(finish);
+  const onDoneRef = useRef(onDone);
+  const doneRef = useRef(false);
+  finishRef.current = finish;
+  onDoneRef.current = onDone;
+
+  useEffect(() => {
+    if (!sceneBarStartedAt) sceneBarStartedAt = performance.now();
+    let raf = 0;
+    let alive = true;
+
+    const tick = (now: number) => {
+      if (!alive) return;
+      const value = sceneBarValue(now, finishRef.current);
+      setShown(value);
+      if (value >= 0.999 && finishRef.current) {
+        setShown(1);
+        if (!doneRef.current) {
+          doneRef.current = true;
+          onDoneRef.current?.();
+        }
+        return;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => {
+      alive = false;
+      cancelAnimationFrame(raf);
+    };
+  }, [finish]);
+
   return (
     <div
       className={
         fill
-          ? 'grid h-full place-items-center bg-[#F3F8FD] text-[13.5px] text-[#3A4A5C]'
-          : 'grid min-h-[320px] place-items-center rounded-2xl border border-border text-[13.5px] text-muted-foreground'
+          ? 'grid h-full place-items-center bg-[#F3F8FD] px-8'
+          : 'grid min-h-[320px] place-items-center rounded-2xl border border-border px-8'
       }
     >
-      Загружаем 3D-сцену…
+      <div className="w-full max-w-[220px]">
+        <div
+          className="h-1.5 overflow-hidden rounded-full bg-[#D8E6F8]"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(shown * 100)}
+          aria-label="Загрузка 3D-сцены"
+        >
+          <div
+            className="h-full origin-left rounded-full bg-primary-bright will-change-transform"
+            style={{ transform: `scaleX(${Math.max(0.04, shown)})` }}
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -108,13 +179,20 @@ export function ResultSimulation({
  * Сцена аэропорта клонирует модели сразу при построении — они должны быть
  * загружены заранее (у upstream их прогревает main.jsx, у нас — здесь).
  */
-function useRobotModels(): 'loading' | 'ready' | 'error' {
+function useRobotModels(): { state: 'loading' | 'ready' | 'error' } {
   const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading');
   useEffect(() => {
     let alive = true;
     import('@/upstream/simulation/robots/models.js')
-      .then(({ loadRobotModels }) => loadRobotModels())
-      .then(() => alive && setState('ready'))
+      .then(({ loadRobotModels, areRobotModelsReady }) => {
+        if (areRobotModelsReady()) {
+          if (alive) setState('ready');
+          return;
+        }
+        return loadRobotModels().then(() => {
+          if (alive) setState('ready');
+        });
+      })
       .catch((error: unknown) => {
         console.error('[simulation] не удалось загрузить 3D-модели', error);
         if (alive) setState('error');
@@ -123,11 +201,12 @@ function useRobotModels(): 'loading' | 'ready' | 'error' {
       alive = false;
     };
   }, []);
-  return state;
+  return { state };
 }
 
 function AirportSimulation({ immersive, planned }: { immersive: boolean; planned?: Planned }) {
-  const models = useRobotModels();
+  const { state: models } = useRobotModels();
+  const [loaderDone, setLoaderDone] = useState(false);
   const parameters = useWizardStore((s) => s.parameters);
   const selectedId = useWizardStore((s) => s.solutionId);
   const { data: fields } = useObjectParameters('airport');
@@ -153,9 +232,11 @@ function AirportSimulation({ immersive, planned }: { immersive: boolean; planned
       </Note>
     );
   }
-  if (!webgl) return <Note fill={immersive}>Браузер не поддерживает WebGL — 3D-симуляцию показать нельзя.</Note>;
+  if (!webgl) return <Note fill={immersive}>Браузер не поддерживает WebGL. 3D-симуляцию показать нельзя.</Note>;
   if (models === 'error') return <Note fill={immersive}>Не удалось загрузить 3D-модели сцены.</Note>;
-  if (models === 'loading') return <SceneFallback fill={immersive} />;
+  if (models === 'loading' || !loaderDone) {
+    return <SceneFallback fill={immersive} finish={models === 'ready'} onDone={() => setLoaderDone(true)} />;
+  }
 
   // Пределы сцены аэропорта (upstream AirportScene): расчёт ведётся по полному числу.
   const limits = [
@@ -169,7 +250,7 @@ function AirportSimulation({ immersive, planned }: { immersive: boolean; planned
 
   return (
     <div className={immersive ? 'relative h-full w-full' : 'grid gap-3'}>
-      <Suspense fallback={<SceneFallback fill={immersive} />}>
+      <Suspense fallback={null}>
         <AirportScene
           key={`${solution.id}:${input.gatesCount}:${input.transportCount}`}
           gatesCount={input.gatesCount}
@@ -202,6 +283,8 @@ function WarehouseSimulation({
   onAdjustFleet,
   adjusting,
 }: Adjust & { immersive: boolean; fleet?: FleetGroup[] }) {
+  const { state: models } = useRobotModels();
+  const [loaderDone, setLoaderDone] = useState(false);
   const parameters = useWizardStore((s) => s.parameters);
   const selectedId = useWizardStore((s) => s.solutionId);
   const fleetIds = useWizardStore((s) => s.fleetIds);
@@ -240,7 +323,13 @@ function WarehouseSimulation({
     return <Note fill={immersive}>Для выбранных решений 3D-модели в симуляции нет.</Note>;
   }
   if (!webgl) {
-    return <Note fill={immersive}>Браузер не поддерживает WebGL — 3D-симуляцию показать нельзя.</Note>;
+    return <Note fill={immersive}>Браузер не поддерживает WebGL. 3D-симуляцию показать нельзя.</Note>;
+  }
+  // Сцену не монтируем, пока glb не готовы — иначе useSimulation на миг ставит
+  // процедурные роборуки («старая симуляция»), потом пересобирает под pick_arm.
+  if (models === 'error') return <Note fill={immersive}>Не удалось загрузить 3D-модели сцены.</Note>;
+  if (models === 'loading' || !loaderDone) {
+    return <SceneFallback fill={immersive} finish={models === 'ready'} onDone={() => setLoaderDone(true)} />;
   }
 
   return (
@@ -274,7 +363,7 @@ function SimulationScene({
     .join(' + ');
 
   const scene = (
-    <Suspense fallback={<SceneFallback fill={immersive} />}>
+    <Suspense fallback={null}>
       <WarehouseScene
         shape={input.shape}
         robotTypes={input.robotTypes}
@@ -328,10 +417,7 @@ function SimulationScene({
 
   if (immersive) {
     return (
-      <div className="relative h-full w-full">
-        {scene}
-        <SubstitutionNote input={input} floating />
-      </div>
+      <div className="relative h-full w-full">{scene}</div>
     );
   }
 
@@ -353,8 +439,8 @@ function SimulationScene({
   );
 }
 
-/** Сколько роботов и башен не поместилось в сцену (подстановки из демо-робота — в допущениях отчёта). */
-function SubstitutionNote({ input, floating }: { input: SimulationInput; floating?: boolean }) {
+/** Сколько роботов и башен не поместилось в сцену — только в блоке допущений, без оверлея на 3D. */
+function SubstitutionNote({ input }: { input: SimulationInput }) {
   const fleets = Object.values(input.fleets);
   const many = fleets.length > 1;
   const lines = [
@@ -366,12 +452,5 @@ function SubstitutionNote({ input, floating }: { input: SimulationInput; floatin
       .map((f) => `${many ? `${f.name}: п` : 'П'}о расчёту нужно ${f.requiredCount}, в сцене помещается ${f.maxCount}.`),
   ];
   if (!lines.length) return null;
-  if (!floating) return <p className="mt-2 text-foreground">{lines.join(' ')}</p>;
-  return (
-    <div className="pointer-events-none absolute right-3 top-3 z-10 grid max-w-[320px] gap-1 rounded-[10px] border border-[#E5E5EA] bg-white/90 px-2.5 py-1.5 text-[11.5px] leading-snug text-[#3A4A5C]">
-      {lines.map((line) => (
-        <p key={line}>{line}</p>
-      ))}
-    </div>
-  );
+  return <p className="mt-2 text-foreground">{lines.join(' ')}</p>;
 }

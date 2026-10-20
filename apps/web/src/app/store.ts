@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { create, type StateCreator } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { exposeForPerf } from '@/lib/perf/frameProfiler';
@@ -130,3 +131,30 @@ export const useWizardStore =
       );
 
 exposeForPerf('wizard', useWizardStore);
+
+/**
+ * true, когда persist дочитал localStorage. До этого parameters/layout — пустые
+ * дефолты: сцена на F5 на миг рисует «чужой» стандартный склад.
+ */
+export function useWizardHydrated(): boolean {
+  const [hydrated, setHydrated] = useState(() => {
+    if (import.meta.env.MODE === 'test') return true;
+    return useWizardStore.persist?.hasHydrated() ?? true;
+  });
+
+  useEffect(() => {
+    if (import.meta.env.MODE === 'test') return;
+    const api = useWizardStore.persist;
+    if (!api) {
+      setHydrated(true);
+      return;
+    }
+    if (api.hasHydrated()) {
+      setHydrated(true);
+      return;
+    }
+    return api.onFinishHydration(() => setHydrated(true));
+  }, []);
+
+  return hydrated;
+}

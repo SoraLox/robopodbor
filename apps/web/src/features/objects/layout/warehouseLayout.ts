@@ -132,9 +132,11 @@ export function palletSlotsOf(parameters: Record<string, string>): number {
 
 /**
  * Стандартная расстановка стеллажей для сценария, если на планировке их нет:
- * у ворот — зона доков, дальше — три ряда двойных стеллажей с рабочими проходами
+ * у ворот — зона доков, дальше — четыре двойных ряда стеллажей с рабочими проходами
  * и центральным поперечным проездом (к нему выходят конвейеры приёмки и
  * отгрузки), у дальней стены — свободная зона комплектации для роборук и сортера.
+ * Четыре ряда покрывают ≥90% паллетомест паспорта по умолчанию (иначе форма
+ * сразу показывает предупреждение на пресете «Распределительный центр»).
  * Доли — от сетки, поэтому раскладка одна и та же на любом размере склада.
  */
 export function withStandardRacks(shape: Shape): Shape {
@@ -142,7 +144,7 @@ export function withStandardRacks(shape: Shape): Shape {
   const n = shape.gridSize;
   const next = { ...shape, cells: shape.cells.slice() } as Shape;
   // Полоса у ворот — под станцию приёмки (карусель, роборуки, стоянки транспортировщиков).
-  const rowPairs = [0.36, 0.52, 0.68].map((f) => Math.round(f * n));
+  const rowPairs = [0.36, 0.52, 0.68, 0.84].map((f) => Math.round(f * n));
   const cross = Math.floor(n / 2);
   for (const gz of rowPairs.flatMap((z) => [z, z + 1])) {
     for (let gx = 2; gx <= n - 3; gx += 1) {
@@ -210,12 +212,15 @@ const gateZ = (cell: number, x: number, ...starts: number[]) =>
 // Двойные ряды стеллажей вдоль x: строки z и z+1.
 const rows = (x0: number, x1: number, ...zs: number[]): Rect[] => zs.map((z) => [x0, z, x1, z + 1]);
 
+/** Пресет по умолчанию на шаге «Планировка» — всегда выбран, пока пользователь не сменит. */
+export const DEFAULT_WAREHOUSE_PRESET_ID = 'dc';
+
 export const WAREHOUSE_PRESETS: WarehousePreset[] = [
   {
     id: 'dc',
     title: 'Распределительный центр',
-    description: 'Пять двусторонних ворот на одной стене, три двойных ряда стеллажей, зона приёмки у ворот.',
-    shows: 'Полный цикл: фуры, горки у ворот, погрузчики и AMR до стеллажей и обратно.',
+    description: 'Пять двусторонних ворот на одной стене, четыре двойных ряда стеллажей, зона приёмки у ворот.',
+    shows: 'Полный цикл: фуры, груз у ворот, погрузчики и AMR до стеллажей и обратно.',
     build: standardLayoutShape,
   },
   {
@@ -291,4 +296,11 @@ export const WAREHOUSE_PRESETS: WarehousePreset[] = [
 export function presetOf(shape: Shape): WarehousePreset | null {
   const code = encodeShape(shape);
   return WAREHOUSE_PRESETS.find((preset) => encodeShape(preset.build()) === code) ?? null;
+}
+
+/** Форма пресета по умолчанию (распределительный центр). */
+export function defaultWarehousePresetShape(): Shape {
+  const preset =
+    WAREHOUSE_PRESETS.find((item) => item.id === DEFAULT_WAREHOUSE_PRESET_ID) ?? WAREHOUSE_PRESETS[0]!;
+  return preset.build();
 }

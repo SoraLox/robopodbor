@@ -7,7 +7,8 @@
  * оборудование, купленное в проект, на конец горизонта ещё чего-то стоит, и без
  * неё доходность занижается, а TCO завышается.
  *
- *   ROI = (Σ эффектов + остаточная стоимость − Σ вложений) / Σ вложений
+ *   ROI / год = [(Σ эффектов + остаточная стоимость − Σ вложений) / Σ вложений] / N
+ *   (чистая выгода за вычетом CAPEX и замен, усреднённая на год горизонта).
  *   Окупаемость — когда накопленный поток выходит в плюс (с интерполяцией в году).
  *   NPV  = Σ поток_t / (1 + r)^t;  IRR — ставка, при которой NPV = 0.
  */
@@ -130,7 +131,8 @@ export function analyzeInvestment(input: FinanceInput): FinanceResult {
     flows,
     totalInvestment,
     netBenefit,
-    roiPct: totalInvestment > 0 ? (netBenefit / totalInvestment) * 100 : null,
+    // Годовой ROI: чистая выгода уже за вычетом CAPEX/замен; делим на горизонт.
+    roiPct: totalInvestment > 0 && horizon > 0 ? ((netBenefit / totalInvestment) * 100) / horizon : null,
     paybackYears: crossing(extend(false)),
     discountedPaybackYears: crossing(extend(true)),
     npv: npvAt(nets, rate),

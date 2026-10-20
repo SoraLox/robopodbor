@@ -32,12 +32,15 @@ export function SolutionPreviewCard({
   selection,
   open,
   onClose,
+  action,
 }: {
   solution: Solution | null;
   /** Результат подбора под паспорт объекта: причины, ограничения, недостающие данные. */
   selection?: SelectionItem | null;
   open: boolean;
   onClose: () => void;
+  /** Нижняя кнопка действия — например «Добавить в состав» при выборе для этапа. */
+  action?: { label: string; onClick: () => void; disabled?: boolean } | null;
 }) {
   const titleId = useId();
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -47,8 +50,14 @@ export function SolutionPreviewCard({
   const tone = score !== undefined ? getFitTone(score) : null;
   const category = solution ? categorize(solution) : null;
   const photo = solution ? robotPhoto(solution) : undefined;
-  const { setCompanionOpen } = useWizardCompanion();
+  const { setCompanionOpen, setCompanionWidth, setCompanionRecenter } = useWizardCompanion();
   const entered = useWizardEnter(open, setCompanionOpen);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    setCompanionWidth(WIZARD_WIDTH_PREVIEW);
+    setCompanionRecenter(true);
+  }, [open, setCompanionWidth, setCompanionRecenter]);
 
   useLayoutEffect(() => {
     const sync = () => setHeight(wizardCardHeightPx());
@@ -74,12 +83,12 @@ export function SolutionPreviewCard({
   }, [open, onClose]);
 
   return (
-    <div aria-hidden={!open} inert={open ? undefined : true}>
+    <div aria-hidden={!open} inert={open ? undefined : true} className="pointer-events-none">
       <aside
         role="dialog"
         aria-modal="false"
         aria-labelledby={titleId}
-        className="relative flex max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[20px] bg-white motion-reduce:!transition-none"
+        className="pointer-events-auto relative flex max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[20px] bg-white motion-reduce:!transition-none"
         style={{
           boxShadow: WIZARD_COMPANION_SHADOW,
           width: WIZARD_WIDTH_PREVIEW,
@@ -101,7 +110,12 @@ export function SolutionPreviewCard({
               <X className="size-3.5" strokeWidth={2} />
             </button>
 
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-4 pt-5 [scrollbar-width:thin]">
+            <div
+              className={cn(
+                'min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-5 [scrollbar-width:thin]',
+                action ? 'pb-3' : 'pb-4',
+              )}
+            >
               {photo ? (
                 <div className="relative overflow-hidden rounded-[14px] border border-[#E5E5EA] bg-white">
                   {/* Фото производителя — предмет на фоне: вписываем целиком, а не обрезаем. */}
@@ -202,6 +216,19 @@ export function SolutionPreviewCard({
                 </p>
               ) : null}
             </div>
+
+            {action ? (
+              <div className="flex-none border-t border-[#F2F2F4] px-5 py-3">
+                <button
+                  type="button"
+                  onClick={action.onClick}
+                  disabled={action.disabled}
+                  className="flex h-11 w-full items-center justify-center rounded-[10px] bg-foreground text-[14px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[#E5E5EA] disabled:text-[#8E8E93] disabled:opacity-100"
+                >
+                  {action.label}
+                </button>
+              </div>
+            ) : null}
           </>
         ) : null}
       </aside>

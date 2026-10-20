@@ -54,73 +54,245 @@ function paybackText(c: EconomicsContext): string {
   return `Вложения ${fmt(c.totalInvestmentMln)} млн ₽ вернутся примерно через ${fmt(c.paybackYears)} ${years(c.paybackYears)}: каждый год роботы экономят около ${fmt(c.effectYearMln)} млн ₽.`;
 }
 
-/** Ответ без внешней модели: по ключевым словам вопроса, на цифрах расчёта. */
-export function localAnswer(question: string, c: EconomicsContext, details = ""): string {
-  const q = question.toLowerCase();
-  const has = (...words: string[]) => words.some((w) => q.includes(w));
-  // Раздел досье по заголовку — для вопросов о разбивке и паспорте склада.
-  const sectionOf = (title: string) => {
-    const start = details.indexOf(title);
-    if (start < 0) return "";
-    const end = details.indexOf("\n\n", start);
-    return details.slice(start, end < 0 ? undefined : end).trim();
+const round1 = (x: number) => Math.round(x * 10) / 10;
+/** Доли как в WAREHOUSE_NORMS — для грубой оценки CAPEX на +1 единицу. */
+const EXTRA_IMPL_SHARE = 0.15;
+const EXTRA_RESERVE_RATIO = 0.05;
+
+type CapexUnitLine = { count: number; name: string; totalMln: number; unitMln: number; slotHint: string };
+
+/** Строки вида «3 × AK-2000-2 — приёмка: 8,8 млн» из разбивки CAPEX в досье. */
+export function parseCapexUnitLines(details: string): CapexUnitLine[] {
+  if (!details) return [];
+  // Имя может содержать дефисы (AK-2000-2) — разделитель слота: пробел + тире/длинное тире.
+  const re = /(\d+)\s*[×x]\s*(.+?)\s+[—\-]\s*([^:\n]+):\s*([\d\s]+(?:[.,]\d+)?)\s*млн/gi;
+  const out: CapexUnitLine[] = [];
+  for (const m of details.matchAll(re)) {
+    const count = Number(m[1]);
+    const totalMln = Number(String(m[4]).replace(/\s/g, "").replace(",", "."));
+    if (!(count > 0) || !Number.isFinite(totalMln) || totalMln <= 0) continue;
+    out.push({
+      count,
+      name: m[2].trim(),
+      totalMln,
+      unitMln: round1(totalMln / count),
+      slotHint: m[3].trim().toLowerCase(),
+    });
+  }
+  return out;
+}
+
+function asksExtraUnitQuestion(q: string): boolean {
+  const unit =
+    q.includes("погрузчик") ||
+    q.includes("штабел") ||
+    q.includes("амр") ||
+    q.includes("amr") ||
+    (q.includes("робот") && /ещё|еще|добав|куп|лишн|плюс|\+1|один/.test(q));
+  return unit && /ещё|еще|добав|куп|лишн|плюс|\+1|если|будет/.test(q);
+}
+
+function pickCapexUnitLine(q: string, robots: EconomicsContext["robots"], lines: CapexUnitLine[]): CapexUnitLine | null {
+  if (!lines.length) return null;
+  const loaderSlots = new Set(["inbound", "outbound"]);
+  const loaderNames = new Set(robots.filter((r) => loaderSlots.has(r.slot)).map((r) => r.name.toLowerCase()));
+  const wantsLoader = q.includes("погрузчик") || q.includes("штабел");
+  const byName = (line: CapexUnitLine) => {
+    const n = line.name.toLowerCase();
+    return robots.find((r) => n.includes(r.name.toLowerCase()) || r.name.toLowerCase().includes(n));
   };
-  if (details && has("разбив", "из чего", "статьи", "структур") && has("capex", "капекс", "вложен", "затрат", "стоимост")) {
-    const part = sectionOf("СТАТЬИ СТОИМОСТИ ВЛАДЕНИЯ");
-    if (part) return part.replace(/^- /gm, "— ");
-  }
-  if (details && has("паспорт", "параметр", "данные склада", "склад")) {
-    const part = sectionOf("ПАСПОРТ СКЛАДА");
-    if (part) return part.replace(/^- /gm, "— ").split("\n").slice(0, 16).join("\n");
-  }
-  if (details && has("денежн", "по годам", "поток")) {
-    const part = sectionOf("ДЕНЕЖНЫЙ ПОТОК");
-    if (part) return part.replace(/^- /gm, "— ");
+
+  if (wantsLoader) {
+    const loaders = lines.filter((line) => {
+      const robot = byName(line);
+      if (robot && loaderSlots.has(robot.slot)) return true;
+      return /при[её]мк|отгруз|погруз|loader|транспортер|транспортёр/i.test(`${line.slotHint} ${line.name}`);
+    });
+    if (loaders.length) return loaders[0]!;
+    // Имя из парка приёмки/отгрузки, даже если в CAPEX слот написан иначе.
+    const named = lines.find((line) => loaderNames.has(line.name.toLowerCase()) || [...loaderNames].some((n) => line.name.toLowerCase().includes(n)));
+    if (named) return named;
   }
 
-  if (has("npv", "приведен", "приведён", "чистая")) {
-    return [
-      `NPV — сколько проект заработает за ${c.horizonYears} ${years(c.horizonYears)} в сегодняшних деньгах. Будущие рубли «дешевле» сегодняшних, поэтому каждый год пересчитывается по ставке ${fmt(c.discountRatePct)}%.`,
-      c.npvMln >= 0
-        ? `Здесь NPV ${fmt(c.npvMln)} млн ₽ — больше нуля: проект выгоднее, чем держать деньги под ${fmt(c.discountRatePct)}% годовых.`
-        : `Здесь NPV ${fmt(c.npvMln)} млн ₽ — меньше нуля: при ставке ${fmt(c.discountRatePct)}% проект не окупает стоимость денег.`,
-    ].join(" ");
+  for (const r of robots) {
+    if (q.includes(r.name.toLowerCase())) {
+      const hit = lines.find((line) => line.name.toLowerCase().includes(r.name.toLowerCase()));
+      if (hit) return hit;
+    }
   }
-  if (has("irr", "норма", "доходност")) {
-    return c.irrPct === null
-      ? "IRR не считается: денежный поток проекта не меняет знак (вложения не возвращаются за горизонт)."
-      : `IRR ${Math.round(c.irrPct)}% — доходность проекта в процентах годовых. Сравните со ставкой кредита или вклада: если IRR выше, вкладываться в роботов выгоднее. Ставка в расчёте — ${fmt(c.discountRatePct)}%.`;
+  return lines[0] ?? null;
+}
+
+/**
+ * Грубая оценка «+1 единица» при том же потоке: цена из разбивки CAPEX,
+ * экономия ФОТ почти не растёт, OPEX чуть растёт, окупаемость удлиняется.
+ */
+export function estimateExtraUnitAnswer(question: string, c: EconomicsContext, details = ""): string | null {
+  const q = question.toLowerCase();
+  if (!asksExtraUnitQuestion(q)) return null;
+
+  const lines = parseCapexUnitLines(details);
+  const picked = pickCapexUnitLine(q, c.robots, lines);
+  const totalRobots = c.robots.reduce((sum, r) => sum + r.count, 0);
+  const list = c.robots.map((r) => `${r.count} × ${r.name} (${SLOT_TITLE[r.slot] ?? r.slot})`).join(", ") || "парк не указан";
+
+  let unitEquip: number;
+  let modelName: string;
+  let currentOfModel: number;
+
+  if (picked) {
+    unitEquip = picked.unitMln;
+    modelName = picked.name;
+    currentOfModel = c.robots
+      .filter((r) => {
+        const n = r.name.toLowerCase();
+        const p = picked.name.toLowerCase();
+        return n.includes(p) || p.includes(n);
+      })
+      .reduce((sum, r) => sum + r.count, 0);
+    if (currentOfModel <= 0) currentOfModel = picked.count;
+  } else if (totalRobots > 0 && c.capexMln > 0) {
+    // Нет строк CAPEX — грубо делим CAPEX на весь парк.
+    unitEquip = round1(c.capexMln / totalRobots);
+    modelName = q.includes("погрузчик")
+      ? c.robots.find((r) => r.slot === "inbound" || r.slot === "outbound")?.name ?? "робот"
+      : c.robots[0]?.name ?? "робот";
+    currentOfModel = c.robots.filter((r) => r.name === modelName).reduce((sum, r) => sum + r.count, 0) || totalRobots;
+  } else {
+    return null;
   }
-  if (has("roi")) {
-    return c.roiPct === null
-      ? "ROI не считается для этого расчёта."
-      : `ROI ${fmt(c.roiPct)}% — сколько чистой прибыли приносит каждый вложенный рубль за ${c.horizonYears} ${years(c.horizonYears)} (с учётом стоимости роботов на конец срока): на 1 ₽ вложений — ${fmt(1 + c.roiPct / 100)} ₽ возврата.`;
+
+  const deltaCapex = round1(unitEquip * (1 + EXTRA_IMPL_SHARE) * (1 + EXTRA_RESERVE_RATIO));
+  const deltaOpex =
+    c.opexYearMln !== undefined && totalRobots > 0 ? round1(c.opexYearMln / totalRobots) : 0;
+  const newInvest = round1(c.totalInvestmentMln + deltaCapex);
+  const newEffect = round1(c.effectYearMln - deltaOpex);
+  const newPayback = newEffect > 0 ? round1(newInvest / newEffect) : null;
+  const nextCount = currentOfModel + 1;
+  const paybackNow =
+    c.paybackYears === null ? "не окупается за горизонт" : `${fmt(c.paybackYears)} ${years(c.paybackYears)}`;
+  const paybackNext =
+    newPayback === null ? "может не окупиться за горизонт" : `~${fmt(newPayback)} ${years(newPayback)}`;
+
+  return [
+    `Один ${modelName} в разбивке CAPEX — около ${fmt(unitEquip)} млн ₽ (оборудование).`,
+    `Если добавить ${nextCount}-й при том же потоке, вложения вырастут примерно на ${fmt(deltaCapex)} млн ₽ (оборудование + доля внедрения и резерва): с ${fmt(c.totalInvestmentMln)} до ~${fmt(newInvest)} млн ₽.`,
+    deltaOpex > 0
+      ? `Годовая экономия почти не вырастет — парк уже под поток, а OPEX парка чуть вырастет (~${fmt(deltaOpex)} млн ₽/год), поэтому окупаемость удлинится с ${paybackNow} до ${paybackNext}.`
+      : `Годовая экономия почти не вырастет (парк уже под поток), поэтому окупаемость удлинится с ${paybackNow} до ${paybackNext}.`,
+    `Сейчас в расчёте: ${list}. Если без лишней единицы не хватает мощности — уточните в 3D-симуляции (Задания → «Добавить робота в расчёт»).`,
+  ].join(" ");
+}
+
+/** Тип вопроса — чтобы не отвечать чувствительностью на «погрузчик» и паспортом на «склад». */
+export type EconomicsIntent =
+  | "extra_unit"
+  | "npv"
+  | "irr"
+  | "roi"
+  | "payback"
+  | "salvage"
+  | "opex"
+  | "capex"
+  | "sensitivity"
+  | "fleet"
+  | "passport"
+  | "cashflow"
+  | "summary"
+  | "open";
+
+/**
+ * Убирает «обёртку» вроде «я тебя спрашиваю», чтобы классификация и модель
+ * видели суть вопроса, а не мета-фразу.
+ */
+export function stripQuestionNoise(question: string): string {
+  let q = question.trim().replace(/\s+/g, " ");
+  q = q.replace(
+    /^(?:ну\s+|слушай\s+|пожалуйста\s+|скажи(?:\s+мне)?\s+|ответь(?:\s+мне)?\s+|подскажи\s+|объясни\s+мне\s+|я\s+(?:тебя\s+)?спрашиваю\s+|я\s+спрашиваю\s+|вопрос[:\s]+)+/i,
+    "",
+  );
+  q = q.replace(/^(?:а\s+)?(?:что|как)\s+насчёт\s+/i, "что будет с ");
+  return q.trim() || question.trim();
+}
+
+/** Краткая задача для модели — что именно нужно ответить. */
+export function taskForIntent(intent: EconomicsIntent, question: string): string {
+  switch (intent) {
+    case "extra_unit":
+      return "Оцени экономический эффект от добавления ещё одной единицы техники (погрузчик/робот): насколько вырастут вложения и OPEX, изменится ли годовая экономия и окупаемость при том же потоке. Не паспорт склада и не общий ±20%.";
+    case "npv":
+      return "Объясни NPV этого расчёта и назови цифру из блока ЦИФРЫ.";
+    case "irr":
+      return "Объясни IRR этого расчёта и назови цифру из блока ЦИФРЫ.";
+    case "roi":
+      return "Объясни ROI этого расчёта и назови цифру из блока ЦИФРЫ.";
+    case "payback":
+      return "Объясни, почему окупаемость именно такая: срок + связь с вложениями и годовой экономией.";
+    case "salvage":
+      return "Объясни остаточную стоимость роботов в этом расчёте.";
+    case "opex":
+      return "Что снизит операционные расходы (OPEX) парка — по рычагам из расчёта.";
+    case "capex":
+      return "Из чего складываются затраты/CAPEX — по разбивке из расчёта, списком.";
+    case "sensitivity":
+      return "Что будет с окупаемостью при изменении указанного фактора (зарплаты/цены и т.п.) — по чувствительности ±20%.";
+    case "fleet":
+      return "Какой парк роботов в расчёте: модели, число, участки.";
+    case "passport":
+      return "Кратко по паспорту склада — только то, о чём спросили, без лишнего.";
+    case "cashflow":
+      return "Покажи денежный поток по годам из расчёта.";
+    case "summary":
+      return "Объясни экономику расчёта простыми словами: вложения, экономия в год, окупаемость, итог.";
+    case "open":
+      return `Ответь точно на вопрос пользователя: «${question}». Если вопрос не про экономику этого расчёта — так и скажи.`;
   }
-  if (has("окуп", "вернут", "вернёт", "payback", "срок")) {
-    const disc = c.discountedPaybackYears === null ? "" : ` С учётом стоимости денег (ставка ${fmt(c.discountRatePct)}%) — через ${fmt(c.discountedPaybackYears)} ${years(c.discountedPaybackYears)}.`;
-    return paybackText(c) + disc;
+}
+
+export function classifyEconomicsQuestion(question: string): EconomicsIntent {
+  const q = stripQuestionNoise(question).toLowerCase();
+  const has = (...words: string[]) => words.some((w) => q.includes(w));
+
+  if (asksExtraUnitQuestion(q)) return "extra_unit";
+  if (has("npv", "приведен", "приведён") || (has("чистая") && has("стоимост", "прибыл", "ценност"))) return "npv";
+  if (has("irr") || (has("доходност") && !has("roi"))) return "irr";
+  if (has("roi") || (has("рентабельн") && has("инвест", "вложен"))) return "roi";
+  if (has("окуп", "payback") || has("вернут", "вернёт") || (has("почему") && has("быстр", "долг", "так"))) return "payback";
+  if (has("остаточ", "salvage") || (has("продать") && has("конец", "горизонт", "срок"))) return "salvage";
+  if (has("opex") || has("рычаг") || (has("снизит", "сократить", "сэконом") && has("операц", "расход", "затрат", "содержан"))) return "opex";
+  if (
+    (has("разбив", "из чего", "статьи", "структур") && has("capex", "капекс", "вложен", "затрат", "стоимост")) ||
+    has("capex", "капекс") ||
+    (has("из чего") && has("склад", "затрат", "вложен", "стоимост"))
+  ) {
+    return "capex";
   }
-  if (has("остаточ", "salvage", "продать", "конец срока")) {
-    return `Остаточная стоимость ${fmt(c.salvageMln)} млн ₽ — сколько будут стоить роботы на конец ${c.horizonYears}-го года. Их можно продать или работать на них дальше, поэтому она учтена как возврат в последнем году.`;
+  if (
+    has("чувствит", "риск") ||
+    has("зарплат") ||
+    (has("вырастет", "упадёт", "упадет", "подорож", "подешев") &&
+      has("цена", "оборуд", "робот", "сервис", "электрич", "труд", "персонал", "оператор"))
+  ) {
+    return "sensitivity";
   }
-  if (has("opex", "снизит", "сократить", "дешевле", "сэконом", "рычаг")) {
-    if (!c.levers.length) return "Отдельных рычагов снижения операционных затрат для этого расчёта нет.";
-    const top = c.levers.slice(0, 3).map((l) => `«${l.title}» — до ${fmt(l.savingMln)} млн ₽ в год`).join("; ");
-    return `OPEX — расходы на содержание роботов каждый год: обслуживание, электричество, ПО. Сильнее всего их снизят: ${top}.`;
+  if (has("паспорт", "параметр склада", "данные склада", "исходные данные")) return "passport";
+  if (has("денежн") || (has("по годам") && has("поток", "кэш", "cash"))) return "cashflow";
+  if (has("парк", "состав") || (has("сколько") && has("робот", "погрузчик")) || (has("какие") && has("робот"))) return "fleet";
+  if (has("объясни", "простыми", "простыми словами", "расскажи экономик", "коротко про") || (has("экономик") && has("прост", "объясн", "расскаж"))) {
+    return "summary";
   }
-  if (has("capex", "вложен", "стоит", "стоимость", "дорог", "затрат", "из чего")) {
-    const top = [...c.costGroups].sort((a, b) => b.amountMln - a.amountMln).slice(0, 3).map((g) => `${g.title} — ${fmt(g.amountMln)} млн ₽`).join("; ");
-    return `CAPEX ${fmt(c.capexMln)} млн ₽ — разовые вложения: покупка роботов и внедрение. Всего с заменами по сроку службы — ${fmt(c.totalInvestmentMln)} млн ₽. Крупнее всего в стоимости владения: ${top}.`;
-  }
-  if (has("риск", "чувствит", "если", "вырастет", "упадёт", "упадет", "зарплат")) {
-    if (!c.sensitivity.length) return "Анализа чувствительности для этого расчёта нет.";
-    const top = c.sensitivity.slice(0, 3).map((s) => `${s.title} — ${s.low}, ${s.high}`).join("; ");
-    return `Окупаемость при изменении факторов на 20%: ${top}. Рост зарплат замещаемых сотрудников ускоряет окупаемость, удорожание роботов — замедляет.`;
-  }
-  if (has("робот", "сколько", "парк", "состав")) {
-    const list = c.robots.map((r) => `${r.count} × ${r.name} (${SLOT_TITLE[r.slot] ?? r.slot})`).join(", ");
-    return `В расчёте: ${list}. Число роботов посчитано под ваш поток грузов; поправить его можно в симуляции через панель «Задания».`;
-  }
+  if (has("робот", "погрузчик") && !has("если", "добав", "куп", "ещё", "еще")) return "fleet";
+  return "open";
+}
+
+function sectionOf(details: string, title: string): string {
+  const start = details.indexOf(title);
+  if (start < 0) return "";
+  const end = details.indexOf("\n\n", start);
+  return details.slice(start, end < 0 ? undefined : end).trim();
+}
+
+function summaryAnswer(c: EconomicsContext): string {
   return [
     `Коротко: вкладываете ${fmt(c.totalInvestmentMln)} млн ₽, роботы экономят около ${fmt(c.effectYearMln)} млн ₽ в год.`,
     paybackText(c),
@@ -129,55 +301,215 @@ export function localAnswer(question: string, c: EconomicsContext, details = "")
   ].join(" ");
 }
 
+/** Структурированный ответ по теме вопроса. Для `open` — краткое резюме (не дамп досье). */
+export function structuredEconomicsAnswer(question: string, c: EconomicsContext, details = ""): string {
+  const intent = classifyEconomicsQuestion(question);
+
+  if (intent === "extra_unit") {
+    return estimateExtraUnitAnswer(question, c, details) ?? summaryAnswer(c);
+  }
+  if (intent === "passport" && details) {
+    const part = sectionOf(details, "ПАСПОРТ СКЛАДА");
+    if (part) return part.replace(/^- /gm, "— ").split("\n").slice(0, 16).join("\n");
+  }
+  if (intent === "cashflow" && details) {
+    const part = sectionOf(details, "ДЕНЕЖНЫЙ ПОТОК");
+    if (part) return part.replace(/^- /gm, "— ");
+  }
+  if (intent === "capex") {
+    if (details) {
+      const breakdown = sectionOf(details, "РАЗБИВКА CAPEX");
+      if (breakdown) {
+        const lines = breakdown
+          .split("\n")
+          .filter((l) => /^[-—·]/.test(l.trim()) || /^\d+\s*[×x]/i.test(l.trim()))
+          .slice(0, 12)
+          .map((l) => l.replace(/^[-·]\s*/, "— ").trim());
+        if (lines.length) {
+          return [`CAPEX ${fmt(c.capexMln)} млн ₽ складывается из:`, ...lines].join("\n");
+        }
+      }
+      const tco = sectionOf(details, "СТАТЬИ СТОИМОСТИ ВЛАДЕНИЯ");
+      if (tco && /разбив|статьи|структур|из чего/.test(question.toLowerCase())) {
+        return tco.replace(/^- /gm, "— ");
+      }
+    }
+    const top = [...c.costGroups].sort((a, b) => b.amountMln - a.amountMln).slice(0, 3).map((g) => `${g.title} — ${fmt(g.amountMln)} млн ₽`).join("; ");
+    return `CAPEX ${fmt(c.capexMln)} млн ₽ — разовые вложения: покупка роботов и внедрение. Всего с заменами по сроку службы — ${fmt(c.totalInvestmentMln)} млн ₽. Крупнее всего в стоимости владения: ${top}.`;
+  }
+  if (intent === "npv") {
+    return [
+      `NPV — сколько проект заработает за ${c.horizonYears} ${years(c.horizonYears)} в сегодняшних деньгах. Будущие рубли «дешевле» сегодняшних, поэтому каждый год пересчитывается по ставке ${fmt(c.discountRatePct)}%.`,
+      c.npvMln >= 0
+        ? `Здесь NPV ${fmt(c.npvMln)} млн ₽ — больше нуля: проект выгоднее, чем держать деньги под ${fmt(c.discountRatePct)}% годовых.`
+        : `Здесь NPV ${fmt(c.npvMln)} млн ₽ — меньше нуля: при ставке ${fmt(c.discountRatePct)}% проект не окупает стоимость денег.`,
+    ].join(" ");
+  }
+  if (intent === "irr") {
+    return c.irrPct === null
+      ? "IRR не считается: денежный поток проекта не меняет знак (вложения не возвращаются за горизонт)."
+      : `IRR ${Math.round(c.irrPct)}% — доходность проекта в процентах годовых. Сравните со ставкой кредита или вклада: если IRR выше, вкладываться в роботов выгоднее. Ставка в расчёте — ${fmt(c.discountRatePct)}%.`;
+  }
+  if (intent === "roi") {
+    return c.roiPct === null
+      ? "ROI не считается для этого расчёта."
+      : `ROI ${fmt(c.roiPct)}% в год — чистая прибыль на вложенный рубль за вычетом CAPEX, усреднённая на год горизонта (${c.horizonYears} ${years(c.horizonYears)}): на 1 ₽ вложений — около ${fmt(c.roiPct / 100)} ₽ чистой прибыли ежегодно.`;
+  }
+  if (intent === "payback") {
+    const disc =
+      c.discountedPaybackYears === null
+        ? ""
+        : ` С учётом стоимости денег (ставка ${fmt(c.discountRatePct)}%) — через ${fmt(c.discountedPaybackYears)} ${years(c.discountedPaybackYears)}.`;
+    return paybackText(c) + disc;
+  }
+  if (intent === "salvage") {
+    return `Остаточная стоимость ${fmt(c.salvageMln)} млн ₽ — сколько будут стоить роботы на конец ${c.horizonYears}-го года. Их можно продать или работать на них дальше, поэтому она учтена как возврат в последнем году.`;
+  }
+  if (intent === "opex") {
+    if (!c.levers.length) return "Отдельных рычагов снижения операционных затрат для этого расчёта нет.";
+    const top = c.levers.slice(0, 3).map((l) => `«${l.title}» — до ${fmt(l.savingMln)} млн ₽ в год`).join("; ");
+    return `OPEX — расходы на содержание роботов каждый год: обслуживание, электричество, ПО. Сильнее всего их снизят: ${top}.`;
+  }
+  if (intent === "sensitivity") {
+    if (!c.sensitivity.length) return "Анализа чувствительности для этого расчёта нет.";
+    const top = c.sensitivity.slice(0, 3).map((s) => `${s.title} — ${s.low}, ${s.high}`).join("; ");
+    return `Окупаемость при изменении факторов на 20%: ${top}. Рост зарплат замещаемых сотрудников ускоряет окупаемость, удорожание роботов — замедляет.`;
+  }
+  if (intent === "fleet") {
+    const list = c.robots.map((r) => `${r.count} × ${r.name} (${SLOT_TITLE[r.slot] ?? r.slot})`).join(", ");
+    return `В расчёте: ${list}. Число роботов посчитано под ваш поток грузов; поправить его можно в симуляции через панель «Задания».`;
+  }
+  return summaryAnswer(c);
+}
+
+/** Чипы в начале чата — единственные «готовые» вопросы; ответы на них тоже даёт ИИ. */
+export const SUGGESTED_QUESTIONS = [
+  "Объясни экономику простыми словами",
+  "Почему окупаемость именно такая?",
+  "Что такое NPV и IRR?",
+  "Из чего складываются затраты?",
+  "Что снизит операционные расходы?",
+  "Что будет, если вырастут зарплаты?",
+] as const;
+
+const normalizeQuestion = (q: string) => q.trim().toLowerCase().replace(/\s+/g, " ");
+
+export function isSuggestedQuestion(question: string): boolean {
+  const n = normalizeQuestion(question);
+  return SUGGESTED_QUESTIONS.some((q) => normalizeQuestion(q) === n);
+}
+
+/** Запасные формулировки для чипов, если ИИ недоступен — 3 варианта на вопрос, один смысл. */
+function suggestedFallbackVariants(c: EconomicsContext): Record<string, string[]> {
+  const pay =
+    c.paybackYears === null ? "за горизонт не окупается" : `примерно за ${fmt(c.paybackYears)} ${years(c.paybackYears)}`;
+  const irr = c.irrPct === null ? "не считается" : `${Math.round(c.irrPct)}%`;
+  const salary = c.sensitivity.find((s) => /зарплат/i.test(s.title));
+  const salaryLine = salary ? `${salary.title}: ${salary.low}; ${salary.high}` : "см. блок чувствительности в отчёте";
+  const levers =
+    c.levers.length > 0
+      ? c.levers
+          .slice(0, 3)
+          .map((l) => `— ${l.title}: до ${fmt(l.savingMln)} млн ₽/год`)
+          .join("\n")
+      : "— отдельных рычагов в этом расчёте нет";
+  const costs =
+    c.costGroups.length > 0
+      ? c.costGroups
+          .slice(0, 4)
+          .map((g) => `— ${g.title}: ${fmt(g.amountMln)} млн ₽`)
+          .join("\n")
+      : `— CAPEX: ${fmt(c.capexMln)} млн ₽`;
+
+  return {
+    [normalizeQuestion(SUGGESTED_QUESTIONS[0])]: [
+      `Коротко по вашему расчёту.\n\nВкладываете ${fmt(c.totalInvestmentMln)} млн ₽, роботы экономят около ${fmt(c.effectYearMln)} млн ₽ в год.\nОкупаемость — ${pay}.\nЗа ${c.horizonYears} ${years(c.horizonYears)} сверх вложений выходит около ${fmt(c.netBenefitMln)} млн ₽.`,
+      `Смысл такой:\n\n— вложения: ${fmt(c.totalInvestmentMln)} млн ₽;\n— экономия в год: ~${fmt(c.effectYearMln)} млн ₽;\n— срок возврата: ${pay}.\n\nИтого за горизонт — около ${fmt(c.netBenefitMln)} млн ₽ сверх того, что вложили.`,
+      `Если без терминов: купили роботов за ${fmt(c.totalInvestmentMln)} млн ₽, они каждый год «возвращают» около ${fmt(c.effectYearMln)} млн ₽ за счёт зарплат, которые больше не платите.\nПоэтому деньги возвращаются ${pay}.`,
+    ],
+    [normalizeQuestion(SUGGESTED_QUESTIONS[1])]: [
+      `Окупаемость ${pay}, потому что годовая экономия (~${fmt(c.effectYearMln)} млн ₽) быстро закрывает вложения ${fmt(c.totalInvestmentMln)} млн ₽.\n\nЭто зарплаты замещаемых сотрудников минус обслуживание и электричество роботов.`,
+      `Срок такой не случайно.\n\nВложения: ${fmt(c.totalInvestmentMln)} млн ₽\nЭкономия в год: ~${fmt(c.effectYearMln)} млн ₽\n\nЧем больше экономия относительно вложений, тем короче окупаемость — здесь как раз ${pay}.`,
+      `Почему ${pay}: роботы экономят около ${fmt(c.effectYearMln)} млн ₽ в год при вложениях ${fmt(c.totalInvestmentMln)} млн ₽.\nНакопленная экономия довольно быстро догоняет CAPEX.`,
+    ],
+    [normalizeQuestion(SUGGESTED_QUESTIONS[2])]: [
+      `NPV и IRR — два взгляда на ту же экономику.\n\n— NPV ${fmt(c.npvMln)} млн ₽: сколько проект даст в сегодняшних деньгах (ставка ${fmt(c.discountRatePct)}%).\n— IRR ${irr}: доходность в % годовых.\n\nЕсли NPV > 0 и IRR выше стоимости денег — проект выглядит выгоднее «просто держать деньги».`,
+      `Простыми словами:\n\nNPV (${fmt(c.npvMln)} млн ₽) — итог в сегодняшних рублях.\nIRR (${irr}) — «ставка», которую проект зарабатывает сам.\n\nСтавка в расчёте — ${fmt(c.discountRatePct)}%.`,
+      `NPV = ${fmt(c.npvMln)} млн ₽ — это уже с учётом того, что будущие деньги дешевле сегодняшних.\nIRR = ${irr} — удобно сравнивать с кредитом или вкладом.`,
+    ],
+    [normalizeQuestion(SUGGESTED_QUESTIONS[3])]: [
+      `Затраты в расчёте (крупнее всего):\n\n${costs}\n\nCAPEX целиком — ${fmt(c.capexMln)} млн ₽, все вложения с заменами — ${fmt(c.totalInvestmentMln)} млн ₽.`,
+      `Из чего складывается:\n\n${costs}\n\nРазовые вложения (CAPEX) — ${fmt(c.capexMln)} млн ₽.`,
+      `По стоимости владения основные статьи такие:\n\n${costs}`,
+    ],
+    [normalizeQuestion(SUGGESTED_QUESTIONS[4])]: [
+      `Сильнее всего OPEX снизят:\n\n${levers}\n\nOPEX — это ежегодное содержание роботов: сервис, ПО, электричество.`,
+      `Чтобы уменьшить операционные расходы парка:\n\n${levers}`,
+      `Рычаги по этому расчёту:\n\n${levers}`,
+    ],
+    [normalizeQuestion(SUGGESTED_QUESTIONS[5])]: [
+      `Если зарплаты замещаемых сотрудников вырастут, окупаемость обычно ускоряется: роботы замещают как раз этот ФОТ.\n\nВ чувствительности (±20%):\n${salaryLine}`,
+      `Рост зарплат → больше экономия от роботов → короче срок возврата.\n\nПо отчёту:\n${salaryLine}`,
+      `При более дорогом ручном труде проект становится выгоднее.\n\nОриентир из чувствительности:\n${salaryLine}`,
+    ],
+  };
+}
+
+function pickRandom<T>(items: T[]): T {
+  return items[Math.floor(Math.random() * items.length)]!;
+}
+
+/**
+ * Запасной ответ без ИИ: для чипов — случайный вариант формулировки;
+ * иначе — краткая структура по теме (только если модель недоступна).
+ */
+export function localAnswer(question: string, c: EconomicsContext, details = ""): string {
+  const variants = suggestedFallbackVariants(c)[normalizeQuestion(question)];
+  if (variants?.length) return pickRandom(variants);
+  return structuredEconomicsAnswer(question, c, details);
+}
+
+/** Ответ модели — дамп паспорта / чужая ветка, не по вопросу. */
+export function looksOffTopicAnswer(answer: string, question: string): boolean {
+  const a = answer.toLowerCase();
+  const q = question.toLowerCase();
+  if (/паспорт склада|общие параметры объекта|площадь активной/.test(a) && !/паспорт|параметр|исходн/.test(q)) return true;
+  // Старый шаблон чувствительности целиком — не то, что просил пользователь.
+  if (/окупаемость при изменении факторов на 20%/.test(a) && !/зарплат|чувствит|риск|вырастет|упад/.test(q)) return true;
+  return false;
+}
+
+/** Для модели — только нужные куски досье, без паспорта (он провоцирует дамп). */
+export function detailsForModel(details: string, intent: EconomicsIntent): string {
+  if (!details) return "";
+  if (intent === "passport") return sectionOf(details, "ПАСПОРТ СКЛАДА") || details.slice(0, 4000);
+  // Порядок = приоритет внимания модели.
+  let keep = ["ПАРК РОБОТОВ", "РАЗБИВКА CAPEX", "ДЕНЕЖНЫЙ ПОТОК", "РЫЧАГИ СНИЖЕНИЯ OPEX", "ДОПУЩЕНИЯ РАСЧЁТА"];
+  if (intent === "extra_unit" || intent === "capex" || intent === "fleet") {
+    keep = ["РАЗБИВКА CAPEX", "ПАРК РОБОТОВ", "ДОПУЩЕНИЯ РАСЧЁТА"];
+  } else if (intent === "cashflow") {
+    keep = ["ДЕНЕЖНЫЙ ПОТОК", "ПАРК РОБОТОВ", "РАЗБИВКА CAPEX"];
+  } else if (intent === "opex") {
+    keep = ["OPEX РОБОТОВ", "РЫЧАГИ СНИЖЕНИЯ OPEX", "ПАРК РОБОТОВ"];
+  } else if (intent === "sensitivity" || intent === "payback" || intent === "summary") {
+    keep = ["ПАРК РОБОТОВ", "РАЗБИВКА CAPEX", "РЫЧАГИ СНИЖЕНИЯ OPEX"];
+  }
+  const parts = keep.map((t) => sectionOf(details, t)).filter(Boolean);
+  const text = parts.join("\n\n").trim();
+  return (text || details).slice(0, 8000);
+}
+
 // ─── Модель на Groq ───────────────────────────────────────────────────────
-// «Обучение» — инструкция: роль, как устроен расчёт, правила ответа и образцы.
-// Дообучения у Groq нет; модель отвечает по этой инструкции и цифрам расчёта.
-const SYSTEM = `Ты — консультант по экономике роботизации склада в сервисе РОБОПОДБОР. Собеседник — руководитель склада или финансист, не экономист по образованию.
+// Короткий system: длинный промпт размывает вопрос. Суть вопроса — в user-сообщении.
+const SYSTEM = `Ты — ИИ-консультант по экономике роботизации склада (РОБОПОДБОР).
 
-КАК УСТРОЕН РАСЧЁТ (опирайся на это, объясняя «почему»):
-- CAPEX — разовые вложения: покупка роботов, ПО и внедрение. «Вложения всего» = CAPEX + замена роботов, у которых срок службы короче горизонта.
-- Экономия в год (эффект) = зарплаты сотрудников, которых заменяют роботы (с налогами на ФОТ), минус OPEX роботов: сервис, ПО, электроэнергия.
-- Окупаемость — через сколько лет накопленная экономия покроет вложения (без учёта стоимости роботов на конец срока). Дисконтированная — то же, но будущие деньги пересчитаны по ставке дисконтирования.
-- NPV — сумма всех денежных потоков за горизонт в сегодняшних деньгах (по ставке дисконтирования). Больше нуля — проект выгоднее, чем держать деньги под эту ставку.
-- IRR — ставка, при которой NPV = 0: «доходность проекта в % годовых». Сравнивают со ставкой кредита или депозита. Если вложения возвращаются меньше чем за год, IRR получается в сотни процентов — это нормально, не ошибка.
-- ROI — чистая прибыль за горизонт (с остаточной стоимостью роботов) на рубль вложений.
-- Остаточная стоимость — сколько стоят роботы на конец горизонта; учтена как возврат в последнем году.
-- TCO — полная стоимость владения за горизонт: вложения + OPEX + оставшийся ФОТ.
-- Число роботов посчитано под поток грузов склада. Его можно поправить в 3D-симуляции: панель «Задания» → «Добавить/Убрать робота в расчёт».
-- Рычаги OPEX и чувствительность (±20% по фактору) — из данных расчёта.
+ГЛАВНОЕ: сначала пойми вопрос пользователя (блок «ЗАДАЧА» в сообщении), потом ответь именно на него. Не подменяй тему паспортом склада, общим обзором или соседним KPI.
 
-ЛОГИКА ФАКТОРОВ (не путай направление):
-- Зарплаты замещаемых сотрудников выше → роботы экономят больше → окупаемость короче, NPV выше. Зарплаты ниже → наоборот.
-- Роботы, сервис, ПО, электроэнергия дороже → вложения или OPEX выше → окупаемость длиннее.
-- Объём операций больше → нужно больше роботов, но и замещается больше работы.
-- В чувствительности у каждого фактора указано, при каком изменении (+20% или −20%) какой срок окупаемости — бери срок именно для того направления, о котором спрашивают.
+Опора: только «ЦИФРЫ РАСЧЁТА», «ПОДРОБНОСТИ» и «ОЦЕНКА +1 ЕДИНИЦА» (если есть). Не выдумывай цифры и не проси прислать данные.
 
-ПРАВИЛА ОТВЕТА:
-0. У тебя есть ВСЁ о складе и расчёте: «ЦИФРЫ РАСЧЁТА» и «ПОДРОБНОСТИ РАСЧЁТА» (паспорт склада, парк роботов, потоки, статьи затрат построчно, сценарии, денежный поток по годам, состав OPEX, допущения). Никогда не проси пользователя прислать данные склада или расчёта — ищи их в этих блоках. Если чего-то там действительно нет — так и скажи, что в расчёте этого нет.
-0.1. Разбивку CAPEX бери ТОЛЬКО из раздела «РАЗБИВКА CAPEX» — все его строки, без пропусков и объединений; группа «CAPEX — покупка, замена и остаточная стоимость» в статьях стоимости владения — это НЕ CAPEX (в ней вычтена остаточная стоимость). Остаточную стоимость и замену называй отдельно, если спрашивают.
-1. Только по-русски. Коротко: 2–5 предложений, до 110 слов; для разбивки (CAPEX, статьи, денежный поток, состав парка) — короткий список строк «— статья: сумма», до 12 строк. Без формул, LaTeX, таблиц и markdown-заголовков; можно короткий список через «—».
-2. Сначала прямой ответ на вопрос с цифрой из расчёта, потом одно пояснение «почему» простыми словами.
-3. Бери числа только из блока «ЦИФРЫ РАСЧЁТА». Не придумывай и не пересчитывай новые показатели, не сравнивай с величинами, которых нет в блоке (например, «в 3 раза больше OPEX», если OPEX не указан). Не считай сам «во сколько раз» и проценты — просто назови обе цифры. Если нужной цифры нет — так и скажи и подскажи, где её взять (паспорт склада, поставщик).
-4. Суммы — «млн ₽» с одним знаком после запятой, сроки — «года/лет», дробные годы — «0,4 года».
-5. Термин объясняй одной фразой при первом упоминании.
-6. Не давай личных инвестиционных советов («покупайте»): описывай, что показывает расчёт.
-7. Вопрос не про экономику или роботов склада — вежливо скажи, что помогаешь только с этим расчётом, и предложи 1–2 вопроса по нему.
+Смысл показателей: CAPEX — разовые вложения; экономия в год = ФОТ замещаемых − OPEX роботов; окупаемость — когда экономия покроет вложения; ROI / год — чистая выгода за вычетом CAPEX, усреднённая на год; NPV/IRR — из цифр расчёта. Зарплаты выше → окупаемость короче. Лишний робот при том же потоке → CAPEX↑, экономия почти та же → окупаемость обычно длиннее.
 
-ОБРАЗЦЫ (цифры в них условные — в ответе всегда бери цифры из блока «ЦИФРЫ РАСЧЁТА»):
-Вопрос: «Почему окупаемость такая быстрая?»
-Ответ: «Вложения 74,1 млн ₽ возвращаются примерно за 0,4 года, потому что роботы экономят около 186 млн ₽ в год — это зарплаты замещаемых операторов за вычетом обслуживания и электричества. Экономия в год больше вложений в 2,5 раза, отсюда и срок меньше года.»
-Вопрос: «Разбей CAPEX»
-Ответ: «CAPEX 23,4 млн ₽ складывается из:
-— 3 погрузчика на приёмке: 8,8 млн ₽;
-— 3 погрузчика на отгрузке: 8,8 млн ₽;
-— ПО: 1,7 млн ₽;
-— внедрение и интеграция: 2,9 млн ₽;
-— резерв 5%: 1,1 млн ₽.
-Больше всего — покупка роботов; внедрение — это монтаж, обучение и интеграция с WMS.»
-Вопрос: «Что такое IRR простыми словами?»
-Ответ: «IRR — доходность проекта в процентах годовых, как ставка по вкладу. Здесь она 263%: деньги в роботах «работают» намного выгоднее, чем под ставку дисконтирования 15%.»
-Вопрос: «Что будет, если зарплаты вырастут?»
-Ответ: «Окупится ещё быстрее: при зарплатах на 20% выше срок сократится примерно до 0,3 года. Роботы заменяют именно эти зарплаты, поэтому чем дороже ручной труд, тем больше экономия в год.»`;
+Формат: по-русски; 4–12 строк; первая фраза — прямой ответ по сути; абзацы и списки «— »; без markdown (#,**), без простыни и без дампа досье. Можно чуть варьировать формулировку, смысл тот же.`
 
 const contextText = (c: EconomicsContext) => {
   const yr = (x: number | null) => (x === null ? "не окупается за горизонт" : `${fmt(x)} ${years(x)}`);
@@ -190,7 +522,7 @@ const contextText = (c: EconomicsContext) => {
     c.opexYearMln !== undefined ? `OPEX роботов ${fmt(c.opexYearMln)} млн ₽ в год` : "OPEX роботов в год: нет в данных",
     `Окупаемость ${yr(c.paybackYears)}; дисконтированная ${yr(c.discountedPaybackYears)}`,
     `NPV ${fmt(c.npvMln)} млн ₽; IRR ${c.irrPct === null ? "не считается" : `${Math.round(c.irrPct)}%`}`,
-    c.roiPct === null ? "ROI не считается" : `ROI ${fmt(c.roiPct)}% — на каждый вложенный рубль ${fmt(c.roiPct / 100)} ₽ чистой прибыли за горизонт`,
+    c.roiPct === null ? "ROI не считается" : `ROI ${fmt(c.roiPct)}% / год — на каждый вложенный рубль ~${fmt(c.roiPct / 100)} ₽ чистой прибыли в год (за вычетом CAPEX)`,
     `Остаточная стоимость ${fmt(c.salvageMln)} млн ₽; итог сверх вложений ${fmt(c.netBenefitMln)} млн ₽`,
     `Роботы: ${c.robots.map((r) => `${r.count} × ${r.name} (${SLOT_TITLE[r.slot] ?? r.slot})`).join("; ") || "нет данных"}`,
     `Стоимость владения по статьям: ${c.costGroups.map((g) => `${g.title} ${fmt(g.amountMln)} млн ₽`).join("; ") || "нет данных"}`,
@@ -217,32 +549,66 @@ async function callGroq(model: string, messages: Array<{ role: string; content: 
     body: JSON.stringify({
       model,
       messages,
-      temperature: 0.3,
-      max_completion_tokens: 700,
-      reasoning_effort: "low",
+      // Ниже — точнее держит задачу; вариативность — за счёт формулировки, не «плавания» темы.
+      temperature: 0.35,
+      max_completion_tokens: 900,
+      reasoning_effort: "medium",
       include_reasoning: false,
     }),
-    signal: AbortSignal.timeout(25_000),
+    signal: AbortSignal.timeout(35_000),
   });
   if (response.status === 429) throw new GroqLimitError(Number(response.headers.get("retry-after") ?? 60));
   if (!response.ok) throw new Error(`Groq ${model}: ${response.status}`);
   const data = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
   const text = data.choices?.[0]?.message?.content?.trim();
   if (!text) throw new Error(`Groq ${model}: пустой ответ`);
-  // Модель иногда всё же ставит markdown — чистим до простого текста.
-  return text.replace(/\*\*(.+?)\*\*/g, "$1").replace(/^#+\s*/gm, "");
+  // Убираем markdown-разметку, списки «—» и абзацы оставляем.
+  return text.replace(/\*\*(.+?)\*\*/g, "$1").replace(/^#+\s*/gm, "").replace(/`+/g, "");
+}
+
+/** Сообщение пользователя: вопрос + явная задача — модель видит суть до ответа. */
+export function buildUserPrompt(question: string, intent: EconomicsIntent): string {
+  const clean = stripQuestionNoise(question);
+  const task = taskForIntent(intent, clean);
+  const variety = isSuggestedQuestion(question)
+    ? "Сформулируй свежо (не как заготовку), смысл тот же."
+    : "Ответь естественно, по делу.";
+  return [
+    `ВОПРОС: ${clean}`,
+    clean !== question.trim() ? `Исходная формулировка: ${question.trim()}` : "",
+    `ЗАДАЧА: ${task}`,
+    variety,
+    "Первая фраза — прямой ответ на ВОПРОС. Не уходи в другие темы.",
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 /** Ответ модели Groq: основная модель, при лимите — запасная. */
 export async function askGroq(question: string, history: ChatTurn[], context: EconomicsContext, apiKey: string, details = ""): Promise<{ answer: string; model: string }> {
+  const intent = classifyEconomicsQuestion(question);
+  const trimmed = detailsForModel(details, intent);
+  const extraUnit = estimateExtraUnitAnswer(question, context, details);
+  // Данные — в system; вопрос и задача — в user (иначе суть тонет в длинном контексте).
   const messages = [
-    { role: "system", content: `${SYSTEM}\n\n${contextText(context)}${details ? `\n\nПОДРОБНОСТИ РАСЧЁТА:\n${details}` : ""}` },
-    ...history.slice(-6).map((t) => ({ role: t.role, content: t.text.slice(0, 1200) })),
-    { role: "user", content: question },
+    {
+      role: "system",
+      content: [
+        SYSTEM,
+        "",
+        contextText(context),
+        trimmed ? `\nПОДРОБНОСТИ РАСЧЁТА:\n${trimmed}` : "",
+        extraUnit ? `\nОЦЕНКА +1 ЕДИНИЦА (используй эти цифры, если вопрос про добавление единицы):\n${extraUnit}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    },
+    // Короткая история — чтобы уточнения работали, но старые ответы не сбивали тему.
+    ...history.slice(-4).map((t) => ({ role: t.role, content: t.text.slice(0, 800) })),
+    { role: "user", content: buildUserPrompt(question, intent) },
   ];
   let lastError: unknown = null;
   for (const model of GROQ_MODELS) {
-    // Сетевой сбой — один повтор той же моделью; лимит — сразу к запасной.
     for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
         return { answer: await callGroq(model, messages, apiKey), model };
@@ -254,4 +620,26 @@ export async function askGroq(question: string, history: ChatTurn[], context: Ec
     }
   }
   throw lastError;
+}
+
+/**
+ * Сначала ИИ (Groq); локальный ответ — только если нет ключа, сбой или явный уход не по теме.
+ */
+export async function resolveEconomicsAnswer(
+  question: string,
+  history: ChatTurn[],
+  context: EconomicsContext,
+  details = "",
+  apiKey?: string,
+): Promise<{ answer: string; source: "local" | "ai" }> {
+  if (apiKey) {
+    try {
+      const { answer } = await askGroq(question, history, context, apiKey, details);
+      if (!looksOffTopicAnswer(answer, question)) return { answer, source: "ai" };
+      console.error("[assistant] Ответ модели отклонён как не по теме, запасной ответ");
+    } catch (error) {
+      console.error("[assistant] Groq недоступен, отвечаем запасным помощником:", error instanceof Error ? error.message : error);
+    }
+  }
+  return { answer: localAnswer(question, context, details), source: "local" };
 }

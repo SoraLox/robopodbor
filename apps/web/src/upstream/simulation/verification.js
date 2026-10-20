@@ -4,11 +4,23 @@
 // Не показывать подтверждение расчёта, пока симуляция идёт слишком мало (цифры «прыгают»).
 export const MIN_VERIFY_SECONDS = 120;
 
+function parkNotes({ required, calculated, placed, requested, extra }) {
+  const parts = [];
+  if (extra) parts.push(extra);
+  if (calculated != null && required != null && required > calculated) {
+    parts.push("парк по расчёту не закрывает пик паспорта");
+  }
+  if (placed != null && requested != null && placed < requested) {
+    parts.push(`в сцене ${placed} из ${requested} роботов`);
+  }
+  return parts.length ? parts.join("; ") : undefined;
+}
+
 // Строки таблицы «нужно / расчёт парка / в симуляции». input:
 //   layout          — какие типы роботов включены;
 //   demand          — потребность объекта на этаж { vacuum, arm, loader };
 //   fleet           — расчётная мощность парка { vacuum (м²/ч, с учётом зарядки), arm, loader };
-//   stats           — показатели симуляции (simSeconds, opsDone, vacuum, loader);
+//   stats           — показатели симуляции (simSeconds, opsDone, vacuum, loader, armPlaced…);
 //   areaPerUnit2    — сколько м² в квадратной единице сцены;
 //   inflowPerFloor  — входящий и исходящий поток на этаж { inbound, outbound };
 //   routeLengthM    — заданная средняя протяжённость маршрута.
@@ -26,7 +38,11 @@ export function buildVerifyRows({ layout, demand, fleet, stats, areaPerUnit2, in
       required: demand.vacuum,
       calculated: fleet.vacuum,
       simulated: cleaning ? (stats.vacuum.cleanedCells * areaPerUnit2) / (stats.vacuum.activeSeconds / 3600) : null,
-      note: "Расчёт учитывает время на зарядку; в симуляции — убранная площадь за время, пока роботы убирают.",
+      note: parkNotes({
+        required: demand.vacuum,
+        calculated: fleet.vacuum,
+        extra: "Расчёт учитывает время на зарядку; в симуляции — убранная площадь за время, пока роботы убирают.",
+      }),
     });
   }
 
@@ -37,6 +53,12 @@ export function buildVerifyRows({ layout, demand, fleet, stats, areaPerUnit2, in
       required: demand.arm,
       calculated: fleet.arm,
       simulated: enoughTime ? stats.opsDone / simHours : null,
+      note: parkNotes({
+        required: demand.arm,
+        calculated: fleet.arm,
+        placed: stats.armPlaced,
+        requested: stats.armRequested,
+      }),
     });
   }
 
@@ -47,7 +69,11 @@ export function buildVerifyRows({ layout, demand, fleet, stats, areaPerUnit2, in
       required: demand.sorter ?? 0,
       calculated: fleet.sorter ?? 0,
       simulated: enoughTime ? stats.sorterItems / simHours : null,
-      note: stats.sorterSystems ? `В сцене ${stats.sorterSystems} сист.; каретки подают штуки с темпом паспортной производительности.` : undefined,
+      note: parkNotes({
+        required: demand.sorter ?? 0,
+        calculated: fleet.sorter ?? 0,
+        extra: stats.sorterSystems ? `В сцене ${stats.sorterSystems} сист.; каретки подают штуки с темпом паспортной производительности.` : undefined,
+      }),
     });
   }
 
@@ -58,7 +84,11 @@ export function buildVerifyRows({ layout, demand, fleet, stats, areaPerUnit2, in
       required: demand.conveyor ?? 0,
       calculated: fleet.conveyor ?? 0,
       simulated: enoughTime ? stats.conveyorUnits / simHours : null,
-      note: stats.conveyorLines ? `В сцене ${stats.conveyorLines} лин. от ворот до хранения.` : undefined,
+      note: parkNotes({
+        required: demand.conveyor ?? 0,
+        calculated: fleet.conveyor ?? 0,
+        extra: stats.conveyorLines ? `В сцене ${stats.conveyorLines} лин. от ворот до хранения.` : undefined,
+      }),
     });
   }
 
@@ -70,7 +100,13 @@ export function buildVerifyRows({ layout, demand, fleet, stats, areaPerUnit2, in
         required: demand.loader,
         calculated: fleet.loader,
         simulated: stats.loader.movedPerHour || null,
-        note: "Производительность погрузчика ограничена длиной маршрута, скоростью и массой груза; если парк не успевает, фуры ждут в очереди.",
+        note: parkNotes({
+          required: demand.loader,
+          calculated: fleet.loader,
+          placed: stats.loaderPlaced,
+          requested: stats.loaderRequested,
+          extra: "Производительность погрузчика ограничена длиной маршрута, скоростью и массой груза; если парк не успевает, фуры ждут в очереди.",
+        }),
       },
       {
         label: "Входящий поток",

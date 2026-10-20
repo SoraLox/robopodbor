@@ -1,9 +1,9 @@
 /**
  * Расчёт экономики по паспорту объекта и выбранному решению каталога (ТЗ 3.5).
  * Модуль без зависимостей: его вызывают и API (POST /calculations), и MSW-моки
- * фронтенда — результат одинаковый в обоих режимах.
+ * фронтенда: результат одинаковый в обоих режимах.
  *
- * Принцип: число из паспорта или карточки — используем; нет числа — не выдумываем,
+ * Принцип: число из паспорта или карточки: используем; нет числа: не выдумываем,
  * а берём явно названное допущение и выносим его в «Допущения» и предупреждение.
  */
 import { OBJECT_LABEL, isTeamEstimate, type CatalogSolution } from "./catalog.js";
@@ -32,7 +32,7 @@ import {
   type WarehouseParams,
 } from "./warehouseEconomics.js";
 
-export const ECONOMICS_MODEL_VERSION = "economics-2026.09d";
+export const ECONOMICS_MODEL_VERSION = "economics-2026.10a";
 
 type Params = Record<string, string>;
 type Confidence = "confirmed" | "needs-review";
@@ -44,9 +44,9 @@ export interface CalculationInput {
   fields: Array<{ id: string; label: string; defaultValue?: string }>;
   processes?: string[];
   solution: CatalogSolution;
-  /** Набор роботов (по одному на флот); solution — главный из них. Нет — только solution. */
+  /** Набор роботов (по одному на флот); solution: главный из них. Нет: только solution. */
   solutions?: CatalogSolution[];
-  /** Склад: какой робот в каком слоте сценария (приёмка, отгрузка, отбор…); нет — по виду робота. */
+  /** Склад: какой робот в каком слоте сценария (приёмка, отгрузка, отбор…); нет: по виду робота. */
   assignments?: Assignment[];
 }
 
@@ -64,7 +64,7 @@ export interface ScenarioOutput {
   }>;
 }
 
-/** Флот в расчёте склада — те же числа идут в 3D-сцену. */
+/** Флот в расчёте склада: те же числа идут в 3D-сцену. */
 export interface FleetOutput {
   kind: FleetKind;
   /** Слот сценария: приёмка, отгрузка, отбор, сортировка, уборка. */
@@ -92,14 +92,14 @@ export interface FleetOutput {
   workPowerKw: number;
   idlePowerKw: number;
   substitutions: Substitution[];
-  /** СтойкаБокс: башен в сетке — ёмкость хранения (роботы — шаттлы, count). */
+  /** СтойкаБокс: башен в сетке: ёмкость хранения (роботы: шаттлы, count). */
   storageTowers?: number;
 }
 
 export interface CalculationOutput {
   /** Денежный поток и инвестиционные показатели покупки (finance.ts). */
   finance?: FinanceOutput;
-  /** Что снизит OPEX — рычаги из структуры затрат расчёта (opexLevers.ts). */
+  /** Что снизит OPEX: рычаги из структуры затрат расчёта (opexLevers.ts). */
   opexLevers?: OpexLeversOutput;
   objectTitle: string;
   meta: string;
@@ -133,7 +133,7 @@ export interface CalculationOutput {
   /** Сколько роботов заложено в расчёт и почему. */
   robots: { count: number; basis: string };
   fleet?: FleetOutput[];
-  /** Склад: связи приёмки и отгрузки — поток, путь, конвейер, доля на людях. */
+  /** Склад: связи приёмки и отгрузки: поток, путь, конвейер, доля на людях. */
   scenario?: ScenarioOutput;
 }
 
@@ -151,9 +151,9 @@ export const NORMS = {
   availability: 0.95,
   reserveRatio: 0.05,
   /** Обслуживание в год, доля цены оборудования, если в карточке нет своей цифры. */
-  serviceShare: 0.07,
-  /** Внедрение, интеграция, зарядная инфраструктура — доля цены оборудования. */
-  implementationShare: 0.15,
+  serviceShare: 0.1,
+  /** Внедрение, интеграция, зарядная инфраструктура: доля цены оборудования. */
+  implementationShare: 0.4,
   /** RaaS: месячный платёж за робота, доля его цены (включает сервис). */
   raasMonthlyShare: 0.025,
   lifespanYears: 7,
@@ -170,7 +170,7 @@ interface Role {
   label: string;
   headcount: string;
   wage: string;
-  /** Заработная плата взята у смежной роли — показываем это. */
+  /** Заработная плата взята у смежной роли: показываем это. */
   wageNote?: string;
 }
 
@@ -180,7 +180,7 @@ interface Demand {
   fields: string[];
   /** Какие единицы производительности робота сопоставимы с этим потоком. */
   robotUnit: RegExp;
-  /** Цикл «туда-обратно» по объекту — если в карточке нет производительности, считаем по скорости. */
+  /** Цикл «туда-обратно» по объекту: если в карточке нет производительности, считаем по скорости. */
   bySpeed?: boolean;
 }
 
@@ -328,7 +328,7 @@ const PROFILES: Record<string, Profile[]> = {
           label: "сотрудники прачечной (транспорт белья)",
           headcount: "cl_chislennost_sotrudnikov_prachechnoy",
           wage: "cl_z_p_sanitara_transportirovschika",
-          wageNote: "з/п санитара-транспортировщика — отдельной з/п прачечной в паспорте нет",
+          wageNote: "з/п санитара-транспортировщика: отдельной з/п прачечной в паспорте нет",
         },
         {
           label: "сотрудники пищеблока (раздача)",
@@ -340,7 +340,7 @@ const PROFILES: Record<string, Profile[]> = {
   ],
 };
 
-// Машины уборки аэропорта считаются в штуках: на каждую — один оператор в смену.
+// Машины уборки аэропорта считаются в штуках: на каждую: один оператор в смену.
 const HEADCOUNT_PER_SHIFT = new Set(["ap_kolichestvo_uborochnyh_mashin"]);
 
 // ─── Вспомогательное ─────────────────────────────────────────────────────
@@ -503,13 +503,13 @@ export function calculateEconomics(input: CalculationInput): CalculationOutput {
     }
     meanWage = replacedHeadcount ? baselineLaborYear / replacedHeadcount / 12 / payrollFactor : 0;
     assumptions.push(
-      `Робот замещает труд на процессе «${profile.label}»: ${profile.roles.map((r) => r.label).join(", ")} — ${Math.round(replacedHeadcount)} чел. Другие роли в расчёт не входят.`,
+      `Робот замещает труд на процессе «${profile.label}»: ${profile.roles.map((r) => r.label).join(", ")}: ${Math.round(replacedHeadcount)} чел. Другие роли в расчёт не входят.`,
     );
   } else {
     gaps.push("для процессов этого решения в паспорте объекта нет численности и зарплат персонала");
   }
 
-  // Полная стоимость одного робота с внедрением и резервом — для оценки по бюджету.
+  // Полная стоимость одного робота с внедрением и резервом: для оценки по бюджету.
   const unitCapexRub = () => {
     const price = solution.costs?.equipment ?? numberOf(solution.price);
     if (!price) return undefined;
@@ -536,7 +536,7 @@ export function calculateEconomics(input: CalculationInput): CalculationOutput {
   if (demand && demandPerDay > 0) {
     if (throughput && demand.robotUnit.test(unit)) {
       perRobot = throughput;
-      perRobotSource = `производительность из карточки — ${fmt(throughput)} ${unit}`;
+      perRobotSource = `производительность из карточки: ${fmt(throughput)} ${unit}`;
     } else if (demand.bySpeed) {
       const speed = numberOf(solution.speed);
       const areaM2 = value(base?.area);
@@ -544,7 +544,7 @@ export function calculateEconomics(input: CalculationInput): CalculationOutput {
         const route = Math.sqrt(areaM2) / 2;
         const cycle = (2 * route) / speed + NORMS.handlingSeconds;
         perRobot = 3600 / cycle;
-        perRobotSource = `по скорости ${fmt(speed)} м/с и маршруту ${Math.round(route)} м в одну сторону (половина стороны квадратного склада) + ${NORMS.handlingSeconds} с на погрузку — ${fmt(perRobot)} паллет/ч`;
+        perRobotSource = `по скорости ${fmt(speed)} м/с и маршруту ${Math.round(route)} м в одну сторону (половина стороны квадратного склада) + ${NORMS.handlingSeconds} с на погрузку: ${fmt(perRobot)} паллет/ч`;
       }
     }
   }
@@ -556,8 +556,8 @@ export function calculateEconomics(input: CalculationInput): CalculationOutput {
     basis = `Пиковый поток «${demand!.label}» ${fmt(peakPerHour)} ${demand!.unit}/ч${peakFactor !== 1 ? ` (с пиковым коэффициентом ${peakFactor})` : ""}; на робота ${perRobotSource}; загрузка ${NORMS.loadFactor}, готовность ${NORMS.availability}, резерв ${pct(NORMS.reserveRatio)}%.`;
   } else if (perShiftStaff > 0) {
     count = Math.max(1, Math.ceil(perShiftStaff));
-    basis = `Производительности робота в карточке нет${demand ? ", по скорости не пересчитать" : ""}: 1 робот на 1 пост в смене — ${count} шт.`;
-    // Без производительности парк на весь штат — не оценка, а экстраполяция.
+    basis = `Производительности робота в карточке нет${demand ? ", по скорости не пересчитать" : ""}: 1 робот на 1 пост в смене: ${count} шт.`;
+    // Без производительности парк на весь штат: не оценка, а экстраполяция.
     // Ограничиваем его бюджетом из паспорта: столько роботов заказчик готов купить.
     const budget = value(base?.budget);
     const unit = unitCapexRub();
@@ -566,18 +566,18 @@ export function calculateEconomics(input: CalculationInput): CalculationOutput {
       const affordable = Math.max(1, Math.floor((budget * 1_000_000) / unit));
       if (affordable < count) {
         count = affordable;
-        basis += ` Столько не укладывается в бюджет ${fmt(budget)} млн ₽ — взято ${count} шт. на весь бюджет.`;
+        basis += ` Столько не укладывается в бюджет ${fmt(budget)} млн ₽: взято ${count} шт. на весь бюджет.`;
       }
     }
     gaps.push("производительность робота");
   } else {
     count = 1;
-    basis = "Потребность не посчитать: нет ни потока, ни численности персонала — заложен 1 робот.";
+    basis = "Потребность не посчитать: нет ни потока, ни численности персонала: заложен 1 робот.";
   }
   assumptions.push(`Роботов в расчёте: ${count}. ${basis}`);
 
   // ─ Сколько людей реально замещают роботы: 1 робот = 1 пост в каждой смене.
-  // Штат шире числа постов на отпуска и болезни — это коэффициент потерь.
+  // Штат шире числа постов на отпуска и болезни: это коэффициент потерь.
   const lossPct = objectType === "warehouse" ? value("wh_koeffitsient_poter_rabochego_vremeni") : undefined;
   if (lossPct !== undefined) track("wh_koeffitsient_poter_rabochego_vremeni");
   const staffPerPost = 1 / (1 - Math.min(0.6, Math.max(0, (lossPct ?? 0) / 100)));
@@ -630,7 +630,7 @@ export function calculateEconomics(input: CalculationInput): CalculationOutput {
   const operatorsYear = operators * meanWage * 12 * payrollFactor;
 
   const lifespan = solution.lifespanYears ?? NORMS.lifespanYears;
-  if (!solution.lifespanYears) assumptions.push(`Срок службы робота — ${NORMS.lifespanYears} лет (в карточке не указан).`);
+  if (!solution.lifespanYears) assumptions.push(`Срок службы робота: ${NORMS.lifespanYears} лет (в карточке не указан).`);
   // Замена оборудования по сроку службы и остаточная стоимость парка на конец горизонта.
   const schedule = replacementSchedule(equipment + software, horizon, lifespan);
 
@@ -659,7 +659,7 @@ export function calculateEconomics(input: CalculationInput): CalculationOutput {
   const purchaseTco = tcoOf(core, core.purchase);
   const raasTco = tcoOf(core, core.raas);
   const effects = yearlyEffects(core, core.purchase);
-  // ROI, окупаемость, NPV, IRR — по денежному потоку с заменой и остаточной стоимостью.
+  // ROI, окупаемость, NPV, IRR: по денежному потоку с заменой и остаточной стоимостью.
   const finance = analyzeInvestment({ capex, effects, replacements: schedule.replacements, salvage: schedule.salvage });
   const purchasePayback = priceKnown ? finance.paybackYears : null;
   const raasPayback = priceKnown ? paybackYears(core, core.raas) : null;
@@ -685,20 +685,20 @@ export function calculateEconomics(input: CalculationInput): CalculationOutput {
       }
     : {
         label: "Срок окупаемости",
-        value: "—",
+        value: "-",
         unit: "",
         trend: "none",
         note: priceKnown
           ? baselineLaborYear === 0
-            ? "Нет данных о замещаемом персонале — эффект не посчитать."
-            : "Экономия не покрывает затраты — не окупается."
-          : "Нет цены робота — окупаемость не посчитать.",
+            ? "Нет данных о замещаемом персонале: эффект не посчитать."
+            : "Экономия не покрывает затраты: не окупается."
+          : "Нет цены робота: окупаемость не посчитать.",
       };
 
   const firstYearSaving = effects[0] ?? 0;
   const opexPercent = baselineLaborYear > 0 ? (firstYearSaving / baselineLaborYear) * 100 : 0;
 
-  // Затраты из карточки: подтверждённые — «Каталог решений», оценки команды — требуют проверки.
+  // Затраты из карточки: подтверждённые: «Каталог решений», оценки команды: требуют проверки.
   const cardSource = (key: string) => (isTeamEstimate(solution, key) ? "Каталог: оценка по классу оборудования" : "Каталог решений");
   const cardConfidence = (key: string): Confidence => (isTeamEstimate(solution, key) ? "needs-review" : "confirmed");
 
@@ -722,7 +722,7 @@ export function calculateEconomics(input: CalculationInput): CalculationOutput {
     {
       title: implementationFromCard
         ? "Внедрение и интеграция"
-        : `Внедрение, интеграция, зарядка — ${pct(NORMS.implementationShare)}% от оборудования`,
+        : `Внедрение, интеграция, зарядка: ${pct(NORMS.implementationShare)}% от оборудования`,
       amount: implementation,
       source: implementationFromCard ? cardSource("costs.implementation") : "Оценка",
       confidence: (implementationFromCard ? cardConfidence("costs.implementation") : "needs-review") as Confidence,
@@ -745,7 +745,7 @@ export function calculateEconomics(input: CalculationInput): CalculationOutput {
       confidence: (serviceFromCard ? cardConfidence("costs.maintenancePerYear") : "needs-review") as Confidence,
     },
     {
-      title: energyYear > 0 ? `Электроэнергия (${energyNote}, ${NORMS.tariffRubPerKwh} ₽/кВт·ч)` : "Электроэнергия — нет данных о мощности",
+      title: energyYear > 0 ? `Электроэнергия (${energyNote}, ${NORMS.tariffRubPerKwh} ₽/кВт·ч)` : "Электроэнергия: нет данных о мощности",
       amount: energyYear * horizon,
       source: energyYear > 0 ? "Каталог + тариф" : "Нет данных",
       confidence: "needs-review" as Confidence,
@@ -865,7 +865,7 @@ export function calculateEconomics(input: CalculationInput): CalculationOutput {
 
   assumptions.push(
     `Горизонт ${horizon} ${yearsUnit(horizon)}, рост зарплат ${pct(NORMS.wageGrowth)}% в год.`,
-    `ROI = (эффект за горизонт + остаточная стоимость парка − CAPEX − замена по сроку службы) / все вложения. Окупаемость — по реальным деньгам, без остаточной стоимости. NPV и дисконтированная окупаемость — по ставке ${FIN_RATE}% (оценка стоимости капитала; в паспорте ставки нет).`,
+    `ROI / год = (эффект за горизонт + остаточная стоимость − CAPEX − замена) / все вложения / ${horizon}. Окупаемость: по реальным деньгам, без остаточной стоимости. NPV и дисконтированная окупаемость: по ставке ${FIN_RATE}%.`,
     `ФОТ = численность × з/п × 12 × коэффициент начислений ${payrollFactor}.`,
     `Режим работы: ${fmt(hoursPerDay)} ч в сутки, ${days} дн. в году.`,
     `RaaS: ${pct(NORMS.raasMonthlyShare)}% цены робота в месяц, сервис включён; внедрение оплачивается отдельно (оценка рынка).`,
@@ -880,8 +880,8 @@ export function calculateEconomics(input: CalculationInput): CalculationOutput {
   }
   const area = value(base?.area);
   const warning = gaps.length
-    ? `Не хватает данных: ${[...new Set(gaps)].join("; ")}. Там, где данных нет, приняты допущения — результат предварительный.`
-    : "Цены и производительность — из каталога; обслуживание, внедрение и тариф RaaS — отраслевые оценки. Уточните у поставщика перед защитой бюджета.";
+    ? `Не хватает данных: ${[...new Set(gaps)].join("; ")}. Там, где данных нет, приняты допущения: результат предварительный.`
+    : "Цены и производительность: из каталога; обслуживание, внедрение и тариф RaaS: отраслевые оценки. Уточните у поставщика перед защитой бюджета.";
 
   return {
     objectTitle: `${OBJECT_LABEL[objectType] ?? "Объект"}${area ? ` · ${Math.round(area).toLocaleString("ru-RU").replace(/ /g, " ")} м²` : ""}`,
@@ -889,22 +889,22 @@ export function calculateEconomics(input: CalculationInput): CalculationOutput {
     payback,
     capex: { label: "CAPEX", value: fmt(mln(capex)), note: "млн ₽, разово", trend: "none" },
     roi: {
-      label: `ROI, ${horizon} ${yearsUnit(horizon)}`,
-      value: roiPct === null || baselineLaborYear === 0 ? "—" : `${Math.round(roiPct)}%`,
-      note: `Чистая выгода ${fmt(mln(finance.netBenefit))} млн ₽ с учётом остаточной стоимости`,
+      label: "ROI / год −CAPEX",
+      value: roiPct === null || baselineLaborYear === 0 ? "-" : `${Math.round(roiPct)}%`,
+      note: `Чистая выгода за вычетом CAPEX, усреднённая на год горизонта (${horizon} ${yearsUnit(horizon)})`,
       trend: roiPct !== null && roiPct > 0 ? "up" : "down",
     },
     opexSaving: {
       series: effects.map((effect) => round1(mln(effect))),
-      percent: baselineLaborYear > 0 ? `${opexPercent >= 0 ? "+" : "−"}${fmt(Math.abs(opexPercent))}%` : "—",
+      percent: baselineLaborYear > 0 ? `${opexPercent >= 0 ? "+" : "−"}${fmt(Math.abs(opexPercent))}%` : "-",
       meta: `${fmt(mln(effects[effects.length - 1] ?? 0))} млн ₽ в год к ${horizon}-му году`,
     },
     warning,
     assumptions,
     scenarios,
     costGroups: [
-      group("capex", "CAPEX — разовая покупка", capexLines),
-      group("opex", `OPEX — расходы за ${horizon} ${yearsUnit(horizon)}`, opexLines),
+      group("capex", "CAPEX: разовая покупка", capexLines),
+      group("opex", `OPEX: расходы за ${horizon} ${yearsUnit(horizon)}`, opexLines),
     ],
     totalTco: round1(mln(totalTco)),
     sensitivity,
@@ -931,14 +931,14 @@ function paybackKpi(model: WarehouseModel, priceKnown: boolean): Kpi {
   }
   return {
     label: "Срок окупаемости",
-    value: "—",
+    value: "-",
     unit: "",
     trend: "none",
     note: !priceKnown
-      ? "Нет цены робота — окупаемость не посчитать."
+      ? "Нет цены робота: окупаемость не посчитать."
       : labor.savings === 0
-        ? "Парк не замещает ролей с зарплатой в паспорте — эффекта нет."
-        : "Экономия ФОТ не покрывает расходы на парк — не окупается.",
+        ? "Парк не замещает ролей с зарплатой в паспорте: эффекта нет."
+        : "Экономия ФОТ не покрывает расходы на парк: не окупается.",
   };
 }
 
@@ -966,13 +966,13 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
   if (!priceKnown) gaps.push("цена робота");
   if (labor.baseline === 0) gaps.push("численность и з/п отборщиков и операторов погрузчиков");
   for (const g of groups.filter((item) => item.throughputPerRobot <= 0)) {
-    gaps.push(`производительность «${g.robot.solution.name}» не указана — заложена 1 система, экономия по ней не считается`);
+    gaps.push(`производительность «${g.robot.solution.name}» не указана: заложена 1 система, экономия по ней не считается`);
   }
   const substituted = fleetSubstitutions(groups);
   if (substituted.length) {
     gaps.push(
       substituted
-        .map(({ name, items }) => `${name} — из демо-робота: ${items.map((item) => item.field).join(", ")}`)
+        .map(({ name, items }) => `${name}: из демо-робота: ${items.map((item) => item.field).join(", ")}`)
         .join("; "),
     );
   }
@@ -1003,31 +1003,31 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
     );
   }
 
-  // СтойкаБокс: роботы — шаттлы (их считает поток), сетка башен — ёмкость хранения.
+  // СтойкаБокс: роботы: шаттлы (их считает поток), сетка башен: ёмкость хранения.
   const cubeLevels = storageLevels(num("wh_vysota_potolkov_zone_hraneniya", 10), num("wh_pallet_height", 1600) / 1000);
   const cubeTowers = palletSlots ? Math.ceil(palletSlots / cubeLevels) : undefined;
   const cube = groups.find((g) => g.robot.model === "storagecube");
 
   const count = groups.reduce((sum, g) => sum + g.count, 0);
   const fleetLine = (g: (typeof groups)[number]) =>
-    `${SLOT_LABEL[g.slot]}: ${g.count} × ${g.robot.solution.name}${g.share < 1 ? ` (${Math.round(g.share * 100)}% потока)` : ""} — пик ${fmt(g.peakDemand)} ${DEMAND_UNIT[g.kind]}, на робота ${fmt(g.throughputPerRobot)} ${DEMAND_UNIT[g.kind]}`;
+    `${SLOT_LABEL[g.slot]}: ${g.count} × ${g.robot.solution.name}${g.share < 1 ? ` (${Math.round(g.share * 100)}% потока)` : ""}: пик ${fmt(g.peakDemand)} ${DEMAND_UNIT[g.kind]}, на робота ${fmt(g.throughputPerRobot)} ${DEMAND_UNIT[g.kind]}`;
   const basis = groups.length
     ? `${groups.map(fleetLine).join("; ")}. Загрузка ${WAREHOUSE_NORMS.loadFactor}, готовность ${WAREHOUSE_NORMS.availability}, резерв парка ×${WAREHOUSE_NORMS.reserveFactor}.`
-    : "Решение не относится ни к одному флоту склада — заложен 1 робот.";
+    : "Решение не относится ни к одному флоту склада: заложен 1 робот.";
 
   const assumptions = [
     `Роботов в расчёте: ${count}. ${basis}`,
     laborAssumption(model),
-    `ФОТ = численность × з/п × 12 × коэффициент начислений ${params.payrollTaxFactor}. Сколько роль делает в час — штат одной смены с учётом потерь рабочего времени ${Math.round(params.staffLossFactor * 100)}%; для операторов погрузчиков нормы выработки в паспорте нет — оператор проходит тот же маршрут со скоростью ${MANUAL_FORKLIFT_SPEED} м/с: ${fmt(manualForkliftRate(params))} паллет/ч.`,
+    `ФОТ = численность × з/п × 12 × коэффициент начислений ${params.payrollTaxFactor}. Сколько роль делает в час: штат одной смены с учётом потерь рабочего времени ${Math.round(params.staffLossFactor * 100)}%; для операторов погрузчиков нормы выработки в паспорте нет: оператор проходит тот же маршрут со скоростью ${MANUAL_FORKLIFT_SPEED} м/с: ${fmt(manualForkliftRate(params))} паллет/ч.`,
     ...(groups.some((g) => g.kind === "arm")
-      ? [`Производительность отбора скорректирована на состав заказов: ${params.piecePickSharePct}% мелкоштучного и ${params.fastSkuSharePct}% SKU А-класса — множитель ×${pickComplexityFactor(params).toFixed(2)}.`]
+      ? [`Производительность отбора скорректирована на состав заказов: ${params.piecePickSharePct}% мелкоштучного и ${params.fastSkuSharePct}% SKU А-класса: множитель ×${pickComplexityFactor(params).toFixed(2)}.`]
       : []),
     ...(groups.some((g) => g.kind === "loader" && g.robot.mobile)
       ? [`Цикл погрузчика: маршрут ${params.routeLengthM} м туда порожним и обратно с грузом ${params.cargoWeightKg} кг (с грузом медленнее) + ${WAREHOUSE_NORMS.loaderHandlingSeconds} с на вилы.`]
       : []),
     ...(layout
       ? [
-          `Планировка из конструктора: путь погрузчика ${params.routeLengthM} м — средний путь по проездам от ближайших ворот до стеллажа.${
+          `Планировка из конструктора: путь погрузчика ${params.routeLengthM} м: средний путь по проездам от ближайших ворот до стеллажа.${
             storage
               ? ` Стеллажи ${fmt(storage.rackAreaM2)} м² × ${storage.levels} ярусов (потолок / высота паллеты с зазором) × ${fmt(storage.perLevelPerM2)} паллет на м² ≈ ${Math.round(storage.pallets).toLocaleString("ru-RU")} паллетомест.`
               : ""
@@ -1036,31 +1036,31 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
       : []),
     ...(cube
       ? [
-          `${cube.robot.solution.name}: роботы — шаттлы над сеткой башен, их ${cube.count} по потоку; сетка — ёмкость хранения${
+          `${cube.robot.solution.name}: роботы: шаттлы над сеткой башен, их ${cube.count} по потоку; сетка: ёмкость хранения${
             cubeTowers ? `: ${cubeTowers.toLocaleString("ru-RU")} башен по ${cubeLevels} ярусов на ${palletSlots.toLocaleString("ru-RU")} паллетомест паспорта` : ""
-          }. Цена карточки — модуль «шаттл + участок сетки»: отдельной цены сетки в каталоге нет.`,
+          }. Цена карточки: модуль «шаттл + участок сетки»: отдельной цены сетки в каталоге нет.`,
         ]
       : []),
     ...(groups.some((g) => g.kind === "vacuum")
       ? [`Уборка: активная зона ${fmt(params.activeAreaM2)} м² за одну смену ${params.hoursPerShift} ч.`]
       : []),
-    `Эффект = экономия ФОТ − OPEX парка. Окупаемость — год, когда накопленный эффект покроет вложения (CAPEX и замену по сроку службы). ROI = (эффект за ${horizon} ${yearsUnit(horizon)} + остаточная стоимость − все вложения) / все вложения. NPV и IRR — по денежному потоку со ставкой дисконтирования.`,
-    `TCO = CAPEX + замена оборудования по сроку службы − остаточная стоимость + (OPEX + оставшийся ФОТ) × горизонт.`,
-    `ROI = (эффект за горизонт + остаточная стоимость парка − CAPEX − замена по сроку службы) / все вложения. Окупаемость — по реальным деньгам, без остаточной стоимости. NPV и дисконтированная окупаемость — по ставке ${FIN_RATE}% (оценка стоимости капитала; в паспорте ставки нет).`,
-    `Резерв CAPEX ${pct(WAREHOUSE_NORMS.capexReserveRatio)}%. Нет в карточке: внедрение ${pct(WAREHOUSE_NORMS.implementationShare)}% цены, сервис ${pct(WAREHOUSE_NORMS.serviceShare)}% цены в год, срок службы ${WAREHOUSE_NORMS.lifespanYears} лет, RaaS ${pct(WAREHOUSE_NORMS.raasMonthlyShare)}% цены в месяц.`,
+    `Эффект = экономия ФОТ − OPEX парка (первый год ×${WAREHOUSE_NORMS.rampUpYear1} из‑за ramp-up). Окупаемость: год, когда накопленный эффект покроет вложения. ROI / год = (эффект за горизонт + остаточная стоимость − все вложения) / все вложения / ${horizon}. NPV и IRR: по денежному потоку.`,
+    `TCO = CAPEX + замена оборудования по сроку службы − остаточная стоимость + (OPEX + оставшийся ФОТ) × горизонт ${horizon} ${yearsUnit(horizon)}.`,
+    `ROI / год — чистая доходность за вычетом CAPEX, усреднённая на год. Окупаемость: по реальным деньгам, без остаточной стоимости. NPV и дисконтированная окупаемость: по ставке ${FIN_RATE}% (оценка стоимости капитала; в паспорте ставки нет).`,
+    `Резерв CAPEX ${pct(WAREHOUSE_NORMS.capexReserveRatio)}%. Нет в карточке: внедрение ${pct(WAREHOUSE_NORMS.implementationShare)}% цены, сервис ${pct(WAREHOUSE_NORMS.serviceShare)}% цены в год, срок службы ${WAREHOUSE_NORMS.lifespanYears} лет, RaaS ${pct(WAREHOUSE_NORMS.raasMonthlyShare)}% цены в месяц. Замещение ФОТ роли ≤ ${pct(WAREHOUSE_NORMS.maxLaborReplacement)}%; операторы парка: 1 на ${WAREHOUSE_NORMS.robotsPerOperator} роботов в смену.`,
     `Электроэнергия ${WAREHOUSE_NORMS.tariffRubPerKwh} ₽/кВт·ч, ${fmt(params.hoursPerDay)} ч в сутки, ${params.daysPerYear} дн. в году; батарейные роботы берут из сети на ${Math.round((1 / WAREHOUSE_NORMS.chargeEfficiency - 1) * 100)}% больше.`,
     ...(defaultsUsed.length ? [`Значения по умолчанию (в паспорте не введены): ${[...new Set(defaultsUsed)].join(", ")}.`] : []),
   ];
 
   // ─ Структура затрат (покупка, за горизонт)
-  // Затраты из карточек: если хоть у одного робота это оценка команды — строка требует проверки.
+  // Затраты из карточек: если хоть у одного робота это оценка команды: строка требует проверки.
   const estimatedIn = (key: string) => groups.some((g) => isTeamEstimate(g.robot.solution, key));
   const fromCards = (key: string) => (estimatedIn(key) ? "Каталог: оценка по классу оборудования" : "Каталог решений");
   const capexLines = [
     ...groups.map((g) => ({
       title: g.robot.solution.perMeter
-        ? `${g.count} × ${g.robot.solution.name}, линия ${g.lineLengthM ?? params.routeLengthM} м — ${SLOT_LABEL[g.slot].toLowerCase()}`
-        : `${g.count} × ${g.robot.solution.name} — ${SLOT_LABEL[g.slot].toLowerCase()}`,
+        ? `${g.count} × ${g.robot.solution.name}, линия ${g.lineLengthM ?? params.routeLengthM} м: ${SLOT_LABEL[g.slot].toLowerCase()}`
+        : `${g.count} × ${g.robot.solution.name}: ${SLOT_LABEL[g.slot].toLowerCase()}`,
       amount: g.count * g.costs.equipment,
       source: g.robot.solution.source ? `Каталог: ${g.robot.solution.source}` : "Каталог решений",
       confidence: (g.robot.solution.fieldSources?.["costs.equipment"]?.confirmed === false ? "needs-review" : "confirmed") as Confidence,
@@ -1076,7 +1076,7 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
     {
       title: groups.every((g) => g.costs.implementationFromCard)
         ? "Внедрение и интеграция"
-        : `Внедрение, интеграция, зарядка — ${pct(WAREHOUSE_NORMS.implementationShare)}% от оборудования`,
+        : `Внедрение, интеграция, зарядка: ${pct(WAREHOUSE_NORMS.implementationShare)}% от оборудования`,
       amount: purchase.capexRaw.implementation,
       source: groups.every((g) => g.costs.implementationFromCard) ? fromCards("costs.implementation") : "Оценка",
       confidence: "needs-review" as Confidence,
@@ -1201,8 +1201,8 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
   }
 
   const warning = gaps.length
-    ? `Не хватает данных: ${[...new Set(gaps)].join("; ")}. Там, где данных нет, приняты допущения — результат предварительный.`
-    : "Цены и производительность — из каталога; обслуживание, внедрение и тариф RaaS — отраслевые оценки. Уточните у поставщика перед защитой бюджета.";
+    ? `Не хватает данных: ${[...new Set(gaps)].join("; ")}. Там, где данных нет, приняты допущения: результат предварительный.`
+    : "Цены и производительность: из каталога; обслуживание, внедрение и тариф RaaS: отраслевые оценки. Уточните у поставщика перед защитой бюджета.";
 
   const effect = purchase.effect;
   const fleet: FleetOutput[] = groups.map((g) => ({
@@ -1235,21 +1235,23 @@ function calculateWarehouseEconomics(input: CalculationInput): CalculationOutput
     payback: paybackKpi(model, priceKnown),
     capex: { label: "CAPEX", value: fmt(mln(purchase.capex)), note: "млн ₽, разово", trend: "none" },
     roi: {
-      label: `ROI, ${horizon} ${yearsUnit(horizon)}`,
-      value: purchase.roiPct === null || labor.savings === 0 ? "—" : `${Math.round(purchase.roiPct)}%`,
-      note: `Годовой эффект ${fmt(mln(effect))} млн ₽, остаточная стоимость ${fmt(mln(purchase.residualValue))} млн ₽`,
+      label: "ROI / год −CAPEX",
+      value: purchase.roiPct === null || labor.savings === 0 ? "-" : `${Math.round(purchase.roiPct)}%`,
+      note: `Чистая выгода за вычетом CAPEX / ${horizon} ${yearsUnit(horizon)}; steady-state эффект ${fmt(mln(effect))} млн ₽/год`,
       trend: purchase.roiPct !== null && purchase.roiPct > 0 ? "up" : "down",
     },
     opexSaving: {
-      series: Array.from({ length: horizon }, () => round1(mln(effect))),
-      percent: labor.baseline > 0 ? `${effect >= 0 ? "+" : "−"}${fmt(Math.abs((effect / labor.baseline) * 100))}%` : "—",
-      meta: `${fmt(mln(effect))} млн ₽ в год: экономия ФОТ ${fmt(mln(labor.savings))} − OPEX парка ${fmt(mln(purchase.opexPerYear))}`,
+      series: Array.from({ length: horizon }, (_, index) =>
+        round1(mln(effect * (index === 0 ? WAREHOUSE_NORMS.rampUpYear1 : 1))),
+      ),
+      percent: labor.baseline > 0 ? `${effect >= 0 ? "+" : "−"}${fmt(Math.abs((effect / labor.baseline) * 100))}%` : "-",
+      meta: `${fmt(mln(effect))} млн ₽ в год (со 2-го): экономия ФОТ ${fmt(mln(labor.savings))} − OPEX парка ${fmt(mln(purchase.opexPerYear))}; 1-й год ×${WAREHOUSE_NORMS.rampUpYear1}`,
     },
     warning,
     assumptions,
     scenarios,
     costGroups: [
-      group("capex", "CAPEX — покупка, замена и остаточная стоимость", capexLines),
+      group("capex", "CAPEX: покупка, замена и остаточная стоимость", capexLines),
       group("opex", `OPEX и оставшийся ФОТ за ${horizon} ${yearsUnit(horizon)}`, opexLines),
     ],
     totalTco: round1(mln(totalTco)),

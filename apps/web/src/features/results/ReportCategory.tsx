@@ -11,7 +11,7 @@ export type ReportSection = {
 };
 
 /**
- * Категории отчёта + деталь справа в той же сетке (не оверлей).
+ * Категории отчёта слева (отдельные плашки) + деталь справа в сетке.
  */
 export function ReportSections({
   sections,
@@ -35,86 +35,68 @@ export function ReportSections({
   return (
     <div
       className={cn(
-        'grid w-full items-start gap-6 sm:gap-8',
+        'grid w-full items-start gap-5 sm:gap-6',
         'transition-[grid-template-columns] duration-300 ease-out motion-reduce:transition-none',
         open
-          ? 'lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]'
+          ? 'lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)]'
           : 'lg:grid-cols-[minmax(0,1fr)_0fr]',
       )}
     >
-      <ReportCategoryList sections={sections} activeId={activeId} onSelect={onSelect} />
-
-      <div className="min-h-0 min-w-0 overflow-hidden">
-        <ReportDetail
-          section={displayed}
-          open={open}
-          onClose={onClose}
-        />
-      </div>
-    </div>
-  );
-}
-
-function ReportCategoryList({
-  sections,
-  activeId,
-  onSelect,
-}: {
-  sections: ReportSection[];
-  activeId: string | null;
-  onSelect: (id: string) => void;
-}) {
-  return (
-    <ul className="grid min-w-0 grid-cols-1 gap-3">
-      {sections.map((section) => {
-        const Icon = section.icon;
-        const active = activeId === section.id;
-        return (
-          <li key={section.id}>
-            <button
-              type="button"
-              onClick={() => onSelect(section.id)}
-              aria-pressed={active}
-              className={cn(
-                'relative flex w-full min-w-0 items-center gap-3 rounded-[14px] border bg-white px-4 py-3.5 text-left transition-colors duration-100',
-                active
-                  ? 'border-[#2F86F0]/60 bg-[#F5F9FF]'
-                  : 'border-[#E5E5EA] hover:border-[#C7C7CC] hover:bg-[#FAFAFA]',
-              )}
-            >
-              {Icon ? (
-                <Icon
+      <ul className="grid min-w-0 gap-3">
+        {sections.map((section) => {
+          const Icon = section.icon;
+          const selected = activeId === section.id;
+          return (
+            <li key={section.id}>
+              <button
+                type="button"
+                onClick={() => onSelect(section.id)}
+                aria-pressed={selected}
+                className={cn(
+                  'flex w-full min-w-0 items-center gap-3.5 rounded-[16px] border bg-white px-4 py-3.5 text-left transition-colors duration-100',
+                  selected
+                    ? 'border-[#D1D1D6] bg-[#F7F7F8]'
+                    : 'border-[#E5E5EA] hover:border-[#D1D1D6] hover:bg-[#FAFAFA]',
+                )}
+              >
+                {Icon ? (
+                  <Icon
+                    className={cn(
+                      'size-[18px] flex-none',
+                      selected ? 'text-foreground' : 'text-[#8E8E93]',
+                    )}
+                    strokeWidth={1.75}
+                    aria-hidden
+                  />
+                ) : null}
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[14px] font-semibold leading-tight tracking-[-0.01em] text-foreground">
+                    {section.title}
+                  </div>
+                  {section.summary ? (
+                    <div className="mt-0.5 truncate text-[12.5px] leading-snug text-[#8E8E93]">
+                      {section.summary}
+                    </div>
+                  ) : null}
+                </div>
+                <ChevronRight
                   className={cn(
-                    'size-4 flex-none',
-                    active ? 'text-[#2F86F0]' : 'text-foreground',
+                    'size-4 flex-none transition-transform duration-200',
+                    selected ? 'translate-x-0.5 text-foreground' : 'text-[#C7C7CC]',
                   )}
                   strokeWidth={1.75}
                   aria-hidden
                 />
-              ) : null}
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-[14px] font-semibold leading-tight text-foreground">
-                  {section.title}
-                </div>
-                {section.summary ? (
-                  <div className="mt-1 truncate text-[12px] leading-snug text-[#8E8E93]">
-                    {section.summary}
-                  </div>
-                ) : null}
-              </div>
-              <ChevronRight
-                className={cn(
-                  'size-4 flex-none transition-transform duration-200',
-                  active ? 'translate-x-0.5 text-[#2F86F0]' : 'text-[#8E8E93]',
-                )}
-                strokeWidth={1.75}
-                aria-hidden
-              />
-            </button>
-          </li>
-        );
-      })}
-    </ul>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+
+      <div className="min-h-0 min-w-0 overflow-hidden">
+        <ReportDetail section={displayed} open={open} onClose={onClose} />
+      </div>
+    </div>
   );
 }
 
@@ -142,53 +124,38 @@ function ReportDetail({
 
   if (!section) return null;
 
-  const Icon = section.icon;
-
   return (
     <aside
       role="region"
       aria-labelledby={titleId}
       aria-hidden={!open}
       className={cn(
-        'flex h-full min-h-[280px] flex-col overflow-hidden rounded-[20px] border border-[#E5E5EA] bg-white',
-        'shadow-[0_4px_24px_rgba(0,0,0,0.06)]',
+        'flex h-full min-h-[300px] flex-col overflow-hidden rounded-[16px] border border-[#E5E5EA] bg-white',
         'transition-[transform,opacity] duration-300 ease-out motion-reduce:transition-none',
-        open ? 'translate-x-0 opacity-100' : 'pointer-events-none translate-x-8 opacity-0',
+        open ? 'translate-x-0 opacity-100' : 'pointer-events-none translate-x-6 opacity-0',
       )}
     >
-      <div className="relative flex-none border-b border-[#E5E5EA] px-5 pb-4 pt-5 pr-14">
+      <div className="relative flex-none border-b border-[#F2F2F4] px-5 py-4 pr-14">
         <button
           ref={closeRef}
           type="button"
           onClick={onClose}
-          className="absolute right-3.5 top-3.5 z-10 flex size-8 items-center justify-center rounded-full bg-[#F2F2F2] text-foreground transition-colors hover:bg-[#E5E5EA]"
+          className="absolute right-3 top-3 z-10 flex size-8 items-center justify-center rounded-[8px] text-[#6E6E73] transition-colors hover:bg-[#F2F2F4] hover:text-foreground"
           aria-label="Закрыть"
           tabIndex={open ? 0 : -1}
         >
-          <X className="size-3.5" strokeWidth={2} />
+          <X className="size-4" strokeWidth={2} />
         </button>
 
-        <div className="flex items-start gap-3">
-          {Icon ? (
-            <span className="mt-0.5 grid size-9 flex-none place-items-center rounded-[10px] bg-[#F5F9FF] text-[#2F86F0]">
-              <Icon className="size-4" strokeWidth={1.75} aria-hidden />
-            </span>
-          ) : null}
-          <div className="min-w-0 flex-1">
-            <h2
-              id={titleId}
-              className="font-heading text-[18px] font-semibold leading-snug tracking-h2 text-foreground"
-            >
-              {section.title}
-            </h2>
-            {section.summary ? (
-              <p className="mt-1.5 text-[13px] leading-snug text-[#6E6E73]">{section.summary}</p>
-            ) : null}
-          </div>
-        </div>
+        <h2
+          id={titleId}
+          className="text-[17px] font-semibold leading-snug tracking-[-0.02em] text-foreground"
+        >
+          {section.title}
+        </h2>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 [scrollbar-width:thin]">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4 [scrollbar-width:thin]">
         {section.content}
       </div>
     </aside>

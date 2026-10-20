@@ -5,16 +5,28 @@ export const WizardCompanionContext = createContext<{
   setRailOpen: (open: boolean) => void;
   /** Ширина рейки слева: узкая (категории) или панель примеров планировки. */
   setRailWidth: (width: number) => void;
+  /** Ширина правого спутника: превью робота или плашка-подсказка. */
+  setCompanionWidth: (width: number) => void;
+  /**
+   * Превью: true — сдвигать группу, чтобы (карточка + превью) были по центру.
+   * Подсказка: false — основная карточка остаётся по центру, плашка справа от неё.
+   */
+  setCompanionRecenter: (recenter: boolean) => void;
   /** Рейка помещается сбоку от карточки (на узком экране — нет). */
   railFits: boolean;
+  /** Правый спутник помещается сбоку (иначе — оверлей / inline). */
+  companionFits: boolean;
 }>({
   setCompanionOpen: () => {},
   setRailOpen: () => {},
   setRailWidth: () => {},
+  setCompanionWidth: () => {},
+  setCompanionRecenter: () => {},
   railFits: false,
+  companionFits: false,
 });
 
-/** Превью / рейка сообщают карточке, что открыты: группа центрируется сдвигом. */
+/** Превью / рейка / подсказка сообщают карточке слоты и сдвиг группы. */
 export function useWizardCompanion() {
   return useContext(WizardCompanionContext);
 }
@@ -48,6 +60,9 @@ export function useWizardEnter(open: boolean, setSlotOpen: (open: boolean) => vo
     return () => {
       cancelAnimationFrame(outerId);
       cancelAnimationFrame(innerId);
+      // Слот иначе остаётся pointer-events / open после размонтирования превью.
+      setEntered(false);
+      setSlotOpen(false);
     };
   }, [open, setSlotOpen]);
 

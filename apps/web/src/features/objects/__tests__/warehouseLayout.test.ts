@@ -4,11 +4,14 @@ import { largestFloorRect } from '@/upstream/simulation/shape/shapeGeometry.js';
 import { computeLayout } from '@/upstream/simulation/layout.js';
 import {
   DEFAULT_LAYOUT,
+  DEFAULT_WAREHOUSE_PRESET_ID,
   STANDARD_LAYOUT,
   decodeShape,
   encodeShape,
   layoutMetrics,
   layoutParameters,
+  presetOf,
+  standardLayoutShape,
   type Shape,
 } from '@/features/objects/layout/warehouseLayout';
 
@@ -22,6 +25,26 @@ function lShape(): Shape {
 }
 
 describe('планировка склада', () => {
+  it('по умолчанию выбран распределительный центр', () => {
+    expect(DEFAULT_WAREHOUSE_PRESET_ID).toBe('dc');
+    expect(presetOf(standardLayoutShape())?.id).toBe('dc');
+    expect(encodeShape(standardLayoutShape())).toBe(STANDARD_LAYOUT);
+  });
+
+  it('стандартная планировка покрывает ≥90% паллетомест паспорта', async () => {
+    const { rackStorage, palletSlotsOf } = await import('@/features/objects/layout/warehouseLayout');
+    const params = {
+      wh_obschaya_ploschad_sklada: '20000',
+      wh_kolichestvo_palletomest: '20000',
+      wh_vysota_potolkov_zone_hraneniya: '10',
+      wh_pallet_length: '1200',
+      wh_pallet_width: '800',
+      wh_pallet_height: '1600',
+    };
+    const storage = rackStorage(standardLayoutShape(), params)!;
+    expect(storage.pallets).toBeGreaterThanOrEqual(palletSlotsOf(params) * 0.9);
+  });
+
   it('форма переживает кодирование в строку паспорта', () => {
     const shape = lShape();
     const text = encodeShape(shape);

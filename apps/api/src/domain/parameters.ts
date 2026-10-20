@@ -95,6 +95,69 @@ function normalizeUnit(unit: string) {
  * Проверка одного значения: тип, единица измерения, диапазон, варианты выбора.
  * Возвращает нормализованное значение или текст ошибки со способом исправления (ТЗ 4.5.4).
  */
+const WH_TOTAL_AREA = "wh_obschaya_ploschad_sklada";
+const WH_ACTIVE_AREA = "wh_ploschad_aktivnoy_zony";
+
+function parseNum(raw: string | undefined): number | null {
+  if (raw === undefined || raw === null) return null;
+  const num = Number(String(raw).replace(/[\s\u00a0]/g, "").replace(",", "."));
+  return Number.isFinite(num) ? num : null;
+}
+
+/**
+ * Подставляет defaultValue в пустые поля и приводит площади склада к допустимому виду:
+ * активная зона не больше общей (иначе UI/расчёт сразу «ломаются» на дефолтах из store).
+ */
+export function fillParameterDefaults(
+  fields: ParameterFieldDef[],
+  current: Record<string, string> = {},
+): Record<string, string> {
+  const next: Record<string, string> = { ...current };
+  for (const field of fields) {
+    const raw = next[field.id];
+    if (raw === undefined || raw === null || String(raw).trim() === "") {
+      next[field.id] = field.defaultValue ?? "";
+    }
+  }
+  return reconcileWarehouseAreas(next, fields);
+}
+
+/** Если активная зона > общей — ужимаем активную до 50% общей (как в дефолтах паспорта). */
+export function reconcileWarehouseAreas(
+  values: Record<string, string>,
+  fields?: ParameterFieldDef[],
+): Record<string, string> {
+  if (!(WH_TOTAL_AREA in values) && !(WH_ACTIVE_AREA in values)) return values;
+  const next = { ...values };
+  const totalField = fields?.find((f) => f.id === WH_TOTAL_AREA);
+  const activeField = fields?.find((f) => f.id === WH_ACTIVE_AREA);
+  let total = parseNum(next[WH_TOTAL_AREA]);
+  let active = parseNum(next[WH_ACTIVE_AREA]);
+  if (total === null && totalField?.defaultValue) total = parseNum(totalField.defaultValue);
+  if (active === null && activeField?.defaultValue) active = parseNum(activeField.defaultValue);
+  if (total === null || active === null) return values;
+  if (active <= total) return values;
+  // Всегда ≤ общей: 50% как в паспорте, но не выше total (min поля не должен ломать связку).
+  next[WH_ACTIVE_AREA] = String(Math.max(0, Math.min(total, Math.round(total * 0.5))));
+  return next;
+}
+
+/** Ошибка связки площадей склада (для сабмита формы). */
+export function warehouseAreaConsistencyError(
+  values: Record<string, string>,
+): { fieldId: string; message: string } | null {
+  const total = parseNum(values[WH_TOTAL_AREA]);
+  const active = parseNum(values[WH_ACTIVE_AREA]);
+  if (total === null || active === null) return null;
+  if (active > total) {
+    return {
+      fieldId: WH_ACTIVE_AREA,
+      message: `Активная зона (${fmt(active)} м²) не может быть больше общей площади склада (${fmt(total)} м²)`,
+    };
+  }
+  return null;
+}
+
 export function checkValue(
   field: ParameterFieldDef,
   raw: string,
@@ -203,7 +266,32 @@ export function parseParameterRows(rows: string[][], fields: ParameterFieldDef[]
     });
   }
 
-  return { values, recognized: Object.keys(values).length, skipped, errors, warnings };
+  const activeBefore = parseNum(values[WH_ACTIVE_AREA]);
+  const totalBefore = parseNum(values[WH_TOTAL_AREA]);
+  const withDefaults = fillParameterDefaults(fields, values);
+  if (
+    activeBefore !== null &&
+    totalBefore !== null &&
+    activeBefore > totalBefore
+  ) {
+    const after = parseNum(withDefaults[WH_ACTIVE_AREA]);
+    warnings.push({
+      fieldId: WH_ACTIVE_AREA,
+      label: fields.find((f) => f.id === WH_ACTIVE_AREA)?.label,
+      message:
+        after !== null
+          ? `Активная зона была больше общей площади — уменьшена до ${fmt(after)} м²`
+          : "Активная зона была больше общей площади — значение скорректировано",
+    });
+  }
+
+  return {
+    values: withDefaults,
+    recognized: Object.keys(values).length,
+    skipped,
+    errors,
+    warnings,
+  };
 }
 
 /** Простейший разбор CSV: разделитель ; , или таб, кавычки по RFC 4180. */

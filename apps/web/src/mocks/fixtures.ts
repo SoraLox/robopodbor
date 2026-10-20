@@ -53,7 +53,7 @@ export const demoCalculation: CalculationResult = {
     value: '3.2',
     unit: 'года',
     trend: 'down',
-    note: 'Рекомендуемый сценарий — покупка с господдержкой: на 0.6 года быстрее аренды (RaaS).',
+    note: 'Рекомендуемый сценарий: покупка с господдержкой, на 0.6 года быстрее аренды (RaaS).',
   },
   capex: {
     label: 'CAPEX',
@@ -62,10 +62,14 @@ export const demoCalculation: CalculationResult = {
     trend: 'none',
   },
   roi: {
-    label: 'ROI, 5 лет',
+    label: 'ROI, 7 лет',
     value: '148%',
     note: 'Чистая выгода 71.4 млн ₽',
     trend: 'up',
+  },
+  robots: {
+    count: 12,
+    basis: '12 × AMR-паллетовоз P15',
   },
   opexSaving: {
     series: [2.1, 4.4, 8.0, 12.6, 18.1, 24.0, 31.2],
@@ -106,7 +110,7 @@ export const demoCalculation: CalculationResult = {
   costGroups: [
     {
       id: 'capex',
-      title: 'CAPEX — разовая покупка',
+      title: 'CAPEX: разовая покупка',
       amount: 80.0,
       share: 59,
       confidence: 'confirmed',
@@ -143,7 +147,7 @@ export const demoCalculation: CalculationResult = {
     },
     {
       id: 'opex',
-      title: 'OPEX — расходы за 7 лет',
+      title: 'OPEX: расходы за 7 лет',
       amount: 54.6,
       share: 41,
       confidence: 'needs-review',
@@ -179,6 +183,28 @@ export const demoCalculation: CalculationResult = {
     { id: 'discount', label: 'Ставка дисконтирования', impact: 0.19, direction: 'up', low: '3.1 года', high: '3.5 года' },
     { id: 'service', label: 'Сервисный контракт, % от CAPEX', impact: 0.13, direction: 'up', low: '3.1 года', high: '3.4 года' },
   ],
+  // Нужен помощнику: без finance клиент подставлял нули, и ответы становились бессмыслицей.
+  finance: {
+    discountRatePct: 16,
+    npvMln: 48.2,
+    irrPct: 38,
+    roiPct: 148,
+    paybackYears: 3.2,
+    discountedPaybackYears: 3.8,
+    salvageMln: 12.0,
+    totalInvestmentMln: 80,
+    netBenefitMln: 71.4,
+    cashFlow: [
+      { year: 0, investmentMln: 80, effectMln: 0, salvageMln: 0, netMln: -80, cumulativeMln: -80, cumulativeDiscountedMln: -80 },
+      { year: 1, investmentMln: 0, effectMln: 25, salvageMln: 0, netMln: 25, cumulativeMln: -55, cumulativeDiscountedMln: -58.4 },
+      { year: 2, investmentMln: 0, effectMln: 25, salvageMln: 0, netMln: 25, cumulativeMln: -30, cumulativeDiscountedMln: -39.8 },
+      { year: 3, investmentMln: 0, effectMln: 25, salvageMln: 0, netMln: 25, cumulativeMln: -5, cumulativeDiscountedMln: -23.8 },
+      { year: 4, investmentMln: 0, effectMln: 25, salvageMln: 0, netMln: 25, cumulativeMln: 20, cumulativeDiscountedMln: -10.0 },
+      { year: 5, investmentMln: 0, effectMln: 25, salvageMln: 0, netMln: 25, cumulativeMln: 45, cumulativeDiscountedMln: 1.9 },
+      { year: 6, investmentMln: 0, effectMln: 25, salvageMln: 0, netMln: 25, cumulativeMln: 70, cumulativeDiscountedMln: 12.2 },
+      { year: 7, investmentMln: 0, effectMln: 25, salvageMln: 12, netMln: 37, cumulativeMln: 107, cumulativeDiscountedMln: 48.2 },
+    ],
+  },
 };
 
 /**
@@ -236,7 +262,7 @@ function withMeta(fields: ParameterField[]): ParameterField[] {
 const rawObjectParameters: Record<string, ParameterField[]> = {
   warehouse: [
     { id: "wh_obschaya_ploschad_sklada", label: "Общая площадь склада", unit: "м²", hint: "Типичный FFC/RDC в логистическом парке. Источник: отраслевые бенчмарки РФ 2023–2024", section: "Общие параметры объекта", kind: "number", min: 10000, max: 100000, defaultValue: "20000" },
-    { id: "wh_ploschad_aktivnoy_zony", label: "Площадь активной (роботизируемой) зоны", unit: "м²", hint: "50% от общей площади", section: "Общие параметры объекта", kind: "number", min: 5000, max: 50000, defaultValue: "10000" },
+    { id: "wh_ploschad_aktivnoy_zony", label: "Площадь активной (роботизируемой) зоны", unit: "м²", hint: "Не больше общей площади склада; по умолчанию 50%", section: "Общие параметры объекта", kind: "number", min: 5000, max: 100000, defaultValue: "10000" },
     { id: "wh_vysota_potolkov_zone_hraneniya", label: "Высота потолков в зоне хранения", unit: "м", hint: "Влияет на выбор типа решений (особенно в случае шаттловой системы)", section: "Общие параметры объекта", kind: "number", min: 5, max: 16, defaultValue: "10" },
     { id: "wh_kolichestvo_etazhey", label: "Количество этажей (мезонинов)", unit: "шт.", hint: "Для многоэтажных решений необходимы лифты - учитывается в CAPEX", section: "Общие параметры объекта", kind: "number", min: 1, max: 3, defaultValue: "1" },
     { id: "wh_shirina_glavnyh_proezdov", label: "Ширина главных проездов", unit: "м", hint: "Определяет допустимые габариты робота", section: "Общие параметры объекта", kind: "number", min: 2.5, max: 6, defaultValue: "3.5" },

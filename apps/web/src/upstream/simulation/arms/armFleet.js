@@ -357,5 +357,14 @@ export function createArmFleet({ group, zone, count, beltTexture, armProd, energ
     }
   }
 
-  return { step, obstacles, meters, dispose, getOpsDone: () => opsDone, getDelivered: () => net?.delivered ?? 0 };
+  return {
+    step,
+    obstacles,
+    meters,
+    dispose,
+    getOpsDone: () => opsDone,
+    getDelivered: () => net?.delivered ?? 0,
+    getPlacedCount: () => arms.length,
+    getRequestedCount: () => count,
+  };
 }

@@ -109,7 +109,7 @@ describe('диспетчер склада', () => {
     expect(minGap).toBeGreaterThan(2);
   }, 180_000);
 
-  it('приёмка погрузчиками, отгрузка через AMR: груз берут из горки у ворот', () => {
+  it('приёмка погрузчиками, отгрузка через AMR: груз берут у ворот', () => {
     const { shape, inGates, outGates } = scene();
     const ops = createWarehouseOps({
       ...base(shape, []),

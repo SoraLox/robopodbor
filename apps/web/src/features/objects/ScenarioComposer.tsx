@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type MutableRefObject } from 'react';
 import { ArrowLeft, Check, X } from 'lucide-react';
 import { fleetKindOf, fleetModelOf } from '@domain/fleet';
 import { isPassiveCarrier, SLOT_KINDS, SLOTS, TRANSPORT_SLOTS, type SlotId } from '@domain/warehouseEconomics';
@@ -6,6 +6,7 @@ import { useScenarioVariants } from '@/api/queries';
 import type { Assignment, ScenarioVariant, SelectionItem, Solution } from '@/api/types';
 import { useWizardStore } from '@/app/store';
 import { areaOf, layoutParameters } from '@/features/objects/layout/warehouseLayout';
+import { WizardHint } from '@/features/objects/WizardHint';
 import { cn } from '@/lib/utils';
 
 /**
@@ -57,8 +58,6 @@ const STAGE: Record<SlotId, { title: string; hint: string; fits: string; manual:
 
 const MAX_CARRIERS = 3;
 
-const yearsWord = (n: number) => (n % 10 === 1 && n % 100 !== 11 ? 'год' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'года' : 'лет');
-
 const fmt = (value: number) => value.toLocaleString('ru-RU', { maximumFractionDigits: 1 });
 
 /** Доли транспорта на связи: заданные — как есть, остальным — поровну. */
@@ -84,17 +83,26 @@ export function ScenarioComposer({
   pickingSlot,
   onPickSlot,
   onPreview,
+  previewOpen = false,
+  active = true,
+  assignRef,
 }: {
   rows: Row[];
   pickingSlot: SlotId | null;
   onPickSlot: (slot: SlotId | null) => void;
   onPreview: (id: string) => void;
+  /** Превью робота занимает правый слот — подсказку тогда не показываем. */
+  previewOpen?: boolean;
+  /** Шаг процессов активен: иначе подсказка не порталится на чужие экраны мастера. */
+  active?: boolean;
+  /** Добавить робота из превью в текущий этап выбора. */
+  assignRef?: MutableRefObject<((solutionId: string) => void) | null>;
 }) {
   const assignments = useWizardStore((s) => s.assignments);
   const setAssignments = useWizardStore((s) => s.setAssignments);
   const parameters = useWizardStore((s) => s.parameters);
   const layout = useWizardStore((s) => s.layout);
-  const [tab, setTab] = useState<Tab>(assignments.length ? 'custom' : 'ready');
+  const [tab, setTab] = useState<Tab>('ready');
   const scenarioParams = useMemo(
     () => ({ ...parameters, ...layoutParameters(layout, areaOf(parameters)) }),
     [parameters, layout],
@@ -112,6 +120,10 @@ export function ScenarioComposer({
     return solution ? isPassiveCarrier(solution as never) : false;
   };
   const add = (slot: SlotId, solutionId: string) => {
+    // Неподходящих объекту в состав не берём — только просмотр в превью.
+    const row = rows.find((item) => item.solution.id === solutionId);
+    if (row?.item?.status === 'excluded') return;
+
     const kind = kindOf(solutionId);
     let next = assignments.filter((a) => !(a.slot === slot && a.solutionId === solutionId));
     if (kind === 'conveyor') {
@@ -130,6 +142,18 @@ export function ScenarioComposer({
     // этап сам подскажет и предложит подходящий погрузчик одной кнопкой.
     setAssignments([...next, { slot, solutionId }]);
   };
+
+  useEffect(() => {
+    if (!assignRef) return;
+    assignRef.current = (solutionId: string) => {
+      if (!pickingSlot) return;
+      add(pickingSlot, solutionId);
+      onPickSlot(null);
+    };
+    return () => {
+      assignRef.current = null;
+    };
+  });
 
   // Транспортировщик без погрузчика: подходящий погрузчик — лучший по подбору.
   const lifterFor = (slot: SlotId) =>
@@ -173,45 +197,42 @@ export function ScenarioComposer({
     const suitable = candidates.filter((row) => row.item?.status !== 'excluded');
     const excluded = candidates.filter((row) => row.item?.status === 'excluded');
     const chosen = new Set(inSlot(pickingSlot).map((a) => a.solutionId));
-    const rowView = ({ solution, item }: Row) => {
+    const rowView = ({ solution, item }: Row, opts: { selectable: boolean }) => {
       const conveyor = fleetKindOf(solution) === 'conveyor';
+      const excluded = item?.status === 'excluded';
       return (
         <div
           key={solution.id}
           className={cn(
             'flex min-w-0 items-center gap-2 rounded-[12px] border bg-white px-3 py-2.5',
             chosen.has(solution.id) ? 'border-foreground' : 'border-[#E5E5EA]',
+            excluded && 'bg-[#FAFAFA]',
           )}
         >
           <button
             type="button"
-            onClick={() => {
-              add(pickingSlot, solution.id);
-              onPickSlot(null);
-            }}
+            onClick={() => onPreview(solution.id)}
             className="min-w-0 flex-1 text-left"
           >
-            <span className="block truncate text-[14px] font-semibold leading-tight text-foreground">
+            <span
+              className={cn(
+                'block truncate text-[14px] font-semibold leading-tight',
+                opts.selectable ? 'text-foreground' : 'text-[#6E6E73]',
+              )}
+            >
               {conveyor && !/конвейер/i.test(solution.name) ? 'Конвейер · ' : ''}
               {solution.name}
             </span>
             <span
               className={cn(
                 'mt-0.5 block truncate text-[12px] leading-snug',
-                item?.status === 'excluded' ? 'text-status-danger' : 'text-[#8E8E93]',
+                opts.selectable ? 'text-[#8E8E93]' : 'text-status-danger',
               )}
             >
-              {item?.status === 'excluded'
-                ? item.blockers[0]
-                : `${solution.vendor} · ${solution.price} млн ₽${solution.perMeter ? ' за метр' : ''}`}
+              {opts.selectable
+                ? `${solution.vendor} · ${solution.price} млн ₽${solution.perMeter ? ' за метр' : ''}`
+                : (item?.blockers[0] ?? 'Не подходит для объекта')}
             </span>
-          </button>
-          <button
-            type="button"
-            onClick={() => onPreview(solution.id)}
-            className="flex-none text-[12px] font-medium text-[#2F86F0] hover:underline"
-          >
-            Подробнее
           </button>
         </div>
       );
@@ -229,7 +250,7 @@ export function ScenarioComposer({
         <p className="mb-2.5 mt-0.5 text-[12px] leading-snug text-[#8E8E93]">
           {stage.hint}. Подходят {stage.fits}.
         </p>
-        <div className="grid min-w-0 gap-2">{suitable.map(rowView)}</div>
+        <div className="grid min-w-0 gap-2">{suitable.map((row) => rowView(row, { selectable: true }))}</div>
         {!suitable.length ? (
           <p className="py-3 text-[12.5px] text-[#8E8E93]">Подходящих объекту роботов для этого этапа в каталоге нет.</p>
         ) : null}
@@ -238,7 +259,9 @@ export function ScenarioComposer({
             <summary className="cursor-pointer py-1 text-[12.5px] font-medium text-[#6E6E73]">
               Не подходят для объекта · {excluded.length}
             </summary>
-            <div className="mt-1.5 grid min-w-0 gap-2">{excluded.map(rowView)}</div>
+            <div className="mt-1.5 grid min-w-0 gap-2">
+              {excluded.map((row) => rowView(row, { selectable: false }))}
+            </div>
           </details>
         ) : null}
       </div>
@@ -276,51 +299,61 @@ export function ScenarioComposer({
     if (!solution) return id;
     return fleetKindOf(solution) === 'conveyor' && !/конвейер/i.test(solution.name) ? `конвейер ${solution.name}` : solution.name;
   };
-  const compositionLines = (list: Assignment[]) =>
-    SLOTS.map((slot) => ({ slot, names: list.filter((a) => a.slot === slot).map((a) => nameOf(a.solutionId)) })).filter(
-      (line) => line.names.length,
-    );
+  /** Уникальные модели состава — те же чипы, что у этапов «Собрать самому». */
+  const compositionChips = (list: Assignment[]) => {
+    const counts = new Map<string, number>();
+    for (const item of list) {
+      const name = nameOf(item.solutionId);
+      counts.set(name, (counts.get(name) ?? 0) + 1);
+    }
+    return [...counts.entries()].map(([name, count]) => ({ name, count }));
+  };
 
-  const variantCard = (variant: ScenarioVariant) => {
+  const variantCard = (variant: ScenarioVariant, index: number) => {
     const selected = sameComposition(assignments, variant.assignments);
+    const highlight = variant.highlights.find((text) => text !== 'Рекомендуем');
+    const chips = compositionChips(variant.assignments);
+    const payback = variant.paybackYears === null ? 'не окупается' : `окупаемость ${fmt(variant.paybackYears)} г.`;
+    // Как подпись этапа в «Собрать самому»: одна короткая строка под заголовком.
+    const meta = [highlight, `экономия ${fmt(variant.savingMln)} млн`, payback, `вложения ${fmt(variant.capexMln)} млн`]
+      .filter(Boolean)
+      .join(' · ');
+
     return (
       <div
         key={variant.id}
         className={cn(
           'relative min-w-0 rounded-[12px] border px-3 py-2.5',
-          variant.recommended && 'mt-1.5 pt-3.5',
+          variant.recommended && 'mt-1.5',
           selected ? 'border-foreground' : variant.recommended ? 'border-status-operation' : 'border-[#E5E5EA]',
         )}
       >
-        {/* Рекомендуемый — как везде в продукте: зелёная рамка и плашка на ней. */}
         {variant.recommended ? (
           <span className="absolute -top-2 right-2.5 rounded-full bg-status-operation-tint px-2 py-0.5 text-[11px] font-semibold leading-none text-status-operation">
             Рекомендуем
           </span>
         ) : null}
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <div className="flex flex-wrap gap-1">
-              {variant.highlights.filter((text) => text !== 'Рекомендуем').map((text) => (
-                <span
-                  key={text}
-                  className={cn(
-                    'rounded-full px-1.5 py-0.5 text-[10.5px] font-semibold leading-none',
-                    'bg-[#F2F2F4] text-[#6E6E73]',
-                  )}
-                >
-                  {text}
-                </span>
-              ))}
-            </div>
-            <div className="mt-1 text-[13.5px] font-semibold leading-tight text-foreground">{variant.title}</div>
+
+        <div className="flex items-start gap-2.5">
+          <span
+            className={cn(
+              'mt-px grid size-5 flex-none place-items-center rounded-full text-[11px] font-semibold',
+              selected ? 'bg-foreground text-white' : 'bg-[#F2F2F4] text-[#6E6E73]',
+            )}
+            aria-hidden
+          >
+            {index + 1}
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="text-[13.5px] font-semibold leading-tight text-foreground">{variant.title}</div>
+            <div className="mt-0.5 text-[11.5px] leading-snug text-[#8E8E93]">{meta}</div>
           </div>
           <button
             type="button"
             onClick={() => setAssignments(variant.assignments)}
             aria-pressed={selected}
             className={cn(
-              'flex h-7 flex-none items-center gap-1 rounded-[8px] px-2 text-[12px] font-medium',
+              'flex flex-none items-center gap-1 rounded-[8px] px-2 py-1 text-[12px] font-medium',
               selected ? 'bg-foreground text-white' : 'border border-[#E5E5EA] text-foreground hover:border-[#C7C7CC]',
             )}
           >
@@ -328,40 +361,36 @@ export function ScenarioComposer({
             {selected ? 'Выбрано' : 'Выбрать'}
           </button>
         </div>
-        <p className="mt-1 text-[11.5px] leading-snug text-[#8E8E93]">{variant.description}</p>
-        <ul className="mt-2 grid gap-0.5 text-[11.5px] leading-snug">
-          {compositionLines(variant.assignments).map((line) => (
-            <li key={line.slot} className="min-w-0">
-              <span className="text-[#8E8E93]">{STAGE[line.slot].title}: </span>
-              <span className="text-foreground">{line.names.join(' + ')}</span>
-            </li>
-          ))}
-        </ul>
-        <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[11.5px] leading-tight tabular-nums">
-          {[
-            [`Экономия за ${variant.horizonYears} ${yearsWord(variant.horizonYears)}`, `${fmt(variant.savingMln)} млн ₽`],
-            ['Окупаемость', variant.paybackYears === null ? 'не окупается' : `${fmt(variant.paybackYears)} г.`],
-            ['Вложения', `${fmt(variant.capexMln)} млн ₽`],
-            ['Роботов', String(variant.robots)],
-          ].map(([label, value]) => (
-            <div key={label} className="min-w-0">
-              <dt className="text-[#8E8E93]">{label}</dt>
-              <dd className="font-semibold text-foreground">{value}</dd>
-            </div>
-          ))}
-        </dl>
+
+        {chips.length ? (
+          <ul className="mt-2 flex min-w-0 flex-wrap gap-1.5 pl-[30px]">
+            {chips.map(({ name, count }) => (
+              <li
+                key={name}
+                className="flex min-w-0 max-w-full items-center rounded-full border border-[#E5E5EA] bg-[#F7F7F8] px-2.5 py-1 text-[12px] leading-none"
+              >
+                <span className="truncate font-medium text-foreground">{name}</span>
+                {count > 1 ? <span className="text-[#8E8E93]"> · ×{count}</span> : null}
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
     );
   };
 
   if (tab === 'ready') {
+    // Панели мастера остаются смонтированными — без active подсказка торчит на «Какой объект считаем».
+    const hintOpen = active && !previewOpen && !pickingSlot;
+    const hintTitle = 'Готовые решения';
+    const hintBody =
+      'Собрали из роботов, которые подходят вашему складу, и посчитали каждый вариант. Выберите один — его можно поправить во вкладке «Собрать самому».';
     return (
       <div className="grid min-w-0 gap-3">
+        <WizardHint open={hintOpen} title={hintTitle}>
+          {hintBody}
+        </WizardHint>
         {tabs}
-        <p className="text-[12.5px] leading-snug text-[#6E6E73]">
-          Собрали из роботов, которые подходят вашему складу, и посчитали каждый вариант. Выберите один — его можно
-          поправить во вкладке «Собрать самому».
-        </p>
         {variants.isLoading ? <div className="h-[120px] animate-pulse rounded-[12px] bg-[#F2F2F2]" /> : null}
         {variants.isError ? <p className="text-[12.5px] text-status-danger">Не удалось собрать варианты.</p> : null}
         {variants.data?.length === 0 ? (
@@ -369,7 +398,7 @@ export function ScenarioComposer({
             Готовых вариантов нет: подходящих роботов мало. Соберите состав во вкладке «Собрать самому».
           </p>
         ) : null}
-        <div className="grid min-w-0 gap-2">{variants.data?.map(variantCard)}</div>
+        <div className="grid min-w-0 gap-2">{variants.data?.map((variant, index) => variantCard(variant, index))}</div>
       </div>
     );
   }

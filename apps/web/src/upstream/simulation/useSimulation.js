@@ -41,8 +41,8 @@ import { FLOOR_PITCH } from "./floorLevel.js";
 const ARM_FACTORIES = { weldarm: makeWeldArmRig };
 const LOADER_FACTORIES = { transporter: makeTransporterRobot };
 
-// Роборука по умолчанию — шестиосевой манипулятор пользователя (pick_arm.glb);
-// пока модель грузится — процедурная.
+// Роборука по умолчанию — шестиосевой манипулятор (pick_arm.glb). Процедурную
+// руку не показываем «пока грузится» — на F5 это выглядело как старая сцена.
 const armFactoryOf = (type) => ARM_FACTORIES[type] ?? makeArmRobot;
 const loaderFactoryOf = (type) => LOADER_FACTORIES[type] ?? makeForkliftRobot;
 
@@ -143,9 +143,8 @@ export function useSimulation(cfg) {
   const st = useRef({}).current;
 
   const [stats, setStats] = useState(EMPTY_STATS);
-  // glb-модели (роботы и фура) грузятся асинхронно (обычно их прогревает main.jsx, и
-  // они уже готовы). Пол, стены и роборуки строим сразу, пылесосы, погрузчики и
-  // фуры — когда модели готовы.
+  // glb-модели грузятся асинхронно. Пока не ready — не ставим процедурные руки
+  // (иначе на секунду мигает старая роборука). Пол/стены можно строить сразу.
   const [modelState, setModelState] = useState(areRobotModelsReady() ? "ready" : "loading"); // 'loading' | 'ready' | 'error'
 
   const { useVacuum, useArm, useLoader } = layout;
@@ -403,7 +402,16 @@ export function useSimulation(cfg) {
         level.linkFleets = [{ kind: "loader", fleet: ops }];
         // Руки станции работают внутри диспетчера; здесь — только их счётчик для панелей.
         if (stationPlan) {
-          level.armFleet = { step() {}, dispose() {}, getOpsDone: ops.getOpsDone, meters: [], obstacles: ops.obstacles, drawPads: false };
+          level.armFleet = {
+            step() {},
+            dispose() {},
+            getOpsDone: ops.getOpsDone,
+            getPlacedCount: () => ops.armsShown,
+            getRequestedCount: () => armCount,
+            meters: [],
+            obstacles: ops.obstacles,
+            drawPads: false,
+          };
         }
       } else if (transportLinks && index === 0) {
         // Связи сценария: у каждой — свои ворота, конвейер от ворот к зоне хранения
@@ -553,7 +561,7 @@ export function useSimulation(cfg) {
       }
 
       if (useArm && armCount > 0 && !level.armFleet) {
-        if (armType === "stacker") {
+        if (armType === "stacker" && modelState === "ready") {
           level.armFleet = createStackerFleet({
             group: level.armGroup,
             zone: layout.armZone,
@@ -571,7 +579,8 @@ export function useSimulation(cfg) {
             opsPerMinute: armProd,
             energyProfile: energyProfiles.arm,
           });
-        } else {
+        } else if (modelState === "ready") {
+          // weldarm / запасной путь — только после загрузки glb, без процедурной вспышки.
           level.armFleet = createArmFleet({
             group: level.armGroup,
             zone: layout.armZone,

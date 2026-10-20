@@ -1,15 +1,7 @@
-import { ShieldCheck, TriangleAlert } from 'lucide-react';
 import type { CostGroup } from '@/api/types';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
 import { cn, fmt } from '@/lib/utils';
 
-const GROUP_COLOR = ['bg-[#2F86F0]', 'bg-[#8E8E93]', 'bg-[#C7C7CC]'];
-const GROUP_DOT = ['bg-[#2F86F0]', 'bg-[#8E8E93]', 'bg-[#C7C7CC]'];
+const GROUP_COLOR = ['#2F86F0', '#EB6834', '#8E8E93', '#1BAF7A'];
 
 export type CostZone = 'vacuum' | 'arm' | 'all';
 
@@ -20,9 +12,14 @@ function guessZone(title: string): CostZone {
   return 'all';
 }
 
+/** Короткое имя группы: «CAPEX: разовая покупка» → «CAPEX». */
+function shortGroup(title: string) {
+  const head = title.split(/[:—–-]/)[0]?.trim();
+  return head || title;
+}
+
 /**
- * Структура затрат: сверху пропорция (видно без чисел), ниже группы.
- * Внутри — строки label | сумма | источник. Без вложенных карточек.
+ * Затраты в панели: доля + суммы. Без простыней, сканируется за секунду.
  */
 export function CostBreakdown({
   groups,
@@ -34,102 +31,59 @@ export function CostBreakdown({
   onHoverLine?: (zone: CostZone | null) => void;
 }) {
   return (
-    <div>
-      <div className="flex h-2 overflow-hidden rounded-full bg-[#F2F2F2]" role="presentation">
+    <div className="grid gap-4">
+      <div className="flex items-end justify-between gap-3">
+        <div className="text-[12px] font-medium text-[#8E8E93]">Итого TCO</div>
+        <div className="text-[22px] font-semibold tabular-nums tracking-[-0.03em] text-foreground">
+          {fmt(total)} <span className="text-[13px] font-medium text-[#8E8E93]">млн ₽</span>
+        </div>
+      </div>
+
+      <div className="flex h-2 overflow-hidden rounded-[3px] bg-[#F2F2F4]" role="presentation">
         {groups.map((group, index) => (
           <div
             key={group.id}
-            className={GROUP_COLOR[index % GROUP_COLOR.length]}
-            style={{ width: `${group.share}%` }}
-            title={`${group.title}: ${group.share}%`}
+            style={{ width: `${group.share}%`, background: GROUP_COLOR[index % GROUP_COLOR.length] }}
+            title={`${shortGroup(group.title)}: ${group.share}%`}
           />
         ))}
       </div>
 
-      <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1">
+      <ul className="grid gap-3">
         {groups.map((group, index) => (
-          <div key={group.id} className="flex items-center gap-1.5 text-[12px]">
-            <span
-              className={cn('size-2 rounded-full', GROUP_DOT[index % GROUP_DOT.length])}
-              aria-hidden
-            />
-            <span className="text-[#8E8E93]">{group.title}</span>
-            <span
-              className={cn(
-                'font-semibold tabular-nums',
-                index === 0 ? 'text-[#2F86F0]' : 'text-foreground',
-              )}
-            >
-              {group.share}%
-            </span>
-          </div>
+          <li key={group.id}>
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="inline-flex min-w-0 items-center gap-2 text-[13px] font-semibold text-foreground">
+                <span
+                  className="size-2 flex-none rounded-[2px]"
+                  style={{ background: GROUP_COLOR[index % GROUP_COLOR.length] }}
+                  aria-hidden
+                />
+                <span className="truncate">{shortGroup(group.title)}</span>
+                <span className="font-medium tabular-nums text-[#8E8E93]">{group.share}%</span>
+              </span>
+              <span className="flex-none text-[13px] font-semibold tabular-nums">{fmt(group.amount)}</span>
+            </div>
+            <ul className="mt-1.5">
+              {group.lines.map((line) => (
+                <li
+                  key={line.title}
+                  title={line.title}
+                  onMouseEnter={() => onHoverLine?.(guessZone(line.title))}
+                  onMouseLeave={() => onHoverLine?.(null)}
+                  className={cn(
+                    'flex items-baseline justify-between gap-3 py-1 text-[12.5px]',
+                    onHoverLine && 'rounded-[4px] px-0.5 hover:bg-[#FAFAFA]',
+                  )}
+                >
+                  <span className="min-w-0 truncate text-[#6E6E73]">{line.title}</span>
+                  <span className="flex-none tabular-nums font-medium text-foreground">{fmt(line.amount)}</span>
+                </li>
+              ))}
+            </ul>
+          </li>
         ))}
-      </div>
-
-      <Accordion
-        type="multiple"
-        defaultValue={groups.map((group) => group.id)}
-        className="mt-3 grid gap-1"
-      >
-        {groups.map((group) => (
-          <AccordionItem key={group.id} value={group.id} className="border-0">
-            <AccordionTrigger className="group rounded-[12px] border border-transparent px-2.5 py-2 transition-colors duration-100 hover:border-[#E5E5EA] hover:bg-[#FAFAFA]">
-              <div className="flex w-full items-baseline gap-3">
-                <span className="min-w-0 flex-1 text-left text-[13px] font-medium text-foreground">
-                  {group.title}
-                </span>
-                <span className="text-[13px] font-semibold tabular-nums text-foreground">
-                  {fmt(group.amount)} млн ₽
-                </span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent>
-              <ul className="mx-1 mb-1 divide-y divide-[#F2F2F2]">
-                {group.lines.map((line) => {
-                  const confirmed = line.confidence === 'confirmed';
-                  return (
-                    <li
-                      key={line.title}
-                      onMouseEnter={() => onHoverLine?.(guessZone(line.title))}
-                      onMouseLeave={() => onHoverLine?.(null)}
-                      className={cn(
-                        'flex flex-wrap items-baseline gap-x-3 gap-y-1 py-2.5 text-[13px]',
-                        onHoverLine ? 'rounded-[8px] px-1.5 hover:bg-[#FAFAFA]' : 'px-1.5',
-                      )}
-                    >
-                      <span className="min-w-0 flex-1 text-foreground/90">{line.title}</span>
-                      <span className="tabular-nums font-medium text-foreground">
-                        {fmt(line.amount)}
-                        <span className="ml-1 font-normal text-[#8E8E93]">· {line.share}%</span>
-                      </span>
-                      <span
-                        className={cn(
-                          'inline-flex w-full items-center gap-1 text-[11.5px] font-medium sm:w-auto',
-                          confirmed ? 'text-status-confirmed' : 'text-status-piloting',
-                        )}
-                      >
-                        {confirmed ? (
-                          <ShieldCheck className="size-3.5" strokeWidth={2} aria-hidden />
-                        ) : (
-                          <TriangleAlert className="size-3.5" strokeWidth={2} aria-hidden />
-                        )}
-                        {line.source}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
-
-      <div className="mt-2 flex items-baseline justify-between rounded-[12px] bg-[#F5F9FF] px-2.5 py-2.5">
-        <span className="text-[12.5px] font-medium text-[#5B8FCE]">Итого за 7 лет</span>
-        <span className="text-[16px] font-semibold tabular-nums text-[#2F86F0]">
-          {fmt(total)} млн ₽
-        </span>
-      </div>
+      </ul>
     </div>
   );
 }

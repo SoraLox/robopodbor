@@ -75,7 +75,7 @@ export function createTruckYard({ group, gates, payload, direction, nav, reach, 
     const pileCells = columns.map((c) => [c.gx, c.gz]);
     return {
       gate,
-      label: `горка у ворот ${gate.id + 1}`,
+      label: `груз у ворот ${gate.id + 1}`,
       slots,
       pileCells,
       sideSpots,

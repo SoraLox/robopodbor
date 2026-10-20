@@ -2,7 +2,12 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check } from 'lucide-react';
 import { CELL } from '@/upstream/simulation/shape/shapeTypes.js';
-import { WAREHOUSE_PRESETS, encodeShape, type Shape, type WarehousePreset } from '@/features/objects/layout/warehouseLayout';
+import {
+  WAREHOUSE_PRESETS,
+  presetOf,
+  type Shape,
+  type WarehousePreset,
+} from '@/features/objects/layout/warehouseLayout';
 import {
   WIZARD_COMPANION_SHADOW,
   WIZARD_PREVIEW_EASE,
@@ -60,7 +65,6 @@ function PresetThumb({ shape, size }: { shape: Shape; size: number }) {
 interface Built {
   preset: WarehousePreset;
   shape: Shape;
-  code: string;
 }
 
 function PresetCard({ item, active, onPick, compact }: { item: Built; active: boolean; onPick: () => void; compact: boolean }) {
@@ -97,14 +101,10 @@ function PresetCard({ item, active, onPick, compact }: { item: Built; active: bo
 
 export function LayoutPresets({ open, draft, onPick }: { open: boolean; draft: Shape; onPick: (shape: Shape) => void }) {
   const built = useMemo<Built[]>(
-    () =>
-      WAREHOUSE_PRESETS.map((preset) => {
-        const shape = preset.build();
-        return { preset, shape, code: encodeShape(shape) };
-      }),
+    () => WAREHOUSE_PRESETS.map((preset) => ({ preset, shape: preset.build() })),
     [],
   );
-  const current = encodeShape(draft);
+  const activeId = presetOf(draft)?.id ?? null;
   const { setRailOpen, setRailWidth, railFits } = useWizardCompanion();
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   const [height, setHeight] = useState(wizardCardHeightPx);
@@ -131,17 +131,23 @@ export function LayoutPresets({ open, draft, onPick }: { open: boolean; draft: S
     return (
       <div className="-mx-1 flex flex-none gap-2 overflow-x-auto px-1 pb-1" aria-label="Примеры складов">
         {built.map((item) => (
-          <PresetCard key={item.preset.id} item={item} active={item.code === current} onPick={() => pick(item)} compact />
+          <PresetCard
+            key={item.preset.id}
+            item={item}
+            active={item.preset.id === activeId}
+            onPick={() => pick(item)}
+            compact
+          />
         ))}
       </div>
     );
   }
   if (!slot) return null;
   return createPortal(
-    <div aria-hidden={!open} inert={open ? undefined : true} className="absolute right-0 top-0">
+    <div aria-hidden={!open} inert={open ? undefined : true} className="pointer-events-none absolute right-0 top-0">
       <aside
         aria-label="Примеры складов"
-        className="relative flex flex-col overflow-hidden rounded-[20px] border border-[#E5E5EA] bg-white motion-reduce:!transition-none"
+        className="pointer-events-auto relative flex flex-col overflow-hidden rounded-[20px] border border-[#E5E5EA] bg-white motion-reduce:!transition-none"
         style={{
           boxShadow: WIZARD_COMPANION_SHADOW,
           width: PRESETS_RAIL_WIDTH,
@@ -159,7 +165,13 @@ export function LayoutPresets({ open, draft, onPick }: { open: boolean; draft: S
         </div>
         <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3 pb-3" style={{ scrollbarWidth: 'thin' }}>
           {built.map((item) => (
-            <PresetCard key={item.preset.id} item={item} active={item.code === current} onPick={() => pick(item)} compact={false} />
+            <PresetCard
+              key={item.preset.id}
+              item={item}
+              active={item.preset.id === activeId}
+              onPick={() => pick(item)}
+              compact={false}
+            />
           ))}
         </div>
       </aside>

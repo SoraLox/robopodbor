@@ -2,7 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AlertCircle, Download, RotateCcw, Upload } from 'lucide-react';
-import { checkValue } from '@domain/parameters';
+import {
+  checkValue,
+  fillParameterDefaults,
+  reconcileWarehouseAreas,
+  warehouseAreaConsistencyError,
+} from '@domain/parameters';
 import { useWizardStore } from '@/app/store';
 import { downloadFile, useImportParameters, useObjectParameters } from '@/api/queries';
 import { Input } from '@/components/ui/input';
@@ -12,6 +17,9 @@ import { FormField, fieldDescribedBy } from '@/components/ui/form-field';
 import type { ParameterField } from '@/api/types';
 import { cn } from '@/lib/utils';
 import { formatGroupedNumber } from '@/lib/formatGroupedNumber';
+
+const WH_TOTAL_AREA = 'wh_obschaya_ploschad_sklada';
+const WH_ACTIVE_AREA = 'wh_ploschad_aktivnoy_zony';
 
 /** Те же правила, что при загрузке файла на сервере: тип, диапазон, варианты. */
 function validate(field: ParameterField, raw: string): string | null {
@@ -82,21 +90,25 @@ export function ObjectFormPage({ showTitleImport = true }: { showTitleImport?: b
 
   useEffect(() => {
     if (!fields) return;
-    setValues((prev) => {
-      const next = { ...prev };
-      for (const field of fields) {
-        if (next[field.id] === undefined) next[field.id] = field.defaultValue ?? '';
-      }
-      return next;
-    });
+    // Дефолты + согласование площадей (в т.ч. после persist/localStorage).
+    setValues((prev) => fillParameterDefaults(fields, prev));
   }, [fields]);
 
   const setValue = (id: string, next: string) => {
-    setValues((prev) => ({ ...prev, [id]: next }));
+    setValues((prev) => {
+      const updated = { ...prev, [id]: next };
+      // При уменьшении общей площади — сразу ужимаем активную (иначе форма «ломается»).
+      // При вводе активной не трогаем на лету — иначе мешает набору цифр; проверка на «Далее».
+      if (id === WH_TOTAL_AREA) return reconcileWarehouseAreas(updated, fields);
+      return updated;
+    });
     setErrors((prev) => {
-      if (!prev[id]) return prev;
       const rest = { ...prev };
       delete rest[id];
+      if (id === WH_TOTAL_AREA || id === WH_ACTIVE_AREA) {
+        delete rest[WH_TOTAL_AREA];
+        delete rest[WH_ACTIVE_AREA];
+      }
       return rest;
     });
   };
@@ -107,7 +119,7 @@ export function ObjectFormPage({ showTitleImport = true }: { showTitleImport?: b
       for (const field of sectionFields) {
         next[field.id] = field.defaultValue ?? '';
       }
-      return next;
+      return reconcileWarehouseAreas(next, fields);
     });
     setErrors((prev) => {
       const next = { ...prev };
@@ -125,11 +137,16 @@ export function ObjectFormPage({ showTitleImport = true }: { showTitleImport?: b
     event.preventDefault();
     if (!fields) return;
 
+    const normalized = reconcileWarehouseAreas(fillParameterDefaults(fields, values), fields);
+    if (normalized !== values) setValues(normalized);
+
     const found: Record<string, string> = {};
     for (const field of fields) {
-      const message = validate(field, values[field.id] ?? '');
+      const message = validate(field, normalized[field.id] ?? '');
       if (message) found[field.id] = message;
     }
+    const areaErr = warehouseAreaConsistencyError(normalized);
+    if (areaErr) found[areaErr.fieldId] = areaErr.message;
     setErrors(found);
     const firstId = Object.keys(found)[0];
     if (firstId) {
@@ -137,7 +154,7 @@ export function ObjectFormPage({ showTitleImport = true }: { showTitleImport?: b
       return;
     }
 
-    setParameters(values);
+    setParameters(normalized);
     navigate(`/calculate/${objectType}/${objectType === 'warehouse' ? 'layout' : 'processes'}`);
   };
 
@@ -145,7 +162,9 @@ export function ObjectFormPage({ showTitleImport = true }: { showTitleImport?: b
     if (!file) return;
     if (fileInput.current) fileInput.current.value = '';
     const result = await importFile.mutateAsync(file);
-    setValues((prev) => ({ ...prev, ...result.values }));
+    setValues((prev) =>
+      reconcileWarehouseAreas({ ...prev, ...result.values }, fields),
+    );
     const rejected: Record<string, string> = {};
     for (const issue of result.errors ?? []) {
       if (issue.fieldId) rejected[issue.fieldId] = issue.message;

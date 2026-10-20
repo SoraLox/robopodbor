@@ -265,12 +265,39 @@ export function createPickStation({ group, plan, beltTexture, rigFactory, armSca
     heap.unit = null;
     heap.ready = false;
     heap.reserved = false;
+    if (heap.feedAnchor) {
+      heap.feedAnchor.removeFromParent();
+      heap.feedAnchor = null;
+    }
     if (pallet) tweens.move(pallet, group, { x: pallet.position.x, y: -0.5, z: pallet.position.z, rotY: pallet.rotation.y }, 0.8, { onDone: () => pallet.removeFromParent() });
+  }
+
+  /** Штучная подача в кучку — чтобы рука шла в темпе паспорта, не дожидаясь погрузчика. */
+  function seedCarton(arm) {
+    const heap = arm.heap;
+    if (!heap.feedAnchor) {
+      heap.feedAnchor = new THREE.Group();
+      heap.feedAnchor.position.set(arm.spot.heap.x, 0, arm.spot.heap.z);
+      group.add(heap.feedAnchor);
+    }
+    const carton = new THREE.Mesh(cartonGeometry, crateMaterial);
+    carton.castShadow = true;
+    carton.position.set(0, 0.35 + heap.cartons.length * (size.y + 0.04), 0);
+    heap.feedAnchor.add(carton);
+    heap.cartons.push(carton);
+    heap.ready = true;
   }
 
   /** Погрузчик ставит паллету в кучку руки: ящик раскладывается на коробки. */
   function placeHeap(arm, palletUnit) {
     const heap = arm.heap;
+    // Убрать штучную подачу — дальше коробки с паллеты.
+    for (const c of heap.cartons) c.removeFromParent();
+    heap.cartons = [];
+    if (heap.feedAnchor) {
+      heap.feedAnchor.removeFromParent();
+      heap.feedAnchor = null;
+    }
     heap.unit = palletUnit;
     const rotY = Math.atan2(plan.along.x, plan.along.z);
     tweens.move(palletUnit, group, { x: arm.spot.heap.x, y: 0, z: arm.spot.heap.z, rotY }, 0.7, {
@@ -296,6 +323,14 @@ export function createPickStation({ group, plan, beltTexture, rigFactory, armSca
   }
 
   function step(dt) {
+    // Подача в темпе opsPerMinute × руки — как на pickingLine; иначе сцена << расчёт.
+    for (const arm of arms) {
+      arm.feedCredit = Math.min((arm.feedCredit ?? 0) + (opsPerMinute / 60) * 1.2 * dt, 4);
+      while (arm.feedCredit >= 1 && !arm.heap.reserved && !arm.heap.unit && arm.heap.cartons.length < 3) {
+        seedCarton(arm);
+        arm.feedCredit -= 1;
+      }
+    }
     belt.step(dt);
     for (const arm of arms) arm.unit.step(dt);
     // Доехала до проёма — ушла за стену.
@@ -319,6 +354,7 @@ export function createPickStation({ group, plan, beltTexture, rigFactory, armSca
       for (const arm of arms) {
         group.remove(arm.rig.group);
         arm.heap.unit?.removeFromParent();
+        arm.heap.feedAnchor?.removeFromParent();
       }
       group.remove(portal);
       cartonGeometry.dispose();

@@ -141,7 +141,7 @@ export function CashFlowChart({ finance }: { finance: Finance }) {
             <line x1={paybackX} x2={paybackX} y1={PAD.top - 6} y2={zero} stroke={VIZ.ink} strokeWidth={1} />
             <circle cx={paybackX} cy={zero} r={4} fill={VIZ.surface} stroke={VIZ.ink} strokeWidth={2} />
             <text x={paybackX + 6} y={PAD.top - 10} fontSize={11.5} fontWeight={600} fill={VIZ.ink}>
-              Окупаемость · {mlnText(payback!)} г.
+              Окупаемость: {mlnText(payback!)} г.
             </text>
           </g>
         ) : null}
@@ -183,13 +183,12 @@ export function CashFlowChart({ finance }: { finance: Finance }) {
   return (
     <ChartCard
       title="Денежный поток"
-      subtitle={`Млн ₽ по годам. Вложения — CAPEX на старте и замена оборудования по сроку службы; в последний год — остаточная стоимость парка.`}
       legend={
         <Legend>
-          <LegendItem color={VIZ.blue} label="Эффект: экономия ФОТ − OPEX" />
+          <LegendItem color={VIZ.blue} label="Эффект" />
           <LegendItem color={VIZ.orange} label="Вложения" />
-          {finance.salvageMln > 0 ? <LegendItem color={VIZ.aqua} label="Остаточная стоимость" /> : null}
-          <LegendItem color={VIZ.ink} label="Накопленным итогом" kind="line" />
+          {finance.salvageMln > 0 ? <LegendItem color={VIZ.aqua} label="Остаточная" /> : null}
+          <LegendItem color={VIZ.ink} label="Накопительным итогом" kind="line" />
         </Legend>
       }
       chart={chart}
@@ -199,8 +198,8 @@ export function CashFlowChart({ finance }: { finance: Finance }) {
           rows={flows.map((f) => [
             yearLabel(f.year),
             mlnText(f.effectMln),
-            f.investmentMln ? `−${mlnText(f.investmentMln)}` : '—',
-            f.salvageMln ? mlnText(f.salvageMln) : '—',
+            f.investmentMln ? `−${mlnText(f.investmentMln)}` : '-',
+            f.salvageMln ? mlnText(f.salvageMln) : '-',
             mlnText(f.netMln),
             mlnText(f.cumulativeMln),
           ])}

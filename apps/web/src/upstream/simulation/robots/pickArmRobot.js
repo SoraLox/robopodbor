@@ -23,7 +23,9 @@ const PAD = new THREE.Vector3(-0.31, 2.17, 1.895); // низ присосок
 const BASE = "Это база";
 const UPPER_ARM = ["Cube.001"];
 const FOREARM = ["Cube.002", "Cube.003"];
-const TOOL = ["Cube.005", "Cube.006", "Cylinder", "Cylinder.001", "Cylinder.002", "Cylinder.003"];
+// В glb на кисти три насадки сразу — оставляем только хваталку (параллельный захват).
+const TOOL = ["Cube.005", "Cube.006"];
+const HIDDEN_TOOLS = ["Cylinder", "Cylinder.001", "Cylinder.002", "Cylinder.003"];
 
 // Плоскость руки: радиус вперёд от оси A1 (u) и высота над полом (v).
 const S_U = SHOULDER.z - A1.z;
@@ -118,6 +120,36 @@ export function preparePickArm(gltfScene) {
   for (const name of UPPER_ARM) place(byName(name), shoulder);
   for (const name of FOREARM) place(byName(name), elbow);
   for (const name of TOOL) place(byName(name), wrist);
+  for (const name of HIDDEN_TOOLS) byName(name)?.removeFromParent();
+
+  // PAD в константах — низ старых вакуумных присосок (Cylinder*). Сейчас на кисти
+  // только губки Cube.005/006, они выше: если оставить grip на PAD, груз висит
+  // с большим зазором под насадкой. Ставим grip на фактический низ хваталки.
+  wrist.updateMatrixWorld(true);
+  const toolBox = new THREE.Box3();
+  let hasTool = false;
+  for (const child of wrist.children) {
+    if (child === grip) continue;
+    child.traverse((o) => {
+      if (!o.isMesh) return;
+      toolBox.expandByObject(o);
+      hasTool = true;
+    });
+  }
+  if (hasTool && Number.isFinite(toolBox.min.y)) {
+    const tipWorld = new THREE.Vector3(
+      (toolBox.min.x + toolBox.max.x) * 0.5,
+      toolBox.min.y,
+      (toolBox.min.z + toolBox.max.z) * 0.5,
+    );
+    grip.position.copy(wrist.worldToLocal(tipWorld));
+  }
+
+  // Вылет для IK: при нулевых углах оси кисти совпадают с файлом.
+  root.userData.armTip = {
+    padDrop: Math.max(0.05, -grip.position.y),
+    lateral: WRIST.x + grip.position.x - A1.x,
+  };
 
   root.traverse((o) => {
     if (o.isMesh) {
@@ -132,11 +164,13 @@ export const pickArmModel = createGlbModel("pick_arm.glb", preparePickArm);
 
 // Поза руки: yaw — направление на цель (как угол пивота процедурной руки:
 // 0 → +X, π → −X), radius — до цели по горизонтали от оси колонны, height —
-// высота низа присосок над полом ячейки.
-export function poseArm(joints, yaw, radius, height) {
-  const u = Math.sqrt(Math.max(1e-6, radius * radius - LATERAL * LATERAL));
+// высота низа хваталки над полом ячейки.
+export function poseArm(joints, yaw, radius, height, tip = { padDrop: PAD_DROP, lateral: LATERAL }) {
+  const lateral = tip.lateral;
+  const padDrop = tip.padDrop;
+  const u = Math.sqrt(Math.max(1e-6, radius * radius - lateral * lateral));
   const wu = u;
-  const wv = height + PAD_DROP;
+  const wv = height + padDrop;
   const du = wu - S_U;
   const dv = wv - S_V;
   const d = Math.min(L1 + L2 - 1e-3, Math.max(Math.abs(L1 - L2) + 1e-3, Math.hypot(du, dv)));
@@ -149,10 +183,10 @@ export function poseArm(joints, yaw, radius, height) {
 
   // Направление на цель: (cos yaw, −sin yaw); рука вытянута по +Z колонны.
   const psi = yaw + Math.PI / 2;
-  joints.turret.rotation.y = psi - Math.atan2(LATERAL, u);
+  joints.turret.rotation.y = psi - Math.atan2(lateral, u);
   joints.shoulder.rotation.x = REST1 - d1;
   joints.elbow.rotation.x = REST2 - d2 - (REST1 - d1);
-  // Кисть держит присоски вертикально при любом положении плеча и локтя.
+  // Кисть держит хваталку вертикально при любом положении плеча и локтя.
   joints.wrist.rotation.x = -(joints.shoulder.rotation.x + joints.elbow.rotation.x);
 }
 
@@ -169,7 +203,8 @@ export function makePickArmRig() {
     wrist: model.getObjectByName("wrist"),
   };
   const claw = model.getObjectByName("grip");
-  const pose = (yaw, radius, height) => poseArm(joints, yaw, radius, height);
+  const tip = model.userData.armTip ?? { padDrop: PAD_DROP, lateral: LATERAL };
+  const pose = (yaw, radius, height) => poseArm(joints, yaw, radius, height, tip);
   pose(Math.PI, REACH, CARRY_HEIGHT);
   return { group, claw, pose };
 }

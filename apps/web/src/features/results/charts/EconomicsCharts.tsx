@@ -15,69 +15,60 @@ const yearsWord = (n: number) => {
 // ─── Ряд показателей ──────────────────────────────────────────────────────
 // Один главный показатель (окупаемость — крупно), остальные — плитки.
 export function FinanceKpis({ finance, horizon }: { finance: Finance; horizon: number }) {
-  const tiles: Array<{ label: string; value: string; note: string; tone?: 'good' | 'bad' }> = [
+  const tiles: Array<{ label: string; value: string; tone?: 'good' | 'bad'; badge?: string }> = [
+    {
+      label: 'Окупаемость',
+      value:
+        finance.paybackYears === null
+          ? '-'
+          : `${mlnText(finance.paybackYears)} ${yearsWord(finance.paybackYears)}`,
+      tone: finance.paybackYears !== null ? 'good' : 'bad',
+    },
     {
       label: 'NPV',
-      value: `${mlnText(finance.npvMln)} млн ₽`,
-      note: `Сколько проект заработает в сегодняшних деньгах: будущие рубли пересчитаны по ставке ${mlnText(finance.discountRatePct)}%`,
+      value: `${mlnText(finance.npvMln)}`,
       tone: finance.npvMln >= 0 ? 'good' : 'bad',
+      badge: `за ${horizon} ${yearsWord(horizon)}`,
     },
     {
       label: 'IRR',
-      value: finance.irrPct === null ? '—' : `${Math.round(finance.irrPct)}%`,
-      note: 'Доходность проекта в % годовых — сравните со ставкой кредита или вклада',
+      value: finance.irrPct === null ? '-' : `${Math.round(finance.irrPct)}%`,
+      badge: '/ год',
     },
     {
-      label: `ROI за ${horizon} ${yearsWord(horizon)}`,
-      value: finance.roiPct === null ? '—' : `${finance.roiPct}%`,
-      note: 'Чистая прибыль на каждый вложенный рубль, с учётом стоимости роботов на конец срока',
+      label: 'ROI',
+      value: finance.roiPct === null ? '-' : `${finance.roiPct}%`,
       tone: (finance.roiPct ?? 0) >= 0 ? 'good' : 'bad',
+      badge: '/ год −CAPEX',
     },
     {
       label: 'Вложения',
-      value: `${mlnText(finance.totalInvestmentMln)} млн ₽`,
-      note: 'Покупка и внедрение роботов (CAPEX) плюс замена по сроку службы',
+      value: mlnText(finance.totalInvestmentMln),
     },
     {
-      label: 'Остаточная стоимость',
-      value: `${mlnText(finance.salvageMln)} млн ₽`,
-      note: `Сколько будут стоить роботы на конец ${horizon}-го года: их можно продать или работать дальше`,
+      label: 'Остаточная',
+      value: mlnText(finance.salvageMln),
     },
   ];
-  const payback = finance.paybackYears;
   return (
-    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.4fr)]">
-      <div className="flex flex-col justify-between rounded-[16px] border border-[#E5E5EA] bg-white p-4 sm:p-5">
-        <div className="text-[12.5px] font-medium text-[#6E6E73]">Окупаемость</div>
-        <div className="mt-2 text-[48px] font-semibold leading-none tracking-[-0.03em] text-foreground">
-          {payback === null ? '—' : mlnText(payback)}
-          {payback !== null ? (
-            <span className="ml-1.5 text-[18px] font-medium tracking-normal text-[#6E6E73]">{yearsWord(payback)}</span>
-          ) : null}
-        </div>
-        <div className="mt-2 text-[12px] leading-snug text-[#8E8E93]">
-          {payback === null
-            ? 'За горизонт расчёта не окупается'
-            : `Через столько лет вложения вернутся из экономии. С учётом стоимости денег — ${finance.discountedPaybackYears === null ? 'за горизонтом расчёта' : `${mlnText(finance.discountedPaybackYears)} ${yearsWord(finance.discountedPaybackYears)}`}`}
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {tiles.map((tile) => (
-          <div key={tile.label} className="min-w-0 rounded-[16px] border border-[#E5E5EA] bg-white p-3.5">
-            <div className="truncate text-[12px] font-medium text-[#6E6E73]">{tile.label}</div>
-            <div
-              className={cn(
-                'mt-1.5 text-[20px] font-semibold leading-tight tracking-[-0.02em]',
-                tile.tone === 'bad' ? 'text-[#D03B3B]' : 'text-foreground',
-              )}
-            >
-              {tile.value}
-            </div>
-            <div className="mt-1 text-[11.5px] leading-snug text-[#8E8E93]">{tile.note}</div>
+    <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      {tiles.map((tile) => (
+        <li key={tile.label} className="rounded-[10px] bg-[#F7F7F8] px-2.5 py-2.5">
+          <div className="truncate text-[11px] font-medium text-[#8E8E93]">
+            {tile.label}
+            {tile.badge ? <span className="font-normal"> {tile.badge}</span> : null}
           </div>
-        ))}
-      </div>
-    </div>
+          <div
+            className={cn(
+              'mt-0.5 text-[16px] font-semibold tabular-nums tracking-[-0.02em]',
+              tile.tone === 'bad' ? 'text-[#D03B3B]' : tile.tone === 'good' ? 'text-[#1F7A4D]' : 'text-foreground',
+            )}
+          >
+            {tile.value}
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -137,13 +128,12 @@ type ReactLabel = string;
 
 // ─── Сравнение сценариев по стоимости владения ─────────────────────────────
 // Форма «акцент»: выбранный (рекомендуемый) — синий, остальные — серые.
-export function TcoCompareChart({ scenarios, horizon }: { scenarios: ScenarioBar[]; horizon: number }) {
+export function TcoCompareChart({ scenarios, horizon: _horizon }: { scenarios: ScenarioBar[]; horizon: number }) {
   const max = Math.max(...scenarios.map((s) => s.tco), 1);
   const base = scenarios.find((s) => s.id === 'as-is');
   return (
     <ChartCard
       title="Стоимость владения за горизонт"
-      subtitle={`Млн ₽ за ${horizon} ${yearsWord(horizon)}: «как есть» — ФОТ замещаемых ролей; покупка и RaaS — вложения, OPEX и оставшийся ФОТ.`}
       chart={
         <HBars
           unit="млн ₽"
@@ -154,7 +144,7 @@ export function TcoCompareChart({ scenarios, horizon }: { scenarios: ScenarioBar
             value: s.tco,
             color: s.recommended ? VIZ.blue : s.id === 'as-is' ? VIZ.grayDark : VIZ.gray,
             badge: s.recommended ? 'Рекомендуем' : undefined,
-            note: base && s.id !== 'as-is' ? `${s.delta} млн ₽ к «как есть»` : s.subtitle,
+            note: base && s.id !== 'as-is' ? `${s.delta} млн ₽` : s.subtitle,
           }))}
         />
       }
@@ -171,7 +161,15 @@ export function TcoCompareChart({ scenarios, horizon }: { scenarios: ScenarioBar
 // ─── Структура стоимости владения: одна полоса 100% + легенда со значениями ─
 const PART_COLORS = [VIZ.blue, VIZ.orange, VIZ.aqua, '#EDA100', '#E87BA4', '#6250D6'];
 
-export function CostStructureChart({ groups, total }: { groups: CostGroup[]; total: number }) {
+export function CostStructureChart({
+  groups,
+  total,
+  plain = false,
+}: {
+  groups: CostGroup[];
+  total: number;
+  plain?: boolean;
+}) {
   // Строки всех групп; остаточная стоимость — отрицательная, показываем отдельно.
   const lines = groups.flatMap((g) => g.lines.map((l) => ({ ...l, group: g.title })));
   const positive = lines.filter((l) => l.amount > 0).sort((a, b) => b.amount - a.amount);
@@ -187,8 +185,9 @@ export function CostStructureChart({ groups, total }: { groups: CostGroup[]; tot
   const [hover, setHover] = useState<number | null>(null);
   return (
     <ChartCard
+      plain={plain}
       title="Из чего складывается стоимость владения"
-      subtitle={`Всего ${mlnText(total)} млн ₽ за горизонт${credit.length ? ` с учётом остаточной стоимости ${mlnText(credit.reduce((s, l) => s + l.amount, 0))} млн ₽` : ''}.`}
+      subtitle={`Всего ${mlnText(total)} млн ₽${credit.length ? ` · остаточная ${mlnText(credit.reduce((s, l) => s + l.amount, 0))} млн ₽` : ''}.`}
       chart={
         <div>
           <div className="flex h-5 w-full gap-[2px]" role="img" aria-label="Доли статей в стоимости владения">
@@ -241,69 +240,39 @@ export function CostStructureChart({ groups, total }: { groups: CostGroup[]; tot
 }
 
 // ─── Что снизит OPEX ──────────────────────────────────────────────────────
-export function OpexLeversChart({ levers }: { levers: Levers }) {
+export function OpexLeversChart({ levers, plain = false }: { levers: Levers; plain?: boolean }) {
   const max = Math.max(...levers.levers.map((l) => l.savingMln), 1);
-  const total = levers.levers.reduce((s, l) => s + l.savingMln, 0);
+  const bars = (
+    <ul className="grid gap-2">
+      {levers.levers.map((l) => (
+        <li key={l.id}>
+          <div className="flex items-baseline justify-between gap-3 text-[12.5px]">
+            <span className="min-w-0 truncate font-medium text-foreground" title={l.title}>
+              {l.title}
+            </span>
+            <span className="flex-none font-semibold tabular-nums">−{mlnText(l.savingMln)}</span>
+          </div>
+          <div className="mt-1 h-2 w-full rounded-r-[3px] bg-[#F2F2F4]">
+            <div
+              className="h-full rounded-r-[3px]"
+              style={{
+                width: `${(l.savingMln / max) * 100}%`,
+                background: l.basis === 'calculated' ? VIZ.blue : VIZ.gray,
+              }}
+            />
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+
+  if (plain) return bars;
+
   return (
     <ChartCard
       title="Что снизит операционные затраты"
-      subtitle={`OPEX после роботизации — ${mlnText(levers.opexYearMln)} млн ₽ в год. Рычаги — из структуры затрат этого расчёта; «оценка» — по допущению, оно названо в описании.`}
-      legend={
-        <Legend>
-          {levers.parts.map((p, i) => (
-            <LegendItem key={p.id} color={[VIZ.grayDark, VIZ.blue, VIZ.orange][i] ?? VIZ.gray} label={`${p.label} · ${mlnText(p.amountMln)} млн ₽`} />
-          ))}
-        </Legend>
-      }
-      chart={
-        <div>
-          <div className="flex h-3 w-full gap-[2px]" role="img" aria-label="Состав OPEX в год">
-            {levers.parts
-              .filter((p) => p.amountMln > 0)
-              .map((p, i, arr) => (
-                <div
-                  key={p.id}
-                  className={cn('h-full', i === 0 && 'rounded-l-[4px]', i === arr.length - 1 && 'rounded-r-[4px]')}
-                  style={{
-                    width: `${(p.amountMln / (levers.opexYearMln || 1)) * 100}%`,
-                    background: [VIZ.grayDark, VIZ.blue, VIZ.orange][levers.parts.indexOf(p)] ?? VIZ.gray,
-                  }}
-                />
-              ))}
-          </div>
-          <div className="mt-5 flex items-baseline justify-between gap-3">
-            <span className="text-[12.5px] font-medium text-[#6E6E73]">Рычаги, экономия в год</span>
-            <span className="text-[12.5px] text-[#8E8E93]">до {mlnText(total)} млн ₽ в год вместе</span>
-          </div>
-          <ul className="mt-2 grid gap-3">
-            {levers.levers.map((l) => (
-              <li key={l.id}>
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="inline-flex min-w-0 items-center gap-1.5 text-[13px] font-medium text-foreground">
-                    <span className="truncate">{l.title}</span>
-                    <span
-                      className={cn(
-                        'flex-none rounded-full px-1.5 py-0.5 text-[10.5px] font-semibold leading-none',
-                        l.basis === 'calculated' ? 'bg-[#EAF3FE] text-[#1C5CAB]' : 'bg-[#F2F2F4] text-[#6E6E73]',
-                      )}
-                    >
-                      {l.basis === 'calculated' ? 'расчёт' : 'оценка'}
-                    </span>
-                  </span>
-                  <span className="flex-none text-[13px] font-semibold tabular-nums text-foreground">−{mlnText(l.savingMln)} млн ₽</span>
-                </div>
-                <div className="mt-1.5 h-2.5 w-full">
-                  <div
-                    className="h-full rounded-r-[4px]"
-                    style={{ width: `${(l.savingMln / max) * 100}%`, background: l.basis === 'calculated' ? VIZ.blue : VIZ.gray }}
-                  />
-                </div>
-                <p className="mt-1 text-[11.5px] leading-snug text-[#8E8E93]">{l.detail}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      }
+      subtitle={`OPEX: ${mlnText(levers.opexYearMln)} млн ₽/год`}
+      chart={bars}
       table={
         <DataTable
           head={['Рычаг', 'Основание', 'Экономия, млн ₽ в год']}
@@ -322,7 +291,15 @@ const yearsOf = (text: string | undefined) => {
   return m ? Number(m[1]!.replace(',', '.')) : null;
 };
 
-export function SensitivityTornado({ factors, basePayback }: { factors: SensitivityFactor[]; basePayback: number }) {
+export function SensitivityTornado({
+  factors,
+  basePayback,
+  plain = false,
+}: {
+  factors: SensitivityFactor[];
+  basePayback: number;
+  plain?: boolean;
+}) {
   const rows = factors.map((f) => {
     const a = yearsOf(f.low) ?? basePayback;
     const b = yearsOf(f.high) ?? basePayback;
@@ -330,44 +307,49 @@ export function SensitivityTornado({ factors, basePayback }: { factors: Sensitiv
   });
   const spread = Math.max(...rows.map((r) => Math.max(basePayback - r.fast, r.slow - basePayback)), 0.05);
   const pos = (v: number) => 50 + ((v - basePayback) / spread) * 46;
+  const chart = (
+    <ul className="grid gap-2.5">
+      {rows.map((r) => (
+        <li key={r.id}>
+          <div className="flex items-baseline justify-between gap-2 text-[12px]">
+            <span className="min-w-0 truncate font-medium text-foreground">{r.label}</span>
+            <span className="flex-none tabular-nums text-[#8E8E93]">
+              {r.low ?? '-'} / {r.high ?? '-'}
+            </span>
+          </div>
+          <div className="relative mt-1 h-3">
+            <div className="absolute inset-y-0 w-px bg-[#D1D1D6]" style={{ left: '50%' }} aria-hidden />
+            <div
+              className="absolute inset-y-0.5 rounded-l-[3px]"
+              style={{ left: `${pos(r.fast)}%`, width: `${50 - pos(r.fast)}%`, background: VIZ.blue }}
+            />
+            <div
+              className="absolute inset-y-0.5 rounded-r-[3px]"
+              style={{ left: 'calc(50% + 1px)', width: `calc(${pos(r.slow) - 50}% - 1px)`, background: VIZ.orange }}
+            />
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+
+  if (plain) return chart;
+
   return (
     <ChartCard
       title="Что сильнее всего двигает окупаемость"
-      subtitle={`Каждый фактор ±20%. Центр — расчётные ${mlnText(basePayback)} ${yearsWord(basePayback)}; полоса влево — окупится быстрее, вправо — дольше.`}
+      subtitle={`±20%. Центр: ${mlnText(basePayback)} ${yearsWord(basePayback)}`}
       legend={
         <Legend>
           <LegendItem color={VIZ.blue} label="Быстрее" />
           <LegendItem color={VIZ.orange} label="Дольше" />
         </Legend>
       }
-      chart={
-        <ul className="grid gap-3">
-          {rows.map((r) => (
-            <li key={r.id}>
-              <div className="text-[12.5px] font-medium text-foreground">{r.label}</div>
-              <div className="relative mt-1.5 h-4">
-                <div className="absolute inset-y-0 w-px bg-[#D1D1D6]" style={{ left: '50%' }} aria-hidden />
-                <div
-                  className="absolute inset-y-0.5 rounded-l-[4px]"
-                  style={{ left: `${pos(r.fast)}%`, width: `${50 - pos(r.fast)}%`, background: VIZ.blue }}
-                />
-                <div
-                  className="absolute inset-y-0.5 rounded-r-[4px]"
-                  style={{ left: 'calc(50% + 2px)', width: `calc(${pos(r.slow) - 50}% - 2px)`, background: VIZ.orange }}
-                />
-              </div>
-              <div className="mt-1 flex justify-between text-[11.5px] tabular-nums text-[#8E8E93]">
-                <span>{r.low ?? '—'}</span>
-                <span>{r.high ?? '—'}</span>
-              </div>
-            </li>
-          ))}
-        </ul>
-      }
+      chart={chart}
       table={
         <DataTable
           head={['Фактор ±20%', 'Оптимистично', 'Осторожно', 'Влияние']}
-          rows={rows.map((r) => [r.label, r.low ?? '—', r.high ?? '—', `±${Math.round(r.impact * 100)}%`])}
+          rows={rows.map((r) => [r.label, r.low ?? '-', r.high ?? '-', `±${Math.round(r.impact * 100)}%`])}
         />
       }
     />

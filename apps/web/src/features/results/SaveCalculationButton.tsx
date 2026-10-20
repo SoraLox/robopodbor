@@ -70,7 +70,7 @@ export function SaveCalculationButton({
       disabled={createProject.isPending}
       className={cn(base, 'bg-foreground text-white hover:bg-foreground/85')}
       aria-label={user ? 'Сохранить расчёт в личный кабинет' : 'Войдите, чтобы сохранить расчёт'}
-      title={createProject.isError ? 'Не удалось сохранить — попробуйте ещё раз' : 'Сохранить в «Мои расчёты»'}
+      title={createProject.isError ? 'Не удалось сохранить. Попробуйте ещё раз' : 'Сохранить в «Мои расчёты»'}
     >
       <Bookmark className="size-4" strokeWidth={1.8} aria-hidden />
       {createProject.isPending ? 'Сохраняем…' : createProject.isError ? 'Повторить' : 'Сохранить'}

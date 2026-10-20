@@ -5,7 +5,6 @@ import {
   Camera,
   ChevronDown,
   ChevronUp,
-  SkipBack,
   ClipboardList,
   Gauge,
   ListTree,
@@ -16,11 +15,12 @@ import {
   RotateCcw,
   RotateCw,
   ScrollText,
+  SkipBack,
   TriangleAlert,
 } from 'lucide-react';
 import { queryKeys, runCalculation, useCalculation, useObjectParameters } from '@/api/queries';
 import { areaOf, layoutParameters } from '@/features/objects/layout/warehouseLayout';
-import { useWizardStore } from '@/app/store';
+import { useWizardHydrated, useWizardStore } from '@/app/store';
 import { Button } from '@/components/ui/button';
 import { CostBreakdown } from './CostBreakdown';
 import { ObjectParametersList } from './ObjectParametersList';
@@ -63,6 +63,7 @@ export function ResultsPage() {
     calculationId: string;
   }>();
   const { data, isLoading, isError } = useCalculation(calculationId);
+  const wizardReady = useWizardHydrated();
   const intro = introOf(data);
   const { data: fields } = useObjectParameters(objectType);
   const entered = useWizardStore((s) => s.parameters);
@@ -83,7 +84,8 @@ export function ResultsPage() {
     }
   };
 
-  if (isLoading) {
+  // Ждём и расчёт, и persist мастера — иначе на F5 сцена мигает дефолтным складом.
+  if (isLoading || !wizardReady) {
     return (
       <div className="grid min-h-[calc(100dvh-3.5rem)] place-items-center px-[18px]">
         <div className="panel grid min-h-[200px] w-full max-w-site place-items-center p-8">
@@ -190,8 +192,8 @@ function ReportBelowFold({
   const sections: ReportSection[] = [
     {
       id: 'costs',
-      title: 'Статьи затрат подробно',
-      summary: `${fmt(data.totalTco)} млн ₽ за ${horizonOf(data)} · сценарий «Покупка»`,
+      title: 'Статьи затрат',
+      summary: `${fmt(data.totalTco)} млн ₽ за ${horizonOf(data)}`,
       icon: ListTree,
       content: <CostBreakdown groups={data.costGroups} total={data.totalTco} />,
     },
@@ -200,7 +202,7 @@ function ReportBelowFold({
           {
             id: 'simulation-check',
             title: 'Проверка симуляцией',
-            summary: 'Нужно · расчёт парка · что сделали роботы в сцене',
+            summary: 'Спрос, расчёт, сцена',
             icon: Gauge,
             content: <SimulationCheck />,
           } satisfies ReportSection,
@@ -211,34 +213,21 @@ function ReportBelowFold({
       title: 'Вводные объекта',
       summary: intro.title,
       icon: ClipboardList,
-      content: (
-        <div>
-          <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1">
-            {intro.meta.split('·').map((part) => (
-              <span key={part} className="text-[12px] text-[#8E8E93]">
-                {part.trim()}
-              </span>
-            ))}
-          </div>
-          {parameterGroups.length ? <ObjectParametersList groups={parameterGroups} /> : null}
-        </div>
+      content: parameterGroups.length ? (
+        <ObjectParametersList groups={parameterGroups} />
+      ) : (
+        <p className="text-[13px] text-[#8E8E93]">{intro.title}</p>
       ),
     },
     {
       id: 'assumptions',
       title: 'Допущения',
-      summary: `${data.assumptions.length + simulationAssumptions.length} пунктов · экономика и симуляция`,
+      summary: `${data.assumptions.length + simulationAssumptions.length} пунктов`,
       icon: ScrollText,
       content: (
-        <div className="grid gap-3">
+        <div className="grid gap-5">
           <AssumptionBlock title="Экономика" items={data.assumptions} />
           <AssumptionBlock title="Симуляция" items={[...simulationAssumptions]} />
-          <button
-            type="button"
-            className="text-left text-[12.5px] font-medium text-[#2F86F0] underline-offset-4 hover:underline"
-          >
-            Изменить допущения
-          </button>
         </div>
       ),
     },
@@ -307,6 +296,7 @@ function HeroMetrics({
 
   const area = areaFromTitle(intro.title);
   const recommended = data.scenarios.find((scenario) => scenario.recommended);
+  const horizon = horizonOf(data);
 
   // Два кегля в острове: 11 (подписи) / 13 (значения и тулбар).
   const iconBtn =
@@ -351,7 +341,7 @@ function HeroMetrics({
               <div className="grid min-w-0 grid-cols-2 content-center gap-x-3 gap-y-3 rounded-[12px] border border-[#E5E5EA] px-2.5 py-2.5">
                 <Metric label="Площадь" value={`${area.number} ${area.unit}`.trim()} />
                 <Metric label="CAPEX" value={data.capex.value} />
-                <Metric label="ROI" value={data.roi.value} />
+                <Metric label="ROI" value={data.roi.value} badge="/ год −CAPEX" />
                 <Metric
                   label="Окупаемость"
                   value={`${data.payback.value} ${data.payback.unit ?? 'лет'}`.trim()}
@@ -376,7 +366,7 @@ function HeroMetrics({
                   <div className="mt-3 grid min-w-0 grid-cols-3 gap-2">
                     <Metric label="CAPEX" value={data.capex.value} />
                     <Metric label="OPEX" value={data.opexSaving.percent} tone="green" />
-                    <Metric label="TCO" value={fmt(recommended.tco)} />
+                    <Metric label="TCO" value={fmt(recommended.tco)} badge={`за ${horizon}`} />
                   </div>
                 </div>
               ) : (
@@ -393,6 +383,7 @@ function HeroMetrics({
                     <Metric
                       label="TCO покупки"
                       value={fmt(data.scenarios.find((scenario) => scenario.id === 'purchase')?.tco ?? data.totalTco)}
+                      badge={`за ${horizon}`}
                     />
                   </div>
                 </div>
@@ -558,8 +549,8 @@ function useFleetAdjust(data: CalculationResult | undefined, objectType: string)
       setAssignments(base);
       setStatus(
         delta > 0
-          ? 'Добавляем нового робота на сцену — заново считаем задания и маршруты всем роботам'
-          : 'Убираем робота со сцены — заново считаем задания и маршруты всем роботам',
+          ? 'Добавляем нового робота на сцену: заново считаем задания и маршруты всем роботам'
+          : 'Убираем робота со сцены: заново считаем задания и маршруты всем роботам',
       );
       navigate(`/calculate/${objectType}/results/${result.id}`, { replace: true });
       window.scrollTo({ top: 0 });
@@ -624,14 +615,20 @@ function Metric({
   label,
   value,
   tone = 'default',
+  badge,
 }: {
   label: string;
   value: string;
   tone?: 'default' | 'blue' | 'green';
+  /** Заметная пометка горизонта («за 5 лет») у показателей за весь срок. */
+  badge?: string;
 }) {
   return (
     <div className="min-w-0">
-      <div className="text-[11px] font-medium text-[#8E8E93]">{label}</div>
+      <div className="truncate text-[11px] font-medium text-[#8E8E93]">
+        {label}
+        {badge ? <span className="font-normal"> {badge}</span> : null}
+      </div>
       <div
         className={cn(
           'mt-1 truncate text-[13px] font-semibold leading-none tabular',
@@ -649,20 +646,24 @@ function Metric({
 
 
 function AssumptionBlock({ title, items }: { title: string; items: string[] }) {
+  if (!items.length) return null;
   return (
-    <div>
-      <div className="px-1 text-[11.5px] font-medium text-[#5B8FCE]">{title}</div>
-      <ul className="mt-1">
+    <section>
+      <h3 className="mb-1.5 text-[12px] font-semibold text-[#8E8E93]">
+        {title} <span className="font-medium text-[#C7C7CC]">{items.length}</span>
+      </h3>
+      <ul className="grid gap-1">
         {items.map((item) => (
           <li
             key={item}
-            className="border-b border-[#F2F2F2] px-1 py-2 text-[13px] leading-snug text-foreground last:border-b-0"
+            title={item}
+            className="truncate rounded-[8px] bg-[#F7F7F8] px-2.5 py-1.5 text-[12.5px] text-foreground"
           >
             {item}
           </li>
         ))}
       </ul>
-    </div>
+    </section>
   );
 }
 

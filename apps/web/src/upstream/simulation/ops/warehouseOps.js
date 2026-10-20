@@ -798,6 +798,7 @@ export function createWarehouseOps({ group, armGroup, racks = null, picking = nu
     meters: [...forklifts.map((f) => f.agent.meter), ...amrs.map((a) => a.agent.meter), ...(station?.meters ?? [])],
     obstacles: [...belts.flatMap((b) => b.obstacles), ...(station?.obstacles ?? [])],
     armsShown: station?.arms.length ?? 0,
+    loadersShown: forklifts.length,
     dispose() {
       for (const f of forklifts) f.dispose();
       for (const a of amrs) a.dispose();

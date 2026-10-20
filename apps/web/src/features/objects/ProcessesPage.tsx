@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useParams } from 'react-router-dom';
-import { AlertTriangle, ChevronRight, type LucideIcon } from 'lucide-react';
+import { ChevronRight, type LucideIcon } from 'lucide-react';
 import type { SlotId } from '@domain/warehouseEconomics';
 import { ScenarioComposer } from '@/features/objects/ScenarioComposer';
 import { useSelection, useSolutions } from '@/api/queries';
@@ -11,6 +11,7 @@ import { getFitTone } from '@/features/catalog/fitTone';
 import { predecodePreviewImages } from '@/features/objects/previewImages';
 import { groupByProcess, robotsCount, type RobotGroup } from '@/features/objects/processGroups';
 import { SolutionPreviewCard } from '@/features/objects/SolutionPreviewCard';
+import { WizardHint } from '@/features/objects/WizardHint';
 import { useWizardCompanion, useWizardEnter } from '@/features/objects/wizardCompanion';
 import {
   wizardCardHeightPx,
@@ -63,10 +64,10 @@ function CategoryRail({
   }, []);
 
   return (
-    <div aria-hidden={!open} inert={open ? undefined : true} className="absolute right-0 top-0">
+    <div aria-hidden={!open} inert={open ? undefined : true} className="pointer-events-none absolute right-0 top-0">
       <aside
         aria-label="Категории автоматизации"
-        className="relative flex flex-col overflow-hidden rounded-[20px] border border-[#E5E5EA] bg-white motion-reduce:!transition-none"
+        className="pointer-events-auto relative flex flex-col overflow-hidden rounded-[20px] border border-[#E5E5EA] bg-white motion-reduce:!transition-none"
         style={{
           boxShadow: WIZARD_COMPANION_SHADOW,
           width: WIZARD_WIDTH_RAIL,
@@ -238,11 +239,14 @@ export function ProcessesPage({
   const isWarehouse = objectType === 'warehouse';
   const assignments = useWizardStore((s) => s.assignments);
   const [pickingSlot, setPickingSlot] = useState<SlotId | null>(null);
+  const assignRef = useRef<((solutionId: string) => void) | null>(null);
   const [showExcluded, setShowExcluded] = useState(false);
   // Путь выбора: процесс → подкатегория (если их несколько) → робот.
   const [groupId, setGroupId] = useState<string | null>(null);
   const [subgroupId, setSubgroupId] = useState<string | null>(null);
+  /** Робот для расчёта (не склад). Превью — отдельно, чтобы «Подробнее» у excluded не выбирало его. */
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [previewId, setPreviewId] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [companion, setCompanion] = useState<HTMLElement | null>(null);
   const [railSlot, setRailSlot] = useState<HTMLElement | null>(null);
@@ -277,6 +281,7 @@ export function ProcessesPage({
   const openGroup = (id: string) => {
     if (id !== groupId) {
       setSelectedId(null);
+      setPreviewId(null);
       setPreviewOpen(false);
     }
     setGroupId(id);
@@ -284,17 +289,23 @@ export function ProcessesPage({
     setShowExcluded(false);
   };
 
+  const closePreview = () => {
+    setPreviewOpen(false);
+    setPreviewId(null);
+  };
+
   // Один «Назад» в шапке карточки: превью → подкатегория → категория → форма.
   useEffect(() => {
     if (!backRef) return;
     backRef.current = () => {
       if (!active) return false;
-      if (pickingSlot) {
-        setPickingSlot(null);
+      if (previewOpen) {
+        closePreview();
         return true;
       }
-      if (previewOpen) {
-        setPreviewOpen(false);
+      if (pickingSlot) {
+        setPickingSlot(null);
+        closePreview();
         return true;
       }
       if (subgroupId) {
@@ -321,24 +332,44 @@ export function ProcessesPage({
   }, []);
 
   useEffect(() => {
-    if (!active) setPreviewOpen(false);
+    if (!active) {
+      closePreview();
+      setSelectedId(null);
+    }
   }, [active]);
 
   useEffect(() => {
     if (active) predecodePreviewImages(rows);
   }, [active, rows]);
 
-  const selectedSolution = rows.find((row) => row.id === selectedId) ?? null;
   const selectedItem = selection?.items.find((item) => item.solutionId === selectedId) ?? null;
+  const previewSolution = rows.find((row) => row.id === previewId) ?? null;
+  const previewItem = selection?.items.find((item) => item.solutionId === previewId) ?? null;
 
-  const openPreview = (id: string) => {
-    if (previewOpen && selectedId === id) {
-      setPreviewOpen(false);
+  /** Превью; select — выбрать для расчёта (не для excluded и не для склада-состава). */
+  const openPreview = (id: string, opts: { select?: boolean } = {}) => {
+    if (previewOpen && previewId === id) {
+      closePreview();
       return;
     }
-    setSelectedId(id);
+    setPreviewId(id);
     setPreviewOpen(true);
+    if (opts.select === false || isWarehouse) return;
+    const item = selection?.items.find((entry) => entry.solutionId === id);
+    if (item?.status === 'excluded') return;
+    setSelectedId(id);
   };
+
+  const excludedInSelection = useMemo(() => {
+    if (isWarehouse) {
+      for (const assignment of assignments) {
+        const item = selection?.items.find((entry) => entry.solutionId === assignment.solutionId);
+        if (item?.status === 'excluded') return item;
+      }
+      return null;
+    }
+    return selectedItem?.status === 'excluded' ? selectedItem : null;
+  }, [isWarehouse, assignments, selection, selectedItem]);
 
   const canCalculate = isWarehouse ? assignments.length > 0 : Boolean(selectedId);
   const goCalculate = () => {
@@ -348,7 +379,7 @@ export function ProcessesPage({
       if (!selectedId) return;
       setSolutionId(selectedId);
     }
-    setPreviewOpen(false);
+    closePreview();
     navigate(`/calculate/${objectType}/calculating`);
   };
 
@@ -359,15 +390,41 @@ export function ProcessesPage({
       railSlot,
     );
 
+  const alreadyInSlot =
+    Boolean(pickingSlot && previewId) &&
+    assignments.some((a) => a.slot === pickingSlot && a.solutionId === previewId);
+  const canAssignFromPreview =
+    Boolean(pickingSlot && previewId) && previewItem?.status !== 'excluded' && !alreadyInSlot;
+
+  // Монтируем превью только когда открыто — иначе useWizardEnter(false) гасит
+  // правый слот и прячет подсказки (WizardHintRail).
   const preview =
     companion &&
     active &&
+    previewOpen &&
+    previewSolution &&
     createPortal(
       <SolutionPreviewCard
-        solution={selectedSolution}
-        selection={selectedItem}
-        open={previewOpen && Boolean(selectedSolution)}
-        onClose={() => setPreviewOpen(false)}
+        solution={previewSolution}
+        selection={previewItem}
+        open
+        onClose={closePreview}
+        action={
+          pickingSlot && previewId
+            ? {
+                label: alreadyInSlot
+                  ? 'Уже в составе'
+                  : previewItem?.status === 'excluded'
+                    ? 'Нельзя добавить'
+                    : 'Добавить в состав',
+                disabled: !canAssignFromPreview,
+                onClick: () => {
+                  assignRef.current?.(previewId);
+                  closePreview();
+                },
+              }
+            : null
+        }
       />,
       companion,
     );
@@ -387,10 +444,10 @@ export function ProcessesPage({
       rows={ordered}
       pickingSlot={pickingSlot}
       onPickSlot={setPickingSlot}
-      onPreview={(id) => {
-        setSelectedId(id);
-        setPreviewOpen(true);
-      }}
+      previewOpen={previewOpen}
+      onPreview={(id) => openPreview(id, { select: false })}
+      active={active}
+      assignRef={assignRef}
     />
   ) : !group ? (
     <>
@@ -469,8 +526,8 @@ export function ProcessesPage({
                   key={solution.id}
                   solution={solution}
                   item={item}
-                  selected={solution.id === selectedId}
-                  onSelect={() => openPreview(solution.id)}
+                  selected={false}
+                  onSelect={() => openPreview(solution.id, { select: false })}
                 />
               ))}
             </div>
@@ -505,17 +562,6 @@ export function ProcessesPage({
           </div>
         </div>
 
-        {selectedItem?.status === 'excluded' ? (
-          <p role="alert" className="mb-2 mt-3 flex gap-1.5 text-[12px] leading-snug text-status-danger">
-            <AlertTriangle className="mt-px size-3.5 flex-none" strokeWidth={2} aria-hidden />
-            <span>
-              Решение выбрано вручную и не прошло подбор: {lowerFirst(selectedItem.blockers[0] ?? '')}. Расчёт
-              покажет ориентир, но на него нельзя опираться без обследования.
-            </span>
-          </p>
-        ) : null}
-
-
         <button
           type="button"
           disabled={!canCalculate}
@@ -525,6 +571,17 @@ export function ProcessesPage({
           {isWarehouse && assignments.length ? `Рассчитать состав · ${new Set(assignments.map((a) => a.solutionId)).size}` : 'Рассчитать'}
         </button>
       </div>
+
+      {/* Только если неподходящий реально попал в состав / выбор для расчёта — не при «Подробнее». */}
+      <WizardHint
+        open={Boolean(active && excludedInSelection && !previewOpen)}
+        title="Не прошло подбор"
+        tone="danger"
+      >
+        Решение выбрано вручную и не прошло подбор:{' '}
+        {lowerFirst(excludedInSelection?.blockers[0] ?? 'есть ограничения')}. Расчёт покажет ориентир, но на него
+        нельзя опираться без обследования.
+      </WizardHint>
 
       {rail}
       {preview}

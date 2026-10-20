@@ -95,7 +95,8 @@ export function TooltipCard({
   );
 }
 
-/** Карточка графика: заголовок, подзаголовок, переключатель «График / Таблица». */
+/** Карточка графика: заголовок, подзаголовок, переключатель «График / Таблица».
+ *  `plain` — без рамки и паддингов (для панели отчёта справа). */
 export function ChartCard({
   title,
   subtitle,
@@ -103,6 +104,7 @@ export function ChartCard({
   chart,
   table,
   className,
+  plain = false,
 }: {
   title: string;
   subtitle?: ReactNode;
@@ -110,10 +112,17 @@ export function ChartCard({
   chart: ReactNode;
   table: ReactNode;
   className?: string;
+  plain?: boolean;
 }) {
   const [view, setView] = useState<'chart' | 'table'>('chart');
   return (
-    <section className={cn('min-w-0 rounded-[16px] border border-[#E5E5EA] bg-white p-4 sm:p-5', className)}>
+    <section
+      className={cn(
+        'min-w-0',
+        plain ? 'bg-transparent p-0' : 'rounded-[16px] border border-[#E5E5EA] bg-white p-4 sm:p-5',
+        className,
+      )}
+    >
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
         <div className="min-w-0">
           <h3 className="text-[15px] font-semibold tracking-[-0.01em] text-foreground">{title}</h3>

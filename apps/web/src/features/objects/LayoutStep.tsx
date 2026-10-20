@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { AlertTriangle, LayoutGrid, RotateCcw } from 'lucide-react';
+import { AlertTriangle, RotateCcw } from 'lucide-react';
 import { useWizardStore } from '@/app/store';
 import { CELL, cellAt, cloneShape, setCellAt } from '@/upstream/simulation/shape/shapeTypes.js';
 import { computeGateClusters } from '@/upstream/simulation/shape/shapeGeometry.js';
@@ -10,15 +10,29 @@ import {
   palletSlotsOf,
   rackStorage,
   encodeShape,
+  decodeShape,
   layoutOrStandard,
-  standardLayoutShape,
-  typicalRacks,
+  defaultWarehousePresetShape,
   isGate,
   layoutMetrics,
   type Shape,
 } from '@/features/objects/layout/warehouseLayout';
 import { cn } from '@/lib/utils';
 import { LayoutPresets } from './LayoutPresets';
+
+/** Старый стандарт (3 ряда, 120 клеток стеллажей) — подменяем на актуальный РЦ с 4 рядами. */
+function isLegacyThreeRowStandard(layout: string | null): boolean {
+  if (!layout || layout === STANDARD_LAYOUT) return false;
+  const shape = decodeShape(layout);
+  if (!shape) return false;
+  let racks = 0;
+  let empty = 0;
+  for (const value of shape.cells) {
+    if (value === CELL.RACK) racks += 1;
+    if (value === CELL.EMPTY) empty += 1;
+  }
+  return empty === 0 && racks === 120;
+}
 
 /**
  * Шаг мастера «Планировка» (только склад): контур здания пиксель-артом по сетке,
@@ -105,9 +119,10 @@ function draw(ctx: CanvasRenderingContext2D, shape: Shape) {
   }
 }
 
-// План не задан — стандартный: прямоугольник с типовой расстановкой стеллажей.
+// План не задан / устаревший стандарт — распределительный центр (пресет по умолчанию).
 // Сцена и расчёт строят ровно то, что здесь нарисовано, ничего не дорисовывая.
 function initialShape(layout: string | null): Shape {
+  if (!layout || isLegacyThreeRowStandard(layout)) return defaultWarehousePresetShape();
   return layoutOrStandard(layout);
 }
 
@@ -127,9 +142,13 @@ export function LayoutStep({ active }: { active: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const painting = useRef(false);
 
-  // Вернулись на шаг после правки в другом месте (загрузили проект) — берём сохранённое.
+  // Вернулись на шаг — берём сохранённое; если плана ещё нет или это старый
+  // 3-рядный стандарт — фиксируем актуальный РЦ в store (4 ряда, без предупреждения).
   useEffect(() => {
-    if (active) setDraft(initialShape(layout));
+    if (!active) return;
+    const shape = initialShape(layout);
+    setDraft(shape);
+    if (!layout || isLegacyThreeRowStandard(layout)) setLayout(STANDARD_LAYOUT);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
@@ -208,13 +227,7 @@ export function LayoutStep({ active }: { active: boolean }) {
   };
 
   const reset = () => {
-    setDraft(standardLayoutShape());
-    setVersion((v) => v + 1);
-  };
-
-  // Типовые ряды стеллажей на текущем контуре (свои стеллажи заменяются).
-  const placeTypicalRacks = () => {
-    setDraft(typicalRacks(draft));
+    setDraft(defaultWarehousePresetShape());
     setVersion((v) => v + 1);
   };
 
@@ -225,7 +238,8 @@ export function LayoutStep({ active }: { active: boolean }) {
 
   const goNext = () => {
     if (!canContinue) return;
-    setLayout(isDefault ? null : encodeShape(cloneShape(draft) as Shape));
+    // Дефолт тоже сохраняем явно (STANDARD_LAYOUT = РЦ), чтобы при возврате пресет оставался выбранным.
+    setLayout(isDefault ? STANDARD_LAYOUT : encodeShape(cloneShape(draft) as Shape));
     navigate(`/calculate/${objectType}/processes`);
   };
 
@@ -322,18 +336,6 @@ export function LayoutStep({ active }: { active: boolean }) {
             </p>
           ) : null}
 
-          <button
-            type="button"
-            onClick={placeTypicalRacks}
-            className="flex items-center justify-center gap-1.5 rounded-[10px] border border-[#E5E5EA] px-2.5 py-1.5 text-[12.5px] font-medium text-foreground hover:border-[#C7C7CC]"
-          >
-            <LayoutGrid className="size-3.5" strokeWidth={2} aria-hidden />
-            Типовая расстановка стеллажей
-          </button>
-          <p className="text-[11.5px] leading-snug text-[#8E8E93]">
-            Три двойных ряда с проходами; у ворот остаётся полоса под приёмку. Сцена и расчёт берут стеллажи только
-            отсюда — ничего не добавляют сами.
-          </p>
           <button
             type="button"
             onClick={reset}

@@ -1,11 +1,11 @@
-import { askGroq, localAnswer, type EconomicsContext } from "../../../apps/api/src/domain/economicsAssistant";
+import { resolveEconomicsAnswer, type EconomicsContext } from "../../../apps/api/src/domain/economicsAssistant";
 import { assistantRequestSchema } from "../../../apps/api/src/domain/assistantRequest";
 
 /**
  * Посредник чата «Спросить про экономику» для GitHub Pages: статический сайт не
  * может хранить ключ Groq, поэтому вопрос идёт сюда. Ключ — секрет воркера
  * (GROQ_API_KEY), запросы — только с разрешённых сайтов (ALLOWED_ORIGINS).
- * Та же инструкция для модели и те же пределы, что у API (apps/api).
+ * Та же логика ответа, что у API (apps/api).
  */
 
 interface Env {
@@ -57,14 +57,13 @@ export default {
     const parsed = assistantRequestSchema.safeParse(await request.json().catch(() => null));
     if (!parsed.success) return json({ message: "Некорректный вопрос" }, 400, cors);
     const { question, history, context, details } = parsed.data;
-    if (env.GROQ_API_KEY) {
-      try {
-        const { answer } = await askGroq(question, history, context as EconomicsContext, env.GROQ_API_KEY, details);
-        return json({ answer, source: "ai" }, 200, cors);
-      } catch (error) {
-        console.error("Groq недоступен:", error instanceof Error ? error.message : error);
-      }
-    }
-    return json({ answer: localAnswer(question, context as EconomicsContext, details), source: "local" }, 200, cors);
+    const { answer, source } = await resolveEconomicsAnswer(
+      question,
+      history,
+      context as EconomicsContext,
+      details,
+      env.GROQ_API_KEY,
+    );
+    return json({ answer, source }, 200, cors);
   },
 };

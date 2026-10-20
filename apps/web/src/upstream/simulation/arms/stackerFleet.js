@@ -100,5 +100,13 @@ export function createStackerFleet({ group, zone, count, armProd, energyProfile 
     }
   }
 
-  return { step, obstacles, meters, dispose, getOpsDone };
+  return {
+    step,
+    obstacles,
+    meters,
+    dispose,
+    getOpsDone,
+    getPlacedCount: () => arms.length,
+    getRequestedCount: () => count,
+  };
 }

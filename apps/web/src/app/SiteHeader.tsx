@@ -96,19 +96,15 @@ export function SiteHeader() {
       )}
     >
       {/*
-        Три зоны в одной линии: логотип / абсолютный центр навигации / действия.
-        Абсолютный центр не зависит от ширины левого и правого блоков — иначе
-        нав «уплывает» в сторону более лёгкого края и кажется кривым.
+        Три колонки одной max-w-site: логотип | нав по центру | действия справа.
+        Правый край аватара = правый край «Задания» / кнопки ИИ.
       */}
       <div className="px-5 sm:px-8">
-        <div className="relative mx-auto flex h-14 max-w-site items-center">
-          <BrandLink className="relative z-10" />
+        <div className="relative mx-auto grid h-14 max-w-site grid-cols-[1fr_auto_1fr] items-center">
+          <BrandLink className="relative z-10 justify-self-start" />
 
-          <nav
-            aria-label="Основная навигация"
-            className="pointer-events-none absolute inset-x-0 hidden items-center justify-center sm:flex"
-          >
-            <ul className="pointer-events-auto flex items-center gap-7">
+          <nav aria-label="Основная навигация" className="hidden sm:block">
+            <ul className="flex items-center gap-7">
               {SITE_NAV.map((item) => (
                 <li key={item.to}>
                   <NavLink
@@ -129,9 +125,8 @@ export function SiteHeader() {
             </ul>
           </nav>
 
-          <div className="relative z-10 ml-auto flex items-center gap-3 sm:gap-5">
-            {/* От sm — ссылки как есть. На мобильном логин/регистрация занимали
-                слишком много места и обрезались, поэтому там только меню. */}
+          <div className="relative z-10 flex items-center justify-self-end gap-3 sm:gap-5">
+            {/* Desktop: вход или аватар у правого края сетки. */}
             <div className="hidden items-center gap-5 sm:flex">
               {user ? (
                 <AccountMenu />
@@ -153,11 +148,9 @@ export function SiteHeader() {
               )}
             </div>
 
-            {user ? <AccountMenu avatarClassName="sm:hidden" /> : null}
-
             {/*
-              Мобильное меню: разделы сайта всегда здесь (на мобильном центральная
-              навигация выше скрыта), вход/регистрация — только для гостя.
+              Мобильное: бургер, затем аватар крайним справа — по сетке.
+              Гостю — только меню (вход внутри выпадашки).
             */}
             <div ref={mobileRef} className="relative sm:hidden">
               <button
@@ -213,6 +206,12 @@ export function SiteHeader() {
                 </div>
               ) : null}
             </div>
+
+            {user ? (
+              <div className="sm:hidden">
+                <AccountMenu />
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

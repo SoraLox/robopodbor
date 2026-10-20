@@ -235,6 +235,9 @@ export function WizardCard({
   const [companionOpen, setCompanionOpen] = useState(false);
   const [railOpen, setRailOpen] = useState(false);
   const [railWidth, setRailWidth] = useState(WIZARD_WIDTH_RAIL);
+  const [companionWidth, setCompanionWidth] = useState(WIZARD_WIDTH_PREVIEW);
+  /** Превью сдвигает группу к центру; подсказка — нет (карточка остаётся посередине). */
+  const [companionRecenter, setCompanionRecenter] = useState(true);
   const [viewportWidth, setViewportWidth] = useState(() =>
     typeof window === 'undefined' ? 1280 : window.innerWidth,
   );
@@ -274,18 +277,31 @@ export function WizardCard({
     return playWidthFlip(card, from, to);
   }, [width]);
 
-  const previewSpan = WIZARD_WIDTH_PREVIEW + COMPANION_GAP_PX;
+  const companionSpan = companionWidth + COMPANION_GAP_PX;
   const railSpan = railWidth + COMPANION_GAP_PX;
   const pad = 2 * 16;
-  const previewSideBySide = viewportWidth - pad >= width + previewSpan + (railOpen ? railSpan : 0);
   const railSideBySide = viewportWidth - pad >= width + railSpan;
+  // Превью: место под карточку + спутник (+ рейку). Подсказка без recenter:
+  // карточка по центру — справа должно хватить половины оставшегося поля.
+  const companionSideBySide = companionRecenter
+    ? viewportWidth - pad >= width + companionSpan + (railOpen && railSideBySide ? railSpan : 0)
+    : viewportWidth - pad >= width + 2 * companionSpan;
   const companion = useMemo(
-    () => ({ setCompanionOpen, setRailOpen, setRailWidth, railFits: railSideBySide }),
-    [railSideBySide],
+    () => ({
+      setCompanionOpen,
+      setRailOpen,
+      setRailWidth,
+      setCompanionWidth,
+      setCompanionRecenter,
+      railFits: railSideBySide,
+      companionFits: companionSideBySide,
+    }),
+    [railSideBySide, companionSideBySide],
   );
-  // Центр всей композиции (рейка | карточка | превью), не только основной карточки.
+  // Рейка и превью балансируют группу; подсказка в rightSpan не входит.
   const leftSpan = railOpen && railSideBySide ? railSpan : 0;
-  const rightSpan = companionOpen && previewSideBySide ? previewSpan : 0;
+  const rightSpan =
+    companionOpen && companionSideBySide && companionRecenter ? companionSpan : 0;
   const groupShift = (leftSpan - rightSpan) / 2;
 
   return (
@@ -313,12 +329,9 @@ export function WizardCard({
         {railSideBySide ? (
           <div
             id={WIZARD_RAIL_ID}
-            className={cn(
-              'absolute inset-y-0 z-10 flex items-stretch',
-              railOpen ? 'pointer-events-auto' : 'pointer-events-none',
-              'right-full',
-            )}
+            className="pointer-events-none absolute inset-y-0 right-full z-10 flex items-stretch"
             style={{ marginRight: COMPANION_GAP_PX }}
+            data-rail-open={railOpen ? 'true' : 'false'}
           />
         ) : null}
 
@@ -395,16 +408,16 @@ export function WizardCard({
           </div>
         </div>
 
-        {/* Превью робота порталится сюда — вне потока, справа от карточки или поверх на узком экране */}
+        {/* Превью / подсказка порталятся сюда. Слот сам никогда не ловит клики —
+            только дети (pointer-events-auto), иначе пустой open-слот блокирует карточку. */}
         <div
           id={WIZARD_COMPANION_ID}
           className={cn(
-            'absolute inset-y-0 z-10 flex items-stretch',
-            // Закрытый слот не должен перехватывать клики по форме (на узком экране он по центру).
-            companionOpen ? 'pointer-events-auto' : 'pointer-events-none',
-            previewSideBySide ? 'left-full' : 'left-1/2 -translate-x-1/2',
+            'pointer-events-none absolute inset-y-0 z-10 flex items-stretch',
+            companionSideBySide ? 'left-full' : 'left-1/2 -translate-x-1/2',
           )}
-          style={previewSideBySide ? { marginLeft: COMPANION_GAP_PX } : undefined}
+          style={companionSideBySide ? { marginLeft: COMPANION_GAP_PX } : undefined}
+          data-companion-open={companionOpen ? 'true' : 'false'}
         />
         </div>
       </div>

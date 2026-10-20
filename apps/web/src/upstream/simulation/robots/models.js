@@ -22,7 +22,24 @@ const MODELS = [
 
 export const areRobotModelsReady = () => MODELS.every((model) => model.isReady());
 
-export const loadRobotModels = () => Promise.all(MODELS.map((model) => model.load()));
+/**
+ * Грузит все glb. onProgress(0…1) — доля готовых моделей (для ползунка на экране сцены).
+ */
+export const loadRobotModels = (onProgress) => {
+  const total = MODELS.length || 1;
+  let done = MODELS.filter((model) => model.isReady()).length;
+  onProgress?.(done / total);
+  if (done === MODELS.length) return Promise.resolve();
+
+  return Promise.all(
+    MODELS.filter((model) => !model.isReady()).map((model) =>
+      model.load().then(() => {
+        done += 1;
+        onProgress?.(done / total);
+      }),
+    ),
+  );
+};
 
 // Прогрев: пока пользователь на экране настроек, модели уже грузятся.
 export const preloadRobotModels = () => MODELS.forEach((model) => model.preload());

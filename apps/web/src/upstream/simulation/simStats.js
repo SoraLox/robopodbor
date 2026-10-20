@@ -33,6 +33,11 @@ export const EMPTY_STATS = {
   conveyorUnits: 0,
   conveyorLines: 0,
   sorterSystems: 0,
+  /** Сколько роборук реально стоит в сцене / сколько просил расчёт. */
+  armPlaced: null,
+  armRequested: null,
+  loaderPlaced: null,
+  loaderRequested: null,
 };
 
 // Одинаковы ли два набора показателей (по полям, вложенные — тоже): если да, состояние
@@ -80,6 +85,10 @@ export function readStats(levels, floorIndex, zoneCells, simSeconds) {
     sorterSystems: level.sorterFleet ? level.sorterFleet.systemsShown : 0,
     conveyorUnits: (level.conveyorFleet ? level.conveyorFleet.getUnitsMoved() : 0) + linkConveyors.reduce((sum, f) => sum + f.getUnitsMoved(), 0),
     conveyorLines: (level.conveyorFleet ? level.conveyorFleet.meters.length : 0) + linkConveyors.reduce((sum, f) => sum + f.meters.length, 0),
+    armPlaced: level.armFleet?.getPlacedCount?.() ?? null,
+    armRequested: level.armFleet?.getRequestedCount?.() ?? null,
+    loaderPlaced: level.loaderSystem?.getPlacedCount?.() ?? level.ops?.loadersShown ?? null,
+    loaderRequested: level.loaderSystem?.getRequestedCount?.() ?? null,
     jobs: level.ops ? jobsOf(level.ops, simSeconds) : null,
   };
 }

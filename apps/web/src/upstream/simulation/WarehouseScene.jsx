@@ -177,7 +177,10 @@ export default function WarehouseScene({
 
   const { vacuum: vacuumStats, loader: loaderStats } = stats;
   const vacuumProfile = energyProfiles.vacuum;
-  const armOpsPerHour = useArm ? armCount * armProd * 60 : 0;
+  // Мощность «Расчёт» — только по роботам, которые реально стоят в сцене.
+  const armPlaced = stats.armPlaced ?? armCount;
+  const loaderPlaced = stats.loaderPlaced ?? loaderCount;
+  const armOpsPerHour = useArm ? armPlaced * armProd * 60 : 0;
   const sceneTitle = robotTypes.map((type) => ROBOT_TITLES[type]).join(", ");
   const fullLoadSlowdownPct = Math.round(LOAD_SLOWDOWN * Math.min(1, cargoWeightKg / loaderCapacityKg) * 100);
 
@@ -191,7 +194,7 @@ export default function WarehouseScene({
     fleet: {
       vacuum: vacuumCount * vacuumProd * chargeDuty,
       arm: armOpsPerHour,
-      loader: loaderCount * loaderThroughput,
+      loader: loaderPlaced * loaderThroughput,
       sorter: sorterCount * sorterThroughput,
       conveyor: conveyorCount * conveyorThroughput,
     },

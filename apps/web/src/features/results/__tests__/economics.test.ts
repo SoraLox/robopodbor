@@ -68,8 +68,8 @@ describe('расчёт экономики по паспорту и решени�
 
   it('уборка не замещает ролей с зарплатой — окупаемость не выдумываем', () => {
     const result = run('warehouse', 'FC0002');
-    expect(result.payback.value).toBe('—');
-    expect(result.roi.value).toBe('—');
+    expect(result.payback.value).toBe('-');
+    expect(result.roi.value).toBe('-');
     expect(result.payback.note).toMatch(/не замещает/);
   });
 

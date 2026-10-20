@@ -28,14 +28,13 @@ describe('ResultsPage', () => {
 
     expect(screen.getByText(/3\.2/)).toBeInTheDocument();
     expect(screen.getAllByText('Рекомендуем').length).toBeGreaterThan(0);
-    // Экономика открыта сразу: сравнение сценариев и структура затрат — на панели.
     expect(screen.getByRole('heading', { name: 'Экономика проекта' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Стоимость владения за горизонт/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Статьи затрат подробно/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Статьи затрат/i })).toBeInTheDocument();
     expect(screen.getByTestId('visualization-slot')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /Статьи затрат подробно/i }));
-    expect(await screen.findByRole('region', { name: /Статьи затрат подробно/i })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Статьи затрат/i }));
+    expect(await screen.findByRole('region', { name: /Статьи затрат/i })).toBeInTheDocument();
   });
 
   it('берёт горизонт и заголовок из расчёта, а не из демо-описания', async () => {
@@ -46,7 +45,7 @@ describe('ResultsPage', () => {
       </Routes>,
       { route: `/calculate/warehouse/results/${result.id}` },
     );
-    expect(await screen.findByText(/за 5 лет · сценарий «Покупка»/, {}, { timeout: 5000 })).toBeInTheDocument();
+    expect(await screen.findByText(/млн ₽ за 5 лет/, {}, { timeout: 5000 })).toBeInTheDocument();
     expect(screen.queryByText(/Южные Врата/)).not.toBeInTheDocument();
   });
 });

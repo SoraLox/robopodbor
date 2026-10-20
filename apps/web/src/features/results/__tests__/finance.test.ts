@@ -11,9 +11,10 @@ describe('инвестиционные показатели', () => {
     expect(schedule.salvage).toBeCloseTo(33.33, 1);
     const f = analyzeInvestment({ capex: 100, effects: [40, 40, 40, 40, 40], replacements: schedule.replacements, salvage: schedule.salvage, discountRate: 0.1 });
     // Поток: −100, 40, 40, −60, 40, 73,3 → чистая выгода 33,3 на 200 вложений.
+    // ROI / год = (33,3/200)/5 ≈ 3,33%.
     expect(f.totalInvestment).toBe(200);
     expect(f.netBenefit).toBeCloseTo(33.33, 1);
-    expect(f.roiPct).toBeCloseTo(16.67, 1);
+    expect(f.roiPct).toBeCloseTo(3.33, 1);
     // Окупаемость — без остаточной стоимости: накопленный поток выходит в ноль к концу 5-го года.
     expect(f.paybackYears).toBeCloseTo(5, 5);
     // NPV по 10%: дисконтированная сумма потока.
@@ -29,18 +30,21 @@ describe('инвестиционные показатели', () => {
     expect(analyzeInvestment({ ...base, salvage: 20 }).roiPct!).toBeGreaterThan(analyzeInvestment({ ...base, salvage: 0 }).roiPct!);
   });
 
-  it('склад: ROI — чистая доходность, а не «эффект × горизонт / CAPEX»', () => {
+  it('склад: ROI / год — чистая выгода за вычетом CAPEX, усреднённая на горизонт', () => {
     const fields = objectParameters.warehouse as never;
     const all = solutions as unknown as CatalogSolution[];
     const forklift = all.find((s) => s.id === 'FL0002')!;
     const r = calculateEconomics({ objectType: 'warehouse', parameters: {}, fields, solution: forklift, solutions: [forklift] });
     const f = r.finance!;
     expect(f).toBeTruthy();
-    expect(f.cashFlow).toHaveLength(Number(/\d+/.exec(r.roi.label)![0]) + 1);
+    const horizon = f.cashFlow.length - 1;
+    expect(r.roi.label).toMatch(/ROI\s*\/\s*год/i);
+    expect(r.roi.label).toMatch(/CAPEX/i);
+    expect(f.cashFlow).toHaveLength(horizon + 1);
     expect(f.cashFlow[0]!.netMln).toBeLessThan(0);
-    // ROI = чистая выгода / вложения.
-    expect(Math.abs(f.roiPct! - (f.netBenefitMln / f.totalInvestmentMln) * 100)).toBeLessThan(2);
+    const annual = (f.netBenefitMln / f.totalInvestmentMln / horizon) * 100;
+    expect(Math.abs(f.roiPct! - annual)).toBeLessThan(2);
     expect(r.roi.value).toBe(`${f.roiPct}%`);
-    expect(r.assumptions.some((a) => /остаточная стоимость парка/.test(a))).toBe(true);
+    expect(r.assumptions.some((a) => /остаточная стоимость|ROI \/ год/.test(a))).toBe(true);
   });
 });

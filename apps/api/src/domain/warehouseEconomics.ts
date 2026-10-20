@@ -37,9 +37,18 @@ export const WAREHOUSE_NORMS = {
   loaderHandlingSeconds: 25,
   /** С грузом погрузчик едет медленнее — доля потери скорости при полной загрузке. */
   loadSlowdown: 0.5,
-  // Нет в карточке — оценки рынка (как и раньше в нашей модели):
-  implementationShare: 0.15,
-  serviceShare: 0.07,
+  /**
+   * Потолок замещения ФОТ роли: даже при полном покрытии потока остаются люди
+   * на исключения, брак, обучение, пики и контроль качества.
+   */
+  maxLaborReplacement: 0.65,
+  /** Один оператор парка в смену на столько роботов (ФОТ вычитается из экономии). */
+  robotsPerOperator: 8,
+  /** Доля Steady-state эффекта в первый год (ramp-up внедрения). */
+  rampUpYear1: 0.55,
+  // Нет в карточке — консервативные оценки рынка (интеграция дороже «железа»):
+  implementationShare: 0.4,
+  serviceShare: 0.1,
   raasMonthlyShare: 0.025,
   lifespanYears: 7,
 } as const;
@@ -109,7 +118,7 @@ export function warehouseParamsOf(values: Params): WarehouseParams {
     fastSkuSharePct: num("wh_dolya_sku_bystrym_oborotom", 0),
     oversizedCargoPct: num("wh_dolya_negabaritnyh_nestandartnyh_gruzov", 0),
     floorAreaM2,
-    activeAreaM2: num("wh_ploschad_aktivnoy_zony", floorAreaM2),
+    activeAreaM2: Math.min(num("wh_ploschad_aktivnoy_zony", floorAreaM2), floorAreaM2),
     routeLengthM: numberOf(values.wh_route_length_m) ?? Math.round(Math.sqrt(floorAreaM2) / 2),
     cargoWeightKg: num("wh_massa_gruzovoy_edinitsy", 50),
     pickerCount: num("wh_nih_otborschiki", 0),
@@ -544,6 +553,7 @@ function laborOf(p: WarehouseParams, groups: FleetGroup[], links: LinkPlan[]): L
   const pickerCost = payroll(p.pickerCount, p.pickerWageMonth);
   const forkliftCost = payroll(p.forkliftOperatorCount, p.forkliftWageMonth);
   const oversizedCeiling = 1 - Math.min(1, Math.max(0, p.oversizedCargoPct / 100));
+  const replaceCap = Math.min(oversizedCeiling, WAREHOUSE_NORMS.maxLaborReplacement);
 
   // Отборщики: пропускная способность роборук и сортера против того, что роль делает сейчас.
   const perShift = (roster: number) => roster / p.shifts / (1 + p.staffLossFactor);
@@ -560,18 +570,24 @@ function laborOf(p: WarehouseParams, groups: FleetGroup[], links: LinkPlan[]): L
         ? Math.min(1, pickThroughput / pickerCapacity)
         : 1
     : null;
-  const pickerFraction = armCapacityFraction === null ? 0 : Math.min(oversizedCeiling, armCapacityFraction);
+  const pickerFraction = armCapacityFraction === null ? 0 : Math.min(replaceCap, armCapacityFraction);
 
   // Операторы погрузчиков: сколько часов ручной работы остаётся на связях приёмки и отгрузки.
   const touched = links.some((l) => l.conveyor || l.carriers.length);
   const before = links.reduce((sum, l) => sum + l.manualHoursBefore, 0);
   const after = links.reduce((sum, l) => sum + l.manualHoursAfter, 0);
   const forkliftRemaining = touched && before > 0 ? after / before : null;
-  const forkliftFraction = forkliftRemaining === null ? 0 : Math.min(oversizedCeiling, 1 - forkliftRemaining);
+  const forkliftFraction = forkliftRemaining === null ? 0 : Math.min(replaceCap, 1 - forkliftRemaining);
 
-  const savings = pickerCost * pickerFraction + forkliftCost * forkliftFraction;
-  // Базовый ФОТ — обе роли, как у Егора; незамещённая часть входит в TCO сценариев
-  // роботизации как оставшийся ФОТ, поэтому сравнение с «Как есть» честное.
+  const roleSavings = pickerCost * pickerFraction + forkliftCost * forkliftFraction;
+  // Операторы парка: роботы не работают без людей на пульте, исключениях и смене.
+  const robotCount = groups.reduce((sum, g) => sum + g.count, 0);
+  const fleetOps =
+    robotCount > 0 ? Math.ceil(robotCount / WAREHOUSE_NORMS.robotsPerOperator) * p.shifts : 0;
+  const fleetOpWage = (p.pickerWageMonth + p.forkliftWageMonth) / 2 || p.forkliftWageMonth || p.pickerWageMonth;
+  const fleetOpCost = payroll(fleetOps, fleetOpWage);
+  const savings = Math.max(0, roleSavings - fleetOpCost);
+  // Базовый ФОТ — обе роли, как у Егора; незамещённая часть + операторы парка входят в TCO.
   const baseline = pickerCost + forkliftCost;
 
   return {
@@ -639,11 +655,13 @@ export function buildWarehouseScenario(kind: "purchase" | "raas", p: WarehousePa
   const { replacementCapex } = schedule;
   const residualValue = schedule.salvage;
   const residualLabor = labor.baseline - labor.savings;
-  // ROI и окупаемость — по денежному потоку: вложения, замена по сроку службы и
-  // остаточная стоимость парка на конец горизонта (раньше ROI = эффект × горизонт / CAPEX).
+  // Первый год — ramp-up внедрения; дальше steady-state. ROI/окупаемость — по потоку.
+  const effects = Array.from({ length: horizon }, (_, index) =>
+    effect * (index === 0 ? WAREHOUSE_NORMS.rampUpYear1 : 1),
+  );
   const finance = analyzeInvestment({
     capex,
-    effects: Array.from({ length: horizon }, () => effect),
+    effects,
     replacements: schedule.replacements,
     salvage: residualValue,
     discountRate: p.discountRate,
@@ -701,7 +719,7 @@ function roleLine(role: string, fraction: number, capacityFraction: number | nul
 }
 
 export function laborAssumption(model: WarehouseModel): string {
-  const { labor, groups, links } = model;
+  const { labor, groups, links, params } = model;
   const lines: string[] = [];
   if (groups.some((g) => g.kind === "arm" || g.kind === "sorter")) {
     lines.push(roleLine("Отборщики", labor.pickerFraction, labor.armCapacityFraction));
@@ -729,10 +747,20 @@ export function laborAssumption(model: WarehouseModel): string {
   if (!lines.length) {
     return "Уборщиков в паспорте склада нет — экономия труда для уборки не считается, только её собственные затраты.";
   }
-  const ceiling = labor.oversizedCeiling < 1
-    ? ` Потолок экономии — ${Math.round(labor.oversizedCeiling * 100)}%: негабаритные грузы остаются ручными при любом парке.`
-    : "";
-  return `Экономия труда считается по каждой роли отдельно. ${lines.join(" ")}${ceiling}`;
+  const robotCount = groups.reduce((sum, g) => sum + g.count, 0);
+  const fleetOps =
+    robotCount > 0 ? Math.ceil(robotCount / WAREHOUSE_NORMS.robotsPerOperator) * params.shifts : 0;
+  const caps = [
+    labor.oversizedCeiling < 1
+      ? `негабарит ${Math.round((1 - labor.oversizedCeiling) * 100)}% остаётся ручным`
+      : "",
+    `замещение роли не выше ${Math.round(WAREHOUSE_NORMS.maxLaborReplacement * 100)}% (исключения, контроль, пики)`,
+    fleetOps > 0
+      ? `минус ${fleetOps} оператор${fleetOps === 1 ? "" : fleetOps < 5 ? "а" : "ов"} парка (1 на ${WAREHOUSE_NORMS.robotsPerOperator} роботов в смену)`
+      : "",
+    `первый год эффект ×${WAREHOUSE_NORMS.rampUpYear1} (ramp-up внедрения)`,
+  ].filter(Boolean);
+  return `Экономия труда считается по каждой роли отдельно. ${lines.join(" ")} Ограничения: ${caps.join("; ")}.`;
 }
 
 export function fleetSubstitutions(groups: FleetGroup[]): Array<{ name: string; items: Substitution[] }> {

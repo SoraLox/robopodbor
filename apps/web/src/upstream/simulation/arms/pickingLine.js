@@ -93,6 +93,7 @@ export function createPickingLine({ group, net, slots, rigFactory, beltTexture, 
     materials.forEach((m) => m.dispose());
   }
 
+  const placed = rows.reduce((sum, r) => sum + r.units.length, 0);
   return {
     // Площадки старых рук на полу не рисуем: руки стоят у общих лент.
     drawPads: false,
@@ -105,5 +106,7 @@ export function createPickingLine({ group, net, slots, rigFactory, beltTexture, 
     meters: rows.flatMap((r) => r.units.map((u) => u.unit.meter)),
     getOpsDone: () => rows.reduce((sum, r) => sum + r.units.reduce((s, u) => s + u.unit.getOps(), 0), 0),
     getDelivered: () => delivered,
+    getPlacedCount: () => placed,
+    getRequestedCount: () => slots.length,
   };
 }
