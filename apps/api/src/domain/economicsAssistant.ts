@@ -69,14 +69,16 @@ export function parseCapexUnitLines(details: string): CapexUnitLine[] {
   const out: CapexUnitLine[] = [];
   for (const m of details.matchAll(re)) {
     const count = Number(m[1]);
-    const totalMln = Number(String(m[4]).replace(/\s/g, "").replace(",", "."));
-    if (!(count > 0) || !Number.isFinite(totalMln) || totalMln <= 0) continue;
+    const name = (m[2] ?? "").trim();
+    const slotHint = (m[3] ?? "").trim().toLowerCase();
+    const totalMln = Number(String(m[4] ?? "").replace(/\s/g, "").replace(",", "."));
+    if (!(count > 0) || !name || !Number.isFinite(totalMln) || totalMln <= 0) continue;
     out.push({
       count,
-      name: m[2].trim(),
+      name,
       totalMln,
       unitMln: round1(totalMln / count),
-      slotHint: m[3].trim().toLowerCase(),
+      slotHint,
     });
   }
   return out;

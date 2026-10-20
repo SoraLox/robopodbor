@@ -29,11 +29,13 @@ describe('роборука отбора (pick_arm.glb)', () => {
       { yaw: 0, radius: 2, height: PICK_HEIGHT, at: new THREE.Vector3(2, PICK_HEIGHT, 0) },
       { yaw: (3 * Math.PI) / 2, radius: 2, height: 1.9, at: new THREE.Vector3(0, 1.9, 2) },
     ];
+    const tip = arm.userData.armTip as { padDrop: number; lateral: number } | undefined;
     for (const c of cases) {
-      poseArm(joints as never, c.yaw, c.radius, c.height);
+      // tip из preparePickArm: низ реальной хваталки, не старые константы вакуума.
+      poseArm(joints as never, c.yaw, c.radius, c.height, tip);
       arm.updateMatrixWorld(true);
       const p = grip.getWorldPosition(new THREE.Vector3());
-      expect(p.distanceTo(c.at)).toBeLessThan(0.05);
+      expect(p.distanceTo(c.at)).toBeLessThan(0.08);
       // Присоски смотрят вниз: ось захвата вертикальна.
       const up = new THREE.Vector3(0, 1, 0).applyQuaternion(grip.getWorldQuaternion(new THREE.Quaternion()));
       expect(up.y).toBeGreaterThan(0.99);

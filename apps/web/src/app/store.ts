@@ -132,6 +132,16 @@ export const useWizardStore =
 
 exposeForPerf('wizard', useWizardStore);
 
+/** В тестах store без persist — у типа поля нет; в рантайме с persist оно есть. */
+type WizardPersistApi = {
+  hasHydrated: () => boolean;
+  onFinishHydration: (fn: () => void) => () => void;
+};
+
+function wizardPersist(): WizardPersistApi | undefined {
+  return (useWizardStore as unknown as { persist?: WizardPersistApi }).persist;
+}
+
 /**
  * true, когда persist дочитал localStorage. До этого parameters/layout — пустые
  * дефолты: сцена на F5 на миг рисует «чужой» стандартный склад.
@@ -139,12 +149,12 @@ exposeForPerf('wizard', useWizardStore);
 export function useWizardHydrated(): boolean {
   const [hydrated, setHydrated] = useState(() => {
     if (import.meta.env.MODE === 'test') return true;
-    return useWizardStore.persist?.hasHydrated() ?? true;
+    return wizardPersist()?.hasHydrated() ?? true;
   });
 
   useEffect(() => {
     if (import.meta.env.MODE === 'test') return;
-    const api = useWizardStore.persist;
+    const api = wizardPersist();
     if (!api) {
       setHydrated(true);
       return;
