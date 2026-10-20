@@ -389,9 +389,10 @@ export function WizardCard({
                 <div data-flip="right" className="flex-none">
                   <div
                     id="wizard-title-action"
-                    className="flex h-7 items-center justify-end gap-1 overflow-hidden"
+                    className="flex h-8 items-center justify-end gap-1 overflow-hidden"
                     style={{
-                      width: expanded ? 60 : 0,
+                      // 60 — две иконки Excel на форме; 188 — «Загрузить AutoCAD» на планировке.
+                      width: expanded ? 188 : 0,
                       opacity: expanded ? 1 : 0,
                       transition: `width ${EXPAND_MS}ms ${EXPAND_EASE}, opacity ${EXPAND_MS}ms ${EXPAND_EASE}`,
                     }}

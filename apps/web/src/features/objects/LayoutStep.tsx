@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useParams } from 'react-router-dom';
-import { AlertTriangle, RotateCcw } from 'lucide-react';
+import { AlertTriangle, RotateCcw, Upload } from 'lucide-react';
 import { useWizardStore } from '@/app/store';
 import { CELL, cellAt, cloneShape, setCellAt } from '@/upstream/simulation/shape/shapeTypes.js';
 import { computeGateClusters } from '@/upstream/simulation/shape/shapeGeometry.js';
@@ -17,6 +18,7 @@ import {
   layoutMetrics,
   type Shape,
 } from '@/features/objects/layout/warehouseLayout';
+import { DxfImportDialog } from '@/features/objects/layout/dxfImport';
 import { cn } from '@/lib/utils';
 import { LayoutPresets } from './LayoutPresets';
 
@@ -139,8 +141,15 @@ export function LayoutStep({ active }: { active: boolean }) {
   const [draft, setDraft] = useState<Shape>(() => initialShape(layout));
   const [version, setVersion] = useState(0);
   const [tool, setTool] = useState<ToolId>('floor');
+  const [dxfOpen, setDxfOpen] = useState(false);
+  const [dxfWarnings, setDxfWarnings] = useState<string[]>([]);
+  const [titleSlot, setTitleSlot] = useState<Element | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const painting = useRef(false);
+
+  useEffect(() => {
+    setTitleSlot(document.getElementById('wizard-title-action'));
+  }, []);
 
   // Вернулись на шаг — берём сохранённое; если плана ещё нет или это старый
   // 3-рядный стандарт — фиксируем актуальный РЦ в store (4 ряда, без предупреждения).
@@ -236,6 +245,12 @@ export function LayoutStep({ active }: { active: boolean }) {
     setVersion((v) => v + 1);
   };
 
+  const onDxfConfirm = (shape: Shape, warnings: string[]) => {
+    applyPreset(shape);
+    setDxfWarnings(warnings);
+    setDxfOpen(false);
+  };
+
   const goNext = () => {
     if (!canContinue) return;
     // Дефолт тоже сохраняем явно (STANDARD_LAYOUT = РЦ), чтобы при возврате пресет оставался выбранным.
@@ -243,8 +258,30 @@ export function LayoutStep({ active }: { active: boolean }) {
     navigate(`/calculate/${objectType}/processes`);
   };
 
+  const titleAction =
+    active && titleSlot
+      ? createPortal(
+          <button
+            type="button"
+            onClick={() => setDxfOpen(true)}
+            title="Загрузить чертёж AutoCAD (.dxf)"
+            className={cn(
+              'flex h-8 items-center gap-1.5 rounded-full border border-primary-bright/50 bg-primary-bright/[0.08] px-2.5',
+              'text-[12px] font-semibold text-primary-bright transition-colors',
+              'hover:border-primary-bright hover:bg-primary-bright/[0.14]',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-bright/25',
+            )}
+          >
+            <Upload className="size-3.5 flex-none" strokeWidth={2} aria-hidden />
+            Загрузить AutoCAD
+          </button>,
+          titleSlot,
+        )
+      : null;
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
+      {titleAction}
       <LayoutPresets open={active} draft={draft} onPick={applyPreset} />
       <div className="flex min-h-0 flex-1 flex-col gap-4 sm:flex-row sm:gap-6">
         <div className="flex min-h-[160px] min-w-0 flex-1 items-start justify-center sm:min-h-0">
@@ -336,6 +373,9 @@ export function LayoutStep({ active }: { active: boolean }) {
             </p>
           ) : null}
 
+          {dxfWarnings.length ? (
+            <p className="text-[12px] leading-snug text-[#8E8E93]">{dxfWarnings.join(' ')}</p>
+          ) : null}
           <button
             type="button"
             onClick={reset}
@@ -356,6 +396,8 @@ export function LayoutStep({ active }: { active: boolean }) {
       >
         Далее
       </button>
+
+      <DxfImportDialog open={dxfOpen} onClose={() => setDxfOpen(false)} onConfirm={onDxfConfirm} />
     </div>
   );
 }

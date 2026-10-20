@@ -139,12 +139,16 @@ export function palletSlotsOf(parameters: Record<string, string>): number {
  * сразу показывает предупреждение на пресете «Распределительный центр»).
  * Доли — от сетки, поэтому раскладка одна и та же на любом размере склада.
  */
-export function withStandardRacks(shape: Shape): Shape {
+export function withStandardRacks(
+  shape: Shape,
+  /** Доли рядов по глубине сетки; по умолчанию 4 двойных ряда. */
+  rowFractions: number[] = [0.36, 0.52, 0.68, 0.84],
+): Shape {
   if (shape.cells.some((value) => value === CELL.RACK)) return shape;
   const n = shape.gridSize;
   const next = { ...shape, cells: shape.cells.slice() } as Shape;
   // Полоса у ворот — под станцию приёмки (карусель, роборуки, стоянки транспортировщиков).
-  const rowPairs = [0.36, 0.52, 0.68, 0.84].map((f) => Math.round(f * n));
+  const rowPairs = rowFractions.map((f) => Math.round(f * n));
   const cross = Math.floor(n / 2);
   for (const gz of rowPairs.flatMap((z) => [z, z + 1])) {
     for (let gx = 2; gx <= n - 3; gx += 1) {

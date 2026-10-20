@@ -310,9 +310,11 @@ export function EconomicsAssistant({ data, parameters }: { data: CalculationResu
   const panelVisible = panel !== null;
 
   return (
-    // Та же сетка, что у шапки / метрик: gutters px-5/sm:px-8 + max-w-site, справа в колонке.
+    // Та же сетка, что у шапки / метрик. Outer + ряд — pointer-events-none:
+    // иначе полная ширина max-w-site перекрывает кнопки симуляции слева.
+    // Клики только у FAB и у открытой панели (ai-panel-open в CSS).
     <div className="pointer-events-none fixed inset-x-0 bottom-5 z-40 px-5 sm:px-8">
-      <div className="pointer-events-auto relative mx-auto flex max-w-site justify-end">
+      <div className="relative mx-auto flex max-w-site justify-end">
       {panelVisible ? (
         <div
           className={cn(
@@ -429,7 +431,7 @@ export function EconomicsAssistant({ data, parameters }: { data: CalculationResu
         aria-hidden={panelVisible}
         className={cn(
           'ai-fab ai-shimmer ai-shimmer-glow rounded-full p-[2.5px] shadow-[0_10px_32px_rgba(0,0,0,0.2)]',
-          panelVisible && 'ai-fab-hidden',
+          panelVisible ? 'ai-fab-hidden' : 'pointer-events-auto',
         )}
       >
         <span className="flex h-14 items-center gap-2.5 rounded-full bg-foreground px-5 text-[15px] font-semibold tracking-[-0.01em] text-white">
