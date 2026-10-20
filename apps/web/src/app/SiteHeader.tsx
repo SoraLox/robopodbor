@@ -5,6 +5,7 @@ import { useSession } from '@/api/auth';
 import { Button } from '@/components/ui/button';
 import { AccountMenu } from './AccountMenu';
 import { BrandLink } from './BrandMark';
+import { WhatsNewDialog } from './WhatsNewDialog';
 import { cn } from '@/lib/utils';
 
 /** Пункт верхней навигации сайта. */
@@ -23,6 +24,12 @@ export const SITE_NAV = [
 ] as const satisfies readonly SiteNavItem[];
 
 export type SiteNavPath = (typeof SITE_NAV)[number]['to'];
+
+const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+  cn(
+    'text-control transition-colors',
+    isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground',
+  );
 
 /** Строка выпадающего мобильного меню — тот же язык, что у AccountMenu. */
 function MobileMenuRow({
@@ -53,6 +60,7 @@ function MobileMenuRow({
 export function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [whatsNewOpen, setWhatsNewOpen] = useState(false);
   const mobileRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const { data: user } = useSession();
@@ -84,6 +92,11 @@ export function SiteHeader() {
     };
   }, [mobileOpen]);
 
+  const openWhatsNew = () => {
+    setMobileOpen(false);
+    setWhatsNewOpen(true);
+  };
+
   // На лендинге у верхнего края hero шапка прозрачная — плоскость
   // на весь экран. После скролла — белая заливка и hairline.
   const isLandingHero = location.pathname === '/' && !scrolled;
@@ -107,21 +120,20 @@ export function SiteHeader() {
             <ul className="flex items-center gap-7">
               {SITE_NAV.map((item) => (
                 <li key={item.to}>
-                  <NavLink
-                    to={item.to}
-                    className={({ isActive }) =>
-                      cn(
-                        'text-control transition-colors',
-                        isActive
-                          ? 'text-foreground'
-                          : 'text-muted-foreground hover:text-foreground',
-                      )
-                    }
-                  >
+                  <NavLink to={item.to} className={navLinkClass}>
                     {item.label}
                   </NavLink>
                 </li>
               ))}
+              <li>
+                <button
+                  type="button"
+                  onClick={openWhatsNew}
+                  className="text-control text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Что изменилось?
+                </button>
+              </li>
             </ul>
           </nav>
 
@@ -180,6 +192,14 @@ export function SiteHeader() {
                         {item.label}
                       </MobileMenuRow>
                     ))}
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={openWhatsNew}
+                      className="flex w-full items-center rounded-[12px] px-3 py-2.5 text-left text-[13.5px] font-medium text-foreground transition-colors duration-100 hover:bg-[#FAFAFA]"
+                    >
+                      Что изменилось?
+                    </button>
                   </div>
 
                   {!user ? (
@@ -215,6 +235,8 @@ export function SiteHeader() {
           </div>
         </div>
       </div>
+
+      <WhatsNewDialog open={whatsNewOpen} onClose={() => setWhatsNewOpen(false)} />
     </header>
   );
 }
